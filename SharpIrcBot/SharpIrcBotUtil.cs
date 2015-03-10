@@ -5,12 +5,21 @@ using System.Globalization;
 using System.IO;
 using System.Reflection;
 using System.Text;
+using log4net;
+using log4net.Appender;
+using log4net.Config;
+using log4net.Core;
+using log4net.Layout;
+using log4net.Repository.Hierarchy;
 using Newtonsoft.Json.Linq;
 
 namespace SharpIrcBot
 {
     public static class SharpIrcBotUtil
     {
+        public const string DefaultLogFormat = "%date{yyyy-MM-dd HH:mm:ss} [%15.15thread] %-5level %30.30logger - %message%newline";
+        public static readonly Encoding Utf8NoBom = new UTF8Encoding(false, true);
+
         public static BotConfig LoadConfig()
         {
             return new BotConfig(JObject.Parse(File.ReadAllText(Path.Combine(AppDirectory, "Config.json"), Encoding.UTF8)));
@@ -155,6 +164,63 @@ namespace SharpIrcBot
             var conn = DbProviderFactories.GetFactory(config.DatabaseProvider).CreateConnection();
             conn.ConnectionString = config.DatabaseConnectionString;
             return conn;
+        }
+
+        public static void SetupFileLogging(Level level = null)
+        {
+            var logConfFile = new FileInfo(Path.Combine(AppDirectory, "LogConf.xml"));
+            if (logConfFile.Exists)
+            {
+                // use the XML configurator instead
+                XmlConfigurator.Configure(logConfFile);
+                return;
+            }
+
+            var hierarchy = (Hierarchy) LogManager.GetRepository();
+            var rootLogger = hierarchy.Root;
+            rootLogger.Level = level ?? Level.Debug;
+
+            var patternLayout = new PatternLayout
+            {
+                ConversionPattern = DefaultLogFormat
+            };
+            patternLayout.ActivateOptions();
+
+            var logAppender = new FileAppender
+            {
+                AppendToFile = true,
+                Encoding = Utf8NoBom,
+                File = Path.Combine(AppDirectory, "Kassaprogramm.log"),
+                Layout = patternLayout
+            };
+            logAppender.ActivateOptions();
+
+            rootLogger.AddAppender(logAppender);
+
+            hierarchy.Configured = true;
+        }
+
+        public static void SetupConsoleLogging(Level level = null)
+        {
+            var hierarchy = (Hierarchy)LogManager.GetRepository();
+            var rootLogger = hierarchy.Root;
+            rootLogger.Level = level ?? Level.Debug;
+
+            var patternLayout = new PatternLayout
+            {
+                ConversionPattern = DefaultLogFormat
+            };
+            patternLayout.ActivateOptions();
+
+            var logAppender = new ManagedColoredConsoleAppender
+            {
+                Layout = patternLayout
+            };
+            logAppender.ActivateOptions();
+
+            rootLogger.AddAppender(logAppender);
+
+            hierarchy.Configured = true;
         }
     }
 }
