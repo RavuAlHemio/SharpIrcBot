@@ -1,0 +1,3 @@
+[submodule "Libraries/SmartIrc4net"]
+	path = Libraries/SmartIrc4net
+	url = https://github.com/meebey/SmartIrc4net.git
