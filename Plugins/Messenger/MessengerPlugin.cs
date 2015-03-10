@@ -422,7 +422,19 @@ namespace Messenger
             return localTime.ToString("yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture);
         }
 
-        protected void HandleChannelMessage(object sender, IrcEventArgs args)
+        private void HandleChannelMessage(object sender, IrcEventArgs args)
+        {
+            try
+            {
+                ActuallyHandleChannelMessage(sender, args);
+            }
+            catch (Exception exc)
+            {
+                Logger.Error("error handling message", exc);
+            }
+        }
+
+        protected void ActuallyHandleChannelMessage(object sender, IrcEventArgs args)
         {
             var message = args.Data;
             if (message.Type != ReceiveType.ChannelMessage || message.Nick == _client.Nickname)
