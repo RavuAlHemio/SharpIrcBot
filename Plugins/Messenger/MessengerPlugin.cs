@@ -126,7 +126,7 @@ namespace Messenger
             else
             {
                 _client.SendMessage(SendType.Message, message.Channel, string.Format(
-                    "{0}: Aye-aye! I\u2019ll deliver your message to [i]{1}[/i] next time I see \u2019em!",
+                    "{0}: Aye-aye! I\u2019ll deliver your message to {1} next time I see \u2019em!",
                     message.Nick,
                     recipient
                 ));
@@ -348,7 +348,7 @@ namespace Messenger
                 if (isIgnored)
                 {
                     _client.SendMessage(SendType.Message, message.Channel, string.Format(
-                        "{0}: You are already ignoring [i]{1}[/i].",
+                        "{0}: You are already ignoring {1}.",
                         message.Nick,
                         blockSender
                     ));
@@ -372,7 +372,7 @@ namespace Messenger
                 );
 
                 _client.SendMessage(SendType.Message, message.Channel, string.Format(
-                    "{0}: You are now ignoring [i]{1}[/i].",
+                    "{0}: You are now ignoring {1}.",
                     message.Nick,
                     blockSender
                 ));
@@ -382,7 +382,7 @@ namespace Messenger
                 if (!isIgnored)
                 {
                     _client.SendMessage(SendType.Message, message.Channel, string.Format(
-                        "{0}: You have not been ignoring [i]{1}[/i].",
+                        "{0}: You have not been ignoring {1}.",
                         message.Nick,
                         blockSender
                     ));
@@ -403,7 +403,7 @@ namespace Messenger
                 );
 
                 _client.SendMessage(SendType.Message, message.Channel, string.Format(
-                    "{0}: You are not ignoring [i]{1}[/i] anymore.",
+                    "{0}: You are not ignoring {1} anymore.",
                     message.Nick,
                     blockSender
                 ));
@@ -419,7 +419,7 @@ namespace Messenger
         protected string FormatUtcTimestampFromDatabase(DateTime timestamp)
         {
             var localTime = timestamp.ToLocalTimeFromDatabase();
-            return localTime.ToString("yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture);
+            return localTime.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
         }
 
         private void HandleChannelMessage(object sender, IrcEventArgs args)
@@ -501,7 +501,7 @@ namespace Messenger
                         messages.Count
                     );
                     _client.SendMessage(SendType.Message, message.Channel, string.Format(
-                        "{0} new messages for {1}{2}! Use \u201c!delivermsg [i]maxnumber[/i]\u201d to get them!",
+                        "{0} new messages for {1}{2}! Use \u201c!delivermsg maxnumber\u201d to get them!",
                         messages.Count,
                         message.Nick,
                         retainerText
