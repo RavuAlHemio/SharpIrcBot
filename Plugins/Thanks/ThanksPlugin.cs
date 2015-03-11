@@ -24,6 +24,20 @@ namespace Thanks
         {
             Client = client;
             Config = new ThanksConfig(config);
+
+            Client.OnChannelMessage += HandleChannelMessage;
+        }
+
+        private void HandleChannelMessage(object sender, IrcEventArgs args)
+        {
+            try
+            {
+                ActuallyHandleChannelMessage(sender, args);
+            }
+            catch (Exception exc)
+            {
+                Logger.Error("error handling message", exc);
+            }
         }
 
         protected void ActuallyHandleChannelMessage(object sender, IrcEventArgs args)
