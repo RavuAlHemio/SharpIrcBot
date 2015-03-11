@@ -46,9 +46,11 @@ namespace Belch
             {
                 var message = string.Join(" ", msgArr.Skip(1));
                 var skittledMessage = new StringBuilder();
+                var colorCodeOffset = new Random().Next(SkittlesCodes.Length);
+
                 for (int i = 0; i < message.Length; ++i)
                 {
-                    int colorCode = SkittlesCodes[i%SkittlesCodes.Length];
+                    int colorCode = SkittlesCodes[(i + colorCodeOffset) % SkittlesCodes.Length];
                     skittledMessage.AppendFormat("\x03{0:D2},99{1}", colorCode, message[i]);
                 }
                 // reset formatting
