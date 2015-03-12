@@ -23,6 +23,7 @@ namespace SharpIrcBot
 
             Client.AutoReconnect = true;
             Client.AutoRejoin = true;
+            Client.AutoRelogin = true;
             Client.Encoding = Encoding.GetEncoding(Config.Encoding);
             Client.SendDelay = Config.SendDelay;
             Client.ActiveChannelSyncing = true;
