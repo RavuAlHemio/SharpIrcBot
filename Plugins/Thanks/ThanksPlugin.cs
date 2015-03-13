@@ -14,8 +14,8 @@ namespace Thanks
     public class ThanksPlugin : IPlugin
     {
         private static readonly ILog Logger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        private static readonly Regex ThankRegex = new Regex("^!(?:thank|thanks|thx)[ ]+([^ ]+)$");
-        private static readonly Regex ThankedRegex = new Regex("^!thanked[ ]+([^ ]+)$");
+        private static readonly Regex ThankRegex = new Regex("^[ ]*!(?:thank|thanks|thx)[ ]+([^ ]+)[ ]*$");
+        private static readonly Regex ThankedRegex = new Regex("^[ ]*!thanked[ ]+([^ ]+)[ ]*$");
 
         protected IrcClient Client;
         protected ThanksConfig Config;
