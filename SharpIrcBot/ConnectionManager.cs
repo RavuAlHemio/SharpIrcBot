@@ -15,18 +15,21 @@ namespace SharpIrcBot
         public readonly IrcClient Client;
 
         protected Thread IrcThread;
+        protected CancellationTokenSource Canceller;
 
         public ConnectionManager(BotConfig config)
         {
             Config = config;
-            Client = new IrcClient();
-
-            Client.AutoReconnect = true;
-            Client.AutoRejoin = true;
-            Client.AutoRelogin = true;
-            Client.Encoding = Encoding.GetEncoding(Config.Encoding);
-            Client.SendDelay = Config.SendDelay;
-            Client.ActiveChannelSyncing = true;
+            Client = new IrcClient
+            {
+                AutoReconnect = false,
+                AutoRejoin = false,
+                AutoRelogin = false,
+                Encoding = Encoding.GetEncoding(Config.Encoding),
+                SendDelay = Config.SendDelay,
+                ActiveChannelSyncing = true
+            };
+            Canceller = new CancellationTokenSource();
         }
 
         public void Start()
@@ -40,20 +43,26 @@ namespace SharpIrcBot
 
         public void Stop()
         {
-            Client.AutoReconnect = false;
+            Canceller.Cancel();
             Client.Disconnect();
             IrcThread.Join();
         }
 
         protected virtual void OuterProc()
         {
-            try
+            var cancelToken = Canceller.Token;
+
+            while (!cancelToken.IsCancellationRequested)
             {
-                Proc();
-            }
-            catch (Exception exc)
-            {
-                Logger.Error("exception while running IRC", exc);
+                try
+                {
+                    Proc();
+                }
+                catch (Exception exc)
+                {
+                    Logger.Error("exception while running IRC", exc);
+                    Client.Disconnect();
+                }
             }
         }
 
