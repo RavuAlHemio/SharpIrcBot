@@ -44,8 +44,19 @@ namespace SharpIrcBot
         public void Stop()
         {
             Canceller.Cancel();
-            Client.Disconnect();
+            DisconnectOrWhatever();
             IrcThread.Join();
+        }
+
+        protected void DisconnectOrWhatever()
+        {
+            try
+            {
+                Client.Disconnect();
+            }
+            catch (NotConnectedException)
+            {
+            }
         }
 
         protected virtual void OuterProc()
@@ -61,7 +72,7 @@ namespace SharpIrcBot
                 catch (Exception exc)
                 {
                     Logger.Error("exception while running IRC", exc);
-                    Client.Disconnect();
+                    DisconnectOrWhatever();
                 }
             }
         }
@@ -85,7 +96,7 @@ namespace SharpIrcBot
             Client.Listen();
 
             // disconnect
-            Client.Disconnect();
+            DisconnectOrWhatever();
         }
     }
 }
