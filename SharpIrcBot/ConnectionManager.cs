@@ -32,6 +32,7 @@ namespace SharpIrcBot
                 SupportNonRfc = true,
                 ActiveChannelSyncing = true
             };
+            Client.OnCtcpRequest += HandleCtcpRequest;
             Canceller = new CancellationTokenSource();
         }
 
@@ -100,6 +101,36 @@ namespace SharpIrcBot
 
             // disconnect
             DisconnectOrWhatever();
+        }
+
+        protected virtual void HandleCtcpRequest(object sender, CtcpEventArgs e)
+        {
+            try
+            {
+                switch (e.CtcpCommand)
+                {
+                    case "VERSION":
+                        Client.SendMessage(SendType.CtcpReply, e.Data.Nick, "VERSION " + Config.CtcpVersionResponse);
+                        break;
+                    case "FINGER":
+                        Client.SendMessage(SendType.CtcpReply, e.Data.Nick, "FINGER " + Config.CtcpFingerResponse);
+                        break;
+                    case "PING":
+                        if (e.Data.Message.Length > 7)
+                        {
+                            Client.SendMessage(SendType.CtcpReply, e.Data.Nick, "PONG " + e.Data.Message.Substring(6, e.Data.Message.Length - 7));
+                        }
+                        else
+                        {
+                            Client.SendMessage(SendType.CtcpReply, e.Data.Nick, "PONG");
+                        }
+                        break;
+                }
+            }
+            catch (Exception exc)
+            {
+                Logger.Warn("exception while handling CTCP request", exc);
+            }
         }
     }
 }

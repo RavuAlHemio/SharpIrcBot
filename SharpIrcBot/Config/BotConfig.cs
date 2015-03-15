@@ -24,6 +24,9 @@ namespace SharpIrcBot
         public List<string> AutoJoinChannels { get; set; }
         public List<PluginConfig> Plugins { get; set; }
 
+        public string CtcpVersionResponse { get; set; }
+        public string CtcpFingerResponse { get; set; }
+
         public BotConfig(JObject obj)
         {
             ServerPort = 6669;
@@ -36,6 +39,9 @@ namespace SharpIrcBot
             AutoConnectCommands = new List<string>();
             AutoJoinChannels = new List<string>();
             Plugins = new List<PluginConfig>();
+
+            CtcpVersionResponse = "SharpIrcBot";
+            CtcpFingerResponse = "I am a bot. I have no fingers.";
 
             JsonSerializer.CreateDefault().Populate(obj.CreateReader(), this);
 
