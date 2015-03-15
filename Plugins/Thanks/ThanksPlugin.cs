@@ -17,15 +17,15 @@ namespace Thanks
         private static readonly Regex ThankRegex = new Regex("^[ ]*!(?:thank|thanks|thx)[ ]+([^ ]+)[ ]*$");
         private static readonly Regex ThankedRegex = new Regex("^[ ]*!thanked[ ]+([^ ]+)[ ]*$");
 
-        protected IrcClient Client;
+        protected ConnectionManager ConnectionManager;
         protected ThanksConfig Config;
 
-        public ThanksPlugin(IrcClient client, JObject config)
+        public ThanksPlugin(ConnectionManager connMgr, JObject config)
         {
-            Client = client;
+            ConnectionManager = connMgr;
             Config = new ThanksConfig(config);
 
-            Client.OnChannelMessage += HandleChannelMessage;
+            ConnectionManager.ChannelMessage += HandleChannelMessage;
         }
 
         private void HandleChannelMessage(object sender, IrcEventArgs args)
@@ -43,7 +43,7 @@ namespace Thanks
         protected void ActuallyHandleChannelMessage(object sender, IrcEventArgs args)
         {
             var message = args.Data;
-            if (message.Type != ReceiveType.ChannelMessage || message.Nick == Client.Nickname)
+            if (message.Type != ReceiveType.ChannelMessage || message.Nick == ConnectionManager.Client.Nickname)
             {
                 return;
             }
@@ -58,7 +58,7 @@ namespace Thanks
 
                 if (thankeeLower == thankerLower)
                 {
-                    Client.SendMessage(SendType.Message, message.Channel, string.Format(
+                    ConnectionManager.Client.SendMessage(SendType.Message, message.Channel, string.Format(
                         "You are so full of yourself, {0}.",
                         thanker
                     ));
@@ -83,7 +83,7 @@ namespace Thanks
                     thankedCount = ctx.ThanksEntries.Count(te => te.ThankeeLowercase == thankeeLower);
                 }
 
-                Client.SendMessage(SendType.Message, message.Channel, string.Format(
+                ConnectionManager.Client.SendMessage(SendType.Message, message.Channel, string.Format(
                     "{0}: Alright! By the way, {1} has been thanked {2} until now.",
                     message.Nick,
                     thankee,
@@ -145,7 +145,7 @@ namespace Thanks
                     );
                 }
 
-                Client.SendMessage(SendType.Message, message.Channel, string.Format(
+                ConnectionManager.Client.SendMessage(SendType.Message, message.Channel, string.Format(
                     "{0}: {1} has {2} until now.{3}",
                     message.Nick,
                     nickname,
@@ -177,7 +177,7 @@ namespace Thanks
                     topStrings.Add(string.Format("{0}: {1}", thankeeAndCount.Nickname, thankeeAndCount.Count));
                 }
 
-                Client.SendMessage(SendType.Message, message.Channel, string.Format(
+                ConnectionManager.Client.SendMessage(SendType.Message, message.Channel, string.Format(
                     "{0}: {1}",
                     message.Nick,
                     string.Join(", ", topStrings)

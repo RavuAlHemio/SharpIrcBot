@@ -5,6 +5,7 @@ using System.Text;
 using log4net;
 using Meebey.SmartIrc4net;
 using Newtonsoft.Json.Linq;
+using SharpIrcBot;
 
 namespace Belch
 {
@@ -14,12 +15,12 @@ namespace Belch
 
         private static readonly int[] SkittlesCodes = {1, 2, 3, 4, 5, 6, 7, 10, 12, 13};
 
-        protected IrcClient Client;
+        protected ConnectionManager ConnectionManager;
 
-        public BelchPlugin(IrcClient client, JObject config)
+        public BelchPlugin(ConnectionManager connMgr, JObject config)
         {
-            Client = client;
-            Client.OnChannelMessage += HandleChannelMessage;
+            ConnectionManager = connMgr;
+            ConnectionManager.ChannelMessage += HandleChannelMessage;
         }
 
         private void HandleChannelMessage(object sender, IrcEventArgs args)
@@ -39,7 +40,7 @@ namespace Belch
             var msgArr = args.Data.MessageArray;
             if (msgArr.Length == 1 && string.Equals(msgArr[0], "!belch"))
             {
-                Client.SendMessage(SendType.Action, args.Data.Channel, "belches loudly");
+                ConnectionManager.Client.SendMessage(SendType.Action, args.Data.Channel, "belches loudly");
             }
 
             if (msgArr.Length > 1 && msgArr[0] == "!skittles")
@@ -56,7 +57,7 @@ namespace Belch
                 // reset formatting
                 skittledMessage.Append("\x0F");
 
-                Client.SendMessage(SendType.Message, args.Data.Channel, skittledMessage.ToString());
+                ConnectionManager.Client.SendMessage(SendType.Message, args.Data.Channel, skittledMessage.ToString());
             }
         }
     }

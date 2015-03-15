@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Reflection;
 using System.Text;
 using System.Threading;
@@ -16,9 +17,15 @@ namespace SharpIrcBot
 
         protected Thread IrcThread;
         protected CancellationTokenSource Canceller;
+        protected HashSet<string> SyncedChannels;
+
+        public event EventHandler<IrcEventArgs> ChannelMessage;
+        public event EventHandler<IrcEventArgs> ChannelAction;
 
         public ConnectionManager(BotConfig config)
         {
+            SyncedChannels = new HashSet<string>();
+
             Config = config;
             Client = new IrcClient
             {
@@ -33,6 +40,9 @@ namespace SharpIrcBot
                 ActiveChannelSyncing = true
             };
             Client.OnCtcpRequest += HandleCtcpRequest;
+            Client.OnChannelMessage += HandleChannelMessage;
+            Client.OnChannelAction += HandleChannelAction;
+            Client.OnChannelActiveSynced += HandleChannelSynced;
             Canceller = new CancellationTokenSource();
         }
 
@@ -83,6 +93,8 @@ namespace SharpIrcBot
 
         protected virtual void Proc()
         {
+            SyncedChannels.Clear();
+
             Client.Connect(Config.ServerHostname, Config.ServerPort);
 
             Client.Login(Config.Nickname, Config.DisplayName, 0, Config.Username, Config.ServerPassword);
@@ -130,6 +142,45 @@ namespace SharpIrcBot
             catch (Exception exc)
             {
                 Logger.Warn("exception while handling CTCP request", exc);
+            }
+        }
+
+        protected virtual void HandleChannelMessage(object sender, IrcEventArgs e)
+        {
+            if (!SyncedChannels.Contains(e.Data.Channel))
+            {
+                return;
+            }
+            OnChannelMessage(e);
+        }
+
+        protected virtual void HandleChannelAction(object sender, ActionEventArgs e)
+        {
+            if (!SyncedChannels.Contains(e.Data.Channel))
+            {
+                return;
+            }
+            OnChannelAction(e);
+        }
+
+        protected virtual void HandleChannelSynced(object sender, IrcEventArgs e)
+        {
+            SyncedChannels.Add(e.Data.Channel);
+        }
+
+        protected virtual void OnChannelMessage(IrcEventArgs e)
+        {
+            if (ChannelMessage != null)
+            {
+                ChannelMessage(this, e);
+            }
+        }
+
+        protected virtual void OnChannelAction(IrcEventArgs e)
+        {
+            if (ChannelAction != null)
+            {
+                ChannelMessage(this, e);
             }
         }
     }

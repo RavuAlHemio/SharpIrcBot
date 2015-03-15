@@ -13,7 +13,7 @@ namespace SharpIrcBotCLI
             var connMgr = new ConnectionManager(config);
             var pluginMgr = new PluginManager(config);
 
-            pluginMgr.LoadPlugins(connMgr.Client);
+            pluginMgr.LoadPlugins(connMgr);
             connMgr.Start();
 
             Console.Error.WriteLine("Press Enter or Esc to quit.");

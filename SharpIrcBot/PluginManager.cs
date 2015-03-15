@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
-using Meebey.SmartIrc4net;
 using Newtonsoft.Json.Linq;
 
 namespace SharpIrcBot
@@ -17,7 +16,7 @@ namespace SharpIrcBot
             Plugins = new List<IPlugin>();
         }
 
-        public void LoadPlugins(IrcClient client)
+        public void LoadPlugins(ConnectionManager connManager)
         {
             foreach (var plugin in Config.Plugins)
             {
@@ -27,8 +26,8 @@ namespace SharpIrcBot
                 {
                     throw new ArgumentException("class is not a plugin");
                 }
-                var ctor = type.GetConstructor(new [] {typeof(IrcClient), typeof(JObject)});
-                var pluginObject = (IPlugin)ctor.Invoke(new object[] {client, plugin.Config});
+                var ctor = type.GetConstructor(new [] {typeof(ConnectionManager), typeof(JObject)});
+                var pluginObject = (IPlugin)ctor.Invoke(new object[] {connManager, plugin.Config});
                 Plugins.Add(pluginObject);
             }
         }
