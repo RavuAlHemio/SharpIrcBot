@@ -22,6 +22,8 @@ namespace SharpIrcBot
             Config = config;
             Client = new IrcClient
             {
+                UseSsl = Config.UseTls,
+                ValidateServerCertificate = Config.VerifyTlsCertificate,
                 AutoReconnect = false,
                 AutoRejoin = false,
                 AutoRelogin = false,

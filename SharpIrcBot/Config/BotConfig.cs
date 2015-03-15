@@ -10,12 +10,15 @@ namespace SharpIrcBot
     {
         public string ServerHostname { get; set; }
         public int ServerPort { get; set; }
+        public bool UseTls { get; set; }
+        public bool VerifyTlsCertificate { get; set; }
 
         public string Nickname { get; set; }
         public string Username { get; set; }
         public string DisplayName { get; set; }
         public string ServerPassword { get; set; }
         public string Encoding { get; set; }
+
         public int SendDelay { get; set; }
         public List<string> AutoConnectCommands { get; set; }
         public List<string> AutoJoinChannels { get; set; }
@@ -24,11 +27,15 @@ namespace SharpIrcBot
         public BotConfig(JObject obj)
         {
             ServerPort = 6669;
+            UseTls = false;
+            VerifyTlsCertificate = false;
+
+            Encoding = "utf-8";
+
+            SendDelay = 200;
             AutoConnectCommands = new List<string>();
             AutoJoinChannels = new List<string>();
             Plugins = new List<PluginConfig>();
-            Encoding = "utf-8";
-            SendDelay = 200;
 
             JsonSerializer.CreateDefault().Populate(obj.CreateReader(), this);
 
