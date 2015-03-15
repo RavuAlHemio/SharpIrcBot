@@ -29,6 +29,7 @@ namespace SharpIrcBot
                 AutoRelogin = false,
                 Encoding = Encoding.GetEncoding(Config.Encoding),
                 SendDelay = Config.SendDelay,
+                SupportNonRfc = true,
                 ActiveChannelSyncing = true
             };
             Canceller = new CancellationTokenSource();
