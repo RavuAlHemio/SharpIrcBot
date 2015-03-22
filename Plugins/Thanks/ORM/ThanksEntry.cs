@@ -31,5 +31,9 @@ namespace Thanks.ORM
         [Column("channel", Order = 5)]
         [MaxLength(255)]
         public string Channel { get; set; }
+
+        [Required]
+        [Column("deleted", Order = 6)]
+        public bool Deleted { get; set; }
     }
 }

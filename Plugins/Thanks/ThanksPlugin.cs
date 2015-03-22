@@ -75,12 +75,13 @@ namespace Thanks
                         Channel = message.Channel,
                         ThankerLowercase = thankerLower,
                         ThankeeLowercase = thankeeLower,
-                        Timestamp = DateTime.Now.ToUniversalTimeForDatabase()
+                        Timestamp = DateTime.Now.ToUniversalTimeForDatabase(),
+                        Deleted = false
                     };
                     ctx.ThanksEntries.Add(entry);
                     ctx.SaveChanges();
 
-                    thankedCount = ctx.ThanksEntries.Count(te => te.ThankeeLowercase == thankeeLower);
+                    thankedCount = ctx.ThanksEntries.Count(te => te.ThankeeLowercase == thankeeLower && !te.Deleted);
                 }
 
                 ConnectionManager.Client.SendMessage(SendType.Message, message.Channel, string.Format(
@@ -101,7 +102,7 @@ namespace Thanks
                 long thankedCount;
                 using (var ctx = GetNewContext())
                 {
-                    thankedCount = ctx.ThanksEntries.Count(te => te.ThankeeLowercase == lowerNickname);
+                    thankedCount = ctx.ThanksEntries.Count(te => te.ThankeeLowercase == lowerNickname && !te.Deleted);
                 }
 
                 string countPhrase;
@@ -127,7 +128,7 @@ namespace Thanks
                     using (var ctx = GetNewContext())
                     {
                         mostGratefulStrings = ctx.ThanksEntries
-                            .Where(te => te.ThankeeLowercase == lowerNickname)
+                            .Where(te => te.ThankeeLowercase == lowerNickname && !te.Deleted)
                             .GroupBy(te => te.ThankerLowercase, (thanker, thanksEnumerable) => new NicknameAndCount { Nickname = thanker, Count = thanksEnumerable.Count() })
                             .OrderByDescending(te => te.Count)
                             .Take(Config.MostGratefulCount + 1)
@@ -160,6 +161,7 @@ namespace Thanks
                 using (var ctx = GetNewContext())
                 {
                     top = ctx.ThanksEntries
+                        .Where(te => !te.Deleted)
                         .GroupBy(te => te.ThankeeLowercase, (thankee, thanksEntries) => new NicknameAndCount
                         {
                             Nickname = thankee,
