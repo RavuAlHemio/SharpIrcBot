@@ -72,7 +72,7 @@ namespace Thanks
                     ConnectionManager.Client.SendMessage(SendType.Message, message.Channel, string.Format(
                         "{0}: Unfortunately, {1} doesn't seem to be logged in with NickServ.",
                         thankerNick,
-                        thankee
+                        thankeeNick
                     ));
                     return;
                 }
