@@ -207,6 +207,8 @@ namespace SharpIrcBot
 
         protected virtual void HandleNickChange(object sender, NickChangeEventArgs e)
         {
+            // remove the old name
+            NicksToLogins.Remove(e.OldNickname);
             // send WHOIS to get their registered name
             Client.RfcWhois(e.NewNickname);
         }
