@@ -201,7 +201,9 @@ namespace SharpIrcBot
 
         protected virtual void HandleJoin(object sender, JoinEventArgs e)
         {
-            // delay a few seconds, then send WHOIS to get their registered name
+            // send WHOIS immediately, then delay a few seconds and send WHOIS again in case they identified after
+            // joining
+            Client.RfcWhois(e.Who);
             DelayThenWhois(e.Who);
         }
 
@@ -209,6 +211,7 @@ namespace SharpIrcBot
         {
             // remove the old name
             NicksToLogins.Remove(e.OldNickname);
+
             // send WHOIS to get their registered name
             Client.RfcWhois(e.NewNickname);
         }
