@@ -19,7 +19,7 @@ namespace Messenger
     public class MessengerPlugin : IPlugin
     {
         private static readonly ILog Logger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        private static readonly Regex SendMessageRegex = new Regex("^[ ]*!(s?)(?:msg|mail)[ ]+([^ ]+)[ ]+(.+)[ ]*$");
+        private static readonly Regex SendMessageRegex = new Regex("^[ ]*!(s?)(?:msg|mail)[ ]+([^ ]+):?[ ]+(.+)[ ]*$");
         private static readonly Regex DeliverMessageRegex = new Regex("^[ ]*!deliver(?:msg|mail)[ ]+([1-9][0-9]*)[ ]*$");
         private static readonly Regex ReplayMessageRegex = new Regex("^[ ]*!replay(?:msg|mail)[ ]+([1-9][0-9]*)$[ ]*");
         private static readonly Regex IgnoreMessageRegex = new Regex("^[ ]*!((?:un)?ignore)(?:msg|mail)[ ]+([^ ]+)$[ ]*");
