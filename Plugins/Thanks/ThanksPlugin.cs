@@ -51,16 +51,39 @@ namespace Thanks
             var thankMatch = ThankRegex.Match(message.Message);
             if (thankMatch.Success)
             {
-                var thanker = message.Nick;
+                var thankerNick = message.Nick;
+                var thanker = ConnectionManager.RegisteredNameForNick(thankerNick);
+
+                if (thanker == null)
+                {
+                    ConnectionManager.Client.SendMessage(SendType.Message, message.Channel, string.Format(
+                        "{0}: You can't use this unless you're logged in with NickServ.",
+                        thankerNick
+                    ));
+                    return;
+                }
+
                 var thankerLower = thanker.ToLowerInvariant();
-                var thankee = thankMatch.Groups[1].Value;
+                var thankeeNick = thankMatch.Groups[1].Value;
+                var thankee = ConnectionManager.RegisteredNameForNick(thankeeNick);
+
+                if (thankee == null)
+                {
+                    ConnectionManager.Client.SendMessage(SendType.Message, message.Channel, string.Format(
+                        "{0}: Unfortunately, {1} doesn't seem to be logged in with NickServ.",
+                        thankerNick,
+                        thankee
+                    ));
+                    return;
+                }
+
                 var thankeeLower = thankee.ToLowerInvariant();
 
                 if (thankeeLower == thankerLower)
                 {
                     ConnectionManager.Client.SendMessage(SendType.Message, message.Channel, string.Format(
                         "You are so full of yourself, {0}.",
-                        thanker
+                        thankerNick
                     ));
                     return;
                 }

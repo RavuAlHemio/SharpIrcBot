@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using log4net;
 using Meebey.SmartIrc4net;
 
@@ -18,6 +20,7 @@ namespace SharpIrcBot
         protected Thread IrcThread;
         protected CancellationTokenSource Canceller;
         protected HashSet<string> SyncedChannels;
+        protected Dictionary<string, string> NicksToLogins;
 
         public event EventHandler<IrcEventArgs> ChannelMessage;
         public event EventHandler<IrcEventArgs> ChannelAction;
@@ -25,6 +28,7 @@ namespace SharpIrcBot
         public ConnectionManager(BotConfig config)
         {
             SyncedChannels = new HashSet<string>();
+            NicksToLogins = new Dictionary<string, string>();
 
             Config = config;
             Client = new IrcClient
@@ -43,6 +47,10 @@ namespace SharpIrcBot
             Client.OnChannelMessage += HandleChannelMessage;
             Client.OnChannelAction += HandleChannelAction;
             Client.OnChannelActiveSynced += HandleChannelSynced;
+            Client.OnRawMessage += HandleRegisteredAs;
+            Client.OnNames += HandleNames;
+            Client.OnJoin += HandleJoin;
+            Client.OnNickChange += HandleNickChange;
             Canceller = new CancellationTokenSource();
         }
 
@@ -168,6 +176,41 @@ namespace SharpIrcBot
             SyncedChannels.Add(e.Data.Channel);
         }
 
+        protected virtual void HandleRegisteredAs(object sender, IrcEventArgs e)
+        {
+            if ((int)e.Data.ReplyCode != 330)
+            {
+                return;
+            }
+
+            // :irc.example.com 330 MYNICK THEIRNICK THEIRLOGIN :is logged in as
+            NicksToLogins[e.Data.RawMessageArray[3].ToLowerInvariant()] = e.Data.RawMessageArray[4];
+        }
+
+        protected virtual void HandleNames(object sender, NamesEventArgs e)
+        {
+            // send WHOIS for every user to get their registered name
+            // do this in packages to reduce traffic
+            const int packageSize = 5;
+
+            for (int i = 0; i < e.UserList.Length; i += packageSize)
+            {
+                Client.RfcWhois(e.UserList.Skip(i).Take(packageSize).ToArray());
+            }
+        }
+
+        protected virtual void HandleJoin(object sender, JoinEventArgs e)
+        {
+            // delay a few seconds, then send WHOIS to get their registered name
+            DelayThenWhois(e.Who);
+        }
+
+        protected virtual void HandleNickChange(object sender, NickChangeEventArgs e)
+        {
+            // send WHOIS to get their registered name
+            Client.RfcWhois(e.NewNickname);
+        }
+
         protected virtual void OnChannelMessage(IrcEventArgs e)
         {
             if (ChannelMessage != null)
@@ -182,6 +225,36 @@ namespace SharpIrcBot
             {
                 ChannelMessage(this, e);
             }
+        }
+
+        public string RegisteredNameForNick(string nick)
+        {
+            if (!Config.HonorUserRegistrations)
+            {
+                // don't give a damn
+                return nick;
+            }
+
+            var lowerNick = nick.ToLowerInvariant();
+            if (NicksToLogins.ContainsKey(lowerNick))
+            {
+                return NicksToLogins[lowerNick];
+            }
+
+            // maybe they are registered now...
+            Client.RfcWhois(nick);
+
+            // return null for the time being
+            return null;
+        }
+
+        protected void DelayThenWhois(string nick)
+        {
+            Task.Run(async () =>
+            {
+                await Task.Delay(TimeSpan.FromSeconds(Config.JoinWhoisDelay));
+                Client.RfcWhois(nick);
+            });
         }
     }
 }

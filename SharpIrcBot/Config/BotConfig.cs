@@ -27,6 +27,9 @@ namespace SharpIrcBot
         public string CtcpVersionResponse { get; set; }
         public string CtcpFingerResponse { get; set; }
 
+        public bool HonorUserRegistrations { get; set; }
+        public double JoinWhoisDelay { get; set; }
+
         public BotConfig(JObject obj)
         {
             ServerPort = 6669;
@@ -42,6 +45,9 @@ namespace SharpIrcBot
 
             CtcpVersionResponse = "SharpIrcBot";
             CtcpFingerResponse = "I am a bot. I have no fingers.";
+
+            HonorUserRegistrations = true;
+            JoinWhoisDelay = 5.0;
 
             JsonSerializer.CreateDefault().Populate(obj.CreateReader(), this);
 

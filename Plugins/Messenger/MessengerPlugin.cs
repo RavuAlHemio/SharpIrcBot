@@ -43,12 +43,16 @@ namespace Messenger
                 return;
             }
 
-            var rawRecipient = match.Groups[2].Value;
+            var rawRecipientNick = match.Groups[2].Value;
             var rawBody = match.Groups[3].Value;
 
-            var lowerSender = message.Nick.ToLowerInvariant();
-            var recipient = SharpIrcBotUtil.RemoveControlCharactersAndTrim(rawRecipient);
+            var sender = ConnectionManager.RegisteredNameForNick(message.Nick) ?? message.Nick;
+            var lowerSender = sender.ToLowerInvariant();
+
+            var recipientNick = SharpIrcBotUtil.RemoveControlCharactersAndTrim(rawRecipientNick);
+            var recipient = ConnectionManager.RegisteredNameForNick(recipientNick) ?? recipientNick;
             var lowerRecipient = recipient.ToLowerInvariant();
+
             var body = SharpIrcBotUtil.RemoveControlCharactersAndTrim(rawBody);
 
             if (lowerRecipient.Length == 0)
@@ -77,10 +81,11 @@ namespace Messenger
             if (isIgnored)
             {
                 Logger.DebugFormat(
-                    "{0} wants to send message {1} to {2}, but the recipient is ignoring the sender",
+                    "{0} ({3}) wants to send message {1} to {2}, but the recipient is ignoring the sender",
                     SharpIrcBotUtil.LiteralString(message.Nick),
                     SharpIrcBotUtil.LiteralString(body),
-                    SharpIrcBotUtil.LiteralString(recipient)
+                    SharpIrcBotUtil.LiteralString(recipient),
+                    SharpIrcBotUtil.LiteralString(sender)
                 );
                 ConnectionManager.Client.SendMessage(SendType.Message, message.Channel, string.Format(
                     "{0}: Can\u2019t send a message to {1}\u2014they\u2019re ignoring you.",
@@ -91,10 +96,11 @@ namespace Messenger
             }
 
             Logger.DebugFormat(
-                "{0} sending message {1} to {2}",
+                "{0} ({3}) sending message {1} to {2}",
                 SharpIrcBotUtil.LiteralString(message.Nick),
                 SharpIrcBotUtil.LiteralString(body),
-                SharpIrcBotUtil.LiteralString(recipient)
+                SharpIrcBotUtil.LiteralString(recipient),
+                SharpIrcBotUtil.LiteralString(sender)
             );
 
             using (var ctx = GetNewContext())
@@ -332,9 +338,11 @@ namespace Messenger
             }
 
             var command = match.Groups[1].Value;
-            var blockSender = match.Groups[2].Value.Trim();
+            var blockSenderNickname = match.Groups[2].Value.Trim();
+            var blockSender = ConnectionManager.RegisteredNameForNick(blockSenderNickname) ?? blockSenderNickname;
             var blockSenderLower = blockSender.ToLowerInvariant();
-            var blockRecipientLower = message.Nick.ToLowerInvariant();
+            var blockRecipient = ConnectionManager.RegisteredNameForNick(message.Nick) ?? message.Nick;
+            var blockRecipientLower = blockRecipient.ToLowerInvariant();
 
             bool isIgnored;
             using (var ctx = GetNewContext())
@@ -366,9 +374,10 @@ namespace Messenger
                     ctx.SaveChanges();
                 }
                 Logger.DebugFormat(
-                    "{0} is now ignoring {1}",
+                    "{0} ({2}) is now ignoring {1}",
                     SharpIrcBotUtil.LiteralString(message.Nick),
-                    SharpIrcBotUtil.LiteralString(blockSender)
+                    SharpIrcBotUtil.LiteralString(blockSender),
+                    SharpIrcBotUtil.LiteralString(blockRecipient)
                 );
 
                 ConnectionManager.Client.SendMessage(SendType.Message, message.Channel, string.Format(
@@ -397,9 +406,10 @@ namespace Messenger
                     ctx.SaveChanges();
                 }
                 Logger.DebugFormat(
-                    "{0} is not ignoring {1} anymore",
+                    "{0} ({2}) is not ignoring {1} anymore",
                     SharpIrcBotUtil.LiteralString(message.Nick),
-                    SharpIrcBotUtil.LiteralString(blockSender)
+                    SharpIrcBotUtil.LiteralString(blockSender),
+                    SharpIrcBotUtil.LiteralString(blockRecipient)
                 );
 
                 ConnectionManager.Client.SendMessage(SendType.Message, message.Channel, string.Format(
@@ -442,7 +452,8 @@ namespace Messenger
                 return;
             }
 
-            var senderLower = message.Nick.ToLowerInvariant();
+            var senderUser = ConnectionManager.RegisteredNameForNick(message.Nick) ?? message.Nick;
+            var senderLower = senderUser.ToLowerInvariant();
 
             PotentialMessageSend(message);
             PotentialDeliverRequest(message);
