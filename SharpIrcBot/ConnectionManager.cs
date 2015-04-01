@@ -195,6 +195,12 @@ namespace SharpIrcBot
 
         protected virtual void HandleRegisteredAs(object sender, IrcEventArgs e)
         {
+            if (CurrentWhoisMapping == null)
+            {
+                // nothing to do here right now
+                return;
+            }
+
             if ((int) e.Data.ReplyCode == 330)
             {
                 // :irc.example.com 330 MYNICK THEIRNICK THEIRLOGIN :is logged in as
