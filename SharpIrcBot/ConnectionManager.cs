@@ -206,16 +206,30 @@ namespace SharpIrcBot
                 // :irc.example.com 330 MYNICK THEIRNICK THEIRLOGIN :is logged in as
                 CurrentWhoisMapping[e.Data.RawMessageArray[3].ToLowerInvariant()] = e.Data.RawMessageArray[4];
             }
+            else if (e.Data.ReplyCode == ReplyCode.WhoIsUser)
+            {
+                // :irc.example.com 311 MYNICK THEIRNICK THEIRHOST * :REALNAME
+                // mark that we have at least seen this user
+                CurrentWhoisMapping[e.Data.RawMessageArray[3]] = null;
+            }
             else if (e.Data.ReplyCode == ReplyCode.EndOfWhoIs)
             {
                 // :irc.example.com 330 MYNICK :End of WHOIS list
 
                 // tally our results
+                if (!CurrentWhoisUsernames.All(CurrentWhoisMapping.ContainsKey))
+                {
+                    // a user whose info has been requested has not been handled yet
+                    // wait until later
+                    return;
+                }
+
                 foreach (var username in CurrentWhoisUsernames)
                 {
-                    if (CurrentWhoisMapping.ContainsKey(username))
+                    if (CurrentWhoisMapping[username] != null)
                     {
-                        Logger.DebugFormat("reg check result: {0} is logged in as {1}", username, CurrentWhoisMapping[username]);
+                        Logger.DebugFormat("reg check result: {0} is logged in as {1}", username,
+                            CurrentWhoisMapping[username]);
                         NicksToLogins[username] = CurrentWhoisMapping[username];
                     }
                     else
