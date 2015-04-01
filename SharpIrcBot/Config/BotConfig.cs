@@ -28,7 +28,7 @@ namespace SharpIrcBot
         public string CtcpFingerResponse { get; set; }
 
         public bool HonorUserRegistrations { get; set; }
-        public double JoinWhoisDelay { get; set; }
+        public double WhoisUpdateIntervalSeconds { get; set; }
 
         public BotConfig(JObject obj)
         {
@@ -47,7 +47,7 @@ namespace SharpIrcBot
             CtcpFingerResponse = "I am a bot. I have no fingers.";
 
             HonorUserRegistrations = true;
-            JoinWhoisDelay = 5.0;
+            WhoisUpdateIntervalSeconds = 300.0;
 
             JsonSerializer.CreateDefault().Populate(obj.CreateReader(), this);
 

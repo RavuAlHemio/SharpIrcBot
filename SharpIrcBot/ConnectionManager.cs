@@ -4,9 +4,9 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using log4net;
 using Meebey.SmartIrc4net;
+using Timer = System.Timers.Timer;
 
 namespace SharpIrcBot
 {
@@ -21,6 +21,9 @@ namespace SharpIrcBot
         protected CancellationTokenSource Canceller;
         protected HashSet<string> SyncedChannels;
         protected Dictionary<string, string> NicksToLogins;
+        protected Dictionary<string, string> CurrentWhoisMapping;
+        protected HashSet<string> CurrentWhoisUsernames;
+        protected Timer WhoisUpdateTimer;
 
         public event EventHandler<IrcEventArgs> ChannelMessage;
         public event EventHandler<IrcEventArgs> ChannelAction;
@@ -29,6 +32,8 @@ namespace SharpIrcBot
         {
             SyncedChannels = new HashSet<string>();
             NicksToLogins = new Dictionary<string, string>();
+            CurrentWhoisMapping = null;
+            CurrentWhoisUsernames = null;
 
             Config = config;
             Client = new IrcClient
@@ -52,6 +57,15 @@ namespace SharpIrcBot
             Client.OnJoin += HandleJoin;
             Client.OnNickChange += HandleNickChange;
             Canceller = new CancellationTokenSource();
+
+            WhoisUpdateTimer = new Timer(Config.WhoisUpdateIntervalSeconds * 1000.0);
+            WhoisUpdateTimer.Elapsed += (sender, args) =>
+            {
+                foreach (var channel in SyncedChannels)
+                {
+                    WhoisEveryoneInChannel(channel);
+                }
+            };
         }
 
         public void Start()
@@ -61,11 +75,14 @@ namespace SharpIrcBot
                 Name = "IRC thread"
             };
             IrcThread.Start();
+
+            WhoisUpdateTimer.Start();
         }
 
         public void Stop()
         {
             Canceller.Cancel();
+            WhoisUpdateTimer.Stop();
             DisconnectOrWhatever();
             IrcThread.Join();
         }
@@ -178,42 +195,53 @@ namespace SharpIrcBot
 
         protected virtual void HandleRegisteredAs(object sender, IrcEventArgs e)
         {
-            if ((int)e.Data.ReplyCode != 330)
+            if ((int) e.Data.ReplyCode == 330)
             {
-                return;
+                // :irc.example.com 330 MYNICK THEIRNICK THEIRLOGIN :is logged in as
+                CurrentWhoisMapping[e.Data.RawMessageArray[3].ToLowerInvariant()] = e.Data.RawMessageArray[4];
             }
+            else if (e.Data.ReplyCode == ReplyCode.EndOfWhoIs)
+            {
+                // :irc.example.com 330 MYNICK :End of WHOIS list
 
-            // :irc.example.com 330 MYNICK THEIRNICK THEIRLOGIN :is logged in as
-            NicksToLogins[e.Data.RawMessageArray[3].ToLowerInvariant()] = e.Data.RawMessageArray[4];
+                // tally our results
+                foreach (var username in CurrentWhoisUsernames)
+                {
+                    if (CurrentWhoisMapping.ContainsKey(username))
+                    {
+                        Logger.DebugFormat("reg check result: {0} is logged in as {1}", username, CurrentWhoisMapping[username]);
+                        NicksToLogins[username] = CurrentWhoisMapping[username];
+                    }
+                    else
+                    {
+                        // this user is not logged in
+                        Logger.DebugFormat("reg check result: {0} is not logged in", username);
+                        NicksToLogins.Remove(username);
+                    }
+                }
+
+                // clean up
+                CurrentWhoisMapping = null;
+                CurrentWhoisUsernames = null;
+            }
         }
 
         protected virtual void HandleNames(object sender, NamesEventArgs e)
         {
-            // send WHOIS for every user to get their registered name
-            // do this in packages to reduce traffic
-            const int packageSize = 5;
-
-            for (int i = 0; i < e.UserList.Length; i += packageSize)
-            {
-                Client.RfcWhois(e.UserList.Skip(i).Take(packageSize).ToArray());
-            }
-        }
-
-        protected virtual void HandleJoin(object sender, JoinEventArgs e)
-        {
-            // send WHOIS immediately, then delay a few seconds and send WHOIS again in case they identified after
-            // joining
-            Client.RfcWhois(e.Who);
-            DelayThenWhois(e.Who);
+            // update all the names
+            RunCheckRegistrationsOn(e.UserList);
         }
 
         protected virtual void HandleNickChange(object sender, NickChangeEventArgs e)
         {
-            // remove the old name
-            NicksToLogins.Remove(e.OldNickname);
+            // update both old and new nickname
+            RunCheckRegistrationsOn(e.OldNickname, e.NewNickname);
+        }
 
-            // send WHOIS to get their registered name
-            Client.RfcWhois(e.NewNickname);
+        protected virtual void HandleJoin(object sender, JoinEventArgs e)
+        {
+            // update this person
+            RunCheckRegistrationsOn(e.Who);
         }
 
         protected virtual void OnChannelMessage(IrcEventArgs e)
@@ -228,7 +256,7 @@ namespace SharpIrcBot
         {
             if (ChannelAction != null)
             {
-                ChannelMessage(this, e);
+                ChannelAction(this, e);
             }
         }
 
@@ -246,20 +274,43 @@ namespace SharpIrcBot
                 return NicksToLogins[lowerNick];
             }
 
-            // maybe they are registered now...
-            Client.RfcWhois(nick);
-
             // return null for the time being
             return null;
         }
 
-        protected void DelayThenWhois(string nick)
+        public void WhoisEveryoneInChannel(string channel)
         {
-            Task.Run(async () =>
+            // perform NAMES on the channel; the names response triggers the WHOIS waterfall
+            Client.RfcNames(channel);
+        }
+
+        protected bool RunCheckRegistrationsOn(params string[] nicknames)
+        {
+            if (CurrentWhoisMapping != null)
             {
-                await Task.Delay(TimeSpan.FromSeconds(Config.JoinWhoisDelay));
-                Client.RfcWhois(nick);
-            });
+                // not right now
+                Logger.Debug("not performing reg check; another one is active");
+                return false;
+            }
+
+            // prepare the list of users
+            CurrentWhoisMapping = new Dictionary<string, string>();
+            CurrentWhoisUsernames = new HashSet<string>(nicknames);
+
+            if (Logger.IsDebugEnabled)
+            {
+                Logger.DebugFormat("performing reg check on: {0}", string.Join(" ", nicknames));
+            }
+
+            // send WHOIS for every user to get their registered name
+            // do this in packages to reduce traffic
+            const int packageSize = 5;
+
+            for (int i = 0; i < nicknames.Length; i += packageSize)
+            {
+                Client.RfcWhois(nicknames.Skip(i).Take(packageSize).ToArray());
+            }
+            return true;
         }
     }
 }
