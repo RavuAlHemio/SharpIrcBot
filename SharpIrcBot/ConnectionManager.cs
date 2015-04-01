@@ -210,14 +210,14 @@ namespace SharpIrcBot
             {
                 // :irc.example.com 311 MYNICK THEIRNICK THEIRHOST * :REALNAME
                 // mark that we have at least seen this user
-                CurrentWhoisMapping[e.Data.RawMessageArray[3]] = null;
+                CurrentWhoisMapping[e.Data.RawMessageArray[3].ToLowerInvariant()] = null;
             }
             else if (e.Data.ReplyCode == ReplyCode.EndOfWhoIs)
             {
                 // :irc.example.com 330 MYNICK :End of WHOIS list
 
                 // tally our results
-                if (!CurrentWhoisUsernames.All(CurrentWhoisMapping.ContainsKey))
+                if (!CurrentWhoisUsernames.All(u => CurrentWhoisMapping.ContainsKey(u.ToLowerInvariant())))
                 {
                     // a user whose info has been requested has not been handled yet
                     // wait until later
@@ -226,17 +226,17 @@ namespace SharpIrcBot
 
                 foreach (var username in CurrentWhoisUsernames)
                 {
-                    if (CurrentWhoisMapping[username] != null)
+                    var lowerUsername = username.ToLowerInvariant();
+                    if (CurrentWhoisMapping[lowerUsername] != null)
                     {
-                        Logger.DebugFormat("reg check result: {0} is logged in as {1}", username,
-                            CurrentWhoisMapping[username]);
-                        NicksToLogins[username] = CurrentWhoisMapping[username];
+                        Logger.DebugFormat("reg check result: {0} is logged in as {1}", username, CurrentWhoisMapping[lowerUsername]);
+                        NicksToLogins[lowerUsername] = CurrentWhoisMapping[lowerUsername];
                     }
                     else
                     {
                         // this user is not logged in
                         Logger.DebugFormat("reg check result: {0} is not logged in", username);
-                        NicksToLogins.Remove(username);
+                        NicksToLogins.Remove(lowerUsername);
                     }
                 }
 
