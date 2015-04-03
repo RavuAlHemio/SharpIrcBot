@@ -297,5 +297,98 @@ namespace SharpIrcBot
             }
             return true;
         }
+
+        /// <remarks><paramref name="words"/> will be modified.</remarks>
+        protected string GetLongestWordPrefix(IList<string> words, int length = 230)
+        {
+            if (words.Count == 0)
+            {
+                throw new ArgumentException("words is empty", "words");
+            }
+
+            var firstWord = words[0];
+            words.RemoveAt(0);
+
+            if (Client.Encoding.GetBytes(firstWord).Length >= length)
+            {
+                // cutting on words isn't enough
+                var returnValue = new StringBuilder(firstWord);
+                var newFirstWord = new StringBuilder();
+
+                while (Client.Encoding.GetBytes(returnValue.ToString()).Length >= length)
+                {
+                    // move a character from the end of returnValue to the beginning of newFirstWord
+                    newFirstWord.Insert(0, returnValue[returnValue.Length - 1]);
+                    --returnValue.Length;
+                }
+
+                // replace the new first word and return the return value
+                words.Insert(0, newFirstWord.ToString());
+                return returnValue.ToString();
+            }
+
+            // start taking words
+            var ret = firstWord;
+            while (words.Count > 0)
+            {
+                var testReturn = ret.ToString() + " " + words[0];
+                if (Client.Encoding.GetBytes(testReturn).Length >= length)
+                {
+                    // nope, not this one anymore
+                    return ret.ToString();
+                }
+
+                // take a word
+                ret = testReturn;
+                words.RemoveAt(0);
+            }
+
+            // we took all the remaining words!
+            return ret;
+        }
+
+        public List<string> SplitMessageToLength(string message, int length = 230)
+        {
+            if (Client.Encoding.GetBytes(message).Length < length || message.Length == 0)
+            {
+                // short-circuit
+                return new List<string> { message };
+            }
+
+            var words = message.Split(' ').ToList();
+            var lines = new List<string>();
+            while (words.Count > 0)
+            {
+                var line = GetLongestWordPrefix(words, length);
+                lines.Add(line);
+            }
+            return lines;
+        }
+
+        public void SendChannelMessage(string channel, string message)
+        {
+            foreach (var line in SplitMessageToLength(message))
+            {
+                Client.SendMessage(SendType.Message, channel, line);
+            }
+        }
+
+        public void SendChannelMessageFormat(string channel, string format, params object[] args)
+        {
+            SendChannelMessage(channel, string.Format(format, args));
+        }
+
+        public void SendChannelAction(string channel, string message)
+        {
+            foreach (var line in SplitMessageToLength(message))
+            {
+                Client.SendMessage(SendType.Action, channel, line);
+            }
+        }
+
+        public void SendChannelActionFormat(string channel, string format, params object[] args)
+        {
+            SendChannelAction(channel, string.Format(format, args));
+        }
     }
 }

@@ -57,17 +57,17 @@ namespace Messenger
 
             if (lowerRecipient.Length == 0)
             {
-                ConnectionManager.Client.SendMessage(SendType.Message, message.Channel, string.Format("{0}: You must specify a name to deliver to!", message.Nick));
+                ConnectionManager.SendChannelMessageFormat(message.Channel, "{0}: You must specify a name to deliver to!", message.Nick);
                 return;
             }
             if (body.Length == 0)
             {
-                ConnectionManager.Client.SendMessage(SendType.Message, message.Channel, string.Format("{0}: You must specify a message to deliver!", message.Nick));
+                ConnectionManager.SendChannelMessageFormat(message.Channel, "{0}: You must specify a message to deliver!", message.Nick);
                 return;
             }
             if (lowerRecipient == ConnectionManager.Client.Nickname.ToLowerInvariant())
             {
-                ConnectionManager.Client.SendMessage(SendType.Message, message.Channel, string.Format("{0}: Sorry, I don\u2019t deliver to myself!", message.Nick));
+                ConnectionManager.SendChannelMessageFormat(message.Channel, "{0}: Sorry, I don\u2019t deliver to myself!", message.Nick);
                 return;
             }
 
@@ -87,11 +87,12 @@ namespace Messenger
                     SharpIrcBotUtil.LiteralString(recipient),
                     SharpIrcBotUtil.LiteralString(sender)
                 );
-                ConnectionManager.Client.SendMessage(SendType.Message, message.Channel, string.Format(
+                ConnectionManager.SendChannelMessageFormat(
+                    message.Channel,
                     "{0}: Can\u2019t send a message to {1}\u2014they\u2019re ignoring you.",
                     message.Nick,
                     recipient
-                ));
+                );
                 return;
             }
 
@@ -124,18 +125,20 @@ namespace Messenger
 
             if (lowerRecipient == lowerSender)
             {
-                ConnectionManager.Client.SendMessage(SendType.Message, message.Channel, string.Format(
+                ConnectionManager.SendChannelMessageFormat(
+                    message.Channel,
                     "{0}: Talking to ourselves? Well, no skin off my back. I\u2019ll deliver your message to you right away. ;)",
                     message.Nick
-                ));
+                );
             }
             else
             {
-                ConnectionManager.Client.SendMessage(SendType.Message, message.Channel, string.Format(
+                ConnectionManager.SendChannelMessageFormat(
+                    message.Channel,
                     "{0}: Aye-aye! I\u2019ll deliver your message to {1} next time I see \u2019em!",
                     message.Nick,
                     recipient
-                ));
+                );
             }
         }
 
@@ -150,10 +153,11 @@ namespace Messenger
             // overflow avoidance
             if (match.Groups[1].Length > 3)
             {
-                ConnectionManager.Client.SendMessage(SendType.Message, message.Channel, string.Format(
+                ConnectionManager.SendChannelMessageFormat(
+                    message.Channel,
                     "{0}: I am absolutely not delivering that many messages at once.",
                     message.Nick
-                ));
+                );
                 return;
             }
             var fetchCount = int.Parse(match.Groups[1].Value);
@@ -184,12 +188,13 @@ namespace Messenger
             // deliver them
             if (messages.Count > 0)
             {
-                ConnectionManager.Client.SendMessage(SendType.Message, message.Channel, string.Format(
+                ConnectionManager.SendChannelMessageFormat(
+                    message.Channel,
                     "Delivering {0} {1} for {2}!",
                     messages.Count,
                     messages.Count == 1 ? "message" : "messages",
                     message.Nick
-                ));
+                );
                 foreach (var msg in messages)
                 {
                     Logger.DebugFormat(
@@ -198,12 +203,13 @@ namespace Messenger
                         SharpIrcBotUtil.LiteralString(msg.Body),
                         SharpIrcBotUtil.LiteralString(message.Nick)
                     );
-                    ConnectionManager.Client.SendMessage(SendType.Message, message.Channel, string.Format(
+                    ConnectionManager.SendChannelMessageFormat(
+                        message.Channel,
                         "{0} <{1}> {2}",
                         FormatUtcTimestampFromDatabase(msg.Timestamp),
                         msg.SenderOriginal,
                         msg.Body
-                    ));
+                    );
                 }
             }
 
@@ -212,27 +218,30 @@ namespace Messenger
             {
                 if (messages.Count > 0)
                 {
-                    ConnectionManager.Client.SendMessage(SendType.Message, message.Channel, string.Format(
+                    ConnectionManager.SendChannelMessageFormat(
+                        message.Channel,
                         "{0} has no more messages left to deliver!",
                         message.Nick
-                    ));
+                    );
                 }
                 else
                 {
-                    ConnectionManager.Client.SendMessage(SendType.Message, message.Channel, string.Format(
+                    ConnectionManager.SendChannelMessageFormat(
+                        message.Channel,
                         "{0} has no messages to deliver!",
                         message.Nick
-                    ));
+                    );
                 }
             }
             else
             {
-                ConnectionManager.Client.SendMessage(SendType.Message, message.Channel, string.Format(
+                ConnectionManager.SendChannelMessageFormat(
+                    message.Channel,
                     "{0} has {1} {2} left to deliver!",
                     message.Nick,
                     messagesLeft,
                     (messagesLeft == 1) ? "message" : "messages"
-                ));
+                );
             }
         }
 
@@ -246,21 +255,23 @@ namespace Messenger
 
             if (match.Groups[1].Length > 3)
             {
-                ConnectionManager.Client.SendMessage(SendType.Message, message.Channel, string.Format(
+                ConnectionManager.SendChannelMessageFormat(
+                    message.Channel,
                     "{0}: I am absolutely not replaying that many messages at once.",
                     message.Nick
-                ));
+                );
                 return;
             }
 
             var replayCount = int.Parse(match.Groups[1].Value);
             if (replayCount > Config.MaxMessagesToReplay)
             {
-                ConnectionManager.Client.SendMessage(SendType.Message, message.Channel, string.Format(
+                ConnectionManager.SendChannelMessageFormat(
+                    message.Channel,
                     "{0}: I only remember a backlog of up to {1} messages.",
                     message.Nick,
                     Config.MaxMessagesToReplay
-                ));
+                );
                 return;
             }
             else if (replayCount == 0)
@@ -285,30 +296,33 @@ namespace Messenger
 
             if (messages.Count == 0)
             {
-                ConnectionManager.Client.SendMessage(SendType.Message, message.Channel, string.Format(
+                ConnectionManager.SendChannelMessageFormat(
+                    message.Channel,
                     "{0}: You have no messages to replay!",
                     message.Nick
-                ));
+                );
                 return;
             }
             if (messages.Count == 1)
             {
                 Logger.DebugFormat("replaying a message for {0}", SharpIrcBotUtil.LiteralString(message.Nick));
-                ConnectionManager.Client.SendMessage(SendType.Message, message.Channel, string.Format(
+                ConnectionManager.SendChannelMessageFormat(
+                    message.Channel,
                     "Replaying message for {0}! {1} <{2}> {3}",
                     message.Nick,
                     FormatUtcTimestampFromDatabase(messages[0].Timestamp),
                     messages[0].SenderOriginal,
                     messages[0].Body
-                ));
+                );
                 return;
             }
 
-            ConnectionManager.Client.SendMessage(SendType.Message, message.Channel, string.Format(
+            ConnectionManager.SendChannelMessageFormat(
+                message.Channel,
                 "{0}: Replaying {1} messages!",
                 message.Nick,
                 messages.Count
-            ));
+            );
             Logger.DebugFormat(
                 "replaying {0} messages for {1}",
                 messages.Count,
@@ -316,17 +330,19 @@ namespace Messenger
             );
             foreach (var msg in messages)
             {
-                ConnectionManager.Client.SendMessage(SendType.Message, message.Channel, string.Format(
+                ConnectionManager.SendChannelMessageFormat(
+                    message.Channel,
                     "{0} <{1}> {2}!",
                     FormatUtcTimestampFromDatabase(msg.Timestamp),
                     msg.SenderOriginal,
                     msg.Body
-                ));
+                );
             }
-            ConnectionManager.Client.SendMessage(SendType.Message, message.Channel, string.Format(
+            ConnectionManager.SendChannelMessageFormat(
+                message.Channel,
                 "{0}: Take care!",
                 message.Nick
-            ));
+            );
         }
 
         protected void PotentialIgnoreListRequest(IrcMessageData message)
@@ -355,11 +371,12 @@ namespace Messenger
             {
                 if (isIgnored)
                 {
-                    ConnectionManager.Client.SendMessage(SendType.Message, message.Channel, string.Format(
+                    ConnectionManager.SendChannelMessageFormat(
+                        message.Channel,
                         "{0}: You are already ignoring {1}.",
                         message.Nick,
                         blockSender
-                    ));
+                    );
                     return;
                 }
 
@@ -380,21 +397,23 @@ namespace Messenger
                     SharpIrcBotUtil.LiteralString(blockRecipient)
                 );
 
-                ConnectionManager.Client.SendMessage(SendType.Message, message.Channel, string.Format(
+                ConnectionManager.SendChannelMessageFormat(
+                    message.Channel,
                     "{0}: You are now ignoring {1}.",
                     message.Nick,
                     blockSender
-                ));
+                );
             }
             else if (command == "unignore")
             {
                 if (!isIgnored)
                 {
-                    ConnectionManager.Client.SendMessage(SendType.Message, message.Channel, string.Format(
+                    ConnectionManager.SendChannelMessageFormat(
+                        message.Channel,
                         "{0}: You have not been ignoring {1}.",
                         message.Nick,
                         blockSender
-                    ));
+                    );
                     return;
                 }
 
@@ -412,11 +431,12 @@ namespace Messenger
                     SharpIrcBotUtil.LiteralString(blockRecipient)
                 );
 
-                ConnectionManager.Client.SendMessage(SendType.Message, message.Channel, string.Format(
+                ConnectionManager.SendChannelMessageFormat(
+                    message.Channel,
                     "{0}: You are not ignoring {1} anymore.",
                     message.Nick,
                     blockSender
-                ));
+                );
             }
         }
 
@@ -494,14 +514,15 @@ namespace Messenger
                         SharpIrcBotUtil.LiteralString(messages[0].Body),
                         SharpIrcBotUtil.LiteralString(message.Nick)
                     );
-                    ConnectionManager.Client.SendMessage(SendType.Message, message.Channel, string.Format(
+                    ConnectionManager.SendChannelMessageFormat(
+                        message.Channel,
                         "Message for {0}{1}! {2} <{3}> {4}",
                         message.Nick,
                         retainerText,
                         FormatUtcTimestampFromDatabase(messages[0].Timestamp),
                         messages[0].SenderOriginal,
                         messages[0].Body
-                    ));
+                    );
                 }
                 else if (messages.Count >= Config.TooManyMessages)
                 {
@@ -511,12 +532,13 @@ namespace Messenger
                         SharpIrcBotUtil.LiteralString(message.Nick),
                         messages.Count
                     );
-                    ConnectionManager.Client.SendMessage(SendType.Message, message.Channel, string.Format(
+                    ConnectionManager.SendChannelMessageFormat(
+                        message.Channel,
                         "{0} new messages for {1}{2}! Use \u201c!delivermsg maxnumber\u201d to get them!",
                         messages.Count,
                         message.Nick,
                         retainerText
-                    ));
+                    );
 
                     // put messages on retainer
                     ctx.MessagesOnRetainer.AddRange(messages.Select(m => new MessageOnRetainer(m)));
@@ -529,12 +551,13 @@ namespace Messenger
                 else
                 {
                     // multiple but not too many messages
-                    ConnectionManager.Client.SendMessage(SendType.Message, message.Channel, string.Format(
+                    ConnectionManager.SendChannelMessageFormat(
+                        message.Channel,
                         "{0} new messages for {1}{2}!",
                         messages.Count,
                         message.Nick,
                         retainerText
-                    ));
+                    );
                     foreach (var msg in messages)
                     {
                         Logger.DebugFormat(
@@ -543,17 +566,19 @@ namespace Messenger
                             SharpIrcBotUtil.LiteralString(msg.Body),
                             SharpIrcBotUtil.LiteralString(message.Nick)
                         );
-                        ConnectionManager.Client.SendMessage(SendType.Message, message.Channel, string.Format(
+                        ConnectionManager.SendChannelMessageFormat(
+                            message.Channel,
                             "{0} <{1}> {2}",
                             FormatUtcTimestampFromDatabase(msg.Timestamp),
                             msg.SenderOriginal,
                             msg.Body
-                        ));
+                        );
                     }
-                    ConnectionManager.Client.SendMessage(SendType.Message, message.Channel, string.Format(
+                    ConnectionManager.SendChannelMessageFormat(
+                        message.Channel,
                         "{0}: Have a nice day!",
                         message.Nick
-                    ));
+                    );
                 }
 
                 if (moveToReplay)

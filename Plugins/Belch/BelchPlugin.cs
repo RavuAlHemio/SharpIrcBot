@@ -40,7 +40,7 @@ namespace Belch
             var msgArr = args.Data.MessageArray;
             if (msgArr.Length == 1 && string.Equals(msgArr[0], "!belch"))
             {
-                ConnectionManager.Client.SendMessage(SendType.Action, args.Data.Channel, "belches loudly");
+                ConnectionManager.SendChannelAction(args.Data.Channel, "belches loudly");
             }
 
             if (msgArr.Length > 1 && msgArr[0] == "!skittles")
@@ -57,7 +57,7 @@ namespace Belch
                 // reset formatting
                 skittledMessage.Append("\x0F");
 
-                ConnectionManager.Client.SendMessage(SendType.Message, args.Data.Channel, skittledMessage.ToString());
+                ConnectionManager.SendChannelMessage(args.Data.Channel, skittledMessage.ToString());
             }
         }
     }

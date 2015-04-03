@@ -56,10 +56,11 @@ namespace Thanks
 
                 if (thanker == null)
                 {
-                    ConnectionManager.Client.SendMessage(SendType.Message, message.Channel, string.Format(
+                    ConnectionManager.SendChannelMessageFormat(
+                        message.Channel,
                         "{0}: You can't use this unless you're logged in with NickServ.",
                         thankerNick
-                    ));
+                    );
                     return;
                 }
 
@@ -69,11 +70,12 @@ namespace Thanks
 
                 if (thankee == null)
                 {
-                    ConnectionManager.Client.SendMessage(SendType.Message, message.Channel, string.Format(
+                    ConnectionManager.SendChannelMessageFormat(
+                        message.Channel,
                         "{0}: Unfortunately, {1} doesn't seem to be logged in with NickServ.",
                         thankerNick,
                         thankeeNick
-                    ));
+                    );
                     return;
                 }
 
@@ -81,10 +83,11 @@ namespace Thanks
 
                 if (thankeeLower == thankerLower)
                 {
-                    ConnectionManager.Client.SendMessage(SendType.Message, message.Channel, string.Format(
+                    ConnectionManager.SendChannelMessageFormat(
+                        message.Channel,
                         "You are so full of yourself, {0}.",
                         thankerNick
-                    ));
+                    );
                     return;
                 }
 
@@ -107,12 +110,13 @@ namespace Thanks
                     thankedCount = ctx.ThanksEntries.Count(te => te.ThankeeLowercase == thankeeLower && !te.Deleted);
                 }
 
-                ConnectionManager.Client.SendMessage(SendType.Message, message.Channel, string.Format(
+                ConnectionManager.SendChannelMessageFormat(
+                    message.Channel,
                     "{0}: Alright! By the way, {1} has been thanked {2} until now.",
                     message.Nick,
                     thankee,
                     (thankedCount == 1) ? "once" : (thankedCount + " times")
-                ));
+                );
                 return;
             }
 
@@ -169,13 +173,14 @@ namespace Thanks
                     );
                 }
 
-                ConnectionManager.Client.SendMessage(SendType.Message, message.Channel, string.Format(
+                ConnectionManager.SendChannelMessageFormat(
+                    message.Channel,
                     "{0}: {1} has {2} until now.{3}",
                     message.Nick,
                     nickname,
                     countPhrase,
                     statsString
-                ));
+                );
             }
 
             if (message.Message == "!topthanked")
@@ -202,11 +207,12 @@ namespace Thanks
                     topStrings.Add(string.Format("{0}: {1}", thankeeAndCount.Nickname, thankeeAndCount.Count));
                 }
 
-                ConnectionManager.Client.SendMessage(SendType.Message, message.Channel, string.Format(
+                ConnectionManager.SendChannelMessageFormat(
+                    message.Channel,
                     "{0}: {1}",
                     message.Nick,
                     string.Join(", ", topStrings)
-                ));
+                );
             }
         }
 
