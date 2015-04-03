@@ -21,8 +21,6 @@ namespace SharpIrcBot
         protected CancellationTokenSource Canceller;
         protected HashSet<string> SyncedChannels;
         protected Dictionary<string, string> NicksToLogins;
-        protected Dictionary<string, string> CurrentWhoisMapping;
-        protected HashSet<string> CurrentWhoisUsernames;
         protected Timer WhoisUpdateTimer;
 
         public event EventHandler<IrcEventArgs> ChannelMessage;
@@ -32,8 +30,6 @@ namespace SharpIrcBot
         {
             SyncedChannels = new HashSet<string>();
             NicksToLogins = new Dictionary<string, string>();
-            CurrentWhoisMapping = null;
-            CurrentWhoisUsernames = null;
 
             Config = config;
             Client = new IrcClient
@@ -195,54 +191,31 @@ namespace SharpIrcBot
 
         protected virtual void HandleRegisteredAs(object sender, IrcEventArgs e)
         {
-            if (CurrentWhoisMapping == null)
-            {
-                // nothing to do here right now
-                return;
-            }
-
-            if ((int) e.Data.ReplyCode == 330)
+            if ((int)e.Data.ReplyCode == 330)
             {
                 // :irc.example.com 330 MYNICK THEIRNICK THEIRLOGIN :is logged in as
-                CurrentWhoisMapping[e.Data.RawMessageArray[3].ToLowerInvariant()] = e.Data.RawMessageArray[4];
+                lock (NicksToLogins)
+                {
+                    NicksToLogins[e.Data.RawMessageArray[3].ToLowerInvariant()] = e.Data.RawMessageArray[4];
+                }
             }
             else if (e.Data.ReplyCode == ReplyCode.WhoIsUser)
             {
                 // :irc.example.com 311 MYNICK THEIRNICK THEIRHOST * :REALNAME
                 // mark that we have at least seen this user
-                CurrentWhoisMapping[e.Data.RawMessageArray[3].ToLowerInvariant()] = null;
+                lock (NicksToLogins)
+                {
+                    NicksToLogins[e.Data.RawMessageArray[3].ToLowerInvariant()] = null;
+                }
             }
-            else if (e.Data.ReplyCode == ReplyCode.EndOfWhoIs)
+            else if (e.Data.ReplyCode == ReplyCode.ErrorNoSuchNickname)
             {
-                // :irc.example.com 330 MYNICK :End of WHOIS list
-
-                // tally our results
-                if (!CurrentWhoisUsernames.All(u => CurrentWhoisMapping.ContainsKey(u.ToLowerInvariant())))
+                // :irc.example.com 311 MYNICK THEIRNICK :No such nick/channel
+                // remove that user
+                lock (NicksToLogins)
                 {
-                    // a user whose info has been requested has not been handled yet
-                    // wait until later
-                    return;
+                    NicksToLogins[e.Data.RawMessageArray[3].ToLowerInvariant()] = null;
                 }
-
-                foreach (var username in CurrentWhoisUsernames)
-                {
-                    var lowerUsername = username.ToLowerInvariant();
-                    if (CurrentWhoisMapping[lowerUsername] != null)
-                    {
-                        Logger.DebugFormat("reg check result: {0} is logged in as {1}", username, CurrentWhoisMapping[lowerUsername]);
-                        NicksToLogins[lowerUsername] = CurrentWhoisMapping[lowerUsername];
-                    }
-                    else
-                    {
-                        // this user is not logged in
-                        Logger.DebugFormat("reg check result: {0} is not logged in", username);
-                        NicksToLogins.Remove(lowerUsername);
-                    }
-                }
-
-                // clean up
-                CurrentWhoisMapping = null;
-                CurrentWhoisUsernames = null;
             }
         }
 
@@ -289,9 +262,12 @@ namespace SharpIrcBot
             }
 
             var lowerNick = nick.ToLowerInvariant();
-            if (NicksToLogins.ContainsKey(lowerNick))
+            lock (NicksToLogins)
             {
-                return NicksToLogins[lowerNick];
+                if (NicksToLogins.ContainsKey(lowerNick))
+                {
+                    return NicksToLogins[lowerNick];
+                }
             }
 
             // return null for the time being
@@ -306,17 +282,6 @@ namespace SharpIrcBot
 
         protected bool RunCheckRegistrationsOn(params string[] nicknames)
         {
-            if (CurrentWhoisMapping != null)
-            {
-                // not right now
-                Logger.Debug("not performing reg check; another one is active");
-                return false;
-            }
-
-            // prepare the list of users
-            CurrentWhoisMapping = new Dictionary<string, string>();
-            CurrentWhoisUsernames = new HashSet<string>(nicknames);
-
             if (Logger.IsDebugEnabled)
             {
                 Logger.DebugFormat("performing reg check on: {0}", string.Join(" ", nicknames));
