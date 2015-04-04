@@ -198,6 +198,7 @@ namespace SharpIrcBot
                 {
                     NicksToLogins[e.Data.RawMessageArray[3].ToLowerInvariant()] = e.Data.RawMessageArray[4];
                 }
+                Logger.DebugFormat("registered that {0} is logged in as {1}", e.Data.RawMessageArray[3], e.Data.RawMessageArray[4]);
             }
             else if (e.Data.ReplyCode == ReplyCode.WhoIsUser)
             {
@@ -207,6 +208,7 @@ namespace SharpIrcBot
                 {
                     NicksToLogins[e.Data.RawMessageArray[3].ToLowerInvariant()] = null;
                 }
+                Logger.DebugFormat("registered that {0} exists (and might not be logged in)", e.Data.RawMessageArray[3]);
             }
             else if (e.Data.ReplyCode == ReplyCode.ErrorNoSuchNickname)
             {
@@ -216,6 +218,7 @@ namespace SharpIrcBot
                 {
                     NicksToLogins[e.Data.RawMessageArray[3].ToLowerInvariant()] = null;
                 }
+                Logger.DebugFormat("registered that {0} is gone and thereby not logged in", e.Data.RawMessageArray[3]);
             }
         }
 
@@ -258,6 +261,7 @@ namespace SharpIrcBot
             if (!Config.HonorUserRegistrations)
             {
                 // don't give a damn
+                Logger.DebugFormat("regname: not honoring user registration; pretending that {0} is logged in as {0}", nick);
                 return nick;
             }
 
@@ -266,9 +270,22 @@ namespace SharpIrcBot
             {
                 if (NicksToLogins.ContainsKey(lowerNick))
                 {
+                    if (Logger.IsDebugEnabled)
+                    {
+                        if (NicksToLogins[lowerNick] == null)
+                        {
+                            Logger.DebugFormat("regname: {0} is not registered (null)", lowerNick);
+                        }
+                        else
+                        {
+                            Logger.DebugFormat("regname: {0} is registered as {1}", lowerNick, NicksToLogins[lowerNick]);
+                        }
+                    }
                     return NicksToLogins[lowerNick];
                 }
             }
+
+            Logger.DebugFormat("regname: {0} is not registered (not contained)", lowerNick);
 
             // return null for the time being
             return null;
