@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -45,19 +46,32 @@ namespace Belch
 
             if (msgArr.Length > 1 && msgArr[0] == "!skittles")
             {
+                const string formatReset = "\x0F";
                 var message = string.Join(" ", msgArr.Skip(1));
-                var skittledMessage = new StringBuilder();
+                var currentPiece = new StringBuilder();
+                var skittledPieces = new List<string>();
                 var colorCodeOffset = new Random().Next(SkittlesCodes.Length);
 
                 for (int i = 0; i < message.Length; ++i)
                 {
                     int colorCode = SkittlesCodes[(i + colorCodeOffset) % SkittlesCodes.Length];
-                    skittledMessage.AppendFormat("\x03{0:D2},99{1}", colorCode, message[i]);
+                    var thisCharacter = string.Format("\x03{0:D2},99{1}", colorCode, message[i]);
+                    if (currentPiece.Length + thisCharacter.Length + formatReset.Length > ConnectionManager.MaxMessageLength)
+                    {
+                        currentPiece.Append(formatReset);
+                        skittledPieces.Add(currentPiece.ToString());
+                        currentPiece.Clear();
+                    }
+                    currentPiece.AppendFormat("\x03{0:D2},99{1}", colorCode, message[i]);
                 }
                 // reset formatting
-                skittledMessage.Append("\x0F");
+                currentPiece.Append(formatReset);
+                skittledPieces.Add(currentPiece.ToString());
 
-                ConnectionManager.SendChannelMessage(args.Data.Channel, skittledMessage.ToString());
+                foreach (var piece in skittledPieces)
+                {
+                    ConnectionManager.SendChannelMessage(args.Data.Channel, piece);
+                }
             }
         }
     }

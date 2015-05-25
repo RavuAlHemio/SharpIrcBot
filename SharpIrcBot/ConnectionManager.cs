@@ -13,6 +13,7 @@ namespace SharpIrcBot
     public class ConnectionManager
     {
         private static readonly ILog Logger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        public static int MaxMessageLength = 230;
 
         public BotConfig Config;
         public readonly IrcClient Client;
@@ -384,7 +385,7 @@ namespace SharpIrcBot
 
         public void SendChannelMessage(string channel, string message)
         {
-            foreach (var line in SplitMessageToLength(message))
+            foreach (var line in SplitMessageToLength(message, MaxMessageLength))
             {
                 Client.SendMessage(SendType.Message, channel, line);
             }
@@ -397,7 +398,7 @@ namespace SharpIrcBot
 
         public void SendChannelAction(string channel, string message)
         {
-            foreach (var line in SplitMessageToLength(message))
+            foreach (var line in SplitMessageToLength(message, MaxMessageLength))
             {
                 Client.SendMessage(SendType.Action, channel, line);
             }
