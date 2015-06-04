@@ -145,11 +145,13 @@ namespace UnoBot
             }
 
             var strippedBody = StripColors(message.Message);
+            Logger.DebugFormat("stripped body: {0}", strippedBody);
             var currentCardMatch = CurrentCardAndPlayerMessage.Match(strippedBody);
             if (currentCardMatch.Success)
             {
                 TopCard.Color = CardUtils.ParseColor(currentCardMatch.Groups[1].Value).Value;
                 TopCard.Value = CardUtils.ParseValue(currentCardMatch.Groups[2].Value).Value;
+                Logger.DebugFormat("current card: {0} {1}", TopCard.Color, TopCard.Value);
             }
         }
 
@@ -162,9 +164,13 @@ namespace UnoBot
             }
 
             var strippedBody = StripColors(message.Message);
+            Logger.DebugFormat("stripped notice: {0}", strippedBody);
+
             var yourHandMatch = YourHandNotice.Match(strippedBody);
             if (yourHandMatch.Success)
             {
+                Logger.Debug("\"your hand\" matched");
+
                 // "[RED FOUR, GREEN FIVE]" -> "RED FOUR, GREEN FIVE"
                 var handCardsString = strippedBody.Substring(1, strippedBody.Length-2);
 
@@ -174,6 +180,11 @@ namespace UnoBot
                 // ["RED FOUR", "GREEN FIVE"] -> [Card(Red Four), Card(Green Five)]
                 CurrentHand = handCardsStrings.Select(c => CardUtils.ParseColorAndValue(c).Value).ToList();
 
+                if (Logger.IsDebugEnabled)
+                {
+                    Logger.DebugFormat("hand cards: {0}", string.Join(", ", CurrentHand.Select(c => string.Format("{0} {1}", c.Color, c.Value))));
+                }
+
                 PlayACard();
                 return;
             }
@@ -181,7 +192,10 @@ namespace UnoBot
             var youDrewMatch = YouDrewNotice.Match(strippedBody);
             if (youDrewMatch.Success)
             {
+                Logger.Debug("\"you drew\" matched");
+
                 var card = CardUtils.ParseColorAndValue(youDrewMatch.Groups[1].Value).Value;
+                Logger.DebugFormat("additionally drawn card: {0} {1}", card.Color, card.Value);
                 CurrentHand.Add(card);
 
                 PlayACard();
@@ -213,6 +227,8 @@ namespace UnoBot
                 var index = Randomizer.Next(possibleCards.Count);
                 var card = possibleCards[index];
 
+                Logger.DebugFormat("playing card: {0} {1}", card.Color, card.Value);
+
                 if (card.Color == CardColor.Wild)
                 {
                     // pick a color
@@ -238,11 +254,13 @@ namespace UnoBot
             if (DrewLast)
             {
                 DrewLast = false;
+                Logger.Debug("passing");
                 ConnectionManager.SendChannelMessage(Config.UnoChannel, "!pass");
             }
             else
             {
                 DrewLast = true;
+                Logger.Debug("drawing");
                 ConnectionManager.SendChannelMessage(Config.UnoChannel, "!draw");
             }
         }
