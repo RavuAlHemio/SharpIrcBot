@@ -17,7 +17,7 @@ namespace UnoBot
         private readonly Regex CurrentCardAndPlayerMessage;
         private const string ColorsRegex = "(?:RED|GREEN|BLUE|YELLOW|WILD)";
         private const string ValuesRegex = "(?:ZERO|ONE|TWO|THREE|FOUR|FIVE|SIX|SEVEN|EIGHT|NINE|S|R|D2|WD4|WILD)";
-        private static readonly Regex YourHandNotice = new Regex(string.Format("^\\[{0} {1}(?:, {0} {1})*)\\]$", ColorsRegex, ValuesRegex));
+        private static readonly Regex YourHandNotice = new Regex(string.Format("^\\[{0} {1}(?:, {0} {1})*\\]$", ColorsRegex, ValuesRegex));
         private static readonly Regex YouDrewNotice = new Regex(string.Format("^you drew a ({0} {1})$", ColorsRegex, ValuesRegex));
 
         protected ConnectionManager ConnectionManager;
