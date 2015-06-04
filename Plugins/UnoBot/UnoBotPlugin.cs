@@ -66,7 +66,12 @@ namespace UnoBot
                     }
                 }
 
-                if (c == 0x02)
+                if (c == 0x0F)
+                {
+                    // switch back to plain
+                    continue;
+                }
+                else if (c == 0x02)
                 {
                     // bold
                     continue;
