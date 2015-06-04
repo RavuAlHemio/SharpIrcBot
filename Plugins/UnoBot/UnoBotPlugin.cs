@@ -11,7 +11,7 @@ using SharpIrcBot;
 
 namespace UnoBot
 {
-    public class UnoBotPlugin
+    public class UnoBotPlugin : IPlugin
     {
         private static readonly ILog Logger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private readonly Regex CurrentCardAndPlayerMessage;
