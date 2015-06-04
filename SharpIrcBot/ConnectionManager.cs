@@ -26,6 +26,7 @@ namespace SharpIrcBot
 
         public event EventHandler<IrcEventArgs> ChannelMessage;
         public event EventHandler<IrcEventArgs> ChannelAction;
+        public event EventHandler<IrcEventArgs> QueryNotice;
 
         public ConnectionManager(BotConfig config)
         {
@@ -53,6 +54,7 @@ namespace SharpIrcBot
             Client.OnNames += HandleNames;
             Client.OnJoin += HandleJoin;
             Client.OnNickChange += HandleNickChange;
+            Client.OnQueryNotice += HandleQueryNotice;
             Canceller = new CancellationTokenSource();
 
             WhoisUpdateTimer = new Timer(Config.WhoisUpdateIntervalSeconds * 1000.0);
@@ -185,6 +187,11 @@ namespace SharpIrcBot
             OnChannelAction(e);
         }
 
+        protected virtual void HandleQueryNotice(object sender, IrcEventArgs e)
+        {
+            OnQueryNotice(e);
+        }
+
         protected virtual void HandleChannelSynced(object sender, IrcEventArgs e)
         {
             SyncedChannels.Add(e.Data.Channel);
@@ -254,6 +261,14 @@ namespace SharpIrcBot
             if (ChannelAction != null)
             {
                 ChannelAction(this, e);
+            }
+        }
+
+        protected virtual void OnQueryNotice(IrcEventArgs e)
+        {
+            if (QueryNotice != null)
+            {
+                QueryNotice(this, e);
             }
         }
 
