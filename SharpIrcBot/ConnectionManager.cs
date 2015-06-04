@@ -130,7 +130,10 @@ namespace SharpIrcBot
             }
 
             // autojoin
-            Client.RfcJoin(Config.AutoJoinChannels.ToArray());
+            foreach (var channel in Config.AutoJoinChannels)
+            {
+                Client.RfcJoin(channel);
+            }
 
             // listen
             Client.Listen();
