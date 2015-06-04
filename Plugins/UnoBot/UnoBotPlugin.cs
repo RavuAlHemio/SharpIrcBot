@@ -81,6 +81,11 @@ namespace UnoBot
                     // underline
                     continue;
                 }
+                else if (c == 0x16)
+                {
+                    // reverse
+                    continue;
+                }
                 else if (c == 0x03)
                 {
                     // color

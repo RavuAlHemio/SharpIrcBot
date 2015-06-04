@@ -190,7 +190,7 @@ namespace SharpIrcBot
             {
                 AppendToFile = true,
                 Encoding = Utf8NoBom,
-                File = Path.Combine(AppDirectory, "Kassaprogramm.log"),
+                File = Path.Combine(AppDirectory, "SharpIrcBot.log"),
                 Layout = patternLayout
             };
             logAppender.ActivateOptions();
