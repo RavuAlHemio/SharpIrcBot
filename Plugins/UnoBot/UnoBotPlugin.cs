@@ -170,6 +170,7 @@ namespace UnoBot
 
             var strippedBody = StripColors(message.Message);
             Logger.DebugFormat("stripped notice: {0}", strippedBody);
+            Logger.DebugFormat("stripped notice codepoints: {0}", string.Join(" ", strippedBody.Select(c => ((int)c).ToString("X"))));
 
             var yourHandMatch = YourHandNotice.Match(strippedBody);
             if (yourHandMatch.Success)
