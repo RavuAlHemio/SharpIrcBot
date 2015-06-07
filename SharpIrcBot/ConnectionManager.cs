@@ -25,7 +25,10 @@ namespace SharpIrcBot
         protected Timer WhoisUpdateTimer;
 
         public event EventHandler<IrcEventArgs> ChannelMessage;
-        public event EventHandler<IrcEventArgs> ChannelAction;
+        public event EventHandler<ActionEventArgs> ChannelAction;
+        public event EventHandler<IrcEventArgs> ChannelNotice;
+        public event EventHandler<IrcEventArgs> QueryMessage;
+        public event EventHandler<ActionEventArgs> QueryAction;
         public event EventHandler<IrcEventArgs> QueryNotice;
 
         public ConnectionManager(BotConfig config)
@@ -49,11 +52,14 @@ namespace SharpIrcBot
             Client.OnCtcpRequest += HandleCtcpRequest;
             Client.OnChannelMessage += HandleChannelMessage;
             Client.OnChannelAction += HandleChannelAction;
+            Client.OnChannelNotice += HandleChannelNotice;
             Client.OnChannelActiveSynced += HandleChannelSynced;
             Client.OnRawMessage += HandleRegisteredAs;
             Client.OnNames += HandleNames;
             Client.OnJoin += HandleJoin;
             Client.OnNickChange += HandleNickChange;
+            Client.OnQueryMessage += HandleQueryMessage;
+            Client.OnQueryAction += HandleQueryAction;
             Client.OnQueryNotice += HandleQueryNotice;
             Canceller = new CancellationTokenSource();
 
@@ -190,6 +196,25 @@ namespace SharpIrcBot
             OnChannelAction(e);
         }
 
+        protected virtual void HandleChannelNotice(object sender, IrcEventArgs e)
+        {
+            if (!SyncedChannels.Contains(e.Data.Channel))
+            {
+                return;
+            }
+            OnChannelNotice(e);
+        }
+
+        protected virtual void HandleQueryMessage(object sender, IrcEventArgs e)
+        {
+            OnQueryMessage(e);
+        }
+
+        protected virtual void HandleQueryAction(object sender, ActionEventArgs e)
+        {
+            OnQueryAction(e);
+        }
+
         protected virtual void HandleQueryNotice(object sender, IrcEventArgs e)
         {
             OnQueryNotice(e);
@@ -259,11 +284,35 @@ namespace SharpIrcBot
             }
         }
 
-        protected virtual void OnChannelAction(IrcEventArgs e)
+        protected virtual void OnChannelAction(ActionEventArgs e)
         {
             if (ChannelAction != null)
             {
                 ChannelAction(this, e);
+            }
+        }
+
+        protected virtual void OnChannelNotice(IrcEventArgs e)
+        {
+            if (ChannelNotice != null)
+            {
+                ChannelNotice(this, e);
+            }
+        }
+
+        protected virtual void OnQueryMessage(IrcEventArgs e)
+        {
+            if (QueryMessage != null)
+            {
+                QueryMessage(this, e);
+            }
+        }
+
+        protected virtual void OnQueryAction(ActionEventArgs e)
+        {
+            if (QueryAction != null)
+            {
+                QueryAction(this, e);
             }
         }
 
@@ -425,6 +474,63 @@ namespace SharpIrcBot
         public void SendChannelActionFormat(string channel, string format, params object[] args)
         {
             SendChannelAction(channel, string.Format(format, args));
+        }
+
+        public void SendChannelNotice(string channel, string message)
+        {
+            foreach (var line in SplitMessageToLength(message, MaxMessageLength))
+            {
+                Client.SendMessage(SendType.Notice, channel, line);
+            }
+        }
+
+        public void SendChannelNoticeFormat(string channel, string format, params object[] args)
+        {
+            SendChannelNotice(channel, string.Format(format, args));
+        }
+
+        public void SendQueryMessage(string nick, string message)
+        {
+            foreach (var line in SplitMessageToLength(message, MaxMessageLength))
+            {
+                Client.SendMessage(SendType.Message, nick, line);
+            }
+        }
+
+        public void SendQueryMessageFormat(string nick, string format, params object[] args)
+        {
+            SendQueryMessage(nick, string.Format(format, args));
+        }
+
+        public void SendQueryAction(string nick, string message)
+        {
+            foreach (var line in SplitMessageToLength(message, MaxMessageLength))
+            {
+                Client.SendMessage(SendType.Action, nick, line);
+            }
+        }
+
+        public void SendQueryActionFormat(string nick, string format, params object[] args)
+        {
+            SendQueryAction(nick, string.Format(format, args));
+        }
+
+        public void SendQueryNotice(string nick, string message)
+        {
+            foreach (var line in SplitMessageToLength(message, MaxMessageLength))
+            {
+                Client.SendMessage(SendType.Notice, nick, line);
+            }
+        }
+
+        public void SendQueryNoticeFormat(string nick, string format, params object[] args)
+        {
+            SendQueryNotice(nick, string.Format(format, args));
+        }
+
+        public void SendRawCommand(string cmd)
+        {
+            Client.WriteLine(cmd);
         }
     }
 }
