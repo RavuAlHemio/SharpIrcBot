@@ -38,6 +38,7 @@ namespace Messenger.ORM
 
         public MessageOnRetainer(IMessage other)
         {
+            MessageUtils.TransferMessage(other, this);
         }
     }
 }
