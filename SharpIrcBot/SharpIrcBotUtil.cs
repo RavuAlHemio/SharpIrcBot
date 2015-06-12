@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data.Common;
+using System.Diagnostics.Contracts;
 using System.Globalization;
 using System.IO;
 using System.Reflection;
@@ -146,6 +147,207 @@ namespace SharpIrcBot
                 }
             }
             ret.Append('"');
+            return ret.ToString();
+        }
+
+        [Pure]
+        private static byte? FromHexDigit(char c)
+        {
+            if (c >= '0' && c <= '9')
+            {
+                return (byte) (c - '0');
+            }
+            else if (c >= 'a' && c <= 'z')
+            {
+                return (byte) (c - 'a' + 10);
+            }
+            else if (c >= 'A' && c <= 'Z')
+            {
+                return (byte)(c - 'A' + 10);
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// Unescapes the C# string literal.
+        /// </summary>
+        /// <param name="str">The string literal to unescape.</param>
+        /// <returns>The unescaped string.</returns>
+        public static string UnescapeString(string str)
+        {
+            var ret = new StringBuilder(str.Length);
+            // 0: normal, 1: after backslash, 2-9: digits of \U, 6-9: digits of \u, 8-9: digits of \x
+            int escapeState = 0;
+            long currentValue = 0;
+            byte? digit;
+            foreach (char c in str)
+            {
+                switch (escapeState)
+                {
+                    case 0:
+                        // not escaping
+                        if (c == '\\')
+                        {
+                            // start escaping
+                            escapeState = 1;
+                            continue;
+                        }
+                        break;
+                    case 1:
+                        // right after backslash
+                        switch (c)
+                        {
+                            // standard cases
+                            case '0':
+                                ret.Append('\0');
+                                escapeState = 0;
+                                continue;
+                            case '\\':
+                                ret.Append('\\');
+                                escapeState = 0;
+                                continue;
+                            case '"':
+                                ret.Append('"');
+                                escapeState = 0;
+                                continue;
+                            case '\'':
+                                ret.Append('\'');
+                                escapeState = 0;
+                                continue;
+                            case 'a':
+                                ret.Append('\a');
+                                escapeState = 0;
+                                continue;
+                            case 'b':
+                                ret.Append('\b');
+                                escapeState = 0;
+                                continue;
+                            case 'f':
+                                ret.Append('\f');
+                                escapeState = 0;
+                                continue;
+                            case 'n':
+                                ret.Append('\n');
+                                escapeState = 0;
+                                continue;
+                            case 'r':
+                                ret.Append('\r');
+                                escapeState = 0;
+                                continue;
+                            case 't':
+                                ret.Append('\t');
+                                escapeState = 0;
+                                continue;
+                            case 'v':
+                                ret.Append('\v');
+                                escapeState = 0;
+                                continue;
+                            case 'x':
+                                // NOTE: \x## only allows two digits
+                                escapeState = 8;
+                                currentValue = 0;
+                                continue;
+                            case 'u':
+                                escapeState = 6;
+                                currentValue = 0;
+                                continue;
+                            case 'U':
+                                escapeState = 2;
+                                currentValue = 0;
+                                continue;
+                            default:
+                                // unexpected escape!
+                                return null;
+                        }
+                    case 2:
+                        // 1st digit of \U
+                        digit = FromHexDigit(c);
+                        if (!digit.HasValue)
+                        {
+                            return null;
+                        }
+                        currentValue |= ((long)digit.Value << 28);
+                        ++escapeState;
+                        continue;
+                    case 3:
+                        // 2nd digit of \U
+                        digit = FromHexDigit(c);
+                        if (!digit.HasValue)
+                        {
+                            return null;
+                        }
+                        currentValue |= ((long)digit.Value << 24);
+                        ++escapeState;
+                        continue;
+                    case 4:
+                        // 3rd digit of \U
+                        digit = FromHexDigit(c);
+                        if (!digit.HasValue)
+                        {
+                            return null;
+                        }
+                        currentValue |= ((long)digit.Value << 20);
+                        ++escapeState;
+                        continue;
+                    case 5:
+                        // 4th digit of \U
+                        digit = FromHexDigit(c);
+                        if (!digit.HasValue)
+                        {
+                            return null;
+                        }
+                        currentValue |= ((long)digit.Value << 16);
+                        ++escapeState;
+                        continue;
+                    case 6:
+                        // 5th digit of \U or 1st digit of \u
+                        digit = FromHexDigit(c);
+                        if (!digit.HasValue)
+                        {
+                            return null;
+                        }
+                        currentValue |= ((long)digit.Value << 12);
+                        ++escapeState;
+                        continue;
+                    case 7:
+                        // 6th digit of \U or 2nd digit of \u
+                        digit = FromHexDigit(c);
+                        if (!digit.HasValue)
+                        {
+                            return null;
+                        }
+                        currentValue |= ((long)digit.Value << 8);
+                        ++escapeState;
+                        continue;
+                    case 8:
+                        // 7th digit of \U or 3rd digit of \u or 1st digit of \x
+                        digit = FromHexDigit(c);
+                        if (!digit.HasValue)
+                        {
+                            return null;
+                        }
+                        currentValue |= ((long)digit.Value << 4);
+                        ++escapeState;
+                        continue;
+                    case 9:
+                        // 8th digit of \U or 4th digit of \u or 2nd digit of \x
+                        digit = FromHexDigit(c);
+                        if (!digit.HasValue)
+                        {
+                            return null;
+                        }
+                        currentValue |= digit.Value;
+
+                        // append!
+                        ret.Append(char.ConvertFromUtf32((int) currentValue));
+                        currentValue = 0;
+                        escapeState = 0;
+                        continue;
+                }
+
+                // default (break and not continue): append
+                ret.Append(c);
+            }
             return ret.ToString();
         }
 

@@ -66,9 +66,16 @@ namespace Sockpuppet
                 return;
             }
 
+            var unescapedCommand = SharpIrcBotUtil.UnescapeString(command);
+            if (unescapedCommand == null)
+            {
+                Logger.InfoFormat("{0} bollocksed up their escapes; ignoring", username);
+                return;
+            }
+
             Logger.InfoFormat("{0} (nick: {1}) issued the following command: {2}", username, message.Nick, command);
 
-            ConnectionManager.SendRawCommand(command);
+            ConnectionManager.SendRawCommand(unescapedCommand);
         }
     }
 }
