@@ -238,12 +238,38 @@ namespace UnoBot
                 var index = Randomizer.Next(possibleCards.Count);
                 var card = possibleCards[index];
 
+                // if more than two cards in hand, perform a strategic draw 10% of the time
+                if (CurrentHand.Count > 2 && !DrewLast)
+                {
+                    var strategicDraw = (Randomizer.Next(10) == 0);
+                    if (strategicDraw)
+                    {
+                        DrewLast = true;
+                        Logger.Debug("strategic draw");
+                        ConnectionManager.SendChannelMessage(Config.UnoChannel, "!draw");
+                        return;
+                    }
+                }
+
                 Logger.DebugFormat("playing card: {0} {1}", card.Color, card.Value);
 
                 if (card.Color == CardColor.Wild)
                 {
                     // pick a color
-                    var chosenColor = (CardColor)Randomizer.Next(4);
+                    var colorsToChoose = new List<CardColor>();
+
+                    // -> add all four colors once to allow for some chaotic color switching
+                    colorsToChoose.Add(CardColor.Red);
+                    colorsToChoose.Add(CardColor.Green);
+                    colorsToChoose.Add(CardColor.Blue);
+                    colorsToChoose.Add(CardColor.Yellow);
+
+                    // -> add all the (non-wild) colors from our hand to increase the chances of a useful pick
+                    colorsToChoose.AddRange(CurrentHand.Select(c => c.Color).Where(c => c != CardColor.Wild));
+
+                    // -> choose at random
+                    var chosenColor = colorsToChoose[Randomizer.Next(colorsToChoose.Count)];
+                    Logger.DebugFormat("chosen color: {0}", chosenColor);
 
                     // play the card
                     ConnectionManager.SendChannelMessage(Config.UnoChannel,
