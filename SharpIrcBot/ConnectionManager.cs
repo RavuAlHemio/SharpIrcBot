@@ -432,7 +432,7 @@ namespace SharpIrcBot
             return ret;
         }
 
-        public List<string> SplitMessageToLength(string message, int length = 230)
+        public List<string> SplitMessageToLength(string message, int length = 479)
         {
             if (Client.Encoding.GetBytes(message).Length < length || message.Length == 0)
             {
