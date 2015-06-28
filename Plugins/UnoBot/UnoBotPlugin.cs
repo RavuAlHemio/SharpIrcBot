@@ -18,7 +18,7 @@ namespace UnoBot
         private const string ColorsRegex = "(?:RED|GREEN|BLUE|YELLOW|WILD)";
         private const string ValuesRegex = "(?:ZERO|ONE|TWO|THREE|FOUR|FIVE|SIX|SEVEN|EIGHT|NINE|S|R|D2|WD4|WILD)";
         // open-ended in case the hand spans multiple lines
-        private static readonly Regex YourHandNotice = new Regex(string.Format("^\\[{0} {1}(?:, {0} {1})*", ColorsRegex, ValuesRegex));
+        private static readonly Regex YourHandNotice = new Regex(string.Format("^\\[{0} {1}(?:, {0} {1})*\\]$", ColorsRegex, ValuesRegex));
         private static readonly Regex YouDrewNotice = new Regex(string.Format("^you drew a ({0} {1})$", ColorsRegex, ValuesRegex));
 
         protected ConnectionManager ConnectionManager;
@@ -28,6 +28,7 @@ namespace UnoBot
         protected List<Card> CurrentHand;
         protected bool DrewLast;
         protected Random Randomizer;
+        protected StringBuilder HandBuilder;
 
         public UnoBotPlugin(ConnectionManager connMgr, JObject config)
         {
@@ -41,6 +42,7 @@ namespace UnoBot
 
             CurrentHand = new List<Card>();
             Randomizer = new Random();
+            HandBuilder = null;
         }
 
         public static string StripColors(string str)
@@ -178,16 +180,32 @@ namespace UnoBot
             Logger.DebugFormat("stripped notice: {0}", strippedBody);
             Logger.DebugFormat("stripped notice codepoints: {0}", string.Join(" ", strippedBody.Select(c => ((int)c).ToString("X"))));
 
-            var yourHandMatch = YourHandNotice.Match(strippedBody);
+            Match yourHandMatch;
+            if (HandBuilder != null)
+            {
+                // append
+                HandBuilder.Append(message.Message);
+
+                // try
+                var strippedHand = StripColors(HandBuilder.ToString());
+
+                yourHandMatch = YourHandNotice.Match(strippedHand);
+            }
+            else
+            {
+                yourHandMatch = YourHandNotice.Match(strippedBody);
+            }
+
             if (yourHandMatch.Success)
             {
                 Logger.Debug("\"your hand\" matched");
+                HandBuilder = null;
 
                 // "[RED FOUR, GREEN FIVE]" -> "RED FOUR, GREEN FIVE"
-                var handCardsString = strippedBody.Substring(1, strippedBody.Length-2);
+                var handCardsString = yourHandMatch.Value.Substring(1, yourHandMatch.Value.Length - 2);
 
                 // "RED FOUR, GREEN FIVE" -> ["RED FOUR", "GREEN FIVE"]
-                var handCardsStrings = handCardsString.Split(new[] {", "}, StringSplitOptions.None);
+                var handCardsStrings = handCardsString.Split(new[] { ", " }, StringSplitOptions.None);
 
                 // ["RED FOUR", "GREEN FIVE"] -> [Card(Red Four), Card(Green Five)]
                 CurrentHand = handCardsStrings.Select(c => CardUtils.ParseColorAndValue(c).Value).ToList();
@@ -198,6 +216,12 @@ namespace UnoBot
                 }
 
                 PlayACard();
+                return;
+            }
+            else if (HandBuilder == null && strippedBody.StartsWith("["))
+            {
+                // prepare this...
+                HandBuilder = new StringBuilder(message.Message);
                 return;
             }
 
