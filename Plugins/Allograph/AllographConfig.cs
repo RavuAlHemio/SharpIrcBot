@@ -30,6 +30,11 @@ namespace Allograph
             public string ReplacementString { get; set; }
 
             public string Comment { get; set; }
+
+            /// <summary>
+            /// If <c>true</c>, this rule is only applied if at least one of the rules preceding it has been applied.
+            /// </summary>
+            public bool OnlyIfPrecedingHit { get; set; }
         }
 
         public List<Replacement> Replacements { get; set; }

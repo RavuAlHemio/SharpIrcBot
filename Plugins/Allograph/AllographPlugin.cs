@@ -49,12 +49,18 @@ namespace Allograph
 
             foreach (var repl in Config.Replacements)
             {
+                if (repl.OnlyIfPrecedingHit && string.Equals(newBody, originalBody, StringComparison.InvariantCulture))
+                {
+                    // no preceding rule hit; don't apply this one
+                    continue;
+                }
+
                 // substitute the username in the replacement string
                 var replacementStringWithUser = repl.ReplacementString.Replace("{{{username}}}", message.Nick);
                 newBody = repl.Regex.Replace(newBody, replacementStringWithUser);
             }
 
-            if (newBody == originalBody)
+            if (string.Equals(newBody, originalBody, StringComparison.InvariantCulture))
             {
                 return;
             }
