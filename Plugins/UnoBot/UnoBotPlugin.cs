@@ -18,7 +18,7 @@ namespace UnoBot
         private const string ColorsRegex = "(?:RED|GREEN|BLUE|YELLOW|WILD)";
         private const string ValuesRegex = "(?:ZERO|ONE|TWO|THREE|FOUR|FIVE|SIX|SEVEN|EIGHT|NINE|S|R|D2|WD4|WILD)";
         // open-ended in case the hand spans multiple lines
-        private static readonly Regex YourHandNotice = new Regex(string.Format("^\\[{0} {1}(?:, {0} {1})*\\]$", ColorsRegex, ValuesRegex));
+        private static readonly Regex YourHandNotice = new Regex(string.Format("^\\[({0} {1}(?:, {0} {1})*)", ColorsRegex, ValuesRegex));
         private static readonly Regex YouDrewNotice = new Regex(string.Format("^you drew a ({0} {1})$", ColorsRegex, ValuesRegex));
 
         protected ConnectionManager ConnectionManager;
@@ -26,9 +26,9 @@ namespace UnoBot
 
         protected Card TopCard;
         protected List<Card> CurrentHand;
+        protected bool CurrentHandIncomplete;
         protected bool DrewLast;
         protected Random Randomizer;
-        protected StringBuilder HandBuilder;
 
         public UnoBotPlugin(ConnectionManager connMgr, JObject config)
         {
@@ -42,7 +42,6 @@ namespace UnoBot
 
             CurrentHand = new List<Card>();
             Randomizer = new Random();
-            HandBuilder = null;
         }
 
         public static string StripColors(string str)
@@ -180,35 +179,21 @@ namespace UnoBot
             Logger.DebugFormat("stripped notice: {0}", strippedBody);
             Logger.DebugFormat("stripped notice codepoints: {0}", string.Join(" ", strippedBody.Select(c => ((int)c).ToString("X"))));
 
-            Match yourHandMatch;
-            if (HandBuilder != null)
-            {
-                // append
-                HandBuilder.Append(message.Message);
 
-                // try
-                var strippedHand = StripColors(HandBuilder.ToString());
-
-                yourHandMatch = YourHandNotice.Match(strippedHand);
-            }
-            else
-            {
-                yourHandMatch = YourHandNotice.Match(strippedBody);
-            }
-
+            var yourHandMatch = YourHandNotice.Match(strippedBody);
             if (yourHandMatch.Success)
             {
                 Logger.Debug("\"your hand\" matched");
-                HandBuilder = null;
 
                 // "[RED FOUR, GREEN FIVE]" -> "RED FOUR, GREEN FIVE"
-                var handCardsString = yourHandMatch.Value.Substring(1, yourHandMatch.Value.Length - 2);
+                var handCardsString = yourHandMatch.Groups[1].Value;
 
                 // "RED FOUR, GREEN FIVE" -> ["RED FOUR", "GREEN FIVE"]
                 var handCardsStrings = handCardsString.Split(new[] { ", " }, StringSplitOptions.None);
 
                 // ["RED FOUR", "GREEN FIVE"] -> [Card(Red Four), Card(Green Five)]
                 CurrentHand = handCardsStrings.Select(c => CardUtils.ParseColorAndValue(c).Value).ToList();
+                CurrentHandIncomplete = !strippedBody.EndsWith("]");
 
                 if (Logger.IsDebugEnabled)
                 {
@@ -216,12 +201,6 @@ namespace UnoBot
                 }
 
                 PlayACard();
-                return;
-            }
-            else if (HandBuilder == null && strippedBody.StartsWith("["))
-            {
-                // prepare this...
-                HandBuilder = new StringBuilder(message.Message);
                 return;
             }
 
@@ -237,6 +216,23 @@ namespace UnoBot
                 PlayACard();
                 return;
             }
+        }
+
+        protected CardColor PickAColor()
+        {
+            var colorsToChoose = new List<CardColor>();
+
+            // -> add all four colors once to allow for some chaotic color switching
+            colorsToChoose.Add(CardColor.Red);
+            colorsToChoose.Add(CardColor.Green);
+            colorsToChoose.Add(CardColor.Blue);
+            colorsToChoose.Add(CardColor.Yellow);
+
+            // -> add all the (non-wild) colors from our hand to increase the chances of a useful pick
+            colorsToChoose.AddRange(CurrentHand.Select(c => c.Color).Where(c => c != CardColor.Wild));
+
+            // -> choose at random
+            return colorsToChoose[Randomizer.Next(colorsToChoose.Count)];
         }
 
         protected void PlayACard()
@@ -281,31 +277,25 @@ namespace UnoBot
                 if (card.Color == CardColor.Wild)
                 {
                     // pick a color
-                    var colorsToChoose = new List<CardColor>();
-
-                    // -> add all four colors once to allow for some chaotic color switching
-                    colorsToChoose.Add(CardColor.Red);
-                    colorsToChoose.Add(CardColor.Green);
-                    colorsToChoose.Add(CardColor.Blue);
-                    colorsToChoose.Add(CardColor.Yellow);
-
-                    // -> add all the (non-wild) colors from our hand to increase the chances of a useful pick
-                    colorsToChoose.AddRange(CurrentHand.Select(c => c.Color).Where(c => c != CardColor.Wild));
-
-                    // -> choose at random
-                    var chosenColor = colorsToChoose[Randomizer.Next(colorsToChoose.Count)];
+                    var chosenColor = PickAColor();
                     Logger.DebugFormat("chosen color: {0}", chosenColor);
 
                     // play the card
-                    ConnectionManager.SendChannelMessage(Config.UnoChannel,
-                        string.Format("!p {0} {1}", card.Value.ToPlayString(), chosenColor.ToPlayString())
+                    ConnectionManager.SendChannelMessageFormat(
+                        Config.UnoChannel,
+                        "!p {0} {1}",
+                        card.Value.ToPlayString(),
+                        chosenColor.ToPlayString()
                     );
                 }
                 else
                 {
                     // play it
-                    ConnectionManager.SendChannelMessage(Config.UnoChannel,
-                        string.Format("!p {0} {1}", card.Color.ToPlayString(), card.Value.ToPlayString())
+                    ConnectionManager.SendChannelMessageFormat(
+                        Config.UnoChannel,
+                        "!p {0} {1}",
+                        card.Color.ToPlayString(),
+                        card.Value.ToPlayString()
                     );
                 }
                 DrewLast = false;
@@ -313,6 +303,45 @@ namespace UnoBot
             }
 
             // nope
+
+            if (CurrentHandIncomplete)
+            {
+                // didn't catch the whole hand
+                // try panicking
+
+                Logger.Debug("incomplete hand and no matching card: panicking");
+                ConnectionManager.SendChannelMessage(Config.UnoChannel, "I can't see all of my cards! AAARGH!!");
+
+                var chosenColor = PickAColor();
+
+                // -> try wild-draw-4
+                ConnectionManager.SendChannelMessageFormat(
+                    Config.UnoChannel,
+                    "!p wd4 {0}",
+                    chosenColor.ToPlayString()
+                );
+
+                // -> try wild
+                ConnectionManager.SendChannelMessageFormat(
+                    Config.UnoChannel,
+                    "!p wild {0}",
+                    chosenColor.ToPlayString()
+                );
+
+                // -> try drawing and passing
+                ConnectionManager.SendChannelMessage(
+                    Config.UnoChannel,
+                    "!draw"
+                );
+                ConnectionManager.SendChannelMessage(
+                    Config.UnoChannel,
+                    "!pass"
+                );
+
+                // one of those must have succeeded...
+                return;
+            }
+
             if (DrewLast)
             {
                 DrewLast = false;
