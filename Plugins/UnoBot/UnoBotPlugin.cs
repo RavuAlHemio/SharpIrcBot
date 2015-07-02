@@ -14,19 +14,25 @@ namespace UnoBot
     public class UnoBotPlugin : IPlugin
     {
         private static readonly ILog Logger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        private readonly Regex CurrentCardAndPlayerMessage;
-        private const string ColorsRegex = "(?:RED|GREEN|BLUE|YELLOW|WILD)";
-        private const string ValuesRegex = "(?:ZERO|ONE|TWO|THREE|FOUR|FIVE|SIX|SEVEN|EIGHT|NINE|S|R|D2|WD4|WILD)";
-        // open-ended in case the hand spans multiple lines
-        private static readonly Regex YourHandNotice = new Regex(string.Format("^\\[({0} {1}(?:, {0} {1})*)", ColorsRegex, ValuesRegex));
-        private static readonly Regex YouDrewNotice = new Regex(string.Format("^you drew a ({0} {1})$", ColorsRegex, ValuesRegex));
+
+        protected const string UnoMessagePrefix = "###   ";
+        protected const string CurrentPlayerEventName = "current_player";
+        protected const string TopCardEventName = "current_card";
+        protected const string HandInfoEventName = "hand_info";
+
+        /// <summary>After the following event is processed (and it's the bot's turn), the bot plays a card.</summary>
+        protected const string TriggerPlayEventName = "hand_info";
+        protected static readonly Regex UnoBotFirstMessage = new Regex("^([1-9][0-9]*) (.*)");
 
         protected ConnectionManager ConnectionManager;
         protected UnoBotConfig Config;
 
+        protected StringBuilder CurrentMessageJson;
+        protected int LinesLeftInMessage;
+
+        protected bool MyTurn;
         protected Card TopCard;
         protected List<Card> CurrentHand;
-        protected bool CurrentHandIncomplete;
         protected bool DrewLast;
         protected Random Randomizer;
 
@@ -35,12 +41,15 @@ namespace UnoBot
             ConnectionManager = connMgr;
             Config = new UnoBotConfig(config);
 
+            CurrentMessageJson = new StringBuilder();
+            LinesLeftInMessage = 0;
+
             ConnectionManager.ChannelMessage += HandleChannelMessage;
-            ConnectionManager.QueryNotice += HandleQueryNotice;
+            ConnectionManager.QueryMessage += HandleQueryMessage;
 
-            CurrentCardAndPlayerMessage = new Regex(string.Format("^###   ({0}) ({1})   \\|\\|   ", ColorsRegex, ValuesRegex));
-
+            MyTurn = false;
             CurrentHand = new List<Card>();
+            DrewLast = false;
             Randomizer = new Random();
         }
 
@@ -119,15 +128,15 @@ namespace UnoBot
             }
         }
 
-        private void HandleQueryNotice(object sender, IrcEventArgs args)
+        private void HandleQueryMessage(object sender, IrcEventArgs args)
         {
             try
             {
-                ActuallyHandleQueryNotice(sender, args);
+                ActuallyHandleQueryMessage(sender, args);
             }
             catch (Exception exc)
             {
-                Logger.Error("error handling notice", exc);
+                Logger.Error("error handling query message", exc);
             }
         }
 
@@ -146,7 +155,7 @@ namespace UnoBot
 
             if (message.Message == "??join")
             {
-                ConnectionManager.SendChannelMessage(message.Channel, "!join");
+                ConnectionManager.SendChannelMessage(message.Channel, "!botjoin");
                 return;
             }
 
@@ -155,19 +164,9 @@ namespace UnoBot
                 ConnectionManager.SendChannelMessage(message.Channel, "!leave");
                 return;
             }
-
-            var strippedBody = StripColors(message.Message);
-            Logger.DebugFormat("stripped body: {0}", strippedBody);
-            var currentCardMatch = CurrentCardAndPlayerMessage.Match(strippedBody);
-            if (currentCardMatch.Success)
-            {
-                TopCard.Color = CardUtils.ParseColor(currentCardMatch.Groups[1].Value).Value;
-                TopCard.Value = CardUtils.ParseValue(currentCardMatch.Groups[2].Value).Value;
-                Logger.DebugFormat("current card: {0} {1}", TopCard.Color, TopCard.Value);
-            }
         }
 
-        protected void ActuallyHandleQueryNotice(object sender, IrcEventArgs args)
+        protected void ActuallyHandleQueryMessage(object sender, IrcEventArgs args)
         {
             var message = args.Data;
             if (message.Nick == ConnectionManager.Client.Nickname)
@@ -175,46 +174,78 @@ namespace UnoBot
                 return;
             }
 
-            var strippedBody = StripColors(message.Message);
-            Logger.DebugFormat("stripped notice: {0}", strippedBody);
-            Logger.DebugFormat("stripped notice codepoints: {0}", string.Join(" ", strippedBody.Select(c => ((int)c).ToString("X"))));
-
-
-            var yourHandMatch = YourHandNotice.Match(strippedBody);
-            if (yourHandMatch.Success)
+            if (!message.Message.StartsWith(UnoMessagePrefix))
             {
-                Logger.Debug("\"your hand\" matched");
-
-                // "[RED FOUR, GREEN FIVE]" -> "RED FOUR, GREEN FIVE"
-                var handCardsString = yourHandMatch.Groups[1].Value;
-
-                // "RED FOUR, GREEN FIVE" -> ["RED FOUR", "GREEN FIVE"]
-                var handCardsStrings = handCardsString.Split(new[] { ", " }, StringSplitOptions.None);
-
-                // ["RED FOUR", "GREEN FIVE"] -> [Card(Red Four), Card(Green Five)]
-                CurrentHand = handCardsStrings.Select(c => CardUtils.ParseColorAndValue(c).Value).ToList();
-                CurrentHandIncomplete = !strippedBody.EndsWith("]");
-
-                if (Logger.IsDebugEnabled)
-                {
-                    Logger.DebugFormat("hand cards: {0}", string.Join(", ", CurrentHand.Select(c => string.Format("{0} {1}", c.Color, c.Value))));
-                }
-
-                PlayACard();
                 return;
             }
 
-            var youDrewMatch = YouDrewNotice.Match(strippedBody);
-            if (youDrewMatch.Success)
+            var messageBody = message.Message.Substring(UnoMessagePrefix.Length);
+
+            if (LinesLeftInMessage > 0)
             {
-                Logger.Debug("\"you drew\" matched");
+                // add this
+                CurrentMessageJson.Append(messageBody);
+                --LinesLeftInMessage;
+            }
+            else
+            {
+                var match = UnoBotFirstMessage.Match(messageBody);
+                if (!match.Success)
+                {
+                    // nope
+                    return;
+                }
 
-                var card = CardUtils.ParseColorAndValue(youDrewMatch.Groups[1].Value).Value;
-                Logger.DebugFormat("additionally drawn card: {0} {1}", card.Color, card.Value);
-                CurrentHand.Add(card);
+                LinesLeftInMessage = int.Parse(match.Groups[1].Value);
+                CurrentMessageJson.Append(match.Groups[2].Value);
+                --LinesLeftInMessage;
+            }
 
-                PlayACard();
+            if (LinesLeftInMessage > 0)
+            {
+                // wait for more
                 return;
+            }
+            
+            // ready to parse
+            var parseMe = CurrentMessageJson.ToString();
+            CurrentMessageJson.Clear();
+
+            var evt = JObject.Parse(parseMe);
+            var eventName = (string) evt["event"];
+
+            Logger.DebugFormat("received event {0}", eventName);
+
+            switch (eventName)
+            {
+                case CurrentPlayerEventName:
+                {
+                    // my turn? not my turn?
+                    var currentPlayer = (string) evt["player"];
+                    MyTurn = (currentPlayer == ConnectionManager.Client.Nickname);
+                    break;
+                }
+                case TopCardEventName:
+                {
+                    var currentCardName = (string) evt["current_card"];
+                    TopCard = CardUtils.ParseColorAndValue(currentCardName).Value;
+                    break;
+                }
+                case HandInfoEventName:
+                {
+                    var handCards = (JArray) evt["hand"];
+                    CurrentHand = handCards
+                        .Select(e => CardUtils.ParseColorAndValue((string)e))
+                        .Where(cav => cav.HasValue)
+                        .Select(cav => cav.Value)
+                        .ToList();
+                    break;
+                }
+            }
+
+            if (eventName == TriggerPlayEventName && MyTurn)
+            {
+                PlayACard();
             }
         }
 
@@ -299,46 +330,6 @@ namespace UnoBot
                     );
                 }
                 DrewLast = false;
-                return;
-            }
-
-            // nope
-
-            if (CurrentHandIncomplete)
-            {
-                // didn't catch the whole hand
-                // try panicking
-
-                Logger.Debug("incomplete hand and no matching card: panicking");
-                ConnectionManager.SendChannelMessage(Config.UnoChannel, "I can't see all of my cards! AAARGH!!");
-
-                var chosenColor = PickAColor();
-
-                // -> try wild-draw-4
-                ConnectionManager.SendChannelMessageFormat(
-                    Config.UnoChannel,
-                    "!p wd4 {0}",
-                    chosenColor.ToPlayString()
-                );
-
-                // -> try wild
-                ConnectionManager.SendChannelMessageFormat(
-                    Config.UnoChannel,
-                    "!p wild {0}",
-                    chosenColor.ToPlayString()
-                );
-
-                // -> try drawing and passing
-                ConnectionManager.SendChannelMessage(
-                    Config.UnoChannel,
-                    "!draw"
-                );
-                ConnectionManager.SendChannelMessage(
-                    Config.UnoChannel,
-                    "!pass"
-                );
-
-                // one of those must have succeeded...
                 return;
             }
 
