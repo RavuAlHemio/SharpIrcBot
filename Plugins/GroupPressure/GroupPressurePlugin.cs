@@ -38,6 +38,11 @@ namespace GroupPressure
                 return;
             }
 
+            if (!Config.Channels.Contains(e.Data.Channel))
+            {
+                return;
+            }
+
             // clean out the backlog
             while (Backlog.Count > Config.BacklogSize)
             {
