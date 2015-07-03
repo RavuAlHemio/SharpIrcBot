@@ -416,7 +416,7 @@ namespace SharpIrcBot
             var ret = firstWord;
             while (words.Count > 0)
             {
-                var testReturn = ret.ToString() + " " + words[0];
+                var testReturn = ret + " " + words[0];
                 if (Client.Encoding.GetBytes(testReturn).Length >= length)
                 {
                     // nope, not this one anymore
@@ -434,18 +434,25 @@ namespace SharpIrcBot
 
         public List<string> SplitMessageToLength(string message, int length = 479)
         {
-            if (Client.Encoding.GetBytes(message).Length < length || message.Length == 0)
-            {
-                // short-circuit
-                return new List<string> { message };
-            }
+            // normalize newlines
+            message = message.Replace("\r\n", "\n").Replace("\r", "\n");
 
-            var words = message.Split(' ').ToList();
             var lines = new List<string>();
-            while (words.Count > 0)
+            foreach (var origLine in message.Split('\n'))
             {
-                var line = GetLongestWordPrefix(words, length);
-                lines.Add(line);
+                if (Client.Encoding.GetBytes(origLine).Length < length || origLine.Length == 0)
+                {
+                    // short-circuit
+                    lines.Add(origLine);
+                    continue;
+                }
+
+                var words = origLine.Split(' ').ToList();
+                while (words.Count > 0)
+                {
+                    var line = GetLongestWordPrefix(words, length);
+                    lines.Add(line);
+                }
             }
             return lines;
         }
