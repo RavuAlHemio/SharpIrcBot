@@ -14,8 +14,8 @@ namespace Thanks
     public class ThanksPlugin : IPlugin
     {
         private static readonly ILog Logger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        private static readonly Regex ThankRegex = new Regex("^[ ]*!(?:thank|thanks|thx)[ ]+([^ ]+)[ ]*$");
-        private static readonly Regex ThankedRegex = new Regex("^[ ]*!thanked[ ]+([^ ]+)[ ]*$");
+        private static readonly Regex ThankRegex = new Regex("^[ ]*!(?:thank|thanks|thx)[ ]+(--force[ ]+)?([^ ]+)[ ]*$");
+        private static readonly Regex ThankedRegex = new Regex("^[ ]*!thanked[ ]+(--raw[ ]+)([^ ]+)[ ]*$");
 
         protected ConnectionManager ConnectionManager;
         protected ThanksConfig Config;
@@ -65,10 +65,11 @@ namespace Thanks
                 }
 
                 var thankerLower = thanker.ToLowerInvariant();
-                var thankeeNick = thankMatch.Groups[1].Value;
+                bool forceThanks = thankMatch.Groups[1].Success;
+                var thankeeNick = thankMatch.Groups[2].Value;
                 var thankee = ConnectionManager.RegisteredNameForNick(thankeeNick);
 
-                if (thankee == null)
+                if (!forceThanks && thankee == null)
                 {
                     ConnectionManager.SendChannelMessageFormat(
                         message.Channel,
@@ -123,7 +124,17 @@ namespace Thanks
             var thankedMatch = ThankedRegex.Match(message.Message);
             if (thankedMatch.Success)
             {
-                var nickname = thankedMatch.Groups[1].Value;
+                bool raw = thankedMatch.Groups[1].Success;
+                var nickname = thankedMatch.Groups[2].Value;
+                if (!raw)
+                {
+                    var username = ConnectionManager.RegisteredNameForNick(nickname);
+                    if (username != null)
+                    {
+                        nickname = username;
+                    }
+                }
+
                 var lowerNickname = nickname.ToLowerInvariant();
 
                 long thankedCount;
