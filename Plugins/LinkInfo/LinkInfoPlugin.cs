@@ -12,7 +12,7 @@ using SharpIrcBot;
 
 namespace LinkInfo
 {
-    public class LinkInfo : IPlugin
+    public class LinkInfoPlugin : IPlugin
     {
         private static readonly ILog Logger = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
@@ -25,7 +25,7 @@ namespace LinkInfo
 
         private Uri _lastLink = null;
 
-        public LinkInfo(ConnectionManager connMgr, JObject config)
+        public LinkInfoPlugin(ConnectionManager connMgr, JObject config)
         {
             ConnectionManager = connMgr;
 

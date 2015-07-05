@@ -51,7 +51,7 @@
     <Compile Include="EncodingGuesser.cs" />
     <Compile Include="IPAddressBlacklist.cs" />
     <Compile Include="LinkAndInfo.cs" />
-    <Compile Include="LinkInfo.cs" />
+    <Compile Include="LinkInfoPlugin.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
