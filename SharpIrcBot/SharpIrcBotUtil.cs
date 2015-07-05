@@ -20,6 +20,7 @@ namespace SharpIrcBot
     {
         public const string DefaultLogFormat = "%date{yyyy-MM-dd HH:mm:ss} [%15.15thread] %-5level %30.30logger - %message%newline";
         public static readonly Encoding Utf8NoBom = new UTF8Encoding(false, true);
+        public static readonly ISet<char> UrlSafeChars = new HashSet<char>("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.");
 
         public static BotConfig LoadConfig()
         {
@@ -423,6 +424,50 @@ namespace SharpIrcBot
             rootLogger.AddAppender(logAppender);
 
             hierarchy.Configured = true;
+        }
+
+        /// <summary>
+        /// URL-encodes the string.
+        /// </summary>
+        /// <returns>The URL-encoded string.</returns>
+        /// <param name="data">The string to URL-encode.</param>
+        /// <param name="charset">The charset being used.</param>
+        /// <param name="spaceAsPlus">If true, encodes spaces (U+0020) as pluses (U+002B).
+        /// If false, encodes spaces as the hex escape "%20".</param>
+        public static string UrlEncode(string data, Encoding charset, bool spaceAsPlus = false)
+        {
+            var ret = new StringBuilder();
+            foreach (string ps in StringToCodePointStrings(data))
+            {
+                if (ps.Length == 1 && UrlSafeChars.Contains(ps[0]))
+                {
+                    // URL-safe character
+                    ret.Append(ps[0]);
+                }
+                else if (spaceAsPlus && ps.Length == 1 && ps[0] == ' ')
+                {
+                    ret.Append('+');
+                }
+                else
+                {
+                    // character in the server's encoding?
+                    try
+                    {
+                        // URL-encode
+                        foreach (var b in charset.GetBytes(ps))
+                        {
+                            ret.AppendFormat("%{0:X2}", (int)b);
+                        }
+                    }
+                    catch (EncoderFallbackException)
+                    {
+                        // unsupported natively by the encoding; perform a URL-encoded HTML escape
+                        ret.AppendFormat("%26%23{0}%3B", Char.ConvertToUtf32(ps, 0));
+                    }
+                }
+            }
+
+            return ret.ToString();
         }
     }
 }

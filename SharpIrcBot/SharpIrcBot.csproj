@@ -50,6 +50,7 @@
     <Compile Include="Config\PluginConfig.cs" />
     <Compile Include="SharpIrcBotUtil.cs" />
     <Compile Include="IDatabaseModuleConfig.cs" />
+    <Compile Include="CookieWebClient.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
