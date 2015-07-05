@@ -67,17 +67,25 @@ namespace Thanks
                 var thankerLower = thanker.ToLowerInvariant();
                 bool forceThanks = thankMatch.Groups[1].Success;
                 var thankeeNick = thankMatch.Groups[2].Value;
-                var thankee = ConnectionManager.RegisteredNameForNick(thankeeNick);
 
-                if (!forceThanks && thankee == null)
+                string thankee;
+                if (forceThanks)
                 {
-                    ConnectionManager.SendChannelMessageFormat(
-                        message.Channel,
-                        "{0}: Unfortunately, {1} doesn't seem to be logged in with NickServ.",
-                        thankerNick,
-                        thankeeNick
-                    );
-                    return;
+                    thankee = thankeeNick;
+                }
+                else
+                {
+                    thankee = ConnectionManager.RegisteredNameForNick(thankeeNick);
+                    if (thankee == null)
+                    {
+                        ConnectionManager.SendChannelMessageFormat(
+                            message.Channel,
+                            "{0}: Unfortunately, {1} doesn't seem to be logged in with NickServ.",
+                            thankerNick,
+                            thankeeNick
+                        );
+                        return;
+                    }
                 }
 
                 var thankeeLower = thankee.ToLowerInvariant();
