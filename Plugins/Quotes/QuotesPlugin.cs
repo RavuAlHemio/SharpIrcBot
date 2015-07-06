@@ -78,8 +78,13 @@ namespace Quotes
                         Body = body,
                         BodyLowercase = body.ToLowerInvariant()
                     };
+                    ctx.Quotes.Add(newFreeFormQuote);
                     ctx.SaveChanges();
                 }
+                ConnectionManager.SendChannelMessage(
+                    e.Data.Channel,
+                    "Done."
+                );
                 return;
             }
 
