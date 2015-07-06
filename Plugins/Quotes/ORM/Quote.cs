@@ -40,5 +40,9 @@ namespace Quotes.ORM
         [Required]
         [Column("body", Order = 7)]
         public string Body { get; set; }
+
+        [Required]
+        [Column("body_lowercase", Order = 8)]
+        public string BodyLowercase { get; set; }
     }
 }

@@ -14,8 +14,10 @@ namespace Quotes
     public class QuotesPlugin : IPlugin
     {
         private static readonly ILog Logger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        private static readonly Regex AddQuoteRegex = new Regex("^!addquote[ ]+(.+)$");
         private static readonly Regex RememberRegex = new Regex("^!remember[ ]+([^ ]+)[ ]+(.+)$");
-        private static readonly Regex QuoteRegex = new Regex("^!quote(?:[ ]+([^ ]+))?$");
+        private static readonly Regex QuoteRegex = new Regex("^!quote(?:[ ]+(.+))?$");
+        private static readonly Regex QuoteUserRegex = new Regex("^!quoteuser[ ]+([^ ]+)$");
 
         protected ConnectionManager ConnectionManager;
         protected QuotesConfig Config;
@@ -33,9 +35,53 @@ namespace Quotes
             ConnectionManager.ChannelAction += HandleChannelAction;
         }
 
+        protected virtual void PostRandomQuote(string requestor, string channel, IQueryable<Quote> quotes)
+        {
+            int quoteCount = quotes.Count();
+            if (quoteCount > 0)
+            {
+                int index = Randomizer.Next(quoteCount);
+                var quote = quotes.OrderBy(q => q.ID).Skip(index).FirstOrDefault();
+                ConnectionManager.SendChannelMessage(
+                    channel,
+                    FormatQuote(quote)
+                );
+            }
+            else
+            {
+                ConnectionManager.SendChannelMessageFormat(
+                    channel,
+                    "Sorry, {0}, I don't have any matching quotes.",
+                    requestor
+                );
+            }
+
+            return;
+        }
+
         protected virtual void HandleChannelMessage(object sender, IrcEventArgs e)
         {
             var body = e.Data.Message;
+
+            var addMatch = AddQuoteRegex.Match(body);
+            if (addMatch.Success)
+            {
+                using (var ctx = GetNewContext())
+                {
+                    var newFreeFormQuote = new Quote
+                    {
+                        Timestamp = DateTime.Now.ToUniversalTimeForDatabase(),
+                        Channel = e.Data.Channel,
+                        Author = e.Data.Nick,
+                        AuthorLowercase = e.Data.Nick.ToLowerInvariant(),
+                        MessageType = "F",
+                        Body = body,
+                        BodyLowercase = body.ToLowerInvariant()
+                    };
+                    ctx.SaveChanges();
+                }
+                return;
+            }
 
             var rememberMatch = RememberRegex.Match(body);
             if (rememberMatch.Success)
@@ -60,7 +106,7 @@ namespace Quotes
                 Quote matchedQuote = null;
                 foreach (var potQuote in PotentialQuotes)
                 {
-                    if (potQuote.AuthorLowercase == lowercaseNick && potQuote.Body.ToLowerInvariant().Contains(lowercaseSubstring))
+                    if (potQuote.AuthorLowercase == lowercaseNick && potQuote.BodyLowercase.Contains(lowercaseSubstring))
                     {
                         matchedQuote = potQuote;
                         break;
@@ -97,49 +143,32 @@ namespace Quotes
             var quoteMatch = QuoteRegex.Match(body);
             if (quoteMatch.Success)
             {
-                var nick = quoteMatch.Groups[1].Success ? quoteMatch.Groups[1].Value : null;
-                var lowercaseNick = (nick != null) ? nick.ToLowerInvariant() : null;
-                var found = false;
+                var subject = quoteMatch.Groups[1].Success ? quoteMatch.Groups[1].Value : null;
+                var lowercaseSubject = (subject != null) ? subject.ToLowerInvariant() : null;
 
                 using (var ctx = GetNewContext())
                 {
-                    var quotes = (nick == null)
-                        ? ctx.Quotes
-                        : ctx.Quotes.Where(q => q.AuthorLowercase == lowercaseNick);
+                    var quotes = (lowercaseSubject != null)
+                        ? ctx.Quotes.Where(q => q.BodyLowercase.Contains(lowercaseSubject))
+                        : ctx.Quotes;
 
-                    int quoteCount = quotes.Count();
-                    if (quoteCount > 0)
-                    {
-                        int index = Randomizer.Next(quoteCount);
-                        var quote = quotes.OrderBy(q => q.ID).Skip(index).FirstOrDefault();
-                        ConnectionManager.SendChannelMessage(
-                            e.Data.Channel,
-                            FormatQuote(quote)
-                        );
-                        found = true;
-                    }
+                    PostRandomQuote(e.Data.Nick, e.Data.Channel, quotes);
                 }
 
-                if (!found)
+                return;
+            }
+
+            var quoteUserMatch = QuoteUserRegex.Match(body);
+            if (quoteUserMatch.Success)
+            {
+                var nick = quoteMatch.Groups[1].Value;
+                var lowercaseNick = nick.ToLowerInvariant();
+
+                using (var ctx = GetNewContext())
                 {
-                    if (nick == null)
-                    {
-                        ConnectionManager.SendChannelMessageFormat(
-                            e.Data.Channel,
-                            "Sorry, {0}, I don't have any quotes.",
-                            e.Data.Nick
-                        );
-                    }
-                    else
-                    {
-                        ConnectionManager.SendChannelMessageFormat(
-                            e.Data.Channel,
-                            "Sorry, {0}, I don't have any quotes for {1}.",
-                            e.Data.Nick,
-                            nick
-                        );
-                    }
-                    return;
+                    var quotes = ctx.Quotes.Where(q => q.AuthorLowercase == lowercaseNick);
+
+                    PostRandomQuote(e.Data.Nick, e.Data.Channel, quotes);
                 }
 
                 return;
@@ -153,7 +182,8 @@ namespace Quotes
                 Author = e.Data.Nick,
                 AuthorLowercase = e.Data.Nick.ToLowerInvariant(),
                 MessageType = "M",
-                Body = body
+                Body = body,
+                BodyLowercase = body.ToLowerInvariant()
             };
             PotentialQuotes.Add(newQuote);
 
@@ -170,7 +200,8 @@ namespace Quotes
                 Author = e.Data.Nick,
                 AuthorLowercase = e.Data.Nick.ToLowerInvariant(),
                 MessageType = "A",
-                Body = e.ActionMessage
+                Body = e.ActionMessage,
+                BodyLowercase = e.ActionMessage.ToLowerInvariant()
             };
             PotentialQuotes.Add(quote);
 
@@ -195,6 +226,10 @@ namespace Quotes
             else if (quote.MessageType == "A")
             {
                 return string.Format("* {0} {1}", quote.Author, quote.Body);
+            }
+            else if (quote.MessageType == "F")
+            {
+                return quote.Body;
             }
 
             return null;
