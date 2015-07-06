@@ -81,6 +81,7 @@ namespace Quotes
                 using (var ctx = GetNewContext())
                 {
                     ctx.Quotes.Add(matchedQuote);
+                    ctx.SaveChanges();
                 }
 
                 ConnectionManager.SendChannelMessageFormat(
