@@ -277,6 +277,7 @@ namespace UnoBot
                         .ToList();
                     if (LastHandCount > 0 && Config.ManyCardsCurseThreshold > 0 && CurrentHand.Count - LastHandCount >= Config.ManyCardsCurseThreshold)
                     {
+                        Logger.Debug("cursing because of overfilled hand");
                         Curse();
                     }
                     LastHandCount = CurrentHand.Count;
@@ -326,6 +327,7 @@ namespace UnoBot
             if (NextPlayer != null && CurrentCardCounts.ContainsKey(NextPlayer) && CurrentCardCounts[NextPlayer] < 3)
             {
                 // the player after me has too few cards; try finding an evil card first
+                Logger.DebugFormat("next player {0} has {1} cards; trying to find an evil card", NextPlayer, CurrentCardCounts[NextPlayer]);
 
                 // D2, S, R
                 possibleCards.AddRange(CurrentHand.Where(hc =>
@@ -341,6 +343,8 @@ namespace UnoBot
 
                 if (possibleCards.Count > 0)
                 {
+                    Logger.Debug("we have an evil card for the next player");
+
                     // don't perform the standard pick
                     standardPick = false;
                 }
@@ -426,6 +430,7 @@ namespace UnoBot
                 Logger.Debug("drawing");
                 if (Config.ManyDrawsCurseThreshold >= 0 && DrawsSinceLastPlay > Config.ManyDrawsCurseThreshold)
                 {
+                    Logger.Debug("cursing because of too many draws");
                     Curse();
                 }
                 ConnectionManager.SendChannelMessage(Config.UnoChannel, "!draw");
