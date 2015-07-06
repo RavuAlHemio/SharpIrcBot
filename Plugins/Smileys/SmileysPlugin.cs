@@ -17,6 +17,7 @@ namespace Smileys
             Config = new SmileysConfig(config);
 
             ConnectionManager.ChannelMessage += HandleChannelOrQueryMessage;
+            ConnectionManager.QueryMessage += HandleChannelOrQueryMessage;
         }
 
         void HandleChannelOrQueryMessage(object sender, IrcEventArgs e)
