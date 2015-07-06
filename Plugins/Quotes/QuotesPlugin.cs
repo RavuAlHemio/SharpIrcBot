@@ -110,7 +110,7 @@ namespace Quotes
                     if (quoteCount > 0)
                     {
                         int index = Randomizer.Next(quoteCount);
-                        var quote = quotes.Skip(index).FirstOrDefault();
+                        var quote = quotes.OrderBy(q => q.ID).Skip(index).FirstOrDefault();
                         ConnectionManager.SendChannelMessage(
                             e.Data.Channel,
                             FormatQuote(quote)
