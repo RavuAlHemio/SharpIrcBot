@@ -234,7 +234,7 @@ namespace UnoBot
             {
                 case CurrentPlayerEventName:
                 {
-                    // my turn? not my turn?
+                    // my turn? not my turn? (legacy)
                     var currentPlayer = (string) evt["player"];
                     MyTurn = (currentPlayer == ConnectionManager.Client.Nickname);
                     break;
