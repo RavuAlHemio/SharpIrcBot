@@ -121,12 +121,23 @@ namespace Quotes
 
                 if (!found)
                 {
-                    ConnectionManager.SendChannelMessageFormat(
-                        e.Data.Channel,
-                        "Sorry, {0}, I don't have any quotes for {1}.",
-                        e.Data.Nick,
-                        nick
-                    );
+                    if (nick == null)
+                    {
+                        ConnectionManager.SendChannelMessageFormat(
+                            e.Data.Channel,
+                            "Sorry, {0}, I don't have any quotes.",
+                            e.Data.Nick
+                        );
+                    }
+                    else
+                    {
+                        ConnectionManager.SendChannelMessageFormat(
+                            e.Data.Channel,
+                            "Sorry, {0}, I don't have any quotes for {1}.",
+                            e.Data.Nick,
+                            nick
+                        );
+                    }
                     return;
                 }
 
