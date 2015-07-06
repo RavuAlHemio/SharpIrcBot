@@ -75,8 +75,8 @@ namespace Quotes
                         Author = e.Data.Nick,
                         AuthorLowercase = e.Data.Nick.ToLowerInvariant(),
                         MessageType = "F",
-                        Body = body,
-                        BodyLowercase = body.ToLowerInvariant()
+                        Body = addMatch.Groups[1].Value,
+                        BodyLowercase = addMatch.Groups[1].Value.ToLowerInvariant()
                     };
                     ctx.Quotes.Add(newFreeFormQuote);
                     ctx.SaveChanges();
