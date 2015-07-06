@@ -156,6 +156,7 @@ namespace Quotes
                     var quotes = (lowercaseSubject != null)
                         ? ctx.Quotes.Where(q => q.BodyLowercase.Contains(lowercaseSubject))
                         : ctx.Quotes;
+                    Logger.DebugFormat("quotes query: {0}", quotes);
 
                     PostRandomQuote(e.Data.Nick, e.Data.Channel, quotes);
                 }
