@@ -11,7 +11,7 @@ using SharpIrcBot;
 
 namespace Quotes
 {
-    public class QuotesPlugin
+    public class QuotesPlugin : IPlugin
     {
         private static readonly ILog Logger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private static readonly Regex RememberRegex = new Regex("^!remember[ ]+([^ ]+)[ ]+(.+)$");
