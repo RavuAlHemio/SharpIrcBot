@@ -46,6 +46,16 @@ namespace Quotes
                 var lowercaseNick = nick.ToLowerInvariant();
                 var lowercaseSubstring = substring.ToLowerInvariant();
 
+                if (lowercaseNick == e.Data.Nick.ToLowerInvariant())
+                {
+                    ConnectionManager.SendChannelMessageFormat(
+                        e.Data.Channel,
+                        "Sorry, {0}, someone else has to remember your quotes.",
+                        e.Data.Nick
+                    );
+                    return;
+                }
+
                 // find it
                 Quote matchedQuote = null;
                 foreach (var potQuote in PotentialQuotes)
