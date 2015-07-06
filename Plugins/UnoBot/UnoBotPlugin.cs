@@ -33,7 +33,9 @@ namespace UnoBot
         protected bool MyTurn;
         protected Card TopCard;
         protected List<Card> CurrentHand;
+        protected int LastHandCount;
         protected bool DrewLast;
+        protected int DrawsSinceLastPlay;
         protected Random Randomizer;
 
         public UnoBotPlugin(ConnectionManager connMgr, JObject config)
@@ -49,7 +51,9 @@ namespace UnoBot
 
             MyTurn = false;
             CurrentHand = new List<Card>();
+            LastHandCount = -1;
             DrewLast = false;
+            DrawsSinceLastPlay = 0;
             Randomizer = new Random();
         }
 
@@ -156,6 +160,10 @@ namespace UnoBot
             if (message.Message == "??join")
             {
                 ConnectionManager.SendChannelMessage(message.Channel, "!botjoin");
+
+                // don't curse if the number of cards jumps up from 1 to 7 ;)
+                LastHandCount = -1;
+
                 return;
             }
 
@@ -239,6 +247,11 @@ namespace UnoBot
                         .Where(cav => cav.HasValue)
                         .Select(cav => cav.Value)
                         .ToList();
+                    if (Config.ManyCardsCurseThreshold > 0 && CurrentHand.Count - LastHandCount >= Config.ManyCardsCurseThreshold)
+                    {
+                        Curse();
+                    }
+                    LastHandCount = CurrentHand.Count;
                     break;
                 }
             }
@@ -247,6 +260,17 @@ namespace UnoBot
             {
                 PlayACard();
             }
+        }
+
+        protected void Curse()
+        {
+            if (Config.Curses.Count == 0)
+            {
+                return;
+            }
+
+            var curse = Config.Curses[Randomizer.Next(Config.Curses.Count)];
+            ConnectionManager.SendChannelMessage(Config.UnoChannel, curse);
         }
 
         protected CardColor PickAColor()
@@ -330,12 +354,14 @@ namespace UnoBot
                     );
                 }
                 DrewLast = false;
+                DrawsSinceLastPlay = 0;
                 return;
             }
 
             if (DrewLast)
             {
                 DrewLast = false;
+                ++DrawsSinceLastPlay;
                 Logger.Debug("passing");
                 ConnectionManager.SendChannelMessage(Config.UnoChannel, "!pass");
             }
@@ -343,6 +369,10 @@ namespace UnoBot
             {
                 DrewLast = true;
                 Logger.Debug("drawing");
+                if (Config.ManyDrawsCurseThreshold >= 0 && DrawsSinceLastPlay > Config.ManyDrawsCurseThreshold)
+                {
+                    Curse();
+                }
                 ConnectionManager.SendChannelMessage(Config.UnoChannel, "!draw");
             }
         }
