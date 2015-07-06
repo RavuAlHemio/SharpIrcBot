@@ -17,8 +17,10 @@ namespace UnoBot
 
         protected const string UnoMessagePrefix = "###   ";
         protected const string CurrentPlayerEventName = "current_player";
+        protected const string CurrentPlayerOrderEventName = "current_player_order";
         protected const string TopCardEventName = "current_card";
         protected const string HandInfoEventName = "hand_info";
+        protected const string CardCountsEventName = "card_counts";
 
         /// <summary>After the following event is processed (and it's the bot's turn), the bot plays a card.</summary>
         protected const string TriggerPlayEventName = "hand_info";
@@ -33,6 +35,8 @@ namespace UnoBot
         protected bool MyTurn;
         protected Card TopCard;
         protected List<Card> CurrentHand;
+        protected Dictionary<string, int> CurrentCardCounts;
+        protected string NextPlayer;
         protected int LastHandCount;
         protected bool DrewLast;
         protected int DrawsSinceLastPlay;
@@ -51,6 +55,8 @@ namespace UnoBot
 
             MyTurn = false;
             CurrentHand = new List<Card>();
+            CurrentCardCounts = new Dictionary<string, int>();
+            NextPlayer = null;
             LastHandCount = -1;
             DrewLast = false;
             DrawsSinceLastPlay = 0;
@@ -233,6 +239,28 @@ namespace UnoBot
                     MyTurn = (currentPlayer == ConnectionManager.Client.Nickname);
                     break;
                 }
+                case CurrentPlayerOrderEventName:
+                {
+                    // my turn? not my turn?
+                    var upcomingPlayers = (JArray) evt["order"];
+                    MyTurn = ((string)upcomingPlayers[0] == ConnectionManager.Client.Nickname);
+                    NextPlayer = (upcomingPlayers.Count > 1)
+                        ? (string)upcomingPlayers[1]
+                        : null;
+                    break;
+                }
+                case CardCountsEventName:
+                {
+                    var cardCounts = (JArray) evt["counts"];
+                    CurrentCardCounts.Clear();
+                    foreach (JObject playerAndCount in cardCounts)
+                    {
+                        var player = (string) playerAndCount["player"];
+                        var count = (int) playerAndCount["count"];
+                        CurrentCardCounts[player] = count;
+                    }
+                    break;
+                }
                 case TopCardEventName:
                 {
                     var currentCardName = (string) evt["current_card"];
@@ -293,20 +321,47 @@ namespace UnoBot
         protected void PlayACard()
         {
             var possibleCards = new List<Card>();
+            bool standardPick = true;
 
-            // by value, times three
-            var cardsByValue = CurrentHand.Where(hc => hc.Value == TopCard.Value).ToList();
-            possibleCards.AddRange(cardsByValue);
-            possibleCards.AddRange(cardsByValue);
-            possibleCards.AddRange(cardsByValue);
+            if (NextPlayer != null && CurrentCardCounts.ContainsKey(NextPlayer) && CurrentCardCounts[NextPlayer] < 3)
+            {
+                // the player after me has too few cards; try finding an evil card first
 
-            // then by color, times two
-            var cardsByColor = CurrentHand.Where(hc => hc.Color == TopCard.Color).ToList();
-            possibleCards.AddRange(cardsByColor);
-            possibleCards.AddRange(cardsByColor);
+                // D2, S, R
+                possibleCards.AddRange(CurrentHand.Where(hc =>
+                    hc.Color == TopCard.Color && (
+                        hc.Value == CardValue.DrawTwo ||
+                        hc.Value == CardValue.Skip ||
+                        hc.Value == CardValue.Reverse
+                    )
+                ));
 
-            // then wildcards, times one
-            possibleCards.AddRange(CurrentHand.Where(hc => hc.Color == CardColor.Wild));
+                // WD4
+                possibleCards.AddRange(CurrentHand.Where(hc => hc.Value == CardValue.WildDrawFour));
+
+                if (possibleCards.Count > 0)
+                {
+                    // don't perform the standard pick
+                    standardPick = false;
+                }
+            }
+
+            if (standardPick)
+            {
+                // by value, times three
+                var cardsByValue = CurrentHand.Where(hc => hc.Value == TopCard.Value).ToList();
+                possibleCards.AddRange(cardsByValue);
+                possibleCards.AddRange(cardsByValue);
+                possibleCards.AddRange(cardsByValue);
+
+                // then by color, times two
+                var cardsByColor = CurrentHand.Where(hc => hc.Color == TopCard.Color).ToList();
+                possibleCards.AddRange(cardsByColor);
+                possibleCards.AddRange(cardsByColor);
+
+                // then wildcards, times one
+                possibleCards.AddRange(CurrentHand.Where(hc => hc.Color == CardColor.Wild));
+            }
 
             if (possibleCards.Count > 0)
             {
