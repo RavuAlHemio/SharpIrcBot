@@ -162,7 +162,7 @@ namespace UnoBot
                 ConnectionManager.SendChannelMessage(message.Channel, "!botjoin");
 
                 // don't curse if the number of cards jumps up from 1 to 7 ;)
-                LastHandCount = -1;
+                LastHandCount = 0;
 
                 return;
             }
@@ -247,7 +247,7 @@ namespace UnoBot
                         .Where(cav => cav.HasValue)
                         .Select(cav => cav.Value)
                         .ToList();
-                    if (Config.ManyCardsCurseThreshold > 0 && CurrentHand.Count - LastHandCount >= Config.ManyCardsCurseThreshold)
+                    if (LastHandCount > 0 && Config.ManyCardsCurseThreshold > 0 && CurrentHand.Count - LastHandCount >= Config.ManyCardsCurseThreshold)
                     {
                         Curse();
                     }
