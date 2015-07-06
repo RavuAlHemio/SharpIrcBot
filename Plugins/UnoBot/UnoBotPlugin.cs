@@ -324,29 +324,34 @@ namespace UnoBot
             var possibleCards = new List<Card>();
             bool standardPick = true;
 
-            if (NextPlayer != null && CurrentCardCounts.ContainsKey(NextPlayer) && CurrentCardCounts[NextPlayer] < 3)
+            if (NextPlayer != null && CurrentCardCounts.ContainsKey(NextPlayer))
             {
-                // the player after me has too few cards; try finding an evil card first
-                Logger.DebugFormat("next player {0} has {1} cards; trying to find an evil card", NextPlayer, CurrentCardCounts[NextPlayer]);
+                Logger.DebugFormat("next player {0} has {1} cards", NextPlayer, CurrentCardCounts[NextPlayer]);
 
-                // D2, S, R
-                possibleCards.AddRange(CurrentHand.Where(hc =>
-                    hc.Color == TopCard.Color && (
-                        hc.Value == CardValue.DrawTwo ||
-                        hc.Value == CardValue.Skip ||
-                        hc.Value == CardValue.Reverse
-                    )
-                ));
-
-                // WD4
-                possibleCards.AddRange(CurrentHand.Where(hc => hc.Value == CardValue.WildDrawFour));
-
-                if (possibleCards.Count > 0)
+                if (CurrentCardCounts[NextPlayer] < 3)
                 {
-                    Logger.Debug("we have an evil card for the next player");
+                    // the player after me has too few cards; try finding an evil card first
+                    Logger.Debug("trying to find an evil card");
 
-                    // don't perform the standard pick
-                    standardPick = false;
+                    // D2, S, R
+                    possibleCards.AddRange(CurrentHand.Where(hc =>
+                        hc.Color == TopCard.Color && (
+                            hc.Value == CardValue.DrawTwo ||
+                            hc.Value == CardValue.Skip ||
+                            hc.Value == CardValue.Reverse
+                        )
+                    ));
+
+                    // WD4
+                    possibleCards.AddRange(CurrentHand.Where(hc => hc.Value == CardValue.WildDrawFour));
+
+                    if (possibleCards.Count > 0)
+                    {
+                        Logger.Debug("we have an evil card for the next player");
+
+                        // don't perform the standard pick
+                        standardPick = false;
+                    }
                 }
             }
 
