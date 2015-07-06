@@ -73,7 +73,8 @@ namespace Quotes
                         e.Data.Channel,
                         "Sorry, {0}, I don't remember what {1} said about \"{2}\".",
                         e.Data.Nick,
-                        lowercaseSubstring
+                        nick,
+                        substring
                     );
                     return;
                 }
