@@ -15,7 +15,7 @@ namespace Thanks
     {
         private static readonly ILog Logger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private static readonly Regex ThankRegex = new Regex("^[ ]*!(?:thank|thanks|thx)[ ]+(--force[ ]+)?([^ ]+)[ ]*$");
-        private static readonly Regex ThankedRegex = new Regex("^[ ]*!thanked[ ]+(--raw[ ]+)([^ ]+)[ ]*$");
+        private static readonly Regex ThankedRegex = new Regex("^[ ]*!thanked[ ]+(--raw[ ]+)?([^ ]+)[ ]*$");
 
         protected ConnectionManager ConnectionManager;
         protected ThanksConfig Config;
