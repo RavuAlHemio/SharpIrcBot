@@ -41,7 +41,7 @@ namespace Quotes
         protected virtual void PostRandomQuote(string requestor, string channel, IQueryable<Quote> quotes, IQueryable<QuoteVote> votes)
         {
             var qualityQuotes = quotes
-                .Where(q => votes.Where(v => v.QuoteID == q.ID).Sum(v => (int?)v.Points).GetValueOrDefault(0) >= Config.VoteThreshold);
+                .Where(q => (votes.Where(v => v.QuoteID == q.ID).Sum(v => (int?)v.Points) ?? 0) >= Config.VoteThreshold);
 
             int quoteCount = qualityQuotes.Count();
             if (quoteCount > 0)
