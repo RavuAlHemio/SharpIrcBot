@@ -40,12 +40,14 @@ namespace Quotes
 
         protected virtual void PostRandomQuote(string requestor, string channel, IQueryable<Quote> quotes, IQueryable<QuoteVote> votes)
         {
-            int quoteCount = quotes.Count();
+            var qualityQuotes = quotes
+                .Where(q => votes.Where(v => v.QuoteID == q.ID).Sum(v => v.Points) >= Config.VoteThreshold);
+
+            int quoteCount = qualityQuotes.Count();
             if (quoteCount > 0)
             {
                 int index = Randomizer.Next(quoteCount);
-                var quote = quotes
-                    .Where(q => votes.Where(v => v.QuoteID == q.ID).Sum(v => v.Points) >= Config.VoteThreshold)
+                var quote = qualityQuotes
                     .OrderBy(q => q.ID)
                     .Skip(index)
                     .FirstOrDefault();
