@@ -42,6 +42,7 @@ namespace Quotes
         {
             var qualityQuotes = quotes
                 .Where(q => votes.Where(v => v.QuoteID == q.ID).Sum(v => v.Points) >= Config.VoteThreshold);
+            Logger.DebugFormat("quality quote SQL: {0}", qualityQuotes);
 
             int quoteCount = qualityQuotes.Count();
             if (quoteCount > 0)
