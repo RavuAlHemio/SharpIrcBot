@@ -7,33 +7,44 @@ namespace UnoBot
     {
         public static CardValue? ParseValue(string str)
         {
-            switch (str)
+            switch (str.ToUpperInvariant())
             {
                 case "ZERO":
+                case "0":
                     return CardValue.Zero;
                 case "ONE":
+                case "1":
                     return CardValue.One;
                 case "TWO":
+                case "2":
                     return CardValue.Two;
                 case "THREE":
+                case "3":
                     return CardValue.Three;
                 case "FOUR":
+                case "4":
                     return CardValue.Four;
                 case "FIVE":
+                case "5":
                     return CardValue.Five;
                 case "SIX":
+                case "6":
                     return CardValue.Six;
                 case "SEVEN":
+                case "7":
                     return CardValue.Seven;
                 case "EIGHT":
+                case "8":
                     return CardValue.Eight;
                 case "NINE":
+                case "9":
                     return CardValue.Nine;
                 case "R":
                     return CardValue.Reverse;
                 case "S":
                     return CardValue.Skip;
                 case "WILD":
+                case "W":
                     return CardValue.Wild;
                 case "D2":
                     return CardValue.DrawTwo;
@@ -69,17 +80,22 @@ namespace UnoBot
 
         public static CardColor? ParseColor(string str)
         {
-            switch (str)
+            switch (str.ToUpperInvariant())
             {
                 case "RED":
+                case "R":
                     return CardColor.Red;
                 case "GREEN":
+                case "G":
                     return CardColor.Green;
                 case "BLUE":
+                case "B":
                     return CardColor.Blue;
                 case "YELLOW":
+                case "Y":
                     return CardColor.Yellow;
                 case "WILD":
+                case "W":
                     return CardColor.Wild;
                 default:
                     return null;

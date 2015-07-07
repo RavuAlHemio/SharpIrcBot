@@ -38,6 +38,7 @@ namespace UnoBot
         protected Dictionary<string, int> CurrentCardCounts;
         protected string NextPlayer;
         protected int LastHandCount;
+        protected CardColor? ColorRequest;
         protected bool DrewLast;
         protected int DrawsSinceLastPlay;
         protected Random Randomizer;
@@ -58,6 +59,7 @@ namespace UnoBot
             CurrentCardCounts = new Dictionary<string, int>();
             NextPlayer = null;
             LastHandCount = -1;
+            ColorRequest = null;
             DrewLast = false;
             DrawsSinceLastPlay = 0;
             Randomizer = new Random();
@@ -176,6 +178,54 @@ namespace UnoBot
             if (message.Message == "??leave")
             {
                 ConnectionManager.SendChannelMessage(message.Channel, "!leave");
+                return;
+            }
+
+            if (message.Message.StartsWith("??color "))
+            {
+                var denyColor = false;
+                if (CurrentCardCounts.Values.All(v => v > Config.PlayToWinThreshold))
+                {
+                    // everybody has more than two cards
+                    denyColor = true;
+                }
+                if (CurrentCardCounts.ContainsKey(message.Nick) && CurrentCardCounts[message.Nick] <= Config.PlayToWinThreshold)
+                {
+                    // the person who is asking has two cards or less
+                    denyColor = true;
+                }
+                if (CurrentHand.Count <= Config.PlayToWinThreshold)
+                {
+                    // I have two cards or less
+                    denyColor = true;
+                }
+
+                if (denyColor)
+                {
+                    ConnectionManager.SendChannelMessage(message.Channel, "Sorry, no can do.");
+                    return;
+                }
+
+                var colorString = message.Message.Substring(("??color ").Length);
+                var color = CardUtils.ParseColor(colorString);
+                if (!color.HasValue || color == CardColor.Wild)
+                {
+                    ConnectionManager.SendChannelMessage(message.Channel, "Uhh, what color is that?");
+                    return;
+                }
+
+                ColorRequest = color;
+
+                // can I change the color?
+                if (CurrentHand.Any(c => c.Color == color || c.Color == CardColor.Wild))
+                {
+                    ConnectionManager.SendChannelMessage(message.Channel, "Yeah, I think that's doable.");
+                }
+                else
+                {
+                    ConnectionManager.SendChannelMessage(message.Channel, "I'll do my best, but don't count on me...");
+                }
+
                 return;
             }
         }
@@ -306,6 +356,14 @@ namespace UnoBot
         {
             var colorsToChoose = new List<CardColor>();
 
+            if (ColorRequest.HasValue)
+            {
+                // we have a pending color request; honor it
+                var color = ColorRequest.Value;
+                ColorRequest = null;
+                return color;
+            }
+
             // -> add all four colors once to allow for some chaotic color switching
             colorsToChoose.Add(CardColor.Red);
             colorsToChoose.Add(CardColor.Green);
@@ -322,13 +380,14 @@ namespace UnoBot
         protected void PlayACard()
         {
             var possibleCards = new List<Card>();
-            bool standardPick = true;
+            bool nextPickStrategy = true;
 
-            if (NextPlayer != null && CurrentCardCounts.ContainsKey(NextPlayer))
+            // strategy 1: destroy the next player if they are close to winning
+            if (nextPickStrategy && NextPlayer != null && CurrentCardCounts.ContainsKey(NextPlayer))
             {
                 Logger.DebugFormat("next player {0} has {1} cards", NextPlayer, CurrentCardCounts[NextPlayer]);
 
-                if (CurrentCardCounts[NextPlayer] < 3)
+                if (CurrentCardCounts[NextPlayer] <= Config.PlayToWinThreshold)
                 {
                     // the player after me has too few cards; try finding an evil card first
                     Logger.Debug("trying to find an evil card");
@@ -349,13 +408,39 @@ namespace UnoBot
                     {
                         Logger.Debug("we have an evil card for the next player");
 
-                        // don't perform the standard pick
-                        standardPick = false;
+                        // don't add the next pick
+                        nextPickStrategy = false;
                     }
                 }
             }
 
-            if (standardPick)
+            // strategy 2: honor color requests
+            if (nextPickStrategy && ColorRequest.HasValue)
+            {
+                if (TopCard.Color == ColorRequest.Value)
+                {
+                    // glad that's been taken care of
+                    ColorRequest = null;
+                }
+                else
+                {
+                    // do I have a usable card that matches the target color?
+                    possibleCards.AddRange(CurrentHand.Where(hc => hc.Color == ColorRequest.Value && hc.Value == TopCard.Value));
+                    if (possibleCards.Count == 0)
+                    {
+                        // nope; try changing with a wild card instead
+                        possibleCards.AddRange(CurrentHand.Where(hc => hc.Color == CardColor.Wild));
+                    }
+                    if (possibleCards.Count > 0)
+                    {
+                        // alright, no need for the standard pick
+                        nextPickStrategy = false;
+                    }
+                }
+            }
+
+            // strategy: pick a card at random
+            if (nextPickStrategy)
             {
                 // by value, times three
                 var cardsByValue = CurrentHand.Where(hc => hc.Value == TopCard.Value).ToList();
@@ -379,7 +464,7 @@ namespace UnoBot
                 var card = possibleCards[index];
 
                 // if more than two cards in hand, perform a strategic draw 10% of the time
-                if (CurrentHand.Count > 2 && !DrewLast)
+                if (CurrentHand.Count > Config.PlayToWinThreshold && !DrewLast)
                 {
                     var strategicDraw = (Randomizer.Next(10) == 0);
                     if (strategicDraw)
