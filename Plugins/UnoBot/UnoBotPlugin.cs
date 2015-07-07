@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -187,16 +188,19 @@ namespace UnoBot
                 if (CurrentCardCounts.Values.All(v => v > Config.PlayToWinThreshold))
                 {
                     // everybody has more than two cards
+                    Logger.DebugFormat("denying color request because everybody has more than {0} cards", Config.PlayToWinThreshold);
                     denyColor = true;
                 }
                 if (CurrentCardCounts.ContainsKey(message.Nick) && CurrentCardCounts[message.Nick] <= Config.PlayToWinThreshold)
                 {
                     // the person who is asking has two cards or less
+                    Logger.DebugFormat("denying color request because the requestor has {0} cards or fewer ({1})", Config.PlayToWinThreshold, CurrentCardCounts[message.Nick]);
                     denyColor = true;
                 }
                 if (CurrentHand.Count <= Config.PlayToWinThreshold)
                 {
                     // I have two cards or less
+                    Logger.DebugFormat("denying color request because I have {0} cards or fewer ({1})", Config.PlayToWinThreshold, CurrentHand.Count);
                     denyColor = true;
                 }
 
@@ -360,6 +364,7 @@ namespace UnoBot
             {
                 // we have a pending color request; honor it
                 var color = ColorRequest.Value;
+                Logger.DebugFormat("honoring color request {0}", color);
                 ColorRequest = null;
                 return color;
             }
