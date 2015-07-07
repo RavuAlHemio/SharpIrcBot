@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using log4net;
 using Meebey.SmartIrc4net;
@@ -22,6 +23,7 @@ namespace Quotes
         protected ConnectionManager ConnectionManager;
         protected QuotesConfig Config;
         protected List<Quote> PotentialQuotes;
+        protected long LastQuoteID;
         protected Random Randomizer;
 
         public QuotesPlugin(ConnectionManager connMgr, JObject config)
@@ -29,19 +31,25 @@ namespace Quotes
             ConnectionManager = connMgr;
             Config = new QuotesConfig(config);
             PotentialQuotes = new List<Quote>(Config.RememberForQuotes + 1);
+            LastQuoteID = -1;
             Randomizer = new Random();
 
             ConnectionManager.ChannelMessage += HandleChannelMessage;
             ConnectionManager.ChannelAction += HandleChannelAction;
         }
 
-        protected virtual void PostRandomQuote(string requestor, string channel, IQueryable<Quote> quotes)
+        protected virtual void PostRandomQuote(string requestor, string channel, IQueryable<Quote> quotes, IQueryable<QuoteVote> votes)
         {
             int quoteCount = quotes.Count();
             if (quoteCount > 0)
             {
                 int index = Randomizer.Next(quoteCount);
-                var quote = quotes.OrderBy(q => q.ID).Skip(index).FirstOrDefault();
+                var quote = quotes
+                    .Where(q => votes.Where(v => v.QuoteID == q.ID).Sum(v => v.Points) >= Config.VoteThreshold)
+                    .OrderBy(q => q.ID)
+                    .Skip(index)
+                    .FirstOrDefault();
+                LastQuoteID = quote.ID;
                 ConnectionManager.SendChannelMessage(
                     channel,
                     FormatQuote(quote)
@@ -55,11 +63,33 @@ namespace Quotes
                     requestor
                 );
             }
-
-            return;
         }
 
-        protected virtual void HandleChannelMessage(object sender, IrcEventArgs e)
+        protected void HandleChannelMessage(object sender, IrcEventArgs e)
+        {
+            try
+            {
+                ActuallyHandleChannelMessage(sender, e);
+            }
+            catch (Exception exc)
+            {
+                Logger.Error("error handling channel message", exc);
+            }
+        }
+
+        protected void HandleChannelAction(object sender, ActionEventArgs e)
+        {
+            try
+            {
+                ActuallyHandleChannelAction(sender, e);
+            }
+            catch (Exception exc)
+            {
+                Logger.Error("error handling channel action", exc);
+            }
+        }
+
+        protected virtual void ActuallyHandleChannelMessage(object sender, IrcEventArgs e)
         {
             var body = e.Data.Message;
 
@@ -156,9 +186,8 @@ namespace Quotes
                     var quotes = (lowercaseSubject != null)
                         ? ctx.Quotes.Where(q => q.BodyLowercase.Contains(lowercaseSubject))
                         : ctx.Quotes;
-                    Logger.DebugFormat("quotes query: {0}", quotes);
 
-                    PostRandomQuote(e.Data.Nick, e.Data.Channel, quotes);
+                    PostRandomQuote(e.Data.Nick, e.Data.Channel, quotes, ctx.QuoteVotes);
                 }
 
                 return;
@@ -174,9 +203,37 @@ namespace Quotes
                 {
                     var quotes = ctx.Quotes.Where(q => q.AuthorLowercase == lowercaseNick);
 
-                    PostRandomQuote(e.Data.Nick, e.Data.Channel, quotes);
+                    PostRandomQuote(e.Data.Nick, e.Data.Channel, quotes, ctx.QuoteVotes);
                 }
 
+                return;
+            }
+
+            if (body == "!upquote" || body == "!uq")
+            {
+                if (LastQuoteID < 0)
+                {
+                    ConnectionManager.SendChannelMessage(
+                        e.Data.Channel,
+                        "You'll have to get a quote first..."
+                    );
+                    return;
+                }
+                UpsertVote(e.Data.Nick, LastQuoteID, 1);
+                return;
+            }
+
+            if (body == "!downquote" || body == "!dq")
+            {
+                if (LastQuoteID < 0)
+                {
+                    ConnectionManager.SendChannelMessage(
+                        e.Data.Channel,
+                        "You'll have to get a quote first..."
+                    );
+                    return;
+                }
+                UpsertVote(e.Data.Nick, LastQuoteID, -1);
                 return;
             }
 
@@ -196,7 +253,7 @@ namespace Quotes
             CleanOutPotentialQuotes();
         }
 
-        protected virtual void HandleChannelAction(object sender, ActionEventArgs e)
+        protected virtual void ActuallyHandleChannelAction(object sender, ActionEventArgs e)
         {
             // put into backlog
             var quote = new Quote
@@ -212,6 +269,31 @@ namespace Quotes
             PotentialQuotes.Add(quote);
 
             CleanOutPotentialQuotes();
+        }
+
+        protected void UpsertVote(string voter, long quoteID, short points)
+        {
+            var voterLowercase = voter.ToLowerInvariant();
+            using (var ctx = GetNewContext())
+            {
+                var vote = ctx.QuoteVotes.FirstOrDefault(v => v.QuoteID == quoteID && v.VoterLowercase == voterLowercase);
+                if (vote == null)
+                {
+                    // add a new one
+                    vote = new QuoteVote
+                    {
+                        QuoteID = quoteID,
+                        VoterLowercase = voterLowercase,
+                        Points = points
+                    };
+                    ctx.QuoteVotes.Add(vote);
+                }
+                else
+                {
+                    vote.Points = points;
+                }
+                ctx.SaveChanges();
+            }
         }
 
         protected void CleanOutPotentialQuotes()

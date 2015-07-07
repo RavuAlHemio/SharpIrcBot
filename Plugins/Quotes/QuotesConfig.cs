@@ -11,10 +11,12 @@ namespace Quotes
         public string DatabaseProvider { get; set; }
         public string DatabaseConnectionString { get; set; }
         public int RememberForQuotes { get; set; }
+        public int VoteThreshold { get; set; }
 
         public QuotesConfig(JObject obj)
         {
             RememberForQuotes = 30;
+            VoteThreshold = -3;
 
             var ser = new JsonSerializer();
             ser.Populate(obj.CreateReader(), this);

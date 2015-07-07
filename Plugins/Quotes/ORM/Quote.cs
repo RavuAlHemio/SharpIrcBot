@@ -9,7 +9,7 @@ namespace Quotes.ORM
     {
         [Key]
         [Required]
-        [Column("message_id", Order = 1)]
+        [Column("quote_id", Order = 1)]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public long ID { get; set; }
 
