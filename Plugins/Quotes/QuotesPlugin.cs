@@ -17,8 +17,8 @@ namespace Quotes
         private static readonly ILog Logger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private static readonly Regex AddQuoteRegex = new Regex("^!addquote[ ]+(.+)$");
         private static readonly Regex RememberRegex = new Regex("^!remember[ ]+([^ ]+)[ ]+(.+)$");
-        private static readonly Regex QuoteRegex = new Regex("^!quote(?:[ ]+(.+))?$");
-        private static readonly Regex QuoteUserRegex = new Regex("^!quoteuser[ ]+([^ ]+)$");
+        private static readonly Regex QuoteRegex = new Regex("^!(any)?quote(?:[ ]+(.+))?$");
+        private static readonly Regex QuoteUserRegex = new Regex("^!(any)?quoteuser[ ]+([^ ]+)$");
 
         protected ConnectionManager ConnectionManager;
         protected QuotesConfig Config;
@@ -38,23 +38,34 @@ namespace Quotes
             ConnectionManager.ChannelAction += HandleChannelAction;
         }
 
-        protected virtual void PostRandomQuote(string requestor, string channel, IQueryable<Quote> quotes, IQueryable<QuoteVote> votes)
+        /// <summary>
+        /// Posts a random quote.
+        /// </summary>
+        /// <param name="requestor">The nickname of the person who requested this quote.</param>
+        /// <param name="channel">The channel in which the request has been placed.</param>
+        /// <param name="quotes">The Queryable of quotes.</param>
+        /// <param name="votes">The Queryable of votes.</param>
+        /// <param name="lowRatedToo">If <c>true</c>, also chooses from quotes rated below a given threshold.</param>
+        protected virtual void PostRandomQuote(string requestor, string channel, IQueryable<Quote> quotes, IQueryable<QuoteVote> votes, bool lowRatedToo)
         {
-            var qualityQuotes = quotes
-                .Where(q => (votes.Where(v => v.QuoteID == q.ID).Sum(v => (int?)v.Points) ?? 0) >= Config.VoteThreshold);
+            IQueryable<Quote> filteredQuotes = lowRatedToo
+                ? quotes
+                : quotes.Where(q => (votes.Where(v => v.QuoteID == q.ID).Sum(v => (int?)v.Points) ?? 0) >= Config.VoteThreshold);
 
-            int quoteCount = qualityQuotes.Count();
+            int quoteCount = filteredQuotes.Count();
             if (quoteCount > 0)
             {
                 int index = Randomizer.Next(quoteCount);
-                var quote = qualityQuotes
+                var quote = filteredQuotes
                     .OrderBy(q => q.ID)
                     .Skip(index)
                     .FirstOrDefault();
+                int voteCount = votes.Where(v => v.QuoteID == quote.ID).Sum(v => (int?) v.Points) ?? 0;
+
                 LastQuoteID = quote.ID;
                 ConnectionManager.SendChannelMessage(
                     channel,
-                    FormatQuote(quote)
+                    FormatQuote(quote, voteCount)
                 );
             }
             else
@@ -112,6 +123,7 @@ namespace Quotes
                     };
                     ctx.Quotes.Add(newFreeFormQuote);
                     ctx.SaveChanges();
+                    LastQuoteID = newFreeFormQuote.ID;
                 }
                 ConnectionManager.SendChannelMessage(
                     e.Data.Channel,
@@ -140,15 +152,8 @@ namespace Quotes
                 }
 
                 // find it
-                Quote matchedQuote = null;
-                foreach (var potQuote in PotentialQuotes)
-                {
-                    if (potQuote.AuthorLowercase == lowercaseNick && potQuote.BodyLowercase.Contains(lowercaseSubstring))
-                    {
-                        matchedQuote = potQuote;
-                        break;
-                    }
-                }
+                var matchedQuote = PotentialQuotes
+                    .FirstOrDefault(potQuote => potQuote.AuthorLowercase == lowercaseNick && potQuote.BodyLowercase.Contains(lowercaseSubstring));
 
                 if (matchedQuote == null)
                 {
@@ -166,12 +171,13 @@ namespace Quotes
                 {
                     ctx.Quotes.Add(matchedQuote);
                     ctx.SaveChanges();
+                    LastQuoteID = matchedQuote.ID;
                 }
 
                 ConnectionManager.SendChannelMessageFormat(
                     e.Data.Channel,
                     "Remembering {0}",
-                    FormatQuote(matchedQuote)
+                    FormatQuote(matchedQuote, 0)
                 );
 
                 return;
@@ -180,7 +186,8 @@ namespace Quotes
             var quoteMatch = QuoteRegex.Match(body);
             if (quoteMatch.Success)
             {
-                var subject = quoteMatch.Groups[1].Success ? quoteMatch.Groups[1].Value : null;
+                bool lowRatedToo = quoteMatch.Groups[1].Success;
+                var subject = quoteMatch.Groups[2].Success ? quoteMatch.Groups[2].Value : null;
                 var lowercaseSubject = (subject != null) ? subject.ToLowerInvariant() : null;
 
                 using (var ctx = GetNewContext())
@@ -189,7 +196,7 @@ namespace Quotes
                         ? ctx.Quotes.Where(q => q.BodyLowercase.Contains(lowercaseSubject))
                         : ctx.Quotes;
 
-                    PostRandomQuote(e.Data.Nick, e.Data.Channel, quotes, ctx.QuoteVotes);
+                    PostRandomQuote(e.Data.Nick, e.Data.Channel, quotes, ctx.QuoteVotes, lowRatedToo);
                 }
 
                 return;
@@ -198,14 +205,15 @@ namespace Quotes
             var quoteUserMatch = QuoteUserRegex.Match(body);
             if (quoteUserMatch.Success)
             {
-                var nick = quoteMatch.Groups[1].Value;
+                bool lowRatedToo = quoteMatch.Groups[1].Success;
+                var nick = quoteMatch.Groups[2].Value;
                 var lowercaseNick = nick.ToLowerInvariant();
 
                 using (var ctx = GetNewContext())
                 {
                     var quotes = ctx.Quotes.Where(q => q.AuthorLowercase == lowercaseNick);
 
-                    PostRandomQuote(e.Data.Nick, e.Data.Channel, quotes, ctx.QuoteVotes);
+                    PostRandomQuote(e.Data.Nick, e.Data.Channel, quotes, ctx.QuoteVotes, lowRatedToo);
                 }
 
                 return;
@@ -307,19 +315,19 @@ namespace Quotes
             }
         }
 
-        protected string FormatQuote(Quote quote)
+        protected string FormatQuote(Quote quote, int voteCount)
         {
             if (quote.MessageType == "M")
             {
-                return string.Format("<{0}> {1}", quote.Author, quote.Body);
+                return string.Format("[{0}] <{1}> {2}", voteCount, quote.Author, quote.Body);
             }
             else if (quote.MessageType == "A")
             {
-                return string.Format("* {0} {1}", quote.Author, quote.Body);
+                return string.Format("[{0}] * {1} {2}", voteCount, quote.Author, quote.Body);
             }
             else if (quote.MessageType == "F")
             {
-                return quote.Body;
+                return string.Format("[{0}] {1}", voteCount, quote.Body);
             }
 
             return null;
