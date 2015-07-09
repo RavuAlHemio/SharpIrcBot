@@ -24,7 +24,7 @@ namespace UnoBot
         protected const string CardCountsEventName = "card_counts";
 
         /// <summary>After the following event is processed (and it's the bot's turn), the bot plays a card.</summary>
-        protected const string TriggerPlayEventName = "hand_info";
+        protected const string TriggerPlayEventName = "current_player_order";
         protected static readonly Regex UnoBotFirstMessage = new Regex("^([1-9][0-9]*) (.*)");
         protected const string BotCommandRegexPattern = "^([?][a-z]+)[ ]+(?i){0}[ ]*$";
 
