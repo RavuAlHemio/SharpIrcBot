@@ -22,9 +22,8 @@ namespace UnoBot
         protected const string TopCardEventName = "current_card";
         protected const string HandInfoEventName = "hand_info";
         protected const string CardCountsEventName = "card_counts";
+        protected const string CardDrawnEventName = "player_drew_card";
 
-        /// <summary>After the following event is processed (and it's the bot's turn), the bot plays a card.</summary>
-        protected const string TriggerPlayEventName = "current_player_order";
         protected static readonly Regex UnoBotFirstMessage = new Regex("^([1-9][0-9]*) (.*)");
         protected const string BotCommandRegexPattern = "^([?][a-z]+)[ ]+(?i){0}[ ]*$";
 
@@ -36,7 +35,6 @@ namespace UnoBot
         protected string BotCommandRegexNick;
         protected Regex BotCommandRegex;
 
-        protected bool MyTurn;
         protected Card TopCard;
         protected List<Card> CurrentHand;
         protected Dictionary<string, int> CurrentCardCounts;
@@ -60,7 +58,6 @@ namespace UnoBot
             ConnectionManager.ChannelMessage += HandleChannelMessage;
             ConnectionManager.QueryMessage += HandleQueryMessage;
 
-            MyTurn = false;
             CurrentHand = new List<Card>();
             CurrentCardCounts = new Dictionary<string, int>();
             NextPlayer = null;
@@ -314,20 +311,21 @@ namespace UnoBot
 
             Logger.DebugFormat("received event {0}", eventName);
 
+            bool playNow = false;
             switch (eventName)
             {
                 case CurrentPlayerEventName:
                 {
                     // my turn? not my turn? (legacy)
                     var currentPlayer = (string) evt["player"];
-                    MyTurn = (currentPlayer == ConnectionManager.Client.Nickname);
+                    playNow = (currentPlayer == ConnectionManager.Client.Nickname);
                     break;
                 }
                 case CurrentPlayerOrderEventName:
                 {
                     // my turn? not my turn?
                     var upcomingPlayers = (JArray) evt["order"];
-                    MyTurn = ((string)upcomingPlayers[0] == ConnectionManager.Client.Nickname);
+                    playNow = ((string)upcomingPlayers[0] == ConnectionManager.Client.Nickname);
                     NextPlayer = (upcomingPlayers.Count > 1)
                         ? (string)upcomingPlayers[1]
                         : null;
@@ -367,9 +365,18 @@ namespace UnoBot
                     LastHandCount = CurrentHand.Count;
                     break;
                 }
+                case CardDrawnEventName:
+                {
+                    var player = (string)evt["player"];
+                    if (player == ConnectionManager.Client.Nickname)
+                    {
+                        playNow = true;
+                    }
+                    break;
+                }
             }
 
-            if (eventName == TriggerPlayEventName && MyTurn)
+            if (playNow)
             {
                 PlayACard();
             }
