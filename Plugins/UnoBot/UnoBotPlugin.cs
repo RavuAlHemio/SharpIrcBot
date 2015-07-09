@@ -40,6 +40,7 @@ namespace UnoBot
         protected Dictionary<string, int> CurrentCardCounts;
         protected HashSet<string> CurrentPlayers;
         protected string NextPlayer;
+        protected string PreviousPlayer;
         protected int LastHandCount;
         protected CardColor? ColorRequest;
         protected bool DrewLast;
@@ -63,6 +64,7 @@ namespace UnoBot
             CurrentCardCounts = new Dictionary<string, int>();
             CurrentPlayers = new HashSet<string>();
             NextPlayer = null;
+            PreviousPlayer = null;
             LastHandCount = -1;
             ColorRequest = null;
             DrewLast = false;
@@ -337,6 +339,10 @@ namespace UnoBot
                     NextPlayer = (upcomingPlayers.Count > 1)
                         ? (string)upcomingPlayers[1]
                         : null;
+                    // if upcomingPlayers.Count <= 2, then NextPlayer == PreviousPlayer
+                    PreviousPlayer = (upcomingPlayers.Count > 2)
+                        ? (string)upcomingPlayers.Last
+                        : null;
                     CurrentPlayers.Clear();
                     CurrentPlayers.UnionWith(upcomingPlayers.Select(tok => (string)tok));
                     break;
@@ -507,6 +513,12 @@ namespace UnoBot
 
                 // then wildcards, times one
                 possibleCards.AddRange(CurrentHand.Where(hc => hc.Color == CardColor.Wild));
+            }
+
+            // post-strategy filter: if the previous player has too few cards, filter out reverses
+            if (PreviousPlayer != null && CurrentCardCounts.ContainsKey(PreviousPlayer) && CurrentCardCounts[PreviousPlayer] <= Config.PlayToWinThreshold)
+            {
+                possibleCards.RemoveAll(c => c.Value == CardValue.Reverse);
             }
 
             if (possibleCards.Count > 0)
