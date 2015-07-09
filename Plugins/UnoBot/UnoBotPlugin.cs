@@ -518,6 +518,7 @@ namespace UnoBot
             // post-strategy filter: if the previous player has too few cards, filter out reverses
             if (PreviousPlayer != null && CurrentCardCounts.ContainsKey(PreviousPlayer) && CurrentCardCounts[PreviousPlayer] <= Config.PlayToWinThreshold)
             {
+                Logger.DebugFormat("previous player ({0}) has {1} cards or less ({2}); filtering out reverses", PreviousPlayer, Config.PlayToWinThreshold, CurrentCardCounts[PreviousPlayer]);
                 possibleCards.RemoveAll(c => c.Value == CardValue.Reverse);
             }
 
