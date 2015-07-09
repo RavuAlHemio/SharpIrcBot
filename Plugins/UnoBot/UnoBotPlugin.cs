@@ -26,12 +26,15 @@ namespace UnoBot
         /// <summary>After the following event is processed (and it's the bot's turn), the bot plays a card.</summary>
         protected const string TriggerPlayEventName = "hand_info";
         protected static readonly Regex UnoBotFirstMessage = new Regex("^([1-9][0-9]*) (.*)");
+        protected const string BotCommandRegexPattern = "^([?][a-z]+)[ ]+(?i){0}[ ]*$";
 
         protected ConnectionManager ConnectionManager;
         protected UnoBotConfig Config;
 
         protected StringBuilder CurrentMessageJson;
         protected int LinesLeftInMessage;
+        protected string BotCommandRegexNick;
+        protected Regex BotCommandRegex;
 
         protected bool MyTurn;
         protected Card TopCard;
@@ -51,6 +54,8 @@ namespace UnoBot
 
             CurrentMessageJson = new StringBuilder();
             LinesLeftInMessage = 0;
+            BotCommandRegexNick = null;
+            BotCommandRegex = null;
 
             ConnectionManager.ChannelMessage += HandleChannelMessage;
             ConnectionManager.QueryMessage += HandleQueryMessage;
@@ -153,6 +158,31 @@ namespace UnoBot
             }
         }
 
+        protected bool IsBotCommand(string message, string expectedCommand)
+        {
+            // ?join
+            if (message == expectedCommand)
+            {
+                return true;
+            }
+
+            // ?join MyBot
+            var botNick = ConnectionManager.Client.Nickname;
+            if (BotCommandRegexNick != botNick)
+            {
+                BotCommandRegexNick = botNick;
+                var pattern = string.Format(BotCommandRegexPattern, Regex.Escape(botNick));
+                BotCommandRegex = new Regex(pattern);
+            }
+            var match = BotCommandRegex.Match(message);
+            if (match.Success && string.Equals(match.Groups[1].Value, botNick, StringComparison.InvariantCultureIgnoreCase))
+            {
+                return true;
+            }
+
+            return false;
+        }
+
         protected void ActuallyHandleChannelMessage(object sender, IrcEventArgs args)
         {
             var message = args.Data;
@@ -166,7 +196,7 @@ namespace UnoBot
                 return;
             }
 
-            if (message.Message == "??join")
+            if (IsBotCommand(message.Message, "?join"))
             {
                 ConnectionManager.SendChannelMessage(message.Channel, "!botjoin");
 
@@ -176,7 +206,7 @@ namespace UnoBot
                 return;
             }
 
-            if (message.Message == "??leave")
+            if (IsBotCommand(message.Message, "?leave"))
             {
                 ConnectionManager.SendChannelMessage(message.Channel, "!leave");
                 return;
