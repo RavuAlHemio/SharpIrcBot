@@ -52,29 +52,30 @@ namespace Thanks
             if (thankMatch.Success)
             {
                 var thankerNick = message.Nick;
-                var thanker = ConnectionManager.RegisteredNameForNick(thankerNick);
 
-                if (thanker == null)
-                {
-                    ConnectionManager.SendChannelMessageFormat(
-                        message.Channel,
-                        "{0}: You can't use this unless you're logged in with NickServ.",
-                        thankerNick
-                    );
-                    return;
-                }
-
-                var thankerLower = thanker.ToLowerInvariant();
                 bool forceThanks = thankMatch.Groups[1].Success;
                 var thankeeNick = thankMatch.Groups[2].Value;
 
+                string thanker;
                 string thankee;
                 if (forceThanks)
                 {
+                    thanker = thankerNick;
                     thankee = thankeeNick;
                 }
                 else
                 {
+                    thanker = ConnectionManager.RegisteredNameForNick(thankerNick);
+                    if (thanker == null)
+                    {
+                        ConnectionManager.SendChannelMessageFormat(
+                            message.Channel,
+                            "{0}: You can't use this unless you're logged in with NickServ.",
+                            thankerNick
+                        );
+                        return;
+                    }
+
                     thankee = ConnectionManager.RegisteredNameForNick(thankeeNick);
                     if (thankee == null)
                     {
@@ -88,6 +89,7 @@ namespace Thanks
                     }
                 }
 
+                var thankerLower = thanker.ToLowerInvariant();
                 var thankeeLower = thankee.ToLowerInvariant();
 
                 if (thankeeLower == thankerLower)
