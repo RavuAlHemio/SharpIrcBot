@@ -38,6 +38,7 @@ namespace UnoBot
         protected Card TopCard;
         protected List<Card> CurrentHand;
         protected Dictionary<string, int> CurrentCardCounts;
+        protected HashSet<string> CurrentPlayers;
         protected string NextPlayer;
         protected int LastHandCount;
         protected CardColor? ColorRequest;
@@ -60,6 +61,7 @@ namespace UnoBot
 
             CurrentHand = new List<Card>();
             CurrentCardCounts = new Dictionary<string, int>();
+            CurrentPlayers = new HashSet<string>();
             NextPlayer = null;
             LastHandCount = -1;
             ColorRequest = null;
@@ -212,28 +214,34 @@ namespace UnoBot
             if (message.Message.StartsWith("??color "))
             {
                 var denyColor = false;
+                if (!CurrentPlayers.Contains(message.Nick))
+                {
+                    // player is not taking part
+                    Logger.DebugFormat("denying {0}'s color request because they are a spectator", message.Nick);
+                    denyColor = true;
+                }
                 if (CurrentCardCounts.Values.All(v => v > Config.PlayToWinThreshold))
                 {
                     // everybody has more than two cards
-                    Logger.DebugFormat("denying color request because everybody has more than {0} cards", Config.PlayToWinThreshold);
+                    Logger.DebugFormat("denying {0}'s color request because everybody has more than {1} cards", message.Nick, Config.PlayToWinThreshold);
                     denyColor = true;
                 }
                 if (CurrentCardCounts.ContainsKey(message.Nick) && CurrentCardCounts[message.Nick] <= Config.PlayToWinThreshold)
                 {
                     // the person who is asking has two cards or less
-                    Logger.DebugFormat("denying color request because the requestor has {0} cards or fewer ({1})", Config.PlayToWinThreshold, CurrentCardCounts[message.Nick]);
+                    Logger.DebugFormat("denying {0}'s color request because they have {1} cards or fewer ({2})", message.Nick, Config.PlayToWinThreshold, CurrentCardCounts[message.Nick]);
                     denyColor = true;
                 }
                 if (CurrentHand.Count <= Config.PlayToWinThreshold)
                 {
                     // I have two cards or less
-                    Logger.DebugFormat("denying color request because I have {0} cards or fewer ({1})", Config.PlayToWinThreshold, CurrentHand.Count);
+                    Logger.DebugFormat("denying {0}'s color request because I have {1} cards or fewer ({2})", message.Nick, Config.PlayToWinThreshold, CurrentHand.Count);
                     denyColor = true;
                 }
 
                 if (denyColor)
                 {
-                    ConnectionManager.SendChannelMessage(message.Channel, "Sorry, no can do.");
+                    ConnectionManager.SendChannelMessageFormat(message.Channel, "Sorry, {0}, no can do.", message.Nick);
                     return;
                 }
 
@@ -250,11 +258,11 @@ namespace UnoBot
                 // can I change the color?
                 if (CurrentHand.Any(c => c.Color == color || c.Color == CardColor.Wild))
                 {
-                    ConnectionManager.SendChannelMessage(message.Channel, "Yeah, I think that's doable.");
+                    ConnectionManager.SendChannelMessageFormat(message.Channel, "Yeah, I think that's doable, {0}.", message.Nick);
                 }
                 else
                 {
-                    ConnectionManager.SendChannelMessage(message.Channel, "I'll do my best, but don't count on me...");
+                    ConnectionManager.SendChannelMessageFormat(message.Channel, "{0}, I'll do my best, but don't count on me...", message.Nick);
                 }
 
                 return;
@@ -329,6 +337,8 @@ namespace UnoBot
                     NextPlayer = (upcomingPlayers.Count > 1)
                         ? (string)upcomingPlayers[1]
                         : null;
+                    CurrentPlayers.Clear();
+                    CurrentPlayers.UnionWith(upcomingPlayers.Select(tok => (string)tok));
                     break;
                 }
                 case CardCountsEventName:
