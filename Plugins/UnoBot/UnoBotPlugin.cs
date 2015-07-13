@@ -15,8 +15,7 @@ namespace UnoBot
     public class UnoBotPlugin : IPlugin
     {
         private static readonly ILog Logger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
-        protected const string UnoMessagePrefix = "###   ";
+        
         protected const string CurrentPlayerEventName = "current_player";
         protected const string CurrentPlayerOrderEventName = "current_player_order";
         protected const string TopCardEventName = "current_card";
@@ -279,12 +278,7 @@ namespace UnoBot
                 return;
             }
 
-            if (!message.Message.StartsWith(UnoMessagePrefix))
-            {
-                return;
-            }
-
-            var messageBody = message.Message.Substring(UnoMessagePrefix.Length);
+            var messageBody = message.Message;
 
             if (LinesLeftInMessage > 0)
             {
