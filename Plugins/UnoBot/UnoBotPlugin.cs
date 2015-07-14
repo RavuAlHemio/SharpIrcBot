@@ -175,7 +175,7 @@ namespace UnoBot
                 BotCommandRegex = new Regex(pattern);
             }
             var match = BotCommandRegex.Match(message);
-            if (match.Success && string.Equals(match.Groups[1].Value, botNick, StringComparison.InvariantCultureIgnoreCase))
+            if (match.Success && string.Equals(match.Groups[1].Value, expectedCommand, StringComparison.InvariantCultureIgnoreCase))
             {
                 return true;
             }
