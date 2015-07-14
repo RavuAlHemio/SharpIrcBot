@@ -482,17 +482,20 @@ namespace UnoBot
                     // the player after me has too few cards; try finding an evil card first
                     Logger.Debug("trying to find an evil card");
 
-                    // D2, S, R
-                    possibleCards.AddRange(CurrentHand.Where(hc =>
-                        hc.Color == TopCard.Color && (
-                            hc.Value == CardValue.DrawTwo ||
-                            hc.Value == CardValue.Skip ||
-                            hc.Value == CardValue.Reverse
-                        )
-                    ));
-
-                    // WD4
+                    // offensive cards first: D2, WD4
+                    possibleCards.AddRange(CurrentHand.Where(hc => hc.Color == TopCard.Color && hc.Value == CardValue.DrawTwo));
                     possibleCards.AddRange(CurrentHand.Where(hc => hc.Value == CardValue.WildDrawFour));
+
+                    if (possibleCards.Count == 0)
+                    {
+                        // defensive cards next: S, R
+                        possibleCards.AddRange(CurrentHand.Where(hc =>
+                            hc.Color == TopCard.Color && (
+                                hc.Value == CardValue.Skip ||
+                                hc.Value == CardValue.Reverse
+                            )
+                        ));
+                    }
 
                     if (possibleCards.Count > 0)
                     {
@@ -529,7 +532,7 @@ namespace UnoBot
                 }
             }
 
-            // strategy: pick a card at random
+            // strategy 3: pick a card at random
             if (nextPickStrategy)
             {
                 // by value, times three
