@@ -504,6 +504,14 @@ namespace UnoBot
                         // don't add the next pick
                         nextPickStrategy = false;
                     }
+                    else if (!DrewLast)
+                    {
+                        // try drawing
+                        DrewLast = true;
+                        Logger.Debug("emergency strategic draw");
+                        ConnectionManager.SendChannelMessage(Config.UnoChannel, "!draw");
+                        return;
+                    }
                 }
             }
 
