@@ -55,7 +55,7 @@ namespace UnoBot
             }
         }
 
-        public static string ToPlayString(this CardValue value)
+        public static string ToShortPlayString(this CardValue value)
         {
             int numericValue = (int)value;
             if (numericValue >= 0 && numericValue <= 9)
@@ -74,6 +74,28 @@ namespace UnoBot
                     return "w";
                 case CardValue.WildDrawFour:
                     return "wd4";
+            }
+            return null;
+        }
+
+        public static string ToFullPlayString(this CardValue value)
+        {
+            if (value >= CardValue.Zero && value <= CardValue.Nine)
+            {
+                return value.ToString().ToUpperInvariant();
+            }
+            switch (value)
+            {
+                case CardValue.Reverse:
+                    return "R";
+                case CardValue.Skip:
+                    return "S";
+                case CardValue.DrawTwo:
+                    return "D2";
+                case CardValue.Wild:
+                    return "WILD";
+                case CardValue.WildDrawFour:
+                    return "WD4";
             }
             return null;
         }
@@ -102,7 +124,7 @@ namespace UnoBot
             }
         }
 
-        public static string ToPlayString(this CardColor color)
+        public static string ToShortPlayString(this CardColor color)
         {
             switch (color)
             {
@@ -118,6 +140,11 @@ namespace UnoBot
                     return "w";
             }
             return null;
+        }
+
+        public static string ToFullPlayString(this CardColor color)
+        {
+            return color.ToString().ToUpperInvariant();
         }
 
         public static Card? ParseColorAndValue(string pair)

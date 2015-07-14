@@ -158,7 +158,7 @@ namespace UnoBot
             }
         }
 
-        protected bool IsBotCommand(string message, string expectedCommand)
+        protected virtual bool IsBotCommand(string message, string expectedCommand)
         {
             // ?join
             if (message == expectedCommand)
@@ -183,7 +183,7 @@ namespace UnoBot
             return false;
         }
 
-        protected void ActuallyHandleChannelMessage(object sender, IrcEventArgs args)
+        protected virtual void ActuallyHandleChannelMessage(object sender, IrcEventArgs args)
         {
             var message = args.Data;
             if (message.Type != ReceiveType.ChannelMessage || message.Nick == ConnectionManager.Client.Nickname)
@@ -270,7 +270,7 @@ namespace UnoBot
             }
         }
 
-        protected void ActuallyHandleQueryMessage(object sender, IrcEventArgs args)
+        protected virtual void ActuallyHandleQueryMessage(object sender, IrcEventArgs args)
         {
             var message = args.Data;
             if (message.Nick == ConnectionManager.Client.Nickname)
@@ -392,7 +392,7 @@ namespace UnoBot
             }
         }
 
-        protected void Curse()
+        protected virtual void Curse()
         {
             if (Config.Curses.Count == 0)
             {
@@ -403,7 +403,7 @@ namespace UnoBot
             ConnectionManager.SendChannelMessage(Config.UnoChannel, curse);
         }
 
-        protected CardColor PickAColor()
+        protected virtual CardColor PickAColor()
         {
             var colorsToChoose = new List<CardColor>();
 
@@ -429,7 +429,45 @@ namespace UnoBot
             return colorsToChoose[Randomizer.Next(colorsToChoose.Count)];
         }
 
-        protected void PlayACard()
+        protected virtual void PlayColorCard(CardColor color, CardValue value)
+        {
+            if (color == CardColor.Wild)
+            {
+                throw new ArgumentOutOfRangeException("color", color, "color must not be Wild");
+            }
+            if (value == CardValue.Wild || value == CardValue.WildDrawFour)
+            {
+                throw new ArgumentOutOfRangeException("value", value, "value must be neither Wild nor WildDrawFour");
+            }
+
+            ConnectionManager.SendChannelMessageFormat(
+                Config.UnoChannel,
+                "!play {0} {1}",
+                color.ToFullPlayString(),
+                value.ToFullPlayString()
+            );
+        }
+
+        protected virtual void PlayWildCard(CardValue value, CardColor chosenColor)
+        {
+            if (value != CardValue.Wild && value != CardValue.WildDrawFour)
+            {
+                throw new ArgumentOutOfRangeException("value", value, "value must be Wild or WildDrawFour");
+            }
+            if (chosenColor == CardColor.Wild)
+            {
+                throw new ArgumentOutOfRangeException("chosenColor", chosenColor, "chosenColor must not be Wild");
+            }
+
+            ConnectionManager.SendChannelMessageFormat(
+                Config.UnoChannel,
+                "!play {0} {1}",
+                value.ToFullPlayString(),
+                chosenColor.ToFullPlayString()
+            );
+        }
+
+        protected virtual void PlayACard()
         {
             var possibleCards = new List<Card>();
             bool nextPickStrategy = true;
@@ -544,22 +582,12 @@ namespace UnoBot
                     Logger.DebugFormat("chosen color: {0}", chosenColor);
 
                     // play the card
-                    ConnectionManager.SendChannelMessageFormat(
-                        Config.UnoChannel,
-                        "!p {0} {1}",
-                        card.Value.ToPlayString(),
-                        chosenColor.ToPlayString()
-                    );
+                    PlayWildCard(card.Value, chosenColor);
                 }
                 else
                 {
                     // play it
-                    ConnectionManager.SendChannelMessageFormat(
-                        Config.UnoChannel,
-                        "!p {0} {1}",
-                        card.Color.ToPlayString(),
-                        card.Value.ToPlayString()
-                    );
+                    PlayColorCard(card.Color, card.Value);
                 }
                 DrewLast = false;
                 DrawsSinceLastPlay = 0;
