@@ -555,19 +555,45 @@ namespace UnoBot
             // strategy 3: pick a card at random
             if (nextPickStrategy)
             {
-                // by value, times three
-                var cardsByValue = CurrentHand.Where(hc => hc.Value == TopCard.Value).ToList();
-                possibleCards.AddRange(cardsByValue);
-                possibleCards.AddRange(cardsByValue);
-                possibleCards.AddRange(cardsByValue);
+                // matched only by value, times StandardValueMatchPriority
+                var cardsByValue = CurrentHand.Where(hc => hc.Value == TopCard.Value && hc.Color != TopCard.Color).ToList();
+                for (int i = 0; i < Config.StandardValueMatchPriority; ++i)
+                {
+                    possibleCards.AddRange(cardsByValue);
+                }
 
-                // then by color, times two
-                var cardsByColor = CurrentHand.Where(hc => hc.Color == TopCard.Color).ToList();
-                possibleCards.AddRange(cardsByColor);
-                possibleCards.AddRange(cardsByColor);
+                // matched only by color, times StandardColorMatchPriority
+                var cardsByColor = CurrentHand.Where(hc => hc.Color == TopCard.Color && hc.Value != TopCard.Value).ToList();
+                for (int i = 0; i < Config.StandardColorMatchPriority; ++i)
+                {
+                    possibleCards.AddRange(cardsByColor);
+                }
 
-                // then wildcards, times one
-                possibleCards.AddRange(CurrentHand.Where(hc => hc.Color == CardColor.Wild));
+                // color changers (W, WD4), times StandardColorChangePriority
+                var colorChangeCards = CurrentHand.Where(hc => hc.Color == CardColor.Wild).ToList();
+                for (int i = 0; i < Config.StandardColorChangePriority; ++i)
+                {
+                    possibleCards.AddRange(colorChangeCards);
+                }
+
+                // player sequence reordering cards (R, S, D2, WD4), times StandardReorderPriority
+                var reorderCards = CurrentHand.Where(hc =>
+                    hc.Value == CardValue.WildDrawFour ||
+                    (
+                        (
+                            hc.Color == TopCard.Color ||
+                            hc.Value == TopCard.Value
+                        ) && (
+                            hc.Value == CardValue.DrawTwo ||
+                            hc.Value == CardValue.Reverse ||
+                            hc.Value == CardValue.Skip
+                        )
+                    )
+                );
+                for (int i = 0; i < Config.StandardReorderPriority; ++i)
+                {
+                    possibleCards.AddRange(reorderCards);
+                }
             }
 
             // post-strategy filter: if the previous player has too few cards, filter out reverses

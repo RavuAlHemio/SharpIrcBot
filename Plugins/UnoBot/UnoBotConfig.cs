@@ -13,6 +13,10 @@ namespace UnoBot
         public int ManyDrawsCurseThreshold { get; set; }
         public int PlayToWinThreshold { get; set; }
         public bool DrawAllTheTime { get; set; }
+        public int StandardColorMatchPriority { get; set; }
+        public int StandardValueMatchPriority { get; set; }
+        public int StandardReorderPriority { get; set; }
+        public int StandardColorChangePriority { get; set; }
 
         public UnoBotConfig(JObject obj)
         {
@@ -20,7 +24,11 @@ namespace UnoBot
             ManyCardsCurseThreshold = 4;
             ManyDrawsCurseThreshold = 3;
             PlayToWinThreshold = 2;
-            DrawAllTheTime = true;
+            DrawAllTheTime = false;
+            StandardColorMatchPriority = 2;
+            StandardValueMatchPriority = 3;
+            StandardReorderPriority = 1;
+            StandardColorChangePriority = 1;
 
             var ser = new JsonSerializer();
             ser.Populate(obj.CreateReader(), this);
