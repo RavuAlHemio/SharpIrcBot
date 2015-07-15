@@ -313,6 +313,11 @@ namespace UnoBot
             CurrentMessageJson.Clear();
 
             var evt = JObject.Parse(parseMe);
+            ProcessJsonEvent(evt);
+        }
+
+        protected virtual void ProcessJsonEvent(JObject evt)
+        {
             var eventName = (string) evt["event"];
 
             CommunicationLogger.DebugFormat("received event {0}", eventName);
@@ -637,7 +642,7 @@ namespace UnoBot
                 // if more than two cards in hand, perform a strategic draw 10% of the time
                 if (CurrentHand.Count > Config.PlayToWinThreshold && !DrewLast)
                 {
-                    var strategicDraw = (Randomizer.Next(10) == 0);
+                    var strategicDraw = (Randomizer.Next(Config.StrategicDrawDenominator) == 0);
                     if (strategicDraw)
                     {
                         StrategyLogger.Debug("strategic draw");
