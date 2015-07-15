@@ -467,10 +467,23 @@ namespace UnoBot
             );
         }
 
+        protected virtual void DrawACard()
+        {
+            DrewLast = true;
+            ConnectionManager.SendChannelMessage(Config.UnoChannel, "!draw");
+            return;
+        }
+
         protected virtual void PlayACard()
         {
             var possibleCards = new List<Card>();
             bool nextPickStrategy = true;
+
+            if (Config.DrawAllTheTime && !DrewLast)
+            {
+                DrawACard();
+                return;
+            }
 
             // strategy 1: destroy the next player if they are close to winning
             if (nextPickStrategy && NextPlayer != null && CurrentCardCounts.ContainsKey(NextPlayer))
@@ -507,9 +520,8 @@ namespace UnoBot
                     else if (!DrewLast)
                     {
                         // try drawing
-                        DrewLast = true;
                         Logger.Debug("emergency strategic draw");
-                        ConnectionManager.SendChannelMessage(Config.UnoChannel, "!draw");
+                        DrawACard();
                         return;
                     }
                 }
@@ -577,9 +589,8 @@ namespace UnoBot
                     var strategicDraw = (Randomizer.Next(10) == 0);
                     if (strategicDraw)
                     {
-                        DrewLast = true;
                         Logger.Debug("strategic draw");
-                        ConnectionManager.SendChannelMessage(Config.UnoChannel, "!draw");
+                        DrawACard();
                         return;
                     }
                 }
@@ -614,14 +625,13 @@ namespace UnoBot
             }
             else
             {
-                DrewLast = true;
-                Logger.Debug("drawing");
                 if (Config.ManyDrawsCurseThreshold >= 0 && DrawsSinceLastPlay > Config.ManyDrawsCurseThreshold)
                 {
                     Logger.Debug("cursing because of too many draws");
                     Curse();
                 }
-                ConnectionManager.SendChannelMessage(Config.UnoChannel, "!draw");
+                Logger.Debug("drawing");
+                DrawACard();
             }
         }
     }

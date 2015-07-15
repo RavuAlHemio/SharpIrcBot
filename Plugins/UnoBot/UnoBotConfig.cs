@@ -12,6 +12,7 @@ namespace UnoBot
         public int ManyCardsCurseThreshold { get; set; }
         public int ManyDrawsCurseThreshold { get; set; }
         public int PlayToWinThreshold { get; set; }
+        public bool DrawAllTheTime { get; set; }
 
         public UnoBotConfig(JObject obj)
         {
@@ -19,6 +20,7 @@ namespace UnoBot
             ManyCardsCurseThreshold = 4;
             ManyDrawsCurseThreshold = 3;
             PlayToWinThreshold = 2;
+            DrawAllTheTime = true;
 
             var ser = new JsonSerializer();
             ser.Populate(obj.CreateReader(), this);
