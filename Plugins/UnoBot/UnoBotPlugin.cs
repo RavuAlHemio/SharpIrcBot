@@ -569,6 +569,13 @@ namespace UnoBot
                     possibleCards.AddRange(cardsByColor);
                 }
 
+                // matched by both color and value, times StandardColorAndValueMatchPriority
+                var identicalCards = CurrentHand.Where(hc => hc.Color == TopCard.Color && hc.Value == TopCard.Value).ToList();
+                for (int i = 0; i < Config.StandardColorAndValueMatchPriority; ++i)
+                {
+                    possibleCards.AddRange(identicalCards);
+                }
+
                 // color changers (W, WD4), times StandardColorChangePriority
                 var colorChangeCards = CurrentHand.Where(hc => hc.Color == CardColor.Wild).ToList();
                 for (int i = 0; i < Config.StandardColorChangePriority; ++i)

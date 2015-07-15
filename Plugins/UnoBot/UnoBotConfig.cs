@@ -15,6 +15,7 @@ namespace UnoBot
         public bool DrawAllTheTime { get; set; }
         public int StandardColorMatchPriority { get; set; }
         public int StandardValueMatchPriority { get; set; }
+        public int StandardColorAndValueMatchPriority { get; set; }
         public int StandardReorderPriority { get; set; }
         public int StandardColorChangePriority { get; set; }
 
@@ -27,6 +28,7 @@ namespace UnoBot
             DrawAllTheTime = false;
             StandardColorMatchPriority = 2;
             StandardValueMatchPriority = 3;
+            StandardColorAndValueMatchPriority = 1;
             StandardReorderPriority = 1;
             StandardColorChangePriority = 1;
 
