@@ -39,6 +39,7 @@ namespace UnoBot
         protected Dictionary<string, int> CurrentCardCounts;
         protected HashSet<string> CurrentPlayers;
         protected string NextPlayer;
+        protected string NextButOnePlayer;
         protected string PreviousPlayer;
         protected int LastHandCount;
         protected CardColor? ColorRequest;
@@ -63,6 +64,7 @@ namespace UnoBot
             CurrentCardCounts = new Dictionary<string, int>();
             CurrentPlayers = new HashSet<string>();
             NextPlayer = null;
+            NextButOnePlayer = null;
             PreviousPlayer = null;
             LastHandCount = -1;
             ColorRequest = null;
@@ -337,6 +339,10 @@ namespace UnoBot
                     PreviousPlayer = (upcomingPlayers.Count > 2)
                         ? (string)upcomingPlayers.Last
                         : null;
+                    // if upcomingPlayers.Count <= 2, then NextButOnePlayer == me
+                    NextButOnePlayer = (upcomingPlayers.Count > 2)
+                        ? (string)upcomingPlayers[2]
+                        : null;
                     CurrentPlayers.Clear();
                     CurrentPlayers.UnionWith(upcomingPlayers.Select(tok => (string)tok));
                     break;
@@ -608,6 +614,13 @@ namespace UnoBot
             {
                 Logger.DebugFormat("previous player ({0}) has {1} cards or less ({2}); filtering out reverses", PreviousPlayer, Config.PlayToWinThreshold, CurrentCardCounts[PreviousPlayer]);
                 possibleCards.RemoveAll(c => c.Value == CardValue.Reverse);
+            }
+
+            // post-strategy filter: if the next-but-one player has too few cards, filter out D2, WD4 and S
+            if (NextButOnePlayer != null && CurrentCardCounts.ContainsKey(NextButOnePlayer) && CurrentCardCounts[NextButOnePlayer] <= Config.PlayToWinThreshold)
+            {
+                Logger.DebugFormat("next-but-one player ({0}) has {1} cards or less ({2}); filtering out cards that would skip my successor (their predecessor)", NextButOnePlayer, Config.PlayToWinThreshold, CurrentCardCounts[NextButOnePlayer]);
+                possibleCards.RemoveAll(c => c.Value == CardValue.DrawTwo || c.Value == CardValue.WildDrawFour || c.Value == CardValue.Skip);
             }
 
             if (possibleCards.Count > 0)
