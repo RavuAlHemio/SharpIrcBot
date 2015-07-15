@@ -485,7 +485,10 @@ namespace UnoBot
             var possibleCards = new List<Card>();
             bool nextPickStrategy = true;
 
-            StrategyLogger.DebugFormat("current hand: {0}", CurrentHand);
+            if (StrategyLogger.IsDebugEnabled)
+            {
+                StrategyLogger.DebugFormat("current hand: [{0}]", string.Join(", ", CurrentHand.Select(c => c.Color + " " + c.Value)));
+            }
 
             if (Config.DrawAllTheTime && !DrewLast)
             {
