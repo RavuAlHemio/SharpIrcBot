@@ -485,6 +485,8 @@ namespace UnoBot
             var possibleCards = new List<Card>();
             bool nextPickStrategy = true;
 
+            StrategyLogger.DebugFormat("current hand: {0}", CurrentHand);
+
             if (Config.DrawAllTheTime && !DrewLast)
             {
                 DrawACard();
