@@ -19,6 +19,7 @@ namespace UnoBot
         public int StandardReorderPriority { get; set; }
         public int StandardColorChangePriority { get; set; }
         public int StrategicDrawDenominator { get; set; }
+        public int EmergencyStrategicDrawDenominator { get; set; }
 
         public UnoBotConfig(JObject obj)
         {
@@ -33,6 +34,7 @@ namespace UnoBot
             StandardReorderPriority = 1;
             StandardColorChangePriority = 1;
             StrategicDrawDenominator = 20;
+            EmergencyStrategicDrawDenominator = 2;
 
             var ser = new JsonSerializer();
             ser.Populate(obj.CreateReader(), this);

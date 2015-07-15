@@ -535,10 +535,13 @@ namespace UnoBot
                     }
                     else if (!DrewLast)
                     {
-                        // try drawing
-                        StrategyLogger.Debug("emergency strategic draw");
-                        DrawACard();
-                        return;
+                        var emergencyStrategicDraw = (Randomizer.Next(Config.EmergencyStrategicDrawDenominator) == 0);
+                        if (emergencyStrategicDraw)
+                        {
+                            StrategyLogger.Debug("emergency strategic draw");
+                            DrawACard();
+                            return;
+                        }
                     }
                 }
             }
@@ -639,7 +642,7 @@ namespace UnoBot
                 var index = Randomizer.Next(possibleCards.Count);
                 var card = possibleCards[index];
 
-                // if more than two cards in hand, perform a strategic draw 10% of the time
+                // if more than two cards in hand, perform a strategic draw every once in a while
                 if (CurrentHand.Count > Config.PlayToWinThreshold && !DrewLast)
                 {
                     var strategicDraw = (Randomizer.Next(Config.StrategicDrawDenominator) == 0);
