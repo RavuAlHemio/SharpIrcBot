@@ -405,6 +405,14 @@ namespace SharpIrcBot
 
         public static void SetupConsoleLogging(Level level = null)
         {
+            var logConfFile = new FileInfo(Path.Combine(AppDirectory, "LogConf.xml"));
+            if (logConfFile.Exists)
+            {
+                // use the XML configurator instead
+                XmlConfigurator.Configure(logConfFile);
+                return;
+            }
+
             var hierarchy = (Hierarchy)LogManager.GetRepository();
             var rootLogger = hierarchy.Root;
             rootLogger.Level = level ?? Level.Debug;
