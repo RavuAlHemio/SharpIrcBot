@@ -246,15 +246,18 @@ namespace DatabaseNickMapping
             var meAsTarget = ctx.NickMappings.FirstOrDefault(nm => nm.MappedNicknameLowercase == lowerNickname);
             if (meAsTarget != null)
             {
+                Logger.DebugFormat("{0} has a base nickname ({1})", nick, meAsTarget.BaseNickname);
                 return meAsTarget.BaseNickname;
             }
 
             var meAsBase = ctx.BaseNicknames.FirstOrDefault(bn => bn.NicknameLowercase == lowerNickname);
             if (meAsBase != null)
             {
+                Logger.DebugFormat("{0} is the base nickname ({1})", nick, meAsBase.Nickname);
                 return meAsBase.Nickname;
             }
 
+            Logger.DebugFormat("{0} not found in the database", nick);
             return null;
         }
 
