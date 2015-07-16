@@ -202,6 +202,8 @@ namespace DatabaseNickMapping
                         };
                         ctx.BaseNicknames.Add(newEntry);
                         ctx.SaveChanges();
+
+                        ConnectionManager.SendChannelMessageFormat(channel, "{0}: The nickname {1} has been registered.", requestor, nickToRegister);
                     }
                 }
             }
