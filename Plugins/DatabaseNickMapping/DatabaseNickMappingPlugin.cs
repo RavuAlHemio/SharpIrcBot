@@ -221,7 +221,7 @@ namespace DatabaseNickMapping
                     }
                     else
                     {
-                        ConnectionManager.SendChannelMessageFormat(channel, "{0}: The base nickname for {1} is {2}.", requestor, baseNick);
+                        ConnectionManager.SendChannelMessageFormat(channel, "{0}: The base nickname for {1} is {2}.", requestor, whichNick, baseNick);
                     }
                 }
             }
