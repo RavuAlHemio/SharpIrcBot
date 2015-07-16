@@ -51,6 +51,7 @@
     <Compile Include="SharpIrcBotUtil.cs" />
     <Compile Include="IDatabaseModuleConfig.cs" />
     <Compile Include="CookieWebClient.cs" />
+    <Compile Include="NickMappingEventArgs.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>

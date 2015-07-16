@@ -21,7 +21,6 @@ namespace SharpIrcBot
         protected Thread IrcThread;
         protected CancellationTokenSource Canceller;
         protected HashSet<string> SyncedChannels;
-        protected Dictionary<string, string> NicksToLogins;
         protected Timer WhoisUpdateTimer;
 
         public event EventHandler<IrcEventArgs> ChannelMessage;
@@ -30,11 +29,16 @@ namespace SharpIrcBot
         public event EventHandler<IrcEventArgs> QueryMessage;
         public event EventHandler<ActionEventArgs> QueryAction;
         public event EventHandler<IrcEventArgs> QueryNotice;
+        public event EventHandler<EventArgs> ConnectedToServer;
+        public event EventHandler<NickMappingEventArgs> NickMapping;
+        public event EventHandler<IrcEventArgs> RawMessage;
+        public event EventHandler<NamesEventArgs> NamesInChannel;
+        public event EventHandler<JoinEventArgs> JoinedChannel;
+        public event EventHandler<NickChangeEventArgs> NickChange;
 
         public ConnectionManager(BotConfig config)
         {
             SyncedChannels = new HashSet<string>();
-            NicksToLogins = new Dictionary<string, string>();
 
             Config = config;
             Client = new IrcClient
@@ -54,23 +58,15 @@ namespace SharpIrcBot
             Client.OnChannelAction += HandleChannelAction;
             Client.OnChannelNotice += HandleChannelNotice;
             Client.OnChannelActiveSynced += HandleChannelSynced;
-            Client.OnRawMessage += HandleRegisteredAs;
+            Client.OnRawMessage += HandleRawMessage;
             Client.OnNames += HandleNames;
             Client.OnJoin += HandleJoin;
             Client.OnNickChange += HandleNickChange;
             Client.OnQueryMessage += HandleQueryMessage;
             Client.OnQueryAction += HandleQueryAction;
             Client.OnQueryNotice += HandleQueryNotice;
+            Client.OnRegistered += HandleRegistered;
             Canceller = new CancellationTokenSource();
-
-            WhoisUpdateTimer = new Timer(Config.WhoisUpdateIntervalSeconds * 1000.0);
-            WhoisUpdateTimer.Elapsed += (sender, args) =>
-            {
-                foreach (var channel in SyncedChannels)
-                {
-                    WhoisEveryoneInChannel(channel);
-                }
-            };
         }
 
         public void Start()
@@ -94,6 +90,14 @@ namespace SharpIrcBot
 
         protected void DisconnectOrWhatever()
         {
+            try
+            {
+                Client.RfcQuit();
+            }
+            catch
+            {
+            }
+
             try
             {
                 Client.Disconnect();
@@ -225,55 +229,29 @@ namespace SharpIrcBot
             SyncedChannels.Add(e.Data.Channel);
         }
 
-        protected virtual void HandleRegisteredAs(object sender, IrcEventArgs e)
+        protected virtual void HandleRawMessage(object sender, IrcEventArgs e)
         {
-            if ((int)e.Data.ReplyCode == 330)
-            {
-                // :irc.example.com 330 MYNICK THEIRNICK THEIRLOGIN :is logged in as
-                lock (NicksToLogins)
-                {
-                    NicksToLogins[e.Data.RawMessageArray[3].ToLowerInvariant()] = e.Data.RawMessageArray[4];
-                }
-                Logger.DebugFormat("registered that {0} is logged in as {1}", e.Data.RawMessageArray[3], e.Data.RawMessageArray[4]);
-            }
-            else if (e.Data.ReplyCode == ReplyCode.WhoIsUser)
-            {
-                // :irc.example.com 311 MYNICK THEIRNICK THEIRHOST * :REALNAME
-                // mark that we have at least seen this user
-                lock (NicksToLogins)
-                {
-                    NicksToLogins[e.Data.RawMessageArray[3].ToLowerInvariant()] = null;
-                }
-                Logger.DebugFormat("registered that {0} exists (and might not be logged in)", e.Data.RawMessageArray[3]);
-            }
-            else if (e.Data.ReplyCode == ReplyCode.ErrorNoSuchNickname)
-            {
-                // :irc.example.com 311 MYNICK THEIRNICK :No such nick/channel
-                // remove that user
-                lock (NicksToLogins)
-                {
-                    NicksToLogins[e.Data.RawMessageArray[3].ToLowerInvariant()] = null;
-                }
-                Logger.DebugFormat("registered that {0} is gone and thereby not logged in", e.Data.RawMessageArray[3]);
-            }
-        }
-
-        protected virtual void HandleNames(object sender, NamesEventArgs e)
-        {
-            // update all the names
-            RunCheckRegistrationsOn(e.UserList);
-        }
-
-        protected virtual void HandleNickChange(object sender, NickChangeEventArgs e)
-        {
-            // update both old and new nickname
-            RunCheckRegistrationsOn(e.OldNickname, e.NewNickname);
+            OnRawMessage(e);
         }
 
         protected virtual void HandleJoin(object sender, JoinEventArgs e)
         {
-            // update this person
-            RunCheckRegistrationsOn(e.Who);
+            OnJoinedChannel(e);
+        }
+
+        protected virtual void HandleNames(object sender, NamesEventArgs e)
+        {
+            OnNamesInChannel(e);
+        }
+
+        protected virtual void HandleNickChange(object sender, NickChangeEventArgs e)
+        {
+            OnNickChange(e);
+        }
+
+        protected virtual void HandleRegistered(object sender, EventArgs e)
+        {
+            OnConnectedToServer(e);
         }
 
         protected virtual void OnChannelMessage(IrcEventArgs e)
@@ -324,63 +302,61 @@ namespace SharpIrcBot
             }
         }
 
+        protected virtual void OnConnectedToServer(EventArgs e)
+        {
+            if (ConnectedToServer != null)
+            {
+                ConnectedToServer(this, e);
+            }
+        }
+
+        protected virtual void OnNickMapping(NickMappingEventArgs e)
+        {
+            if (NickMapping != null)
+            {
+                NickMapping(this, e);
+            }
+        }
+
+        protected virtual void OnRawMessage(IrcEventArgs e)
+        {
+            if (RawMessage != null)
+            {
+                RawMessage(this, e);
+            }
+        }
+
+        protected virtual void OnNamesInChannel(NamesEventArgs e)
+        {
+            if (NamesInChannel != null)
+            {
+                NamesInChannel(this, e);
+            }
+        }
+
+        protected virtual void OnJoinedChannel(JoinEventArgs e)
+        {
+            if (JoinedChannel != null)
+            {
+                JoinedChannel(this, e);
+            }
+        }
+
+        protected virtual void OnNickChange(NickChangeEventArgs e)
+        {
+            if (NickChange != null)
+            {
+                NickChange(this, e);
+            }
+        }
+
         public string RegisteredNameForNick(string nick)
         {
-            if (!Config.HonorUserRegistrations)
-            {
-                // don't give a damn
-                Logger.DebugFormat("regname: not honoring user registration; pretending that {0} is logged in as {0}", nick);
-                return nick;
-            }
+            // perform nick mapping
+            var eventArgs = new NickMappingEventArgs(nick);
+            OnNickMapping(eventArgs);
 
-            var lowerNick = nick.ToLowerInvariant();
-            lock (NicksToLogins)
-            {
-                if (NicksToLogins.ContainsKey(lowerNick))
-                {
-                    if (Logger.IsDebugEnabled)
-                    {
-                        if (NicksToLogins[lowerNick] == null)
-                        {
-                            Logger.DebugFormat("regname: {0} is not registered (null)", lowerNick);
-                        }
-                        else
-                        {
-                            Logger.DebugFormat("regname: {0} is registered as {1}", lowerNick, NicksToLogins[lowerNick]);
-                        }
-                    }
-                    return NicksToLogins[lowerNick];
-                }
-            }
-
-            Logger.DebugFormat("regname: {0} is not registered (not contained)", lowerNick);
-
-            // return null for the time being
-            return null;
-        }
-
-        public void WhoisEveryoneInChannel(string channel)
-        {
-            // perform NAMES on the channel; the names response triggers the WHOIS waterfall
-            Client.RfcNames(channel);
-        }
-
-        protected bool RunCheckRegistrationsOn(params string[] nicknames)
-        {
-            if (Logger.IsDebugEnabled)
-            {
-                Logger.DebugFormat("performing reg check on: {0}", string.Join(" ", nicknames));
-            }
-
-            // send WHOIS for every user to get their registered name
-            // do this in packages to reduce traffic
-            const int packageSize = 5;
-
-            for (int i = 0; i < nicknames.Length; i += packageSize)
-            {
-                Client.RfcWhois(nicknames.Skip(i).Take(packageSize).ToArray());
-            }
-            return true;
+            return eventArgs.MapsTo.FirstOrDefault();
         }
 
         /// <remarks><paramref name="words"/> will be modified.</remarks>
