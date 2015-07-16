@@ -211,7 +211,7 @@ namespace DatabaseNickMapping
             var baseNickMatch = BaseNickRegex.Match(message);
             if (baseNickMatch.Success)
             {
-                var whichNick = pseudoRegisterMatch.Groups[1].Value;
+                var whichNick = baseNickMatch.Groups[1].Value;
                 using (var ctx = GetNewContext())
                 {
                     var baseNick = FindBaseNickFor(whichNick, ctx);
