@@ -21,7 +21,6 @@ namespace SharpIrcBot
         protected Thread IrcThread;
         protected CancellationTokenSource Canceller;
         protected HashSet<string> SyncedChannels;
-        protected Timer WhoisUpdateTimer;
 
         public event EventHandler<IrcEventArgs> ChannelMessage;
         public event EventHandler<ActionEventArgs> ChannelAction;
@@ -76,14 +75,11 @@ namespace SharpIrcBot
                 Name = "IRC thread"
             };
             IrcThread.Start();
-
-            WhoisUpdateTimer.Start();
         }
 
         public void Stop()
         {
             Canceller.Cancel();
-            WhoisUpdateTimer.Stop();
             DisconnectOrWhatever();
             IrcThread.Join();
         }
