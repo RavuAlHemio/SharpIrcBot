@@ -121,18 +121,16 @@ namespace WhoisLoginNickMapping
             {
                 if (NicksToLogins.ContainsKey(lowerNick))
                 {
-                    if (Logger.IsDebugEnabled)
+                    if (NicksToLogins[lowerNick] == null)
                     {
-                        if (NicksToLogins[lowerNick] == null)
-                        {
-                            Logger.DebugFormat("regname: {0} is not registered (null)", lowerNick);
-                        }
-                        else
-                        {
-                            Logger.DebugFormat("regname: {0} is registered as {1}", lowerNick, NicksToLogins[lowerNick]);
-                        }
+                        Logger.DebugFormat("regname: {0} is not registered (null)", lowerNick);
                     }
-                    args.MapsTo.Add(NicksToLogins[lowerNick]);
+                    else
+                    {
+                        Logger.DebugFormat("regname: {0} is registered as {1}", lowerNick, NicksToLogins[lowerNick]);
+                        args.MapsTo.Add(NicksToLogins[lowerNick]);
+                    }
+                    return;
                 }
             }
 
