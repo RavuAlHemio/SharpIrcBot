@@ -15,6 +15,9 @@ namespace UnoBot
     {
         private static readonly ILog CommunicationLogger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType.FullName + ".Communication");
         private static readonly ILog StrategyLogger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType.FullName + ".Strategy");
+
+        protected delegate StrategyContinuation StrategyFunction(List<Card> possibleCards);
+        protected delegate void FilterFunction(List<Card> possibleCards);
         
         protected const string CurrentPlayerEventName = "current_player";
         protected const string CurrentPlayerOrderEventName = "current_player_order";
@@ -485,10 +488,227 @@ namespace UnoBot
             return;
         }
 
+        /// <summary>
+        /// Strategy: try to destroy the next player if they are close to winning.
+        /// </summary>
+        protected StrategyContinuation StrategyDestroyNextPlayerIfDangerous(List<Card> possibleCards)
+        {
+            if (NextPlayer == null || !CurrentCardCounts.ContainsKey(NextPlayer))
+            {
+                // not sure who my next player is or how many cards they have
+                return StrategyContinuation.ContinueToNextStrategy;
+            }
+
+            StrategyLogger.DebugFormat("next player {0} has {1} cards", NextPlayer, CurrentCardCounts[NextPlayer]);
+
+            if (CurrentCardCounts[NextPlayer] > Config.PlayToWinThreshold)
+            {
+                // not dangerous
+                return StrategyContinuation.ContinueToNextStrategy;
+            }
+
+            // the player after me has too few cards; try finding an evil card first
+            StrategyLogger.Debug("trying to find an evil card");
+
+            // offensive cards first: D2, WD4
+            possibleCards.AddRange(CurrentHand.Where(hc => hc.Color == TopCard.Color && hc.Value == CardValue.DrawTwo));
+            possibleCards.AddRange(CurrentHand.Where(hc => hc.Value == CardValue.WildDrawFour));
+
+            if (possibleCards.Count == 0)
+            {
+                // defensive cards next: S, R
+                possibleCards.AddRange(CurrentHand.Where(hc =>
+                    hc.Color == TopCard.Color && (
+                        hc.Value == CardValue.Skip ||
+                        hc.Value == CardValue.Reverse
+                    )
+                ));
+            }
+
+            if (possibleCards.Count > 0)
+            {
+                StrategyLogger.Debug("we have an evil card for the next player");
+
+                // don't add the next pick
+                return StrategyContinuation.SkipAllOtherStrategies;
+            }
+            else if (!DrewLast)
+            {
+                if (CurrentHand.Count <= Config.PlayToWinThreshold)
+                {
+                    StrategyLogger.DebugFormat("not risking emergency strategic draw for evil card");
+                }
+                else
+                {
+                    var emergencyStrategicDraw = (Randomizer.Next(Config.EmergencyStrategicDrawDenominator) == 0);
+                    if (emergencyStrategicDraw)
+                    {
+                        StrategyLogger.Debug("emergency strategic draw for evil card");
+                        DrawACard();
+                        return StrategyContinuation.DontPlayCard;
+                    }
+                    else
+                    {
+                        StrategyLogger.Debug("skipping emergency strategic draw for evil card");
+                    }
+                }
+            }
+
+            return StrategyContinuation.ContinueToNextStrategy;
+        }
+
+        /// <summary>
+        /// Strategy: honor color requests.
+        /// </summary>
+        protected StrategyContinuation StrategyHonorColorRequests(List<Card> possibleCards)
+        {
+            if (TopCard.Color == ColorRequest.Value)
+            {
+                // glad that's been taken care of
+                ColorRequest = null;
+                return StrategyContinuation.ContinueToNextStrategy;
+            }
+
+            // do I have a usable card that matches the target color?
+            possibleCards.AddRange(CurrentHand.Where(hc => hc.Color == ColorRequest.Value && hc.Value == TopCard.Value));
+            if (possibleCards.Count == 0)
+            {
+                // nope; try changing with a wild card instead
+                possibleCards.AddRange(CurrentHand.Where(hc => hc.Color == CardColor.Wild));
+            }
+            if (possibleCards.Count > 0)
+            {
+                // alright, no need for the standard pick
+                return StrategyContinuation.SkipAllOtherStrategies;
+            }
+
+            return StrategyContinuation.ContinueToNextStrategy;
+        }
+
+        /// <summary>
+        /// Strategy: pick a card at random.
+        /// </summary>
+        protected StrategyContinuation StrategyRandomPick(List<Card> possibleCards)
+        {
+            // matched only by value, times StandardValueMatchPriority
+            var cardsByValue = CurrentHand.Where(hc => hc.Value == TopCard.Value && hc.Color != TopCard.Color).ToList();
+            for (int i = 0; i < Config.StandardValueMatchPriority; ++i)
+            {
+                possibleCards.AddRange(cardsByValue);
+            }
+
+            // matched only by color, times StandardColorMatchPriority
+            var cardsByColor = CurrentHand.Where(hc => hc.Color == TopCard.Color && hc.Value != TopCard.Value).ToList();
+            for (int i = 0; i < Config.StandardColorMatchPriority; ++i)
+            {
+                possibleCards.AddRange(cardsByColor);
+            }
+
+            // matched by both color and value, times StandardColorAndValueMatchPriority
+            var identicalCards = CurrentHand.Where(hc => hc.Color == TopCard.Color && hc.Value == TopCard.Value).ToList();
+            for (int i = 0; i < Config.StandardColorAndValueMatchPriority; ++i)
+            {
+                possibleCards.AddRange(identicalCards);
+            }
+
+            // color changers (W, WD4), times StandardColorChangePriority
+            var colorChangeCards = CurrentHand.Where(hc => hc.Color == CardColor.Wild).ToList();
+            for (int i = 0; i < Config.StandardColorChangePriority; ++i)
+            {
+                possibleCards.AddRange(colorChangeCards);
+            }
+
+            // player sequence reordering cards (R, S, D2, WD4), times StandardReorderPriority
+            var reorderCards = CurrentHand.Where(hc =>
+                hc.Value == CardValue.WildDrawFour ||
+                (
+                    (
+                        hc.Color == TopCard.Color ||
+                        hc.Value == TopCard.Value
+                    ) && (
+                        hc.Value == CardValue.DrawTwo ||
+                        hc.Value == CardValue.Reverse ||
+                        hc.Value == CardValue.Skip
+                    )
+                )
+            );
+            for (int i = 0; i < Config.StandardReorderPriority; ++i)
+            {
+                possibleCards.AddRange(reorderCards);
+            }
+
+            return StrategyContinuation.ContinueToNextStrategy;
+        }
+
+        /// <summary>
+        /// Filter: if the previous player has too few cards, filter out reverses.
+        /// </summary>
+        protected void FilterReverseIfPreviousWinning(List<Card> possibleCards)
+        {
+            if (CurrentHand.Count <= Config.PlayToWinThreshold)
+            {
+                // not filtering anything; I'm about to win!
+                return;
+            }
+
+            if (PreviousPlayer != null && CurrentCardCounts.ContainsKey(PreviousPlayer) && CurrentCardCounts[PreviousPlayer] <= Config.PlayToWinThreshold)
+            {
+                StrategyLogger.DebugFormat("previous player ({0}) has {1} cards or less ({2}); filtering out reverses", PreviousPlayer, Config.PlayToWinThreshold, CurrentCardCounts[PreviousPlayer]);
+                possibleCards.RemoveAll(c => c.Value == CardValue.Reverse);
+            }
+        }
+
+        /// <summary>
+        /// Filter: if the next-but-one player has too few cards, filter out any cards that would skip right to them.
+        /// </summary>
+        protected void FilterAnySkipsIfNextButOneWinning(List<Card> possibleCards)
+        {
+            if (CurrentHand.Count <= Config.PlayToWinThreshold)
+            {
+                // not filtering anything; I'm about to win!
+                return;
+            }
+
+            if (NextButOnePlayer != null && CurrentCardCounts.ContainsKey(NextButOnePlayer) && CurrentCardCounts[NextButOnePlayer] <= Config.PlayToWinThreshold)
+            {
+                StrategyLogger.DebugFormat("next-but-one player ({0}) has {1} cards or less ({2}); filtering out cards that would skip my successor (their predecessor)", NextButOnePlayer, Config.PlayToWinThreshold, CurrentCardCounts[NextButOnePlayer]);
+                possibleCards.RemoveAll(c => c.Value == CardValue.DrawTwo || c.Value == CardValue.WildDrawFour || c.Value == CardValue.Skip);
+            }
+        }
+
+        protected virtual StrategyFunction[] AssembleStrategies()
+        {
+            return new StrategyFunction[]
+            {
+                // strategy 1: destroy the next player if they are close to winning
+                StrategyDestroyNextPlayerIfDangerous,
+
+                // strategy 2: honor color requests
+                StrategyHonorColorRequests,
+
+                // strategy 3: pick a card at random
+                StrategyRandomPick
+            };
+        }
+
+        protected virtual FilterFunction[] AssembleFilters()
+        {
+            return new FilterFunction[]
+            {
+                // filter 1: if the previous player has too few cards, filter out reverses
+                FilterReverseIfPreviousWinning,
+
+                // filter 2: if the next-but-one player has too few cards, filter out any card that would skip right to them
+                FilterAnySkipsIfNextButOneWinning
+            };
+        }
+
         protected virtual void PlayACard()
         {
             var possibleCards = new List<Card>();
-            bool nextPickStrategy = true;
+
+            var strategies = AssembleStrategies();
+            var filters = AssembleFilters();
 
             if (StrategyLogger.IsDebugEnabled)
             {
@@ -501,144 +721,33 @@ namespace UnoBot
                 return;
             }
 
-            // strategy 1: destroy the next player if they are close to winning
-            if (nextPickStrategy && NextPlayer != null && CurrentCardCounts.ContainsKey(NextPlayer))
+            // apply strategies
+            foreach (var strategy in strategies)
             {
-                StrategyLogger.DebugFormat("next player {0} has {1} cards", NextPlayer, CurrentCardCounts[NextPlayer]);
-
-                if (CurrentCardCounts[NextPlayer] <= Config.PlayToWinThreshold)
+                var continuation = strategy(possibleCards);
+                if (continuation == StrategyContinuation.ContinueToNextStrategy)
                 {
-                    // the player after me has too few cards; try finding an evil card first
-                    StrategyLogger.Debug("trying to find an evil card");
-
-                    // offensive cards first: D2, WD4
-                    possibleCards.AddRange(CurrentHand.Where(hc => hc.Color == TopCard.Color && hc.Value == CardValue.DrawTwo));
-                    possibleCards.AddRange(CurrentHand.Where(hc => hc.Value == CardValue.WildDrawFour));
-
-                    if (possibleCards.Count == 0)
-                    {
-                        // defensive cards next: S, R
-                        possibleCards.AddRange(CurrentHand.Where(hc =>
-                            hc.Color == TopCard.Color && (
-                                hc.Value == CardValue.Skip ||
-                                hc.Value == CardValue.Reverse
-                            )
-                        ));
-                    }
-
-                    if (possibleCards.Count > 0)
-                    {
-                        StrategyLogger.Debug("we have an evil card for the next player");
-
-                        // don't add the next pick
-                        nextPickStrategy = false;
-                    }
-                    else if (!DrewLast)
-                    {
-                        var emergencyStrategicDraw = (Randomizer.Next(Config.EmergencyStrategicDrawDenominator) == 0);
-                        if (emergencyStrategicDraw)
-                        {
-                            StrategyLogger.Debug("emergency strategic draw");
-                            DrawACard();
-                            return;
-                        }
-                    }
+                    continue;
+                }
+                else if (continuation == StrategyContinuation.DontPlayCard)
+                {
+                    return;
+                }
+                else if (continuation == StrategyContinuation.SkipAllOtherStrategies)
+                {
+                    break;
                 }
             }
 
-            // strategy 2: honor color requests
-            if (nextPickStrategy && ColorRequest.HasValue)
+            // apply filters
+            foreach (var filter in filters)
             {
-                if (TopCard.Color == ColorRequest.Value)
-                {
-                    // glad that's been taken care of
-                    ColorRequest = null;
-                }
-                else
-                {
-                    // do I have a usable card that matches the target color?
-                    possibleCards.AddRange(CurrentHand.Where(hc => hc.Color == ColorRequest.Value && hc.Value == TopCard.Value));
-                    if (possibleCards.Count == 0)
-                    {
-                        // nope; try changing with a wild card instead
-                        possibleCards.AddRange(CurrentHand.Where(hc => hc.Color == CardColor.Wild));
-                    }
-                    if (possibleCards.Count > 0)
-                    {
-                        // alright, no need for the standard pick
-                        nextPickStrategy = false;
-                    }
-                }
-            }
-
-            // strategy 3: pick a card at random
-            if (nextPickStrategy)
-            {
-                // matched only by value, times StandardValueMatchPriority
-                var cardsByValue = CurrentHand.Where(hc => hc.Value == TopCard.Value && hc.Color != TopCard.Color).ToList();
-                for (int i = 0; i < Config.StandardValueMatchPriority; ++i)
-                {
-                    possibleCards.AddRange(cardsByValue);
-                }
-
-                // matched only by color, times StandardColorMatchPriority
-                var cardsByColor = CurrentHand.Where(hc => hc.Color == TopCard.Color && hc.Value != TopCard.Value).ToList();
-                for (int i = 0; i < Config.StandardColorMatchPriority; ++i)
-                {
-                    possibleCards.AddRange(cardsByColor);
-                }
-
-                // matched by both color and value, times StandardColorAndValueMatchPriority
-                var identicalCards = CurrentHand.Where(hc => hc.Color == TopCard.Color && hc.Value == TopCard.Value).ToList();
-                for (int i = 0; i < Config.StandardColorAndValueMatchPriority; ++i)
-                {
-                    possibleCards.AddRange(identicalCards);
-                }
-
-                // color changers (W, WD4), times StandardColorChangePriority
-                var colorChangeCards = CurrentHand.Where(hc => hc.Color == CardColor.Wild).ToList();
-                for (int i = 0; i < Config.StandardColorChangePriority; ++i)
-                {
-                    possibleCards.AddRange(colorChangeCards);
-                }
-
-                // player sequence reordering cards (R, S, D2, WD4), times StandardReorderPriority
-                var reorderCards = CurrentHand.Where(hc =>
-                    hc.Value == CardValue.WildDrawFour ||
-                    (
-                        (
-                            hc.Color == TopCard.Color ||
-                            hc.Value == TopCard.Value
-                        ) && (
-                            hc.Value == CardValue.DrawTwo ||
-                            hc.Value == CardValue.Reverse ||
-                            hc.Value == CardValue.Skip
-                        )
-                    )
-                );
-                for (int i = 0; i < Config.StandardReorderPriority; ++i)
-                {
-                    possibleCards.AddRange(reorderCards);
-                }
-            }
-
-            // post-strategy filter: if the previous player has too few cards, filter out reverses
-            if (PreviousPlayer != null && CurrentCardCounts.ContainsKey(PreviousPlayer) && CurrentCardCounts[PreviousPlayer] <= Config.PlayToWinThreshold)
-            {
-                StrategyLogger.DebugFormat("previous player ({0}) has {1} cards or less ({2}); filtering out reverses", PreviousPlayer, Config.PlayToWinThreshold, CurrentCardCounts[PreviousPlayer]);
-                possibleCards.RemoveAll(c => c.Value == CardValue.Reverse);
-            }
-
-            // post-strategy filter: if the next-but-one player has too few cards, filter out D2, WD4 and S
-            if (NextButOnePlayer != null && CurrentCardCounts.ContainsKey(NextButOnePlayer) && CurrentCardCounts[NextButOnePlayer] <= Config.PlayToWinThreshold)
-            {
-                StrategyLogger.DebugFormat("next-but-one player ({0}) has {1} cards or less ({2}); filtering out cards that would skip my successor (their predecessor)", NextButOnePlayer, Config.PlayToWinThreshold, CurrentCardCounts[NextButOnePlayer]);
-                possibleCards.RemoveAll(c => c.Value == CardValue.DrawTwo || c.Value == CardValue.WildDrawFour || c.Value == CardValue.Skip);
+                filter(possibleCards);
             }
 
             if (possibleCards.Count > 0)
             {
-                // pick one at random
+                // pick a card at random
                 var index = Randomizer.Next(possibleCards.Count);
                 var card = possibleCards[index];
 
