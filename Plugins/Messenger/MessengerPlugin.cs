@@ -482,6 +482,12 @@ namespace Messenger
 
             // even banned users get messages; they just can't respond to them
 
+            // only deliver if we are in a delivery channel
+            if (Config.DeliveryChannels.Count > 0 && !Config.DeliveryChannels.Contains(args.Data.Channel))
+            {
+                return;
+            }
+
             // check if the sender should get any messages
             List<Message> messages;
             using (var ctx = GetNewContext())
