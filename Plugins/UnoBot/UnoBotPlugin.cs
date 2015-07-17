@@ -437,7 +437,11 @@ namespace UnoBot
             colorsToChoose.Add(CardColor.Yellow);
 
             // -> add all the (non-wild) colors from our hand to increase the chances of a useful pick
-            colorsToChoose.AddRange(CurrentHand.Select(c => c.Color).Where(c => c != CardColor.Wild));
+            var handColors = CurrentHand.Select(c => c.Color).Where(c => c != CardColor.Wild).ToList();
+            for (int i = 0; i < Config.ColorInHandPreference; ++i)
+            {
+                colorsToChoose.AddRange(handColors);
+            }
 
             // -> choose at random
             return colorsToChoose[Randomizer.Next(colorsToChoose.Count)];
