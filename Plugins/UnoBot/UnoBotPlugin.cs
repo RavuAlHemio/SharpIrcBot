@@ -562,6 +562,12 @@ namespace UnoBot
         /// </summary>
         protected StrategyContinuation StrategyHonorColorRequests(List<Card> possibleCards)
         {
+            if (!ColorRequest.HasValue)
+            {
+                // no color request to honor
+                return StrategyContinuation.ContinueToNextStrategy;
+            }
+
             if (TopCard.Color == ColorRequest.Value)
             {
                 // glad that's been taken care of
