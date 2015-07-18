@@ -98,12 +98,13 @@ namespace SharpIrcBot
         protected virtual void OuterProc()
         {
             var cancelToken = Canceller.Token;
-            DateTime? lastFailurePoint = null;
             TimeSpan cooldown = TimeSpan.FromSeconds(1);
             TimeSpan cooldownIncreaseThreshold = TimeSpan.FromMinutes(Config.CooldownIncreaseThresholdMinutes);
 
             while (!cancelToken.IsCancellationRequested)
             {
+                var connectPoint = DateTime.UtcNow;
+
                 try
                 {
                     Proc();
@@ -113,13 +114,12 @@ namespace SharpIrcBot
                     Logger.Error("exception while running IRC", exc);
                     DisconnectOrWhatever();
 
-                    var nowFail = DateTime.UtcNow;
-                    if (cooldownIncreaseThreshold == TimeSpan.Zero || (lastFailurePoint.HasValue && (nowFail - lastFailurePoint.Value) < cooldownIncreaseThreshold))
+                    var failPoint = DateTime.UtcNow;
+                    if (cooldownIncreaseThreshold == TimeSpan.Zero || (failPoint - connectPoint) < cooldownIncreaseThreshold)
                     {
                         // increase cooldown
                         cooldown = TimeSpan.FromTicks(cooldown.Ticks * 2);
                     }
-                    lastFailurePoint = nowFail;
                 }
 
                 Thread.Sleep(cooldown);
