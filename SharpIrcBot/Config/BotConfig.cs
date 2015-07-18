@@ -20,6 +20,7 @@ namespace SharpIrcBot
         public string Encoding { get; set; }
 
         public int SendDelay { get; set; }
+        public double CooldownIncreaseThresholdMinutes { get; set; }
         public List<string> AutoConnectCommands { get; set; }
         public List<string> AutoJoinChannels { get; set; }
         public List<PluginConfig> Plugins { get; set; }
@@ -36,6 +37,7 @@ namespace SharpIrcBot
             Encoding = "utf-8";
 
             SendDelay = 200;
+            CooldownIncreaseThresholdMinutes = 1.0;
             AutoConnectCommands = new List<string>();
             AutoJoinChannels = new List<string>();
             Plugins = new List<PluginConfig>();

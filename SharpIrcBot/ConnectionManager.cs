@@ -100,6 +100,7 @@ namespace SharpIrcBot
             var cancelToken = Canceller.Token;
             DateTime? lastFailurePoint = null;
             TimeSpan cooldown = TimeSpan.FromSeconds(1);
+            TimeSpan cooldownIncreaseThreshold = TimeSpan.FromMinutes(Config.CooldownIncreaseThresholdMinutes);
 
             while (!cancelToken.IsCancellationRequested)
             {
@@ -113,7 +114,7 @@ namespace SharpIrcBot
                     DisconnectOrWhatever();
 
                     var nowFail = DateTime.UtcNow;
-                    if (lastFailurePoint.HasValue && (nowFail - lastFailurePoint.Value) < TimeSpan.FromMinutes(1))
+                    if (cooldownIncreaseThreshold == TimeSpan.Zero || (lastFailurePoint.HasValue && (nowFail - lastFailurePoint.Value) < cooldownIncreaseThreshold))
                     {
                         // increase cooldown
                         cooldown = TimeSpan.FromTicks(cooldown.Ticks * 2);
