@@ -88,14 +88,6 @@ namespace SharpIrcBot
         {
             try
             {
-                Client.RfcQuit();
-            }
-            catch
-            {
-            }
-
-            try
-            {
                 Client.Disconnect();
             }
             catch (NotConnectedException)
@@ -106,6 +98,8 @@ namespace SharpIrcBot
         protected virtual void OuterProc()
         {
             var cancelToken = Canceller.Token;
+            DateTime? lastFailurePoint = null;
+            TimeSpan cooldown = TimeSpan.FromSeconds(1);
 
             while (!cancelToken.IsCancellationRequested)
             {
@@ -117,7 +111,17 @@ namespace SharpIrcBot
                 {
                     Logger.Error("exception while running IRC", exc);
                     DisconnectOrWhatever();
+
+                    var nowFail = DateTime.UtcNow;
+                    if (lastFailurePoint.HasValue && (nowFail - lastFailurePoint.Value) < TimeSpan.FromMinutes(1))
+                    {
+                        // increase cooldown
+                        cooldown = TimeSpan.FromTicks(cooldown.Ticks * 2);
+                    }
+                    lastFailurePoint = nowFail;
                 }
+
+                Thread.Sleep(cooldown);
             }
         }
 
