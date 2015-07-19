@@ -162,6 +162,59 @@ namespace UnoBot
             }
             return new Card { Color = color.Value, Value = value.Value };
         }
+
+        public static bool IsValid(this Card card)
+        {
+            switch (card.Color)
+            {
+                case CardColor.Wild:
+                    switch (card.Value)
+                    {
+                        case CardValue.Wild:
+                        case CardValue.WildDrawFour:
+                            return true;
+                        default:
+                            // wild card of wrong or unknown value
+                            return false;
+                    }
+                case CardColor.Red:
+                case CardColor.Green:
+                case CardColor.Blue:
+                case CardColor.Yellow:
+                    switch (card.Value)
+                    {
+                        case CardValue.Zero:
+                        case CardValue.One:
+                        case CardValue.Two:
+                        case CardValue.Three:
+                        case CardValue.Four:
+                        case CardValue.Five:
+                        case CardValue.Six:
+                        case CardValue.Seven:
+                        case CardValue.Eight:
+                        case CardValue.Nine:
+                        case CardValue.Reverse:
+                        case CardValue.Skip:
+                        case CardValue.DrawTwo:
+                            return true;
+                        default:
+                            // color card of wrong or unknown value
+                            return false;
+                    }
+                default:
+                    // unknown color
+                    return false;
+            }
+        }
+
+        public static string ToShortPlayString(this Card card)
+        {
+            return string.Format(CultureInfo.InvariantCulture, "{0} {1}", card.Color.ToShortPlayString(), card.Value.ToShortPlayString());
+        }
+
+        public static string ToFullPlayString(this Card card)
+        {
+            return string.Format(CultureInfo.InvariantCulture, "{0} {1}", card.Color.ToFullPlayString(), card.Value.ToFullPlayString());
+        }
     }
 }
-

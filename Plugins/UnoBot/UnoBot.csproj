@@ -46,6 +46,10 @@
     <Compile Include="Card.cs" />
     <Compile Include="StrategyContinuation.cs" />
     <Compile Include="NaiveUnoBotPlugin.cs" />
+    <Compile Include="GameMaster\GameMasterConfig.cs" />
+    <Compile Include="GameMaster\UnoGameMasterPlugin.cs" />
+    <Compile Include="GameMaster\Player.cs" />
+    <Compile Include="GameMaster\GameState.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
@@ -60,5 +64,8 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="GameMaster\" />
   </ItemGroup>
 </Project>
