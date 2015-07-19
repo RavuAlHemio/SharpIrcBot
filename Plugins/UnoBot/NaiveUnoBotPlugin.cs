@@ -137,6 +137,7 @@ namespace UnoBot
                 {
                     PlayColorCard(cardToPlay.Value);
                 }
+                DrewLast = false;
             }
             else
             {
