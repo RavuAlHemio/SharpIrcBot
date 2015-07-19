@@ -447,6 +447,11 @@ namespace UnoBot
             return colorsToChoose[Randomizer.Next(colorsToChoose.Count)];
         }
 
+        protected virtual void PlayColorCard(Card card)
+        {
+            PlayColorCard(card.Color, card.Value);
+        }
+
         protected virtual void PlayColorCard(CardColor color, CardValue value)
         {
             if (color == CardColor.Wild)
@@ -489,7 +494,13 @@ namespace UnoBot
         {
             DrewLast = true;
             ConnectionManager.SendChannelMessage(Config.UnoChannel, "!draw");
-            return;
+        }
+
+        protected virtual void PassAfterDrawing()
+        {
+            ++DrawsSinceLastPlay;
+            DrewLast = false;
+            ConnectionManager.SendChannelMessage(Config.UnoChannel, "!pass");
         }
 
         /// <summary>
@@ -787,7 +798,7 @@ namespace UnoBot
                 else
                 {
                     // play it
-                    PlayColorCard(card.Color, card.Value);
+                    PlayColorCard(card);
                 }
                 DrewLast = false;
                 DrawsSinceLastPlay = 0;
@@ -796,10 +807,8 @@ namespace UnoBot
 
             if (DrewLast)
             {
-                DrewLast = false;
-                ++DrawsSinceLastPlay;
                 StrategyLogger.Debug("passing");
-                ConnectionManager.SendChannelMessage(Config.UnoChannel, "!pass");
+                PassAfterDrawing();
             }
             else
             {

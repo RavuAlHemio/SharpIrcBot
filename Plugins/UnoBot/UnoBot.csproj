@@ -45,6 +45,7 @@
     <Compile Include="CardUtils.cs" />
     <Compile Include="Card.cs" />
     <Compile Include="StrategyContinuation.cs" />
+    <Compile Include="NaiveUnoBotPlugin.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
