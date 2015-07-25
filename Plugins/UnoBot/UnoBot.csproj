@@ -50,6 +50,8 @@
     <Compile Include="GameMaster\UnoGameMasterPlugin.cs" />
     <Compile Include="GameMaster\Player.cs" />
     <Compile Include="GameMaster\GameState.cs" />
+    <Compile Include="GameMaster\Pile.cs" />
+    <Compile Include="GameMaster\SortedMultiset.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>

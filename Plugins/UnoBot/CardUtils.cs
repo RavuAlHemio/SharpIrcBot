@@ -160,7 +160,7 @@ namespace UnoBot
             {
                 return null;
             }
-            return new Card { Color = color.Value, Value = value.Value };
+            return new Card(color.Value, value.Value);
         }
 
         public static bool IsValid(this Card card)
@@ -215,6 +215,21 @@ namespace UnoBot
         public static string ToFullPlayString(this Card card)
         {
             return string.Format(CultureInfo.InvariantCulture, "{0} {1}", card.Color.ToFullPlayString(), card.Value.ToFullPlayString());
+        }
+
+        public static bool IsWild(this CardValue value)
+        {
+            return (value == CardValue.Wild || value == CardValue.WildDrawFour);
+        }
+
+        public static bool IsWild(this CardColor color)
+        {
+            return (color == CardColor.Wild);
+        }
+
+        public static bool IsWild(this Card card)
+        {
+            return (card.Color.IsWild() && card.Value.IsWild());
         }
     }
 }
