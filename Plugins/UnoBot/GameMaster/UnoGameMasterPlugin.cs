@@ -22,11 +22,13 @@ namespace UnoBot.GameMaster
         protected static readonly CardColor[] RegularColors = { CardColor.Red, CardColor.Green, CardColor.Blue, CardColor.Yellow };
         protected static readonly Regex StartGameRegex = new Regex("^!uno(?:[ ]+\\+([a-zA-Z]))*$");
         protected static readonly Regex PlayCardRegex = new Regex("^!p(?:lay)?[ ]+([A-Za-z0-9]+)[ ]+([A-Za-z0-9]+)$");
+        protected static readonly Regex BotTestRegex = new Regex("^!bottest[ ]+([0-9]+)$");
 
         protected ConnectionManager ConnectionManager;
         protected GameMasterConfig Config;
 
         protected bool AttackMode;
+        protected bool ExtremeMode;
         protected Pile<Card> DrawPile;
         protected Pile<Card> DiscardPile;
         protected List<Player> Players;
@@ -38,6 +40,8 @@ namespace UnoBot.GameMaster
         protected Timer TurnTickTimer;
         protected object TurnLock;
         protected Random Randomizer;
+        protected int BotTestCount;
+        protected DateTime? BotTestJoinRequested;
 
         public UnoGameMasterPlugin(ConnectionManager connMgr, JObject config)
         {
@@ -45,6 +49,7 @@ namespace UnoBot.GameMaster
             Config = new GameMasterConfig(config);
 
             AttackMode = false;
+            ExtremeMode = false;
             DrawPile = new Pile<Card>();
             DiscardPile = new Pile<Card>();
             Players = new List<Player>();
@@ -56,6 +61,8 @@ namespace UnoBot.GameMaster
             TurnTickTimer = new Timer(TurnTickTimerElapsed, null, TimeSpan.Zero, TimeSpan.FromSeconds(1));
             TurnLock = new object();
             Randomizer = new Random();
+            BotTestCount = 0;
+            BotTestJoinRequested = null;
 
             ConnectionManager.ChannelMessage += HandleChannelMessage;
             ConnectionManager.NickChange += HandleNickChange;
@@ -370,12 +377,23 @@ namespace UnoBot.GameMaster
         {
             lock (TurnLock)
             {
-                if (!TurnStartedUtc.HasValue)
+                var nowUtc = DateTime.UtcNow;
+
+                if (CurrentGameState == GameState.Preparation && BotTestJoinRequested.HasValue)
+                {
+                    if ((nowUtc - BotTestJoinRequested.Value) >= TimeSpan.FromSeconds(Config.BotJoinWaitSeconds))
+                    {
+                        // bots should be joined now; start the game!
+                        ConnectionManager.SendChannelMessage(Config.UnoChannel, "That should do it; dealing!");
+                        DealGame();
+                    }
+                }
+
+                if (CurrentGameState != GameState.InProgress || !TurnStartedUtc.HasValue)
                 {
                     return;
                 }
 
-                var nowUtc = DateTime.UtcNow;
                 if ((nowUtc - TurnStartedUtc.Value) >= TimeSpan.FromSeconds(Config.SecondsPerTurn))
                 {
                     // bzzt -- time's up!
@@ -451,6 +469,7 @@ namespace UnoBot.GameMaster
                 var body = e.Data.Message;
                 var bodyTrimmedEnd = body.TrimEnd();
 
+                // !play or !p
                 var playCardMatch = PlayCardRegex.Match(bodyTrimmedEnd);
                 if (playCardMatch.Success)
                 {
@@ -560,9 +579,24 @@ namespace UnoBot.GameMaster
                     {
                         // this player wins!
                         ConnectionManager.SendChannelMessageFormat(Config.UnoChannel, "{0} is the winner!", firstPlayerWithNoCards.Nick);
+                        Logger.InfoFormat("Uno game won by {0}", firstPlayerWithNoCards.Nick);
 
                         // clean up the game
                         StopGame();
+
+                        if (BotTestCount > 0)
+                        {
+                            --BotTestCount;
+                            if (BotTestCount > 0)
+                            {
+                                // start another round, inviting all bots!
+                                ConnectionManager.SendChannelMessageFormat(Config.UnoChannel, "I'm in bot test mode; {0} game{1} left!", BotTestCount, (BotTestCount == 1) ? "" : "s");
+                                Logger.InfoFormat("{0} bot test game/s left", BotTestCount);
+                                PrepareGame();
+                                ConnectionManager.SendChannelMessage(Config.UnoChannel, "?join");
+                                BotTestJoinRequested = DateTime.UtcNow;
+                            }
+                        }
 
                         return;
                     }
@@ -571,6 +605,7 @@ namespace UnoBot.GameMaster
                     AdvanceToNextPlayer();
                 }
 
+                // !uno
                 var startGameMatch = StartGameRegex.Match(bodyTrimmedEnd);
                 if (startGameMatch.Success)
                 {
@@ -588,45 +623,50 @@ namespace UnoBot.GameMaster
                             return;
                     }
 
-                    bool attack = false, extreme = false;
+                    // process options
+                    AttackMode = false;
+                    ExtremeMode = false;
                     foreach (Capture cap in startGameMatch.Captures)
                     {
                         switch (cap.Value)
                         {
                             case "A":
                             case "a":
-                                attack = true;
+                                AttackMode = true;
                                 break;
                             case "E":
                             case "e":
-                                extreme = true;
+                                ExtremeMode = true;
                                 break;
                         }
                     }
 
                     // prepare game
-                    if (extreme)
-                    {
-                        PrepareExtremePiles();
-                    }
-                    else
-                    {
-                        PrepareRegularPiles();
-                    }
-                    AttackMode = attack;
-                    Players.Clear();
-                    PlayerOrderReversed = false;
-                    DrewLast = false;
-                    TurnStartedUtc = null;
+                    PrepareGame();
 
                     // add player who launched the game
                     Players.Add(Player.Create(e.Data.Nick));
 
-                    // we're accepting applications!
-                    CurrentGameState = GameState.Preparation;
-
                     ConnectionManager.SendChannelMessageFormat(Config.UnoChannel, "{0} started a game of Uno!", e.Data.Nick);
 
+                    return;
+                }
+
+                var botTestMatch = BotTestRegex.Match(bodyTrimmedEnd);
+                if (botTestMatch.Success)
+                {
+                    BotTestCount = int.Parse(botTestMatch.Groups[1].Value, CultureInfo.InvariantCulture);
+
+                    ConnectionManager.SendChannelMessageFormat(Config.UnoChannel, "{0} engaged bot test mode; {1} games left!", e.Data.Nick, BotTestCount);
+
+                    // prepare a game
+                    PrepareGame();
+
+                    // trigger bot joinage
+                    ConnectionManager.SendChannelMessage(Config.UnoChannel, "?join");
+
+                    // wait for bot joinage
+                    BotTestJoinRequested = DateTime.UtcNow;
                     return;
                 }
 
@@ -693,32 +733,7 @@ namespace UnoBot.GameMaster
                             break;
                     }
 
-                    // shuffle the draw pile
-                    DrawPile.Shuffle(Randomizer);
-
-                    // distribute the cards
-                    foreach (var player in Players)
-                    {
-                        var drawnCards = DrawCards(Config.InitialDealSize);
-                        player.Hand.UnionWith(drawnCards);
-                    }
-
-                    // draw one card and discard it; this will be our top card
-                    var newTopCard = DrawCard();
-                    if (newTopCard.Color == CardColor.Wild)
-                    {
-                        // it's a wild card; give it a fixed color at random
-                        newTopCard = new Card((CardColor)Randomizer.Next(0, 4), newTopCard.Value);
-                    }
-                    DiscardPile.Push(newTopCard);
-
-                    CurrentGameState = GameState.InProgress;
-
-                    // we're getting ready to start!
-                    BroadcastAnchorCardsDealtEvent();
-
-                    // start a new turn!
-                    StartNewTurn();
+                    DealGame();
                 }
                 else if (bodyTrimmedEnd == "!draw")
                 {
@@ -782,6 +797,11 @@ namespace UnoBot.GameMaster
 
                     // skip to the next player
                     AdvanceToNextPlayer();
+                }
+                else if (bodyTrimmedEnd == "!endgame")
+                {
+                    StopGame();
+                    ConnectionManager.SendChannelMessage(Config.UnoChannel, "Game stopped.");
                 }
             }
         }
@@ -914,6 +934,56 @@ namespace UnoBot.GameMaster
 
                 StopGame();
             }
+        }
+
+        protected virtual void PrepareGame()
+        {
+            if (ExtremeMode)
+            {
+                PrepareExtremePiles();
+            }
+            else
+            {
+                PrepareRegularPiles();
+            }
+
+            Players.Clear();
+            PlayerOrderReversed = false;
+            DrewLast = false;
+            TurnStartedUtc = null;
+
+            // we're accepting applications!
+            CurrentGameState = GameState.Preparation;
+        }
+
+        protected virtual void DealGame()
+        {
+            // shuffle the draw pile
+            DrawPile.Shuffle(Randomizer);
+
+            // distribute the cards
+            foreach (var player in Players)
+            {
+                var drawnCards = DrawCards(Config.InitialDealSize);
+                player.Hand.UnionWith(drawnCards);
+            }
+
+            // draw one card and discard it; this will be our top card
+            var newTopCard = DrawCard();
+            if (newTopCard.Color == CardColor.Wild)
+            {
+                // it's a wild card; give it a fixed color at random
+                newTopCard = new Card((CardColor)Randomizer.Next(0, 4), newTopCard.Value);
+            }
+            DiscardPile.Push(newTopCard);
+
+            CurrentGameState = GameState.InProgress;
+
+            // we're getting ready to start!
+            BroadcastAnchorCardsDealtEvent();
+
+            // start a new turn!
+            StartNewTurn();
         }
 
         protected virtual void StopGame()

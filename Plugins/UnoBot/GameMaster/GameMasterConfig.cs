@@ -9,11 +9,13 @@ namespace UnoBot.GameMaster
     {
         public string UnoChannel { get; set; }
         public double SecondsPerTurn { get; set; }
+        public double BotJoinWaitSeconds { get; set; }
         public int InitialDealSize { get; set; }
 
         public GameMasterConfig(JObject obj)
         {
             SecondsPerTurn = 60.0;
+            BotJoinWaitSeconds = 3.0;
             InitialDealSize = 7;
 
             var ser = new JsonSerializer();
