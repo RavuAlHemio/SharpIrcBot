@@ -22,9 +22,13 @@ namespace SharpIrcBot
         public static readonly Encoding Utf8NoBom = new UTF8Encoding(false, true);
         public static readonly ISet<char> UrlSafeChars = new HashSet<char>("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.");
 
-        public static BotConfig LoadConfig()
+        public static BotConfig LoadConfig(string configPath = null)
         {
-            return new BotConfig(JObject.Parse(File.ReadAllText(Path.Combine(AppDirectory, "Config.json"), Encoding.UTF8)));
+            if (configPath == null)
+            {
+                configPath = Path.Combine(AppDirectory, "Config.json");
+            }
+            return new BotConfig(JObject.Parse(File.ReadAllText(configPath, Encoding.UTF8)));
         }
 
         public static string AppDirectory

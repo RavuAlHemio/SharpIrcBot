@@ -9,7 +9,7 @@ namespace SharpIrcBotCLI
         {
             SharpIrcBotUtil.SetupConsoleLogging();
 
-            var config = SharpIrcBotUtil.LoadConfig();
+            var config = SharpIrcBotUtil.LoadConfig(args.Length > 0 ? args[0] : null);
             var connMgr = new ConnectionManager(config);
             var pluginMgr = new PluginManager(config);
 
