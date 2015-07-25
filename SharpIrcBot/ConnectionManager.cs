@@ -34,6 +34,8 @@ namespace SharpIrcBot
         public event EventHandler<NamesEventArgs> NamesInChannel;
         public event EventHandler<JoinEventArgs> JoinedChannel;
         public event EventHandler<NickChangeEventArgs> NickChange;
+        public event EventHandler<PartEventArgs> UserLeftChannel;
+        public event EventHandler<QuitEventArgs> UserQuitServer;
 
         public ConnectionManager(BotConfig config)
         {
@@ -65,6 +67,8 @@ namespace SharpIrcBot
             Client.OnQueryAction += HandleQueryAction;
             Client.OnQueryNotice += HandleQueryNotice;
             Client.OnRegistered += HandleRegistered;
+            Client.OnPart += HandlePart;
+            Client.OnQuit += HandleQuit;
             Canceller = new CancellationTokenSource();
         }
 
@@ -255,6 +259,16 @@ namespace SharpIrcBot
             OnConnectedToServer(e);
         }
 
+        protected virtual void HandleQuit(object sender, QuitEventArgs e)
+        {
+            OnUserQuitServer(e);
+        }
+
+        protected virtual void HandlePart(object sender, PartEventArgs e)
+        {
+            OnUserLeftChannel(e);
+        }
+
         protected virtual void OnChannelMessage(IrcEventArgs e)
         {
             if (ChannelMessage != null)
@@ -348,6 +362,22 @@ namespace SharpIrcBot
             if (NickChange != null)
             {
                 NickChange(this, e);
+            }
+        }
+
+        protected virtual void OnUserLeftChannel(PartEventArgs e)
+        {
+            if (UserLeftChannel != null)
+            {
+                UserLeftChannel(this, e);
+            }
+        }
+
+        protected virtual void OnUserQuitServer(QuitEventArgs e)
+        {
+            if (UserQuitServer != null)
+            {
+                UserQuitServer(this, e);
             }
         }
 
