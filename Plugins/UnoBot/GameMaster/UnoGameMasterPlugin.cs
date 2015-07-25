@@ -961,6 +961,11 @@ namespace UnoBot.GameMaster
             // shuffle the draw pile
             DrawPile.Shuffle(Randomizer);
 
+            if (Config.ShufflePlayerList)
+            {
+                Pile<Player>.Shuffle(Players, Randomizer);
+            }
+
             // distribute the cards
             foreach (var player in Players)
             {
