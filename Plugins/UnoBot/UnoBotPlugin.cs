@@ -553,7 +553,7 @@ namespace UnoBot
                 {
                     StrategyLogger.DebugFormat("not risking emergency strategic draw for evil card");
                 }
-                else
+                else if (Config.EmergencyStrategicDrawDenominator > 0)
                 {
                     var emergencyStrategicDraw = (Randomizer.Next(Config.EmergencyStrategicDrawDenominator) == 0);
                     if (emergencyStrategicDraw)
@@ -773,7 +773,7 @@ namespace UnoBot
                 var card = possibleCards[index];
 
                 // if more than two cards in hand, perform a strategic draw every once in a while
-                if (CurrentHand.Count > Config.PlayToWinThreshold && !DrewLast)
+                if (Config.StrategicDrawDenominator > 0 && CurrentHand.Count > Config.PlayToWinThreshold && !DrewLast)
                 {
                     var strategicDraw = (Randomizer.Next(Config.StrategicDrawDenominator) == 0);
                     if (strategicDraw)
