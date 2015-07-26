@@ -843,6 +843,11 @@ namespace UnoBot.GameMaster
 
         protected virtual void StartNewTurn()
         {
+            if (CurrentGameState != GameState.InProgress)
+            {
+                return;
+            }
+
             // broadcast info
             BroadcastCardCountsEvent();
             BroadcastCurrentCardEvent();
@@ -907,21 +912,26 @@ namespace UnoBot.GameMaster
             }
 
             // is it this player's turn?
-            var currentPlayer = Players[CurrentPlayerIndex];
-            if (player == currentPlayer)
+            bool removed = false;
+            if (CurrentPlayerIndex < Players.Count)
             {
-                // yes -.-
+                var currentPlayer = Players[CurrentPlayerIndex];
+                if (player == currentPlayer)
+                {
+                    // yes -.-
 
-                // remove the player
-                Players.RemoveAt(CurrentPlayerIndex);
+                    // remove the player
+                    Players.RemoveAt(CurrentPlayerIndex);
 
-                // make it the next player's turn
-                AdvanceToNextPlayer();
+                    // make it the next player's turn
+                    AdvanceToNextPlayer();
+
+                    removed = true;
+                }
             }
-            else
-            {
-                // no
 
+            if (!removed)
+            {
                 // simply remove the player
                 Players.Remove(player);
             }
