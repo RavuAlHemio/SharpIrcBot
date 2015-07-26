@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using log4net;
 using Meebey.SmartIrc4net;
@@ -23,7 +22,7 @@ namespace Quotes
         protected ConnectionManager ConnectionManager;
         protected QuotesConfig Config;
         protected List<Quote> PotentialQuotes;
-        protected long LastQuoteID;
+        protected Dictionary<string, long> LastQuoteIDs;
         protected Random Randomizer;
 
         public QuotesPlugin(ConnectionManager connMgr, JObject config)
@@ -31,22 +30,25 @@ namespace Quotes
             ConnectionManager = connMgr;
             Config = new QuotesConfig(config);
             PotentialQuotes = new List<Quote>(Config.RememberForQuotes + 1);
-            LastQuoteID = -1;
+            LastQuoteIDs = new Dictionary<string, long>();
             Randomizer = new Random();
 
             ConnectionManager.ChannelMessage += HandleChannelMessage;
             ConnectionManager.ChannelAction += HandleChannelAction;
+            ConnectionManager.QueryMessage += HandleQueryMessage;
         }
 
         /// <summary>
         /// Posts a random quote.
         /// </summary>
         /// <param name="requestor">The nickname of the person who requested this quote.</param>
-        /// <param name="channel">The channel in which the request has been placed.</param>
+        /// <param name="location">The channel (for channel messages) or nickname (for private messages) in which the
+        /// request has been placed.</param>
         /// <param name="quotes">The Queryable of quotes.</param>
         /// <param name="votes">The Queryable of votes.</param>
         /// <param name="lowRatedToo">If <c>true</c>, also chooses from quotes rated below a given threshold.</param>
-        protected virtual void PostRandomQuote(string requestor, string channel, IQueryable<Quote> quotes, IQueryable<QuoteVote> votes, bool lowRatedToo)
+        /// <param name="postReply">Action to invoke to post a reply.</param>
+        protected virtual void PostRandomQuote(string requestor, string location, IQueryable<Quote> quotes, IQueryable<QuoteVote> votes, bool lowRatedToo, Action<string> postReply)
         {
             IQueryable<Quote> filteredQuotes = lowRatedToo
                 ? quotes
@@ -62,19 +64,12 @@ namespace Quotes
                     .FirstOrDefault();
                 int voteCount = votes.Where(v => v.QuoteID == quote.ID).Sum(v => (int?) v.Points) ?? 0;
 
-                LastQuoteID = quote.ID;
-                ConnectionManager.SendChannelMessage(
-                    channel,
-                    FormatQuote(quote, voteCount)
-                );
+                LastQuoteIDs[location] = quote.ID;
+                postReply(FormatQuote(quote, voteCount));
             }
             else
             {
-                ConnectionManager.SendChannelMessageFormat(
-                    channel,
-                    "Sorry, {0}, I don't have any matching quotes.",
-                    requestor
-                );
+                postReply(string.Format("Sorry, {0}, I don't have any matching quotes.", requestor));
             }
         }
 
@@ -102,6 +97,18 @@ namespace Quotes
             }
         }
 
+        protected void HandleQueryMessage(object sender, IrcEventArgs e)
+        {
+            try
+            {
+                ActuallyHandleQueryMessage(sender, e);
+            }
+            catch (Exception exc)
+            {
+                Logger.Error("error handling query message", exc);
+            }
+        }
+
         protected virtual void ActuallyHandleChannelMessage(object sender, IrcEventArgs e)
         {
             var body = e.Data.Message;
@@ -123,7 +130,7 @@ namespace Quotes
                     };
                     ctx.Quotes.Add(newFreeFormQuote);
                     ctx.SaveChanges();
-                    LastQuoteID = newFreeFormQuote.ID;
+                    LastQuoteIDs[e.Data.Channel] = newFreeFormQuote.ID;
                 }
                 ConnectionManager.SendChannelMessage(
                     e.Data.Channel,
@@ -171,7 +178,7 @@ namespace Quotes
                 {
                     ctx.Quotes.Add(matchedQuote);
                     ctx.SaveChanges();
-                    LastQuoteID = matchedQuote.ID;
+                    LastQuoteIDs[e.Data.Channel] = matchedQuote.ID;
                 }
 
                 ConnectionManager.SendChannelMessageFormat(
@@ -183,67 +190,14 @@ namespace Quotes
                 return;
             }
 
-            var quoteMatch = QuoteRegex.Match(body);
-            if (quoteMatch.Success)
+            if (ActuallyHandleChannelOrQueryMessage(
+                e.Data.Nick,
+                e.Data.Channel,
+                e.Data.Message,
+                m => ConnectionManager.SendChannelMessage(e.Data.Channel, m))
+            )
             {
-                bool lowRatedToo = quoteMatch.Groups[1].Success;
-                var subject = quoteMatch.Groups[2].Success ? quoteMatch.Groups[2].Value : null;
-                var lowercaseSubject = (subject != null) ? subject.ToLowerInvariant() : null;
-
-                using (var ctx = GetNewContext())
-                {
-                    var quotes = (lowercaseSubject != null)
-                        ? ctx.Quotes.Where(q => q.BodyLowercase.Contains(lowercaseSubject))
-                        : ctx.Quotes;
-
-                    PostRandomQuote(e.Data.Nick, e.Data.Channel, quotes, ctx.QuoteVotes, lowRatedToo);
-                }
-
-                return;
-            }
-
-            var quoteUserMatch = QuoteUserRegex.Match(body);
-            if (quoteUserMatch.Success)
-            {
-                bool lowRatedToo = quoteMatch.Groups[1].Success;
-                var nick = quoteMatch.Groups[2].Value;
-                var lowercaseNick = nick.ToLowerInvariant();
-
-                using (var ctx = GetNewContext())
-                {
-                    var quotes = ctx.Quotes.Where(q => q.AuthorLowercase == lowercaseNick);
-
-                    PostRandomQuote(e.Data.Nick, e.Data.Channel, quotes, ctx.QuoteVotes, lowRatedToo);
-                }
-
-                return;
-            }
-
-            if (body == "!upquote" || body == "!uq")
-            {
-                if (LastQuoteID < 0)
-                {
-                    ConnectionManager.SendChannelMessage(
-                        e.Data.Channel,
-                        "You'll have to get a quote first..."
-                    );
-                    return;
-                }
-                UpsertVote(e.Data.Nick, LastQuoteID, 1);
-                return;
-            }
-
-            if (body == "!downquote" || body == "!dq")
-            {
-                if (LastQuoteID < 0)
-                {
-                    ConnectionManager.SendChannelMessage(
-                        e.Data.Channel,
-                        "You'll have to get a quote first..."
-                    );
-                    return;
-                }
-                UpsertVote(e.Data.Nick, LastQuoteID, -1);
+                // handled
                 return;
             }
 
@@ -279,6 +233,83 @@ namespace Quotes
             PotentialQuotes.Add(quote);
 
             CleanOutPotentialQuotes();
+        }
+
+        protected virtual void ActuallyHandleQueryMessage(object sender, IrcEventArgs e)
+        {
+            if (ActuallyHandleChannelOrQueryMessage(
+                e.Data.Nick,
+                e.Data.Nick,
+                e.Data.Message,
+                m => ConnectionManager.SendQueryMessage(e.Data.Nick, m))
+            )
+            {
+                // handled
+                return;
+            }
+        }
+
+        protected virtual bool ActuallyHandleChannelOrQueryMessage(string sender, string location, string message, Action<string> postReply)
+        {
+            var quoteMatch = QuoteRegex.Match(message);
+            if (quoteMatch.Success)
+            {
+                bool lowRatedToo = quoteMatch.Groups[1].Success;
+                var subject = quoteMatch.Groups[2].Success ? quoteMatch.Groups[2].Value : null;
+                var lowercaseSubject = (subject != null) ? subject.ToLowerInvariant() : null;
+
+                using (var ctx = GetNewContext())
+                {
+                    var quotes = (lowercaseSubject != null)
+                        ? ctx.Quotes.Where(q => q.BodyLowercase.Contains(lowercaseSubject))
+                        : ctx.Quotes;
+
+                    PostRandomQuote(sender, location, quotes, ctx.QuoteVotes, lowRatedToo, postReply);
+                }
+
+                return true;
+            }
+
+            var quoteUserMatch = QuoteUserRegex.Match(message);
+            if (quoteUserMatch.Success)
+            {
+                bool lowRatedToo = quoteMatch.Groups[1].Success;
+                var nick = quoteMatch.Groups[2].Value;
+                var lowercaseNick = nick.ToLowerInvariant();
+
+                using (var ctx = GetNewContext())
+                {
+                    var quotes = ctx.Quotes.Where(q => q.AuthorLowercase == lowercaseNick);
+
+                    PostRandomQuote(sender, location, quotes, ctx.QuoteVotes, lowRatedToo, postReply);
+                }
+
+                return true;
+            }
+
+            if (message == "!upquote" || message == "!uq")
+            {
+                if (!LastQuoteIDs.ContainsKey(location))
+                {
+                    postReply("You'll have to get a quote first...");
+                    return true;
+                }
+                UpsertVote(sender, LastQuoteIDs[location], 1);
+                return true;
+            }
+
+            if (message == "!downquote" || message == "!dq")
+            {
+                if (!LastQuoteIDs.ContainsKey(location))
+                {
+                    postReply("You'll have to get a quote first...");
+                    return true;
+                }
+                UpsertVote(sender, LastQuoteIDs[location], -1);
+                return true;
+            }
+
+            return false;
         }
 
         protected void UpsertVote(string voter, long quoteID, short points)
