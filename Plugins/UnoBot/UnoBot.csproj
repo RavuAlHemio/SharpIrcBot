@@ -52,6 +52,8 @@
     <Compile Include="GameMaster\GameState.cs" />
     <Compile Include="GameMaster\Pile.cs" />
     <Compile Include="GameMaster\SortedMultiset.cs" />
+    <Compile Include="RuntimeTweaking\ConfigTweaking.cs" />
+    <Compile Include="RuntimeTweaking\NotTweakableAtRuntimeAttribute.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
@@ -69,5 +71,6 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="GameMaster\" />
+    <Folder Include="RuntimeTweaking\" />
   </ItemGroup>
 </Project>

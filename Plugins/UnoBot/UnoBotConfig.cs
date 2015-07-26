@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using UnoBot.RuntimeTweaking;
 
 namespace UnoBot
 {
@@ -22,6 +23,9 @@ namespace UnoBot
         public int EmergencyStrategicDrawDenominator { get; set; }
         public int ColorInHandPreference { get; set; }
 
+        [NotTweakableAtRuntime]
+        public bool RuntimeTweakable { get; set; }
+
         public UnoBotConfig(JObject obj)
         {
             Curses = new List<string>();
@@ -37,6 +41,7 @@ namespace UnoBot
             StrategicDrawDenominator = 30;
             EmergencyStrategicDrawDenominator = 2;
             ColorInHandPreference = 3;
+            RuntimeTweakable = false;
 
             var ser = new JsonSerializer();
             ser.Populate(obj.CreateReader(), this);

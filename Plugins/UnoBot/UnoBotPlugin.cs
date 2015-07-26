@@ -8,6 +8,7 @@ using System.Text.RegularExpressions;
 using log4net;
 using Meebey.SmartIrc4net;
 using SharpIrcBot;
+using UnoBot.RuntimeTweaking;
 
 namespace UnoBot
 {
@@ -28,6 +29,7 @@ namespace UnoBot
 
         protected static readonly Regex UnoBotFirstMessage = new Regex("^([1-9][0-9]*) (.*)");
         protected const string BotCommandRegexPattern = "^([?][a-z]+)[ ]+(?i){0}[ ]*$";
+        protected static readonly Regex RuntimeTweakPattern = new Regex("^!unobotset[ ]+([A-Za-z]+)[ ]+(.+)$");
 
         protected ConnectionManager ConnectionManager;
         protected UnoBotConfig Config;
@@ -270,6 +272,29 @@ namespace UnoBot
                 {
                     ConnectionManager.SendChannelMessageFormat(message.Channel, "{0}, I'll do my best, but don't count on me...", message.Nick);
                 }
+
+                return;
+            }
+
+            var runtimeTweakMatch = RuntimeTweakPattern.Match(message.Message);
+            if (runtimeTweakMatch.Success)
+            {
+                if (!Config.RuntimeTweakable)
+                {
+                    ConnectionManager.SendChannelMessageFormat(message.Channel, "Sorry, {0}, I'm not allowed to do that.", message.Nick);
+                    return;
+                }
+
+                try
+                {
+                    ConfigTweaking.TweakConfig(Config, runtimeTweakMatch.Groups[1].Value, runtimeTweakMatch.Groups[2].Value);
+                }
+                catch (ArgumentException ae)
+                {
+                    ConnectionManager.SendChannelMessageFormat(message.Channel, "That didn't work out, {0}: {1}", message.Nick, ae.Message);
+                    return;
+                }
+                ConnectionManager.SendChannelMessageFormat(message.Channel, "{0}: Done.", message.Nick);
 
                 return;
             }
