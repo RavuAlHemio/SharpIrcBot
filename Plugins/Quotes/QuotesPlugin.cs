@@ -136,6 +136,7 @@ namespace Quotes
         protected virtual void ActuallyHandleChannelMessage(object sender, IrcEventArgs e)
         {
             var body = e.Data.Message;
+            var normalizedNick = ConnectionManager.RegisteredNameForNick(e.Data.Nick) ?? e.Data.Nick;
 
             var addMatch = AddQuoteRegex.Match(body);
             if (addMatch.Success)
@@ -146,8 +147,8 @@ namespace Quotes
                     {
                         Timestamp = DateTime.Now.ToUniversalTimeForDatabase(),
                         Channel = e.Data.Channel,
-                        Author = e.Data.Nick,
-                        AuthorLowercase = e.Data.Nick.ToLowerInvariant(),
+                        Author = normalizedNick,
+                        AuthorLowercase = normalizedNick.ToLowerInvariant(),
                         MessageType = "F",
                         Body = addMatch.Groups[1].Value,
                         BodyLowercase = addMatch.Groups[1].Value.ToLowerInvariant()
@@ -172,7 +173,7 @@ namespace Quotes
                 var lowercaseNick = nick.ToLowerInvariant();
                 var lowercaseSubstring = substring.ToLowerInvariant();
 
-                if (lowercaseNick == e.Data.Nick.ToLowerInvariant())
+                if (lowercaseNick == normalizedNick.ToLowerInvariant())
                 {
                     ConnectionManager.SendChannelMessageFormat(
                         e.Data.Channel,
@@ -230,8 +231,8 @@ namespace Quotes
             {
                 Timestamp = DateTime.Now.ToUniversalTimeForDatabase(),
                 Channel = e.Data.Channel,
-                Author = e.Data.Nick,
-                AuthorLowercase = e.Data.Nick.ToLowerInvariant(),
+                Author = normalizedNick,
+                AuthorLowercase = normalizedNick.ToLowerInvariant(),
                 MessageType = "M",
                 Body = body,
                 BodyLowercase = body.ToLowerInvariant()
@@ -244,12 +245,13 @@ namespace Quotes
         protected virtual void ActuallyHandleChannelAction(object sender, ActionEventArgs e)
         {
             // put into backlog
+            var normalizedNick = ConnectionManager.RegisteredNameForNick(e.Data.Nick) ?? e.Data.Nick;
             var quote = new Quote
             {
                 Timestamp = DateTime.Now.ToUniversalTimeForDatabase(),
                 Channel = e.Data.Channel,
-                Author = e.Data.Nick,
-                AuthorLowercase = e.Data.Nick.ToLowerInvariant(),
+                Author = normalizedNick,
+                AuthorLowercase = normalizedNick.ToLowerInvariant(),
                 MessageType = "A",
                 Body = e.ActionMessage,
                 BodyLowercase = e.ActionMessage.ToLowerInvariant()
@@ -275,6 +277,8 @@ namespace Quotes
 
         protected virtual bool ActuallyHandleChannelOrQueryMessage(string sender, string location, string message, Action<string> postReply)
         {
+            var normalizedSender = ConnectionManager.RegisteredNameForNick(sender) ?? sender;
+
             var quoteMatch = QuoteRegex.Match(message);
             if (quoteMatch.Success)
             {
@@ -320,7 +324,7 @@ namespace Quotes
                     postReply("You'll have to get a quote first...");
                     return true;
                 }
-                UpsertVote(sender, LastQuoteIDs[location], 1);
+                UpsertVote(normalizedSender, LastQuoteIDs[location], 1);
                 return true;
             }
 
@@ -331,7 +335,7 @@ namespace Quotes
                     postReply("You'll have to get a quote first...");
                     return true;
                 }
-                UpsertVote(sender, LastQuoteIDs[location], -1);
+                UpsertVote(normalizedSender, LastQuoteIDs[location], -1);
                 return true;
             }
 
