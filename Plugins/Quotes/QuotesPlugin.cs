@@ -68,7 +68,8 @@ namespace Quotes
                 LastQuoteIDs[location] = quote.ID;
                 if (addMyRating)
                 {
-                    var requestorVote = votes.FirstOrDefault(v => v.QuoteID == quote.ID && v.VoterLowercase == requestor.ToLowerInvariant());
+                    var requestorLower = requestor.ToLowerInvariant();
+                    var requestorVote = votes.FirstOrDefault(v => v.QuoteID == quote.ID && v.VoterLowercase == requestorLower);
 
                     string requestorVoteString = " ";
                     if (requestorVote != null)
