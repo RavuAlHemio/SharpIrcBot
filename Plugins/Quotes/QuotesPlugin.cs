@@ -16,8 +16,8 @@ namespace Quotes
         private static readonly ILog Logger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private static readonly Regex AddQuoteRegex = new Regex("^!addquote[ ]+(.+)$");
         private static readonly Regex RememberRegex = new Regex("^!remember[ ]+([^ ]+)[ ]+(.+)$");
-        private static readonly Regex QuoteRegex = new Regex("^!(any)?quote(?:[ ]+(.+))?$");
-        private static readonly Regex QuoteUserRegex = new Regex("^!(any)?quoteuser[ ]+([^ ]+)$");
+        private static readonly Regex QuoteRegex = new Regex("^!(any)?(r)?quote(?:[ ]+(.+))?$");
+        private static readonly Regex QuoteUserRegex = new Regex("^!(any)?(r)?quoteuser[ ]+([^ ]+)$");
 
         protected ConnectionManager ConnectionManager;
         protected QuotesConfig Config;
@@ -47,8 +47,9 @@ namespace Quotes
         /// <param name="quotes">The Queryable of quotes.</param>
         /// <param name="votes">The Queryable of votes.</param>
         /// <param name="lowRatedToo">If <c>true</c>, also chooses from quotes rated below a given threshold.</param>
+        /// <param name="addMyRating">If <c>true</c>, shows how the requestor voted on this quote.</param>
         /// <param name="postReply">Action to invoke to post a reply.</param>
-        protected virtual void PostRandomQuote(string requestor, string location, IQueryable<Quote> quotes, IQueryable<QuoteVote> votes, bool lowRatedToo, Action<string> postReply)
+        protected virtual void PostRandomQuote(string requestor, string location, IQueryable<Quote> quotes, IQueryable<QuoteVote> votes, bool lowRatedToo, bool addMyRating, Action<string> postReply)
         {
             IQueryable<Quote> filteredQuotes = lowRatedToo
                 ? quotes
@@ -65,7 +66,29 @@ namespace Quotes
                 int voteCount = votes.Where(v => v.QuoteID == quote.ID).Sum(v => (int?) v.Points) ?? 0;
 
                 LastQuoteIDs[location] = quote.ID;
-                postReply(FormatQuote(quote, voteCount));
+                if (addMyRating)
+                {
+                    var requestorVote = votes.FirstOrDefault(v => v.QuoteID == quote.ID && v.VoterLowercase == requestor.ToLowerInvariant());
+
+                    string requestorVoteString = " ";
+                    if (requestorVote != null)
+                    {
+                        if (requestorVote.Points < 0)
+                        {
+                            requestorVoteString = "-";
+                        }
+                        else if (requestorVote.Points > 0)
+                        {
+                            requestorVoteString = "+";
+                        }
+                    }
+
+                    postReply(FormatQuote(quote, voteCount, requestorVoteString));
+                }
+                else
+                {
+                    postReply(FormatQuote(quote, voteCount, ""));
+                }
             }
             else
             {
@@ -255,7 +278,8 @@ namespace Quotes
             if (quoteMatch.Success)
             {
                 bool lowRatedToo = quoteMatch.Groups[1].Success;
-                var subject = quoteMatch.Groups[2].Success ? quoteMatch.Groups[2].Value : null;
+                bool addMyRating = quoteMatch.Groups[2].Success;
+                var subject = quoteMatch.Groups[3].Success ? quoteMatch.Groups[2].Value : null;
                 var lowercaseSubject = (subject != null) ? subject.ToLowerInvariant() : null;
 
                 using (var ctx = GetNewContext())
@@ -264,7 +288,7 @@ namespace Quotes
                         ? ctx.Quotes.Where(q => q.BodyLowercase.Contains(lowercaseSubject))
                         : ctx.Quotes;
 
-                    PostRandomQuote(sender, location, quotes, ctx.QuoteVotes, lowRatedToo, postReply);
+                    PostRandomQuote(sender, location, quotes, ctx.QuoteVotes, lowRatedToo, addMyRating, postReply);
                 }
 
                 return true;
@@ -274,14 +298,15 @@ namespace Quotes
             if (quoteUserMatch.Success)
             {
                 bool lowRatedToo = quoteMatch.Groups[1].Success;
-                var nick = quoteMatch.Groups[2].Value;
+                bool addMyRating = quoteMatch.Groups[2].Success;
+                var nick = quoteMatch.Groups[3].Value;
                 var lowercaseNick = nick.ToLowerInvariant();
 
                 using (var ctx = GetNewContext())
                 {
                     var quotes = ctx.Quotes.Where(q => q.AuthorLowercase == lowercaseNick);
 
-                    PostRandomQuote(sender, location, quotes, ctx.QuoteVotes, lowRatedToo, postReply);
+                    PostRandomQuote(sender, location, quotes, ctx.QuoteVotes, lowRatedToo, addMyRating, postReply);
                 }
 
                 return true;
@@ -346,19 +371,19 @@ namespace Quotes
             }
         }
 
-        protected string FormatQuote(Quote quote, int voteCount)
+        protected string FormatQuote(Quote quote, int voteCount, string requestorVote = "")
         {
             if (quote.MessageType == "M")
             {
-                return string.Format("[{0}] <{1}> {2}", voteCount, quote.Author, quote.Body);
+                return string.Format("[{0}{3}] <{1}> {2}", voteCount, quote.Author, quote.Body, requestorVote);
             }
             else if (quote.MessageType == "A")
             {
-                return string.Format("[{0}] * {1} {2}", voteCount, quote.Author, quote.Body);
+                return string.Format("[{0}{3}] * {1} {2}", voteCount, quote.Author, quote.Body, requestorVote);
             }
             else if (quote.MessageType == "F")
             {
-                return string.Format("[{0}] {1}", voteCount, quote.Body);
+                return string.Format("[{0}{2}] {1}", voteCount, quote.Body, requestorVote);
             }
 
             return null;
