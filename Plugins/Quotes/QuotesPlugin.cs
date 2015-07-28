@@ -284,7 +284,7 @@ namespace Quotes
             {
                 bool lowRatedToo = quoteMatch.Groups[1].Success;
                 bool addMyRating = quoteMatch.Groups[2].Success;
-                var subject = quoteMatch.Groups[3].Success ? quoteMatch.Groups[2].Value : null;
+                var subject = quoteMatch.Groups[3].Success ? quoteMatch.Groups[3].Value : null;
                 var lowercaseSubject = (subject != null) ? subject.ToLowerInvariant() : null;
 
                 using (var ctx = GetNewContext())
