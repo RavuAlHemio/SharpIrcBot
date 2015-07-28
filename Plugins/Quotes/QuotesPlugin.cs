@@ -21,7 +21,7 @@ namespace Quotes
 
         protected ConnectionManager ConnectionManager;
         protected QuotesConfig Config;
-        protected List<Quote> PotentialQuotes;
+        protected Dictionary<string, List<Quote>> PotentialQuotesPerChannel;
         protected Dictionary<string, long> LastQuoteIDs;
         protected Random Randomizer;
 
@@ -29,7 +29,7 @@ namespace Quotes
         {
             ConnectionManager = connMgr;
             Config = new QuotesConfig(config);
-            PotentialQuotes = new List<Quote>(Config.RememberForQuotes + 1);
+            PotentialQuotesPerChannel = new Dictionary<string, List<Quote>>();
             LastQuoteIDs = new Dictionary<string, long>();
             Randomizer = new Random();
 
@@ -184,8 +184,9 @@ namespace Quotes
                 }
 
                 // find it
-                var matchedQuote = PotentialQuotes
-                    .FirstOrDefault(potQuote => potQuote.AuthorLowercase == lowercaseNick && potQuote.BodyLowercase.Contains(lowercaseSubstring));
+                var matchedQuote = PotentialQuotesPerChannel.ContainsKey(e.Data.Channel)
+                    ? PotentialQuotesPerChannel[e.Data.Channel].FirstOrDefault(potQuote => potQuote.AuthorLowercase == lowercaseNick && potQuote.BodyLowercase.Contains(lowercaseSubstring))
+                    : null;
 
                 if (matchedQuote == null)
                 {
@@ -237,9 +238,9 @@ namespace Quotes
                 Body = body,
                 BodyLowercase = body.ToLowerInvariant()
             };
-            PotentialQuotes.Add(newQuote);
+            AddPotentialQuote(newQuote, e.Data.Channel);
 
-            CleanOutPotentialQuotes();
+            CleanOutPotentialQuotes(e.Data.Channel);
         }
 
         protected virtual void ActuallyHandleChannelAction(object sender, ActionEventArgs e)
@@ -256,9 +257,9 @@ namespace Quotes
                 Body = e.ActionMessage,
                 BodyLowercase = e.ActionMessage.ToLowerInvariant()
             };
-            PotentialQuotes.Add(quote);
+            AddPotentialQuote(quote, e.Data.Channel);
 
-            CleanOutPotentialQuotes();
+            CleanOutPotentialQuotes(e.Data.Channel);
         }
 
         protected virtual void ActuallyHandleQueryMessage(object sender, IrcEventArgs e)
@@ -367,12 +368,27 @@ namespace Quotes
             }
         }
 
-        protected void CleanOutPotentialQuotes()
+        protected void AddPotentialQuote(Quote quote, string channel)
+        {
+            if (!PotentialQuotesPerChannel.ContainsKey(channel))
+            {
+                PotentialQuotesPerChannel[channel] = new List<Quote>(Config.RememberForQuotes + 1);
+            }
+            PotentialQuotesPerChannel[channel].Add(quote);
+        }
+
+        protected void CleanOutPotentialQuotes(string channel)
         {
             // clean out
-            if (PotentialQuotes.Count > Config.RememberForQuotes)
+            if (!PotentialQuotesPerChannel.ContainsKey(channel))
             {
-                PotentialQuotes.RemoveRange(0, PotentialQuotes.Count - Config.RememberForQuotes);
+                return;
+            }
+
+            var thisChannelPotentialQuotes = PotentialQuotesPerChannel[channel];
+            if (thisChannelPotentialQuotes.Count > Config.RememberForQuotes)
+            {
+                thisChannelPotentialQuotes.RemoveRange(0, thisChannelPotentialQuotes.Count - Config.RememberForQuotes);
             }
         }
 
