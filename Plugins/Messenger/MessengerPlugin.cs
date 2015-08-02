@@ -161,7 +161,8 @@ namespace Messenger
                 return;
             }
             var fetchCount = int.Parse(match.Groups[1].Value);
-            var lowerSender = message.Nick.ToLowerInvariant();
+            var sender = ConnectionManager.RegisteredNameForNick(message.Nick) ?? message.Nick;
+            var lowerSender = sender.ToLowerInvariant();
 
             List<MessageOnRetainer> messages;
             int messagesLeft;
@@ -279,7 +280,8 @@ namespace Messenger
                 return;
             }
 
-            var lowerSender = message.Nick.ToLowerInvariant();
+            var sender = ConnectionManager.RegisteredNameForNick(message.Nick) ?? message.Nick;
+            var lowerSender = sender.ToLowerInvariant();
 
             List<ReplayableMessage> messages;
             using (var ctx = GetNewContext())
