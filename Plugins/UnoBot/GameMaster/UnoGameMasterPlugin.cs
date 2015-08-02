@@ -409,11 +409,11 @@ namespace UnoBot.GameMaster
             }
         }
 
-        protected virtual void HandleChannelMessage(object sender, IrcEventArgs e)
+        protected virtual void HandleChannelMessage(object sender, IrcEventArgs e, MessageFlags flags)
         {
             try
             {
-                ActuallyHandleChannelMessage(sender, e);
+                ActuallyHandleChannelMessage(sender, e, flags);
             }
             catch (Exception exc)
             {
@@ -457,8 +457,13 @@ namespace UnoBot.GameMaster
             }
         }
 
-        protected virtual void ActuallyHandleChannelMessage(object sender, IrcEventArgs e)
+        protected virtual void ActuallyHandleChannelMessage(object sender, IrcEventArgs e, MessageFlags flags)
         {
+            if (flags.HasFlag(MessageFlags.UserBanned))
+            {
+                return;
+            }
+
             if (e.Data.Channel != Config.UnoChannel)
             {
                 return;

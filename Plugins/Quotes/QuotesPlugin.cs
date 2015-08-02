@@ -97,11 +97,11 @@ namespace Quotes
             }
         }
 
-        protected void HandleChannelMessage(object sender, IrcEventArgs e)
+        protected void HandleChannelMessage(object sender, IrcEventArgs e, MessageFlags flags)
         {
             try
             {
-                ActuallyHandleChannelMessage(sender, e);
+                ActuallyHandleChannelMessage(sender, e, flags);
             }
             catch (Exception exc)
             {
@@ -109,11 +109,11 @@ namespace Quotes
             }
         }
 
-        protected void HandleChannelAction(object sender, ActionEventArgs e)
+        protected void HandleChannelAction(object sender, ActionEventArgs e, MessageFlags flags)
         {
             try
             {
-                ActuallyHandleChannelAction(sender, e);
+                ActuallyHandleChannelAction(sender, e, flags);
             }
             catch (Exception exc)
             {
@@ -121,11 +121,11 @@ namespace Quotes
             }
         }
 
-        protected void HandleQueryMessage(object sender, IrcEventArgs e)
+        protected void HandleQueryMessage(object sender, IrcEventArgs e, MessageFlags flags)
         {
             try
             {
-                ActuallyHandleQueryMessage(sender, e);
+                ActuallyHandleQueryMessage(sender, e, flags);
             }
             catch (Exception exc)
             {
@@ -133,8 +133,13 @@ namespace Quotes
             }
         }
 
-        protected virtual void ActuallyHandleChannelMessage(object sender, IrcEventArgs e)
+        protected virtual void ActuallyHandleChannelMessage(object sender, IrcEventArgs e, MessageFlags flags)
         {
+            if (flags.HasFlag(MessageFlags.UserBanned))
+            {
+                return;
+            }
+
             var body = e.Data.Message;
             var normalizedNick = ConnectionManager.RegisteredNameForNick(e.Data.Nick) ?? e.Data.Nick;
 
@@ -243,8 +248,13 @@ namespace Quotes
             CleanOutPotentialQuotes(e.Data.Channel);
         }
 
-        protected virtual void ActuallyHandleChannelAction(object sender, ActionEventArgs e)
+        protected virtual void ActuallyHandleChannelAction(object sender, ActionEventArgs e, MessageFlags flags)
         {
+            if (flags.HasFlag(MessageFlags.UserBanned))
+            {
+                return;
+            }
+
             // put into backlog
             var normalizedNick = ConnectionManager.RegisteredNameForNick(e.Data.Nick) ?? e.Data.Nick;
             var quote = new Quote
@@ -262,8 +272,13 @@ namespace Quotes
             CleanOutPotentialQuotes(e.Data.Channel);
         }
 
-        protected virtual void ActuallyHandleQueryMessage(object sender, IrcEventArgs e)
+        protected virtual void ActuallyHandleQueryMessage(object sender, IrcEventArgs e, MessageFlags flags)
         {
+            if (flags.HasFlag(MessageFlags.UserBanned))
+            {
+                return;
+            }
+
             if (ActuallyHandleChannelOrQueryMessage(
                 e.Data.Nick,
                 e.Data.Nick,

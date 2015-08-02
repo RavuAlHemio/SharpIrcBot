@@ -30,11 +30,11 @@ namespace DatabaseNickMapping
             ConnectionManager.NickMapping += HandleNickMapping;
         }
 
-        protected virtual void HandleChannelMessage(object sender, IrcEventArgs args)
+        protected virtual void HandleChannelMessage(object sender, IrcEventArgs args, MessageFlags flags)
         {
             try
             {
-                ActuallyHandleChannelMessage(sender, args);
+                ActuallyHandleChannelMessage(sender, args, flags);
             }
             catch (Exception exc)
             {
@@ -54,8 +54,13 @@ namespace DatabaseNickMapping
             }
         }
 
-        protected virtual void ActuallyHandleChannelMessage(object sender, IrcEventArgs args)
+        protected virtual void ActuallyHandleChannelMessage(object sender, IrcEventArgs args, MessageFlags flags)
         {
+            if (flags.HasFlag(MessageFlags.UserBanned))
+            {
+                return;
+            }
+
             var message = args.Data.Message;
             var channel = args.Data.Channel;
             var requestor = args.Data.Nick;

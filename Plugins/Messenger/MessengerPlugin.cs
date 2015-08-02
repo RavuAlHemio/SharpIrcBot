@@ -452,11 +452,11 @@ namespace Messenger
             return localTime.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
         }
 
-        private void HandleChannelMessage(object sender, IrcEventArgs args)
+        private void HandleChannelMessage(object sender, IrcEventArgs args, MessageFlags flags)
         {
             try
             {
-                ActuallyHandleChannelMessage(sender, args);
+                ActuallyHandleChannelMessage(sender, args, flags);
             }
             catch (Exception exc)
             {
@@ -464,10 +464,10 @@ namespace Messenger
             }
         }
 
-        protected void ActuallyHandleChannelMessage(object sender, IrcEventArgs args)
+        protected void ActuallyHandleChannelMessage(object sender, IrcEventArgs args, MessageFlags flags)
         {
             var message = args.Data;
-            if (message.Type != ReceiveType.ChannelMessage || message.Nick == ConnectionManager.Client.Nickname)
+            if (flags.HasFlag(MessageFlags.UserBanned) || message.Type != ReceiveType.ChannelMessage || message.Nick == ConnectionManager.Client.Nickname)
             {
                 return;
             }

@@ -52,6 +52,9 @@
     <Compile Include="IDatabaseModuleConfig.cs" />
     <Compile Include="CookieWebClient.cs" />
     <Compile Include="NickMappingEventArgs.cs" />
+    <Compile Include="FilteringSetWrapper.cs" />
+    <Compile Include="SharpIrcBotEventHandler.cs" />
+    <Compile Include="MessageFlags.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Text;
+using log4net;
 using Meebey.SmartIrc4net;
 using Newtonsoft.Json.Linq;
 using SharpIrcBot;
@@ -8,6 +9,8 @@ namespace Smileys
 {
     public class SmileysPlugin : IPlugin
     {
+        private static readonly ILog Logger = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+
         protected ConnectionManager ConnectionManager;
         protected SmileysConfig Config;
 
@@ -20,11 +23,23 @@ namespace Smileys
             ConnectionManager.QueryMessage += HandleChannelOrQueryMessage;
         }
 
-        void HandleChannelOrQueryMessage(object sender, IrcEventArgs e)
+        void HandleChannelOrQueryMessage(object sender, IrcEventArgs e, MessageFlags flags)
         {
-            if (e.Data.Message == "!smileys" || e.Data.Message == "!smilies")
+            if (flags.HasFlag(MessageFlags.UserBanned))
             {
-                SendSmileysTo(e.Data.Nick);
+                return;
+            }
+
+            try
+            {
+                if (e.Data.Message == "!smileys" || e.Data.Message == "!smilies")
+                {
+                    SendSmileysTo(e.Data.Nick);
+                }
+            }
+            catch (Exception exc)
+            {
+                Logger.Error("error while handling channel or query message", exc);
             }
         }
 

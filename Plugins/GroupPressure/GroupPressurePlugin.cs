@@ -30,8 +30,25 @@ namespace GroupPressure
             Connection.ChannelAction += HandleChannelMessageOrAction;
         }
 
-        private void HandleChannelMessageOrAction(object sender, IrcEventArgs e)
+        private void HandleChannelMessageOrAction(object sender, IrcEventArgs args, MessageFlags flags)
         {
+            try
+            {
+                ActuallyHandleChannelMessageOrAction(sender, args, flags);
+            }
+            catch (Exception exc)
+            {
+                Logger.Error("error handling message", exc);
+            }
+        }
+
+        private void ActuallyHandleChannelMessageOrAction(object sender, IrcEventArgs e, MessageFlags flags)
+        {
+            if (flags.HasFlag(MessageFlags.UserBanned))
+            {
+                return;
+            }
+
             var body = e.Data.Message;
             if (body.Length == 0)
             {

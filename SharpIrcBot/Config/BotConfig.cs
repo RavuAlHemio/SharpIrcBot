@@ -28,6 +28,8 @@ namespace SharpIrcBot
         public string CtcpVersionResponse { get; set; }
         public string CtcpFingerResponse { get; set; }
 
+        public ISet<string> BannedUsers { get; set; }
+
         public BotConfig(JObject obj)
         {
             ServerPort = 6669;
@@ -44,6 +46,12 @@ namespace SharpIrcBot
 
             CtcpVersionResponse = "SharpIrcBot";
             CtcpFingerResponse = "I am a bot. I have no fingers.";
+
+            //BannedUsers = new HashSet<string>();
+            BannedUsers = new FilteringSetWrapper<string>(
+                new HashSet<string>(),
+                s => s.ToLowerInvariant()
+            );
 
             JsonSerializer.CreateDefault().Populate(obj.CreateReader(), this);
 

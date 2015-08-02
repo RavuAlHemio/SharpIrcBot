@@ -22,12 +22,12 @@ namespace SharpIrcBot
         protected CancellationTokenSource Canceller;
         protected HashSet<string> SyncedChannels;
 
-        public event EventHandler<IrcEventArgs> ChannelMessage;
-        public event EventHandler<ActionEventArgs> ChannelAction;
-        public event EventHandler<IrcEventArgs> ChannelNotice;
-        public event EventHandler<IrcEventArgs> QueryMessage;
-        public event EventHandler<ActionEventArgs> QueryAction;
-        public event EventHandler<IrcEventArgs> QueryNotice;
+        public event SharpIrcBotEventHandler<IrcEventArgs> ChannelMessage;
+        public event SharpIrcBotEventHandler<ActionEventArgs> ChannelAction;
+        public event SharpIrcBotEventHandler<IrcEventArgs> ChannelNotice;
+        public event SharpIrcBotEventHandler<IrcEventArgs> QueryMessage;
+        public event SharpIrcBotEventHandler<ActionEventArgs> QueryAction;
+        public event SharpIrcBotEventHandler<IrcEventArgs> QueryNotice;
         public event EventHandler<EventArgs> ConnectedToServer;
         public event EventHandler<NickMappingEventArgs> NickMapping;
         public event EventHandler<IrcEventArgs> RawMessage;
@@ -269,11 +269,26 @@ namespace SharpIrcBot
             OnUserLeftChannel(e);
         }
 
+        protected virtual MessageFlags FlagsForNick(string nick)
+        {
+            if (Config.BannedUsers.Contains(nick))
+            {
+                return MessageFlags.UserBanned;
+            }
+            var regNick = RegisteredNameForNick(nick);
+            if (regNick != null && Config.BannedUsers.Contains(regNick))
+            {
+                return MessageFlags.UserBanned;
+            }
+            return MessageFlags.None;
+        }
+
         protected virtual void OnChannelMessage(IrcEventArgs e)
         {
             if (ChannelMessage != null)
             {
-                ChannelMessage(this, e);
+                var flags = FlagsForNick(e.Data.Nick);
+                ChannelMessage(this, e, flags);
             }
         }
 
@@ -281,7 +296,8 @@ namespace SharpIrcBot
         {
             if (ChannelAction != null)
             {
-                ChannelAction(this, e);
+                var flags = FlagsForNick(e.Data.Nick);
+                ChannelAction(this, e, flags);
             }
         }
 
@@ -289,7 +305,8 @@ namespace SharpIrcBot
         {
             if (ChannelNotice != null)
             {
-                ChannelNotice(this, e);
+                var flags = FlagsForNick(e.Data.Nick);
+                ChannelNotice(this, e, flags);
             }
         }
 
@@ -297,7 +314,8 @@ namespace SharpIrcBot
         {
             if (QueryMessage != null)
             {
-                QueryMessage(this, e);
+                var flags = FlagsForNick(e.Data.Nick);
+                QueryMessage(this, e, flags);
             }
         }
 
@@ -305,7 +323,8 @@ namespace SharpIrcBot
         {
             if (QueryAction != null)
             {
-                QueryAction(this, e);
+                var flags = FlagsForNick(e.Data.Nick);
+                QueryAction(this, e, flags);
             }
         }
 
@@ -313,7 +332,8 @@ namespace SharpIrcBot
         {
             if (QueryNotice != null)
             {
-                QueryNotice(this, e);
+                var flags = FlagsForNick(e.Data.Nick);
+                QueryNotice(this, e, flags);
             }
         }
 

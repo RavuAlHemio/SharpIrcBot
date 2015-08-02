@@ -141,11 +141,11 @@ namespace UnoBot
             return ret.ToString();
         }
 
-        private void HandleChannelMessage(object sender, IrcEventArgs args)
+        private void HandleChannelMessage(object sender, IrcEventArgs args, MessageFlags flags)
         {
             try
             {
-                ActuallyHandleChannelMessage(sender, args);
+                ActuallyHandleChannelMessage(sender, args, flags);
             }
             catch (Exception exc)
             {
@@ -153,11 +153,11 @@ namespace UnoBot
             }
         }
 
-        private void HandleQueryMessage(object sender, IrcEventArgs args)
+        private void HandleQueryMessage(object sender, IrcEventArgs args, MessageFlags flags)
         {
             try
             {
-                ActuallyHandleQueryMessage(sender, args);
+                ActuallyHandleQueryMessage(sender, args, flags);
             }
             catch (Exception exc)
             {
@@ -190,8 +190,13 @@ namespace UnoBot
             return false;
         }
 
-        protected virtual void ActuallyHandleChannelMessage(object sender, IrcEventArgs args)
+        protected virtual void ActuallyHandleChannelMessage(object sender, IrcEventArgs args, MessageFlags flags)
         {
+            if (flags.HasFlag(MessageFlags.UserBanned))
+            {
+                return;
+            }
+
             var message = args.Data;
             if (message.Type != ReceiveType.ChannelMessage || message.Nick == ConnectionManager.Client.Nickname)
             {
@@ -300,8 +305,13 @@ namespace UnoBot
             }
         }
 
-        protected virtual void ActuallyHandleQueryMessage(object sender, IrcEventArgs args)
+        protected virtual void ActuallyHandleQueryMessage(object sender, IrcEventArgs args, MessageFlags flags)
         {
+            if (flags.HasFlag(MessageFlags.UserBanned))
+            {
+                return;
+            }
+
             var message = args.Data;
             if (message.Nick == ConnectionManager.Client.Nickname)
             {

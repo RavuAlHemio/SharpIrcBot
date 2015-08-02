@@ -22,11 +22,11 @@ namespace Sockpuppet
             ConnectionManager.QueryMessage += HandleQueryMessage;
         }
 
-        private void HandleQueryMessage(object sender, IrcEventArgs args)
+        private void HandleQueryMessage(object sender, IrcEventArgs args, MessageFlags flags)
         {
             try
             {
-                ActuallyHandleQueryMessage(sender, args);
+                ActuallyHandleQueryMessage(sender, args, flags);
             }
             catch (Exception exc)
             {
@@ -34,8 +34,13 @@ namespace Sockpuppet
             }
         }
 
-        protected void ActuallyHandleQueryMessage(object sender, IrcEventArgs args)
+        protected void ActuallyHandleQueryMessage(object sender, IrcEventArgs args, MessageFlags flags)
         {
+            if (flags.HasFlag(MessageFlags.UserBanned))
+            {
+                return;
+            }
+
             var message = args.Data;
             if (message.Type != ReceiveType.QueryMessage || message.Nick == ConnectionManager.Client.Nickname)
             {

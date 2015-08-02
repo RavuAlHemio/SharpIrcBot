@@ -24,11 +24,11 @@ namespace Belch
             ConnectionManager.ChannelMessage += HandleChannelMessage;
         }
 
-        private void HandleChannelMessage(object sender, IrcEventArgs args)
+        private void HandleChannelMessage(object sender, IrcEventArgs args, MessageFlags flags)
         {
             try
             {
-                ActuallyHandleChannelMessage(sender, args);
+                ActuallyHandleChannelMessage(sender, args, flags);
             }
             catch (Exception exc)
             {
@@ -36,8 +36,13 @@ namespace Belch
             }
         }
 
-        private void ActuallyHandleChannelMessage(object sender, IrcEventArgs args)
+        private void ActuallyHandleChannelMessage(object sender, IrcEventArgs args, MessageFlags flags)
         {
+            if (flags.HasFlag(MessageFlags.UserBanned))
+            {
+                return;
+            }
+
             var msgArr = args.Data.MessageArray;
             if (msgArr.Length == 1 && string.Equals(msgArr[0], "!belch"))
             {
