@@ -7,7 +7,15 @@ namespace LinkInfo
         public readonly Uri Link;
         public readonly string Info;
 
-        public LinkAndInfo(Uri link, string info)
+        public bool HasInfo
+        {
+            get
+            {
+                return Info != null;
+            }
+        }
+
+        public LinkAndInfo(Uri link, string info = null)
         {
             Link = link;
             Info = info;

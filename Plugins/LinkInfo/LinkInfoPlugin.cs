@@ -23,7 +23,7 @@ namespace LinkInfo
 
         protected ConnectionManager ConnectionManager;
 
-        private Uri _lastLink = null;
+        private LinkAndInfo _lastLinkAndInfo = null;
 
         public LinkInfoPlugin(ConnectionManager connMgr, JObject config)
         {
@@ -54,13 +54,19 @@ namespace LinkInfo
             var body = args.Data.Message;
             if (body == "!lastlink")
             {
-                if (_lastLink == null)
+                if (_lastLinkAndInfo == null)
                 {
                     ConnectionManager.SendChannelMessage(args.Data.Channel, "No last link!");
                 }
                 else
                 {
-                    PostLinkInfo(new [] {_lastLink}, args.Data.Channel);
+                    // fetch if not fetched yet
+                    if (!_lastLinkAndInfo.HasInfo)
+                    {
+                        var info = ObtainLinkInfo(_lastLinkAndInfo.Link);
+                        _lastLinkAndInfo = new LinkAndInfo(_lastLinkAndInfo.Link, info);
+                    }
+                    PostLinkInfo(_lastLinkAndInfo, args.Data.Channel);
                 }
                 return;
             }
@@ -71,13 +77,13 @@ namespace LinkInfo
             // store the new "last link"
             if (links.Count > 0)
             {
-                _lastLink = links[links.Count - 1];
+                _lastLinkAndInfo = new LinkAndInfo(links[links.Count - 1], null);
             }
 
             // respond?
             if (body.StartsWith("!link "))
             {
-                PostLinkInfo(links, args.Data.Channel);
+                FetchAndPostLinkInfo(links, args.Data.Channel);
             }
         }
 
@@ -89,20 +95,19 @@ namespace LinkInfo
                 Uri uri;
                 if (Uri.TryCreate(word, UriKind.Absolute, out uri))
                 {
+                    if (uri.Scheme != "http" && uri.Scheme != "https")
+                    {
+                        continue;
+                    }
+                    // Uri verifies that http(s) URIs are at least minimal (http://a)
                     ret.Add(uri);
                 }
             }
-            return ret;
+            return ret;                
         }
 
         public static string RealObtainLinkInfo(Uri link)
         {
-            var lowerUrl = link.ToString().ToLowerInvariant();
-            if (!lowerUrl.StartsWith("http://") && !lowerUrl.StartsWith("https://"))
-            {
-                return "(I only access HTTP and HTTPS URLs)";
-            }
-
             // check URL blacklist
             var addresses = Dns.GetHostAddresses(link.Host);
             if (addresses.Length == 0)
@@ -232,17 +237,22 @@ namespace LinkInfo
             }
         }
 
-        protected void PostLinkInfo(IEnumerable<Uri> links, string channel)
+        protected void FetchAndPostLinkInfo(IEnumerable<Uri> links, string channel)
         {
             foreach (var linkAndInfo in links.Select(l => new LinkAndInfo(l, ObtainLinkInfo(l))))
             {
-                ConnectionManager.SendChannelMessageFormat(
-                    channel,
-                    "{0}: {1}",
-                    linkAndInfo.Link,
-                    linkAndInfo.Info
-                );
+                PostLinkInfo(linkAndInfo, channel);
             }
+        }
+
+        protected void PostLinkInfo(LinkAndInfo linkAndInfo, string channel)
+        {
+            ConnectionManager.SendChannelMessageFormat(
+                channel,
+                "{0}: {1}",
+                linkAndInfo.Link,
+                linkAndInfo.Info
+            );
         }
     }
 }
