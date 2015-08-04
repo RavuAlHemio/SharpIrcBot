@@ -2,7 +2,7 @@
 
 namespace LinkInfo
 {
-    class LinkAndInfo
+    public class LinkAndInfo
     {
         public readonly Uri Link;
         public readonly string Info;
