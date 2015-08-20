@@ -20,14 +20,17 @@ namespace LinkInfo
         public static readonly Uri GoogleImageSearchUrl = new Uri("http://www.google.com/imghp?hl=en&tab=wi");
         public const string GoogleImageSearchByImageUrlPattern = "https://www.google.com/searchbyimage?hl=en&image_url={0}";
         public const string FakeUserAgent = "Mozilla/5.0 (X11; Linux x86_64; rv:31.0) Gecko/20100101 Firefox/31.0";
+        public const int DownloadBufferSize = 4 * 1024 * 1024;
 
         protected ConnectionManager ConnectionManager;
+        protected LinkInfoConfig Config;
 
         private LinkAndInfo _lastLinkAndInfo = null;
 
         public LinkInfoPlugin(ConnectionManager connMgr, JObject config)
         {
             ConnectionManager = connMgr;
+            Config = new LinkInfoConfig(config);
 
             ConnectionManager.ChannelMessage += HandleChannelMessage;
         }
@@ -106,7 +109,7 @@ namespace LinkInfo
             return ret;                
         }
 
-        public static string RealObtainLinkInfo(Uri link)
+        public string RealObtainLinkInfo(Uri link)
         {
             // check URL blacklist
             var addresses = Dns.GetHostAddresses(link.Host);
@@ -128,19 +131,36 @@ namespace LinkInfo
                 request.Timeout = 5000;
                 try
                 {
-                    var resp = request.GetResponse();
-
-                    // find the content-type
-                    contentTypeHeader = resp.Headers[HttpResponseHeader.ContentType];
-                    if (contentTypeHeader != null)
+                    using (var resp = request.GetResponse())
                     {
-                        contentType = contentTypeHeader.Split(';')[0];
-                    }
-                    var webResp = resp as HttpWebResponse;
-                    responseCharacterSet = (webResp != null) ? webResp.CharacterSet : null;
+                        // find the content-type
+                        contentTypeHeader = resp.Headers[HttpResponseHeader.ContentType];
+                        if (contentTypeHeader != null)
+                        {
+                            contentType = contentTypeHeader.Split(';')[0];
+                        }
+                        var webResp = resp as HttpWebResponse;
+                        responseCharacterSet = (webResp != null) ? webResp.CharacterSet : null;
 
-                    // copy
-                    resp.GetResponseStream().CopyTo(respStore);
+                        // copy
+                        var buf = new byte[DownloadBufferSize];
+                        var responseStream = resp.GetResponseStream();
+                        long totalBytesRead = 0;
+                        for (;;)
+                        {
+                            int bytesRead = responseStream.Read(buf, 0, buf.Length);
+                            if (bytesRead == 0)
+                            {
+                                break;
+                            }
+                            totalBytesRead += bytesRead;
+                            if (totalBytesRead > Config.MaxDownloadSizeBytes)
+                            {
+                                return "(file too large)";
+                            }
+                            respStore.Write(buf, 0, bytesRead);
+                        }
+                    }
                 }
                 catch (WebException we)
                 {
@@ -224,7 +244,7 @@ namespace LinkInfo
             }
         }
 
-        public static string ObtainLinkInfo(Uri link)
+        public string ObtainLinkInfo(Uri link)
         {
             try
             {
