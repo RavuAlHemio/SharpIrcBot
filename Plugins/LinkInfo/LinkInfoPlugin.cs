@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.Sockets;
 using Fizzler.Systems.HtmlAgilityPack;
 using HtmlAgilityPack;
 using log4net;
@@ -63,8 +64,8 @@ namespace LinkInfo
                 }
                 else
                 {
-                    // fetch if not fetched yet
-                    if (!_lastLinkAndInfo.HasInfo)
+                    // fetch if not fetched yet or a temporary error occurred last time
+                    if (!_lastLinkAndInfo.HasInfo || _lastLinkAndInfo.TemporaryErrorOccurred)
                     {
                         var info = ObtainLinkInfo(_lastLinkAndInfo.Link);
                         _lastLinkAndInfo = new LinkAndInfo(_lastLinkAndInfo.Link, info);
@@ -109,17 +110,26 @@ namespace LinkInfo
             return ret;                
         }
 
-        public string RealObtainLinkInfo(Uri link)
+        public Tuple<bool, string> RealObtainLinkInfo(Uri link)
         {
             // check URL blacklist
-            var addresses = Dns.GetHostAddresses(link.Host);
+            IPAddress[] addresses;
+            try
+            {
+                addresses = Dns.GetHostAddresses(link.Host);
+            }
+            catch (SocketException)
+            {
+                return Tuple.Create(false, "(cannot resolve)");
+            }
+
             if (addresses.Length == 0)
             {
-                return "(cannot resolve)";
+                return Tuple.Create(false, "(cannot resolve)");
             }
             if (addresses.Any(IPAddressBlacklist.IsIPAddressBlacklisted))
             {
-                return "(I refuse to access this IP address)";
+                return Tuple.Create(true, "(I refuse to access this IP address)");
             }
 
             var request = WebRequest.Create(link);
@@ -156,7 +166,7 @@ namespace LinkInfo
                             totalBytesRead += bytesRead;
                             if (totalBytesRead > Config.MaxDownloadSizeBytes)
                             {
-                                return "(file too large)";
+                                return Tuple.Create(true, "(file too large)");
                             }
                             respStore.Write(buf, 0, bytesRead);
                         }
@@ -165,13 +175,13 @@ namespace LinkInfo
                 catch (WebException we)
                 {
                     var httpResponse = we.Response as HttpWebResponse;
-                    return string.Format("(HTTP {0})", httpResponse != null ? httpResponse.StatusCode.ToString() : "error");
+                    return Tuple.Create(false, string.Format("(HTTP {0})", httpResponse != null ? httpResponse.StatusCode.ToString() : "error"));
                 }
 
                 switch (contentType)
                 {
                     case "application/octet-stream":
-                        return "(can't figure out the content type, sorry)";
+                        return Tuple.Create(true, "(can't figure out the content type, sorry)");
                     case "text/html":
                     case "application/xhtml+xml":
                         // HTML? parse it and get the title
@@ -183,27 +193,27 @@ namespace LinkInfo
                         var titleElement = htmlDoc.DocumentNode.SelectSingleNode(".//title");
                         if (titleElement != null)
                         {
-                            return HtmlEntity.DeEntitize(titleElement.InnerText);
+                            return Tuple.Create(true, HtmlEntity.DeEntitize(titleElement.InnerText));
                         }
                         var h1Element = htmlDoc.DocumentNode.SelectSingleNode(".//h1");
                         if (h1Element != null)
                         {
-                            return HtmlEntity.DeEntitize(h1Element.InnerText);
+                            return Tuple.Create(true, HtmlEntity.DeEntitize(h1Element.InnerText));
                         }
-                        return "(HTML without a title O_o)";
+                        return Tuple.Create(true, "(HTML without a title O_o)");
                     case "image/png":
-                        return ObtainImageInfo(link, "PNG image");
+                        return Tuple.Create(true, ObtainImageInfo(link, "PNG image"));
                     case "image/jpeg":
-                        return ObtainImageInfo(link, "JPEG image");
+                        return Tuple.Create(true, ObtainImageInfo(link, "JPEG image"));
                     case "image/gif":
-                        return ObtainImageInfo(link, "GIF image");
+                        return Tuple.Create(true, ObtainImageInfo(link, "GIF image"));
                     case "application/json":
-                        return "JSON";
+                        return Tuple.Create(true, "JSON");
                     case "text/xml":
                     case "application/xml":
-                        return "XML";
+                        return Tuple.Create(true, "XML");
                     default:
-                        return string.Format("file of type {0}", contentType);
+                        return Tuple.Create(true, string.Format("file of type {0}", contentType));
                 }
             }
         }
@@ -244,7 +254,7 @@ namespace LinkInfo
             }
         }
 
-        public string ObtainLinkInfo(Uri link)
+        public Tuple<bool, string> ObtainLinkInfo(Uri link)
         {
             try
             {
@@ -253,7 +263,7 @@ namespace LinkInfo
             catch (Exception ex)
             {
                 Logger.Warn("link info", ex);
-                return "(an error occurred)";
+                return Tuple.Create(false, "(an error occurred)");
             }
         }
 
