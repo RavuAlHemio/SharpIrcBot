@@ -20,7 +20,6 @@ namespace LinkInfo
         public static readonly Uri GoogleHomepageUrl = new Uri("http://www.google.com/");
         public static readonly Uri GoogleImageSearchUrl = new Uri("http://www.google.com/imghp?hl=en&tab=wi");
         public const string GoogleImageSearchByImageUrlPattern = "https://www.google.com/searchbyimage?hl=en&image_url={0}";
-        public const string FakeUserAgent = "Mozilla/5.0 (X11; Linux x86_64; rv:31.0) Gecko/20100101 Firefox/31.0";
         public const int DownloadBufferSize = 4 * 1024 * 1024;
 
         protected ConnectionManager ConnectionManager;
@@ -218,12 +217,12 @@ namespace LinkInfo
             }
         }
 
-        public static string ObtainImageInfo(Uri url, string text)
+        public string ObtainImageInfo(Uri url, string text)
         {
             try
             {
                 var client = new CookieWebClient();
-                client.Headers[HttpRequestHeader.UserAgent] = FakeUserAgent;
+                client.Headers[HttpRequestHeader.UserAgent] = Config.FakeUserAgent;
 
                 // alibi-visit the image search page to get the cookies
                 client.Headers[HttpRequestHeader.Referer] = GoogleHomepageUrl.ToString();
