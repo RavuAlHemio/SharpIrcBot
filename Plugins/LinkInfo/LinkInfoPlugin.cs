@@ -137,6 +137,7 @@ namespace LinkInfo
                 var contentType = "application/octet-stream";
                 string contentTypeHeader = null;
                 string responseCharacterSet = null;
+                request.Headers[HttpRequestHeader.UserAgent] = Config.FakeUserAgent;
                 request.Timeout = 5000;
                 try
                 {
