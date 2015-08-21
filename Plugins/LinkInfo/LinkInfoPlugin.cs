@@ -80,7 +80,7 @@ namespace LinkInfo
             // store the new "last link"
             if (links.Count > 0)
             {
-                _lastLinkAndInfo = new LinkAndInfo(links[links.Count - 1], null);
+                _lastLinkAndInfo = new LinkAndInfo(links[links.Count - 1]);
             }
 
             // respond?
