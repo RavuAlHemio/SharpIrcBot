@@ -132,13 +132,19 @@ namespace LinkInfo
             }
 
             var request = WebRequest.Create(link);
+            var httpRequest = request as HttpWebRequest;
             using (var respStore = new MemoryStream())
             {
                 var contentType = "application/octet-stream";
                 string contentTypeHeader = null;
                 string responseCharacterSet = null;
-                request.Headers[HttpRequestHeader.UserAgent] = Config.FakeUserAgent;
                 request.Timeout = 5000;
+                if (httpRequest != null)
+                {
+                    // HTTP-specific settings
+                    httpRequest.UserAgent = Config.FakeUserAgent;
+                }
+
                 try
                 {
                     using (var resp = request.GetResponse())
