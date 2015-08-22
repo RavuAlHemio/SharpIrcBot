@@ -54,6 +54,7 @@
     <Compile Include="GameMaster\SortedMultiset.cs" />
     <Compile Include="RuntimeTweaking\ConfigTweaking.cs" />
     <Compile Include="RuntimeTweaking\NotTweakableAtRuntimeAttribute.cs" />
+    <Compile Include="ByMalusUnoBotPlugin.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>

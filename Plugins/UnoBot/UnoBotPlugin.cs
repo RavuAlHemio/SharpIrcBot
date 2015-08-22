@@ -642,9 +642,9 @@ namespace UnoBot
         }
 
         /// <summary>
-        /// Strategy: pick a card at random.
+        /// Strategy: weight cards by type.
         /// </summary>
-        protected StrategyContinuation StrategyRandomPick(List<Card> possibleCards)
+        protected StrategyContinuation StrategyWeightByType(List<Card> possibleCards)
         {
             // matched only by value, times StandardValueMatchPriority
             var cardsByValue = CurrentHand.Where(hc => hc.Value == TopCard.Value && hc.Color != TopCard.Color).ToList();
@@ -732,6 +732,37 @@ namespace UnoBot
             }
         }
 
+        /// <summary>
+        /// Picks the card that should be played from a list of possible cards.
+        /// </summary>
+        /// <returns>The card to play, or <c>null</c> to draw a card instead.</returns>
+        /// <param name="possibleCards">Cards to choose from.</param>
+        protected virtual Card? PerformFinalPick(List<Card> possibleCards)
+        {
+            if (possibleCards.Count == 0)
+            {
+                // no card to choose from
+                return null;
+            }
+
+            // pick a card at random
+            var index = Randomizer.Next(possibleCards.Count);
+            var card = possibleCards[index];
+
+            // if more than two cards in hand, perform a strategic draw every once in a while
+            if (Config.StrategicDrawDenominator > 0 && CurrentHand.Count > Config.PlayToWinThreshold && !DrewLast)
+            {
+                var strategicDraw = (Randomizer.Next(Config.StrategicDrawDenominator) == 0);
+                if (strategicDraw)
+                {
+                    StrategyLogger.Debug("strategic draw");
+                    return null;
+                }
+            }
+
+            return card;
+        }
+
         protected virtual StrategyFunction[] AssembleStrategies()
         {
             return new StrategyFunction[]
@@ -742,8 +773,8 @@ namespace UnoBot
                 // strategy 2: honor color requests
                 StrategyHonorColorRequests,
 
-                // strategy 3: pick a card at random
-                StrategyRandomPick
+                // strategy 3: weight cards by type
+                StrategyWeightByType
             };
         }
 
@@ -757,6 +788,24 @@ namespace UnoBot
                 // filter 2: if the next-but-one player has too few cards, filter out any card that would skip right to them
                 FilterAnySkipsIfNextButOneWinning
             };
+        }
+
+        protected bool IsCardPlayable(Card card)
+        {
+            if (card.Color == TopCard.Color)
+            {
+                return true;
+            }
+            if (card.Value == TopCard.Value)
+            {
+                return true;
+            }
+            if (card.Color == CardColor.Wild)
+            {
+                return true;
+            }
+
+            return false;
         }
 
         protected virtual void PlayACard()
@@ -801,23 +850,12 @@ namespace UnoBot
                 filter(possibleCards);
             }
 
-            if (possibleCards.Count > 0)
+            // perform the final pick
+            var maybeCard = PerformFinalPick(possibleCards);
+            if (maybeCard.HasValue)
             {
-                // pick a card at random
-                var index = Randomizer.Next(possibleCards.Count);
-                var card = possibleCards[index];
-
-                // if more than two cards in hand, perform a strategic draw every once in a while
-                if (Config.StrategicDrawDenominator > 0 && CurrentHand.Count > Config.PlayToWinThreshold && !DrewLast)
-                {
-                    var strategicDraw = (Randomizer.Next(Config.StrategicDrawDenominator) == 0);
-                    if (strategicDraw)
-                    {
-                        StrategyLogger.Debug("strategic draw");
-                        DrawACard();
-                        return;
-                    }
-                }
+                // final pick chose a card
+                var card = maybeCard.Value;
 
                 StrategyLogger.DebugFormat("playing card: {0} {1}", card.Color, card.Value);
 
