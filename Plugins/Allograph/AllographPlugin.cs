@@ -101,6 +101,15 @@ namespace Allograph
                 }
             }
 
+            if (Config.CooldownIncreasePerHit > 0)
+            {
+                // update cooldowns
+                Cooldowns.Clear();
+                Cooldowns.AddRange(newCooldowns);
+
+                Logger.DebugFormat("cooldowns are now: {0}", string.Join(", ", newCooldowns.Select(c => c.ToString())));
+            }
+
             if (string.Equals(newBody, originalBody, StringComparison.InvariantCulture))
             {
                 return;
@@ -115,15 +124,6 @@ namespace Allograph
             else
             {
                 Logger.DebugFormat("{0:F2} >= {1:F2}; not posting {2}", thisProbabilityValue, Config.ProbabilityPercent, newBody);
-            }
-
-            if (Config.CooldownIncreasePerHit > 0)
-            {
-                // update cooldowns
-                Cooldowns.Clear();
-                Cooldowns.AddRange(newCooldowns);
-
-                Logger.DebugFormat("cooldowns are now: {0}", string.Join(", ", newCooldowns.Select(c => c.ToString())));
             }
         }
     }
