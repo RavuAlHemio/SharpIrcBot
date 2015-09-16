@@ -41,10 +41,13 @@ namespace Allograph
 
         public double ProbabilityPercent { get; set; }
 
+        public int CooldownIncreasePerHit { get; set; }
+
         public AllographConfig(JObject obj)
         {
             Replacements = new List<Replacement>();
             ProbabilityPercent = 100.0;
+            CooldownIncreasePerHit = 5;
 
             var ser = new JsonSerializer();
             ser.Populate(obj.CreateReader(), this);

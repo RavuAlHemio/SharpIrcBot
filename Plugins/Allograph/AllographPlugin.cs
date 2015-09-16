@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Linq;
 using System.Reflection;
 using log4net;
 using Meebey.SmartIrc4net;
 using Newtonsoft.Json.Linq;
 using SharpIrcBot;
+using System.Collections.Generic;
 
 namespace Allograph
 {
@@ -14,12 +16,14 @@ namespace Allograph
         protected readonly AllographConfig Config;
         protected readonly Random Random;
         protected readonly ConnectionManager ConnectionManager;
+        protected readonly List<int> Cooldowns;
         
         public AllographPlugin(ConnectionManager connMgr, JObject config)
         {
             ConnectionManager = connMgr;
             Config = new AllographConfig(config);
             Random = new Random();
+            Cooldowns = new List<int>(Enumerable.Repeat(0, Config.Replacements.Count));
 
             ConnectionManager.ChannelMessage += HandleChannelMessage;
         }
@@ -52,9 +56,14 @@ namespace Allograph
             var originalBody = message.Message;
             var newBody = originalBody;
 
+            bool somethingHit = false;
+            int i = -1;
+            var newCooldowns = new List<int>(Cooldowns);
             foreach (var repl in Config.Replacements)
             {
-                if (repl.OnlyIfPrecedingHit && string.Equals(newBody, originalBody, StringComparison.InvariantCulture))
+                ++i;
+
+                if (repl.OnlyIfPrecedingHit && !somethingHit)
                 {
                     // no preceding rule hit; don't apply this one
                     continue;
@@ -62,7 +71,34 @@ namespace Allograph
 
                 // substitute the username in the replacement string
                 var replacementStringWithUser = repl.ReplacementString.Replace("{{{username}}}", message.Nick);
-                newBody = repl.Regex.Replace(newBody, replacementStringWithUser);
+                var nextNewBody = repl.Regex.Replace(newBody, replacementStringWithUser);
+
+                if (Config.CooldownIncreasePerHit > 0)
+                {
+                    if (!string.Equals(newBody, nextNewBody, StringComparison.InvariantCulture))
+                    {
+                        // this rule changed something!
+                        if (newCooldowns[i] == 0)
+                        {
+                            // warm, apply it!
+                            newBody = nextNewBody;
+                            somethingHit = true;
+                        }
+
+                        // cool down
+                        newCooldowns[i] += Config.CooldownIncreasePerHit;
+                    }
+                    else if (newCooldowns[i] > 0)
+                    {
+                        // this rule didn't change anything; warm up!
+                        --newCooldowns[i];
+                    }
+                }
+                else
+                {
+                    // no cooldowns
+                    newBody = nextNewBody;
+                }
             }
 
             if (string.Equals(newBody, originalBody, StringComparison.InvariantCulture))
@@ -79,6 +115,13 @@ namespace Allograph
             else
             {
                 Logger.DebugFormat("{0:F2} >= {1:F2}; not posting {2}", thisProbabilityValue, Config.ProbabilityPercent, newBody);
+            }
+
+            if (Config.CooldownIncreasePerHit > 0)
+            {
+                // update cooldowns
+                Cooldowns.Clear();
+                Cooldowns.AddRange(newCooldowns);
             }
         }
     }
