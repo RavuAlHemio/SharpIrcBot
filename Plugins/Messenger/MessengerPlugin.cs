@@ -334,7 +334,7 @@ namespace Messenger
             {
                 ConnectionManager.SendChannelMessageFormat(
                     message.Channel,
-                    "{0} <{1}> {2}!",
+                    "{0} <{1}> {2}",
                     FormatUtcTimestampFromDatabase(msg.Timestamp),
                     msg.SenderOriginal,
                     msg.Body
