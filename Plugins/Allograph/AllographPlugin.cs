@@ -122,6 +122,8 @@ namespace Allograph
                 // update cooldowns
                 Cooldowns.Clear();
                 Cooldowns.AddRange(newCooldowns);
+
+                Logger.DebugFormat("cooldowns are now: {0}", string.Join(", ", newCooldowns.Select(c => c.ToString())));
             }
         }
     }
