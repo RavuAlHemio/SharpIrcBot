@@ -16,14 +16,14 @@ namespace Allograph
         protected readonly AllographConfig Config;
         protected readonly Random Random;
         protected readonly ConnectionManager ConnectionManager;
-        protected readonly List<int> Cooldowns;
+        protected readonly Dictionary<string, List<int>> CooldownsPerChannel;
         
         public AllographPlugin(ConnectionManager connMgr, JObject config)
         {
             ConnectionManager = connMgr;
             Config = new AllographConfig(config);
             Random = new Random();
-            Cooldowns = new List<int>(Enumerable.Repeat(0, Config.Replacements.Count));
+            CooldownsPerChannel = new Dictionary<string, List<int>>();
 
             ConnectionManager.ChannelMessage += HandleChannelMessage;
         }
@@ -55,10 +55,16 @@ namespace Allograph
 
             var originalBody = message.Message;
             var newBody = originalBody;
+            var channel = message.Channel;
+
+            if (!CooldownsPerChannel.ContainsKey(channel))
+            {
+                CooldownsPerChannel[channel] = new List<int>(Enumerable.Repeat(0, Config.Replacements.Count));
+            }
 
             bool somethingHit = false;
             int i = -1;
-            var newCooldowns = new List<int>(Cooldowns);
+            var newCooldowns = new List<int>(CooldownsPerChannel[channel]);
             foreach (var repl in Config.Replacements)
             {
                 ++i;
@@ -116,8 +122,8 @@ namespace Allograph
             if (Config.CooldownIncreasePerHit >= 0)
             {
                 // update cooldowns
-                Cooldowns.Clear();
-                Cooldowns.AddRange(newCooldowns);
+                CooldownsPerChannel[channel].Clear();
+                CooldownsPerChannel[channel].AddRange(newCooldowns);
 
                 Logger.DebugFormat("cooldowns are now: {0}", string.Join(", ", newCooldowns.Select(c => c.ToString())));
             }
