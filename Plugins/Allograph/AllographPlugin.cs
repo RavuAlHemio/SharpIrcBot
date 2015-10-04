@@ -57,6 +57,11 @@ namespace Allograph
             var newBody = originalBody;
             var channel = message.Channel;
 
+            if (Config.ChannelBlacklist.Contains(channel))
+            {
+                return;
+            }
+
             if (!CooldownsPerChannel.ContainsKey(channel))
             {
                 CooldownsPerChannel[channel] = new List<int>(Enumerable.Repeat(0, Config.Replacements.Count));

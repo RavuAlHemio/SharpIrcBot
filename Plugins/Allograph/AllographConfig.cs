@@ -50,6 +50,8 @@ namespace Allograph
 
         public List<Replacement> Replacements { get; set; }
 
+        public HashSet<string> ChannelBlacklist { get; set; }
+
         public double ProbabilityPercent { get; set; }
 
         public int CooldownIncreasePerHit { get; set; }
@@ -57,6 +59,7 @@ namespace Allograph
         public AllographConfig(JObject obj)
         {
             Replacements = new List<Replacement>();
+            ChannelBlacklist = new HashSet<string>();
             ProbabilityPercent = 100.0;
             CooldownIncreasePerHit = 5;
 
