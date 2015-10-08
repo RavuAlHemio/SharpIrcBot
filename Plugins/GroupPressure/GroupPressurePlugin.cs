@@ -66,10 +66,12 @@ namespace GroupPressure
                 Backlog.Dequeue();
             }
 
+            var normalizedSender = Connection.RegisteredNameForNick(e.Data.Nick) ?? e.Data.Nick;
+
             // append the message
             Backlog.Enqueue(new BacklogMessage
             {
-                Sender = e.Data.Nick,
+                Sender = normalizedSender,
                 Body = body,
                 Action = (e.Data.Type == ReceiveType.ChannelAction)
             });
