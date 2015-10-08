@@ -35,6 +35,14 @@ namespace Allograph
             /// If <c>true</c>, this rule is only applied if at least one of the rules preceding it has been applied.
             /// </summary>
             public bool OnlyIfPrecedingHit { get; set; }
+
+            public int CustomCooldownIncreasePerHit { get; set; }
+
+            public Replacement()
+            {
+                OnlyIfPrecedingHit = false;
+                CustomCooldownIncreasePerHit = -1;
+            }
         }
 
         public List<Replacement> Replacements { get; set; }

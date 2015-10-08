@@ -73,7 +73,7 @@ namespace Allograph
                 var replacementStringWithUser = repl.ReplacementString.Replace("{{{username}}}", message.Nick);
                 var nextNewBody = repl.Regex.Replace(newBody, replacementStringWithUser);
 
-                if (Config.CooldownIncreasePerHit > 0)
+                if (Config.CooldownIncreasePerHit >= 0 || repl.CustomCooldownIncreasePerHit >= 0)
                 {
                     if (!string.Equals(newBody, nextNewBody, StringComparison.InvariantCulture))
                     {
@@ -86,7 +86,9 @@ namespace Allograph
                         }
 
                         // cool down
-                        newCooldowns[i] += Config.CooldownIncreasePerHit;
+                        newCooldowns[i] += (repl.CustomCooldownIncreasePerHit >= 0)
+                            ? repl.CustomCooldownIncreasePerHit
+                            : Config.CooldownIncreasePerHit;
                     }
                     else if (newCooldowns[i] > 0)
                     {
@@ -101,7 +103,7 @@ namespace Allograph
                 }
             }
 
-            if (Config.CooldownIncreasePerHit > 0)
+            if (Config.CooldownIncreasePerHit >= 0)
             {
                 // update cooldowns
                 Cooldowns.Clear();
