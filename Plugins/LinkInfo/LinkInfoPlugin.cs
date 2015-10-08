@@ -285,7 +285,7 @@ namespace LinkInfo
         {
             ConnectionManager.SendChannelMessageFormat(
                 channel,
-                "{0}: {1}",
+                "{0} :: {1}",
                 linkAndInfo.Link,
                 linkAndInfo.Info
             );
