@@ -69,6 +69,16 @@ namespace Allograph
                     continue;
                 }
 
+                if (repl.AdditionalProbabilityPercent > 0.0)
+                {
+                    var replProbabilityValue = Random.NextDouble() * 100.0;
+                    if (replProbabilityValue >= repl.AdditionalProbabilityPercent)
+                    {
+                        // next!
+                        continue;
+                    }
+                }
+
                 // substitute the username in the replacement string
                 var replacementStringWithUser = repl.ReplacementString.Replace("{{{username}}}", message.Nick);
                 var nextNewBody = repl.Regex.Replace(newBody, replacementStringWithUser);

@@ -36,11 +36,14 @@ namespace Allograph
             /// </summary>
             public bool OnlyIfPrecedingHit { get; set; }
 
+            public double AdditionalProbabilityPercent { get; set; }
+
             public int CustomCooldownIncreasePerHit { get; set; }
 
             public Replacement()
             {
                 OnlyIfPrecedingHit = false;
+                AdditionalProbabilityPercent = 0.0;
                 CustomCooldownIncreasePerHit = -1;
             }
         }
