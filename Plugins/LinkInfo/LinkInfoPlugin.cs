@@ -251,7 +251,7 @@ namespace LinkInfo
                 
                 var htmlDoc = new HtmlDocument();
                 htmlDoc.LoadHtml(parseMe);
-                var foundHints = htmlDoc.DocumentNode.QuerySelectorAll(".qb-bmqc .qb-b");
+                var foundHints = htmlDoc.DocumentNode.QuerySelectorAll("._hUb ._gUb");
                 foreach (var hint in foundHints)
                 {
                     return string.Format("{0} ({1})", text, HtmlEntity.DeEntitize(hint.InnerText));
