@@ -140,7 +140,7 @@ namespace LinkInfo
                 var contentType = "application/octet-stream";
                 string contentTypeHeader = null;
                 string responseCharacterSet = null;
-                request.Timeout = 5000;
+                request.Timeout = (int)(Config.TimeoutSeconds * 100);
                 if (httpRequest != null)
                 {
                     // HTTP-specific settings
@@ -230,7 +230,10 @@ namespace LinkInfo
         {
             try
             {
-                var client = new CookieWebClient();
+                var client = new CookieWebClient
+                {
+                    Timeout = TimeSpan.FromSeconds(Config.ImageInfoTimeoutSeconds)
+                };
                 client.Headers[HttpRequestHeader.UserAgent] = Config.FakeUserAgent;
 
                 // alibi-visit the image search page to get the cookies

@@ -5,13 +5,13 @@ namespace SharpIrcBot
 {
     public class CookieWebClient : WebClient
     {
-        public CookieContainer CookieJar;
-        public int Timeout;
+        public CookieContainer CookieJar { get; set; }
+        public TimeSpan Timeout { get; set; }
 
         public CookieWebClient()
         {
             CookieJar = new CookieContainer();
-            Timeout = 100;
+            Timeout = TimeSpan.FromMilliseconds(100.0);
         }
 
         public void ClearCookieJar()
@@ -27,7 +27,10 @@ namespace SharpIrcBot
                 return null;
             }
 
-            req.Timeout = Timeout;
+            req.Timeout = (Timeout == TimeSpan.Zero)
+                ? System.Threading.Timeout.Infinite
+                : (int)(Timeout.TotalMilliseconds);
+
             var httpReq = req as HttpWebRequest;
             if (httpReq != null)
             {
