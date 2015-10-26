@@ -117,13 +117,15 @@ namespace LinkInfo
             {
                 addresses = Dns.GetHostAddresses(link.Host);
             }
-            catch (SocketException)
+            catch (SocketException se)
             {
+                Logger.WarnFormat("socket exception when resolving {0}: {1}", link.Host, se);
                 return Tuple.Create(false, "(cannot resolve)");
             }
 
             if (addresses.Length == 0)
             {
+                Logger.WarnFormat("no addresses found when resolving {0}", link.Host);
                 return Tuple.Create(false, "(cannot resolve)");
             }
             if (addresses.Any(IPAddressBlacklist.IsIPAddressBlacklisted))
