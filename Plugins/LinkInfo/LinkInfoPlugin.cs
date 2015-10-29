@@ -17,9 +17,9 @@ namespace LinkInfo
     {
         private static readonly ILog Logger = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
-        public static readonly Uri GoogleHomepageUrl = new Uri("http://www.google.com/");
-        public static readonly Uri GoogleImageSearchUrl = new Uri("http://www.google.com/imghp?hl=en&tab=wi");
-        public const string GoogleImageSearchByImageUrlPattern = "https://www.google.com/searchbyimage?hl=en&image_url={0}";
+        public const string GoogleHomepageUrlPattern = "https://{0}/";
+        public const string GoogleImageSearchUrlPattern = "https://{0}/imghp?hl=en&tab=wi";
+        public const string GoogleImageSearchByImageUrlPattern = "https://{0}/searchbyimage?hl=en&image_url={1}";
         public const int DownloadBufferSize = 4 * 1024 * 1024;
 
         protected ConnectionManager ConnectionManager;
@@ -234,18 +234,22 @@ namespace LinkInfo
                 {
                     Timeout = TimeSpan.FromSeconds(Config.ImageInfoTimeoutSeconds)
                 };
-                client.Headers[HttpRequestHeader.UserAgent] = Config.FakeUserAgent;
+
+                var googleImageSearchUrl = string.Format(GoogleImageSearchUrlPattern, Config.GoogleDomain);
 
                 // alibi-visit the image search page to get the cookies
-                client.Headers[HttpRequestHeader.Referer] = GoogleHomepageUrl.ToString();
-                client.DownloadData(GoogleImageSearchUrl);
+                client.Headers[HttpRequestHeader.UserAgent] = Config.FakeUserAgent;
+                client.Headers[HttpRequestHeader.Referer] = string.Format(GoogleHomepageUrlPattern, Config.GoogleDomain);
+                client.DownloadData(googleImageSearchUrl);
 
                 // fetch the actual info
                 var searchUrl = new Uri(string.Format(
                     GoogleImageSearchByImageUrlPattern,
+                    Config.GoogleDomain,
                     SharpIrcBotUtil.UrlEncode(url.ToString(), SharpIrcBotUtil.Utf8NoBom, true)
                 ));
-                client.Headers[HttpRequestHeader.Referer] = GoogleImageSearchUrl.ToString();
+                client.Headers[HttpRequestHeader.UserAgent] = Config.FakeUserAgent;
+                client.Headers[HttpRequestHeader.Referer] = googleImageSearchUrl;
                 var responseBytes = client.DownloadData(searchUrl);
                 var parseMe = EncodingGuesser.GuessEncodingAndDecode(responseBytes, null, null);
                 
