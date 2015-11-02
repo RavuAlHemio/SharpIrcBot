@@ -4,6 +4,7 @@ using System.Data.Common;
 using System.Diagnostics.Contracts;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Text;
 using log4net;
@@ -480,6 +481,37 @@ namespace SharpIrcBot
             }
 
             return ret.ToString();
+        }
+
+        /// <summary>
+        /// Returns a list containing the elements of the enumerable in shuffled order.
+        /// </summary>
+        /// <typeparam name="T">The type of item in the enumerable.</typeparam>
+        /// <param name="itemsToShuffle">The enumerable whose items to return in a shuffled list.</param>
+        /// <param name="rng">The random number generator to use, or <c>null</c> to create one.</param>
+        /// <returns>List containing the enumerable's items in shuffled order.</returns>
+        public static List<T> ToShuffledList<T>(this IEnumerable<T> itemsToShuffle, Random rng = null)
+        {
+            if (rng == null)
+            {
+                rng = new Random();
+            }
+
+            var list = itemsToShuffle.ToList();
+
+            // Fisher-Yates shuffle (Knuth shuffle)
+            for (int i = 0; i < list.Count - 1; ++i)
+            {
+                // i <= j < count
+                int j = rng.Next(i, list.Count);
+
+                // swap
+                T temp = list[i];
+                list[i] = list[j];
+                list[j] = temp;
+            }
+
+            return list;
         }
     }
 }

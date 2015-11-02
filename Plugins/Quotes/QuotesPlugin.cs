@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
@@ -18,12 +19,20 @@ namespace Quotes
         private static readonly Regex RememberRegex = new Regex("^!remember[ ]+([^ ]+)[ ]+(.+)$");
         private static readonly Regex QuoteRegex = new Regex("^!(any|bad)?(r)?quote(?:[ ]+(.+))?$");
         private static readonly Regex QuoteUserRegex = new Regex("^!(any|bad)?(r)?quoteuser[ ]+([^ ]+)$");
+        private static readonly Regex NextQuoteRegex = new Regex("^!next(any|bad)?(r)?quote[ ]*$");
 
         protected ConnectionManager ConnectionManager;
         protected QuotesConfig Config;
         protected Dictionary<string, List<Quote>> PotentialQuotesPerChannel;
         protected Dictionary<string, long> LastQuoteIDs;
         protected Random Randomizer;
+
+        protected List<Quote> ShuffledGoodQuotes { get; set; }
+        protected List<Quote> ShuffledAnyQuotes { get; set; }
+        protected List<Quote> ShuffledBadQuotes { get; set; }
+        protected int ShuffledGoodQuotesIndex { get; set; }
+        protected int ShuffledAnyQuotesIndex { get; set; }
+        protected int ShuffledBadQuotesIndex { get; set; }
 
         public QuotesPlugin(ConnectionManager connMgr, JObject config)
         {
@@ -36,6 +45,62 @@ namespace Quotes
             ConnectionManager.ChannelMessage += HandleChannelMessage;
             ConnectionManager.ChannelAction += HandleChannelAction;
             ConnectionManager.QueryMessage += HandleQueryMessage;
+        }
+
+        protected virtual IQueryable<Quote> GetFilteredQuotes(IQueryable<Quote> quotes, IQueryable<QuoteVote> votes, QuoteRating requestedRating)
+        {
+            switch (requestedRating)
+            {
+                case QuoteRating.Low:
+                    return quotes.Where(q => (votes.Where(v => v.QuoteID == q.ID).Sum(v => (int?)v.Points) ?? 0) < Config.VoteThreshold);
+                case QuoteRating.Any:
+                    return quotes;
+                case QuoteRating.High:
+                    return quotes.Where(q => (votes.Where(v => v.QuoteID == q.ID).Sum(v => (int?)v.Points) ?? 0) >= Config.VoteThreshold);
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(requestedRating));
+            }
+        }
+
+        /// <summary>
+        /// Posts a specific quote.
+        /// </summary>
+        /// <param name="quote">The quote to post.</param>
+        /// <param name="requestor">The nickname of the person who requested this quote.</param>
+        /// <param name="location">The channel (for channel messages) or nickname (for private messages) in which the
+        /// request has been placed.</param>
+        /// <param name="votes">The Queryable of votes.</param>
+        /// <param name="addMyRating">If <c>true</c>, shows how the requestor voted on this quote.</param>
+        /// <param name="postReply">Action to invoke to post a reply.</param>
+        protected virtual void PostQuote(Quote quote, string requestor, string location, IQueryable<QuoteVote> votes, bool addMyRating, Action<string> postReply)
+        {
+            int voteCount = votes.Where(v => v.QuoteID == quote.ID).Sum(v => (int?)v.Points) ?? 0;
+
+            LastQuoteIDs[location] = quote.ID;
+            if (addMyRating)
+            {
+                var requestorLower = requestor.ToLowerInvariant();
+                var requestorVote = votes.FirstOrDefault(v => v.QuoteID == quote.ID && v.VoterLowercase == requestorLower);
+
+                string requestorVoteString = " ";
+                if (requestorVote != null)
+                {
+                    if (requestorVote.Points < 0)
+                    {
+                        requestorVoteString = "-";
+                    }
+                    else if (requestorVote.Points > 0)
+                    {
+                        requestorVoteString = "+";
+                    }
+                }
+
+                postReply(FormatQuote(quote, voteCount, requestorVoteString));
+            }
+            else
+            {
+                postReply(FormatQuote(quote, voteCount, ""));
+            }
         }
 
         /// <summary>
@@ -51,21 +116,7 @@ namespace Quotes
         /// <param name="postReply">Action to invoke to post a reply.</param>
         protected virtual void PostRandomQuote(string requestor, string location, IQueryable<Quote> quotes, IQueryable<QuoteVote> votes, QuoteRating requestedRating, bool addMyRating, Action<string> postReply)
         {
-            IQueryable<Quote> filteredQuotes;
-            switch (requestedRating)
-            {
-                case QuoteRating.Low:
-                    filteredQuotes = quotes.Where(q => (votes.Where(v => v.QuoteID == q.ID).Sum(v => (int?)v.Points) ?? 0) < Config.VoteThreshold);
-                    break;
-                case QuoteRating.Any:
-                    filteredQuotes = quotes;
-                    break;
-                case QuoteRating.High:
-                    filteredQuotes = quotes.Where(q => (votes.Where(v => v.QuoteID == q.ID).Sum(v => (int?)v.Points) ?? 0) >= Config.VoteThreshold);
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(requestedRating));
-            }
+            var filteredQuotes = GetFilteredQuotes(quotes, votes, requestedRating);
 
             int quoteCount = filteredQuotes.Count();
             if (quoteCount > 0)
@@ -75,33 +126,8 @@ namespace Quotes
                     .OrderBy(q => q.ID)
                     .Skip(index)
                     .FirstOrDefault();
-                int voteCount = votes.Where(v => v.QuoteID == quote.ID).Sum(v => (int?) v.Points) ?? 0;
 
-                LastQuoteIDs[location] = quote.ID;
-                if (addMyRating)
-                {
-                    var requestorLower = requestor.ToLowerInvariant();
-                    var requestorVote = votes.FirstOrDefault(v => v.QuoteID == quote.ID && v.VoterLowercase == requestorLower);
-
-                    string requestorVoteString = " ";
-                    if (requestorVote != null)
-                    {
-                        if (requestorVote.Points < 0)
-                        {
-                            requestorVoteString = "-";
-                        }
-                        else if (requestorVote.Points > 0)
-                        {
-                            requestorVoteString = "+";
-                        }
-                    }
-
-                    postReply(FormatQuote(quote, voteCount, requestorVoteString));
-                }
-                else
-                {
-                    postReply(FormatQuote(quote, voteCount, ""));
-                }
+                PostQuote(quote, requestor, location, votes, addMyRating, postReply);
             }
             else
             {
@@ -178,6 +204,12 @@ namespace Quotes
                     e.Data.Channel,
                     "Done."
                 );
+
+                // invalidate these
+                ShuffledAnyQuotes = null;
+                ShuffledBadQuotes = null;
+                ShuffledGoodQuotes = null;
+
                 return;
             }
 
@@ -229,6 +261,11 @@ namespace Quotes
                     "Remembering {0}",
                     FormatQuote(matchedQuote, 0)
                 );
+
+                // invalidate these
+                ShuffledAnyQuotes = null;
+                ShuffledBadQuotes = null;
+                ShuffledGoodQuotes = null;
 
                 return;
             }
@@ -360,6 +397,58 @@ namespace Quotes
                     var quotes = ctx.Quotes.Where(q => q.AuthorLowercase == lowercaseNick);
 
                     PostRandomQuote(sender, location, quotes, ctx.QuoteVotes, rating, addMyRating, postReply);
+                }
+
+                return true;
+            }
+
+            var nextQuoteMatch = NextQuoteRegex.Match(message);
+            if (nextQuoteMatch.Success)
+            {
+                var rating = QuoteRatingFromRegexGroup(quoteMatch.Groups[1]);
+                bool addMyRating = quoteMatch.Groups[2].Success;
+                
+                using (var ctx = GetNewContext())
+                {
+                    Quote quote = null;
+                    switch (rating)
+                    {
+                        case QuoteRating.Any:
+                            if (ShuffledAnyQuotes == null)
+                            {
+                                ShuffledAnyQuotes = GetFilteredQuotes(ctx.Quotes, ctx.QuoteVotes, QuoteRating.Any)
+                                    .ToShuffledList();
+                                ShuffledAnyQuotesIndex = 0;
+                            }
+                            quote = ShuffledAnyQuotes[ShuffledAnyQuotesIndex++];
+                            ShuffledAnyQuotesIndex %= ShuffledAnyQuotes.Count;
+                            break;
+                        case QuoteRating.High:
+                            if (ShuffledGoodQuotes == null)
+                            {
+                                ShuffledGoodQuotes = GetFilteredQuotes(ctx.Quotes, ctx.QuoteVotes, QuoteRating.High)
+                                    .ToShuffledList();
+                                ShuffledGoodQuotesIndex = 0;
+                            }
+                            quote = ShuffledGoodQuotes[ShuffledGoodQuotesIndex++];
+                            ShuffledGoodQuotesIndex %= ShuffledGoodQuotes.Count;
+                            break;
+                        case QuoteRating.Low:
+                            if (ShuffledBadQuotes == null)
+                            {
+                                ShuffledBadQuotes = GetFilteredQuotes(ctx.Quotes, ctx.QuoteVotes, QuoteRating.Low)
+                                    .ToShuffledList();
+                                ShuffledBadQuotesIndex = 0;
+                            }
+                            quote = ShuffledBadQuotes[ShuffledBadQuotesIndex++];
+                            ShuffledBadQuotesIndex %= ShuffledBadQuotes.Count;
+                            break;
+                        default:
+                            Debug.Fail("unexpected quote rating");
+                            break;
+                    }
+                    
+                    PostQuote(quote, sender, location, ctx.QuoteVotes, addMyRating, postReply);
                 }
 
                 return true;
