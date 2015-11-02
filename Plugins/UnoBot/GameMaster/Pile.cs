@@ -183,7 +183,7 @@ namespace UnoBot.GameMaster
             for (int i = 0; i < list.Count - 1; ++i)
             {
                 // i <= j < count
-                int j = randomizer.Next(0, i);
+                int j = randomizer.Next(i, list.Count);
 
                 // swap
                 T temp = list[i];
