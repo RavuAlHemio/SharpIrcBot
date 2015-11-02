@@ -405,8 +405,8 @@ namespace Quotes
             var nextQuoteMatch = NextQuoteRegex.Match(message);
             if (nextQuoteMatch.Success)
             {
-                var rating = QuoteRatingFromRegexGroup(quoteMatch.Groups[1]);
-                bool addMyRating = quoteMatch.Groups[2].Success;
+                var rating = QuoteRatingFromRegexGroup(nextQuoteMatch.Groups[1]);
+                bool addMyRating = nextQuoteMatch.Groups[2].Success;
                 
                 using (var ctx = GetNewContext())
                 {
