@@ -183,7 +183,12 @@ namespace LinkInfo
                 catch (WebException we)
                 {
                     var httpResponse = we.Response as HttpWebResponse;
-                    return Tuple.Create(false, string.Format("(HTTP {0})", httpResponse != null ? httpResponse.StatusCode.ToString() : "error"));
+                    if (httpResponse != null)
+                    {
+                        return Tuple.Create(false, string.Format("(HTTP {0})", httpResponse.StatusCode));
+                    }
+                    Logger.Warn("HTTP exception thrown", we);
+                    return Tuple.Create(false, "(HTTP error)");
                 }
 
                 switch (contentType)
