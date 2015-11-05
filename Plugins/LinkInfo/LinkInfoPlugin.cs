@@ -140,7 +140,7 @@ namespace LinkInfo
                 var contentType = "application/octet-stream";
                 string contentTypeHeader = null;
                 string responseCharacterSet = null;
-                request.Timeout = (int)(Config.TimeoutSeconds * 100);
+                request.Timeout = (int)TimeSpan.FromSeconds(Config.TimeoutSeconds).TotalMilliseconds;
                 if (httpRequest != null)
                 {
                     // HTTP-specific settings
