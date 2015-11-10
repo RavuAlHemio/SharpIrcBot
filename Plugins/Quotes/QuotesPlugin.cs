@@ -222,7 +222,9 @@ namespace Quotes
                 var lowercaseNick = nick.ToLowerInvariant();
                 var lowercaseSubstring = substring.ToLowerInvariant();
 
-                if (lowercaseNick == normalizedNick.ToLowerInvariant())
+                var lowercaseRegisteredNick = ConnectionManager.RegisteredNameForNick(lowercaseNick) ?? lowercaseNick;
+
+                if (lowercaseRegisteredNick == normalizedNick.ToLowerInvariant())
                 {
                     ConnectionManager.SendChannelMessageFormat(
                         e.Data.Channel,
@@ -234,7 +236,7 @@ namespace Quotes
 
                 // find it
                 var matchedQuote = PotentialQuotesPerChannel.ContainsKey(e.Data.Channel)
-                    ? PotentialQuotesPerChannel[e.Data.Channel].FirstOrDefault(potQuote => potQuote.AuthorLowercase == lowercaseNick && potQuote.BodyLowercase.Contains(lowercaseSubstring))
+                    ? PotentialQuotesPerChannel[e.Data.Channel].FirstOrDefault(potQuote => potQuote.AuthorLowercase == lowercaseRegisteredNick && potQuote.BodyLowercase.Contains(lowercaseSubstring))
                     : null;
 
                 if (matchedQuote == null)
