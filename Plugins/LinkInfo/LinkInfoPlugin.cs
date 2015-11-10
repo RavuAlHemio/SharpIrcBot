@@ -63,11 +63,10 @@ namespace LinkInfo
                 }
                 else
                 {
-                    // fetch if not fetched yet or a temporary error occurred last time
-                    if (!_lastLinkAndInfo.HasInfo || _lastLinkAndInfo.TemporaryErrorOccurred)
+                    // fetch if not fetched yet or a transient error occurred last time
+                    if (_lastLinkAndInfo.ShouldRefetch)
                     {
-                        var info = ObtainLinkInfo(_lastLinkAndInfo.Link);
-                        _lastLinkAndInfo = new LinkAndInfo(_lastLinkAndInfo.Link, info);
+                        _lastLinkAndInfo = ObtainLinkInfo(_lastLinkAndInfo.Link);
                     }
                     PostLinkInfo(_lastLinkAndInfo, args.Data.Channel);
                 }
@@ -80,7 +79,7 @@ namespace LinkInfo
             // store the new "last link"
             if (links.Count > 0)
             {
-                _lastLinkAndInfo = new LinkAndInfo(links[links.Count - 1]);
+                _lastLinkAndInfo = LinkAndInfo.CreateUnfetched(links[links.Count-1]);
             }
 
             // respond?
@@ -109,7 +108,7 @@ namespace LinkInfo
             return ret;                
         }
 
-        public Tuple<bool, string> RealObtainLinkInfo(Uri link)
+        public LinkAndInfo RealObtainLinkInfo(Uri link)
         {
             // check URL blacklist
             IPAddress[] addresses;
@@ -120,17 +119,17 @@ namespace LinkInfo
             catch (SocketException se)
             {
                 Logger.WarnFormat("socket exception when resolving {0}: {1}", link.Host, se);
-                return Tuple.Create(false, "(cannot resolve)");
+                return new LinkAndInfo(link, "(cannot resolve)", FetchErrorLevel.TransientError);
             }
 
             if (addresses.Length == 0)
             {
                 Logger.WarnFormat("no addresses found when resolving {0}", link.Host);
-                return Tuple.Create(false, "(cannot resolve)");
+                return new LinkAndInfo(link, "(cannot resolve)", FetchErrorLevel.TransientError);
             }
             if (addresses.Any(IPAddressBlacklist.IsIPAddressBlacklisted))
             {
-                return Tuple.Create(true, "(I refuse to access this IP address)");
+                return new LinkAndInfo(link, "(I refuse to access this IP address)", FetchErrorLevel.LastingError);
             }
 
             var request = WebRequest.Create(link);
@@ -158,7 +157,7 @@ namespace LinkInfo
                             contentType = contentTypeHeader.Split(';')[0];
                         }
                         var webResp = resp as HttpWebResponse;
-                        responseCharacterSet = (webResp != null) ? webResp.CharacterSet : null;
+                        responseCharacterSet = webResp?.CharacterSet;
 
                         // copy
                         var buf = new byte[DownloadBufferSize];
@@ -174,7 +173,7 @@ namespace LinkInfo
                             totalBytesRead += bytesRead;
                             if (totalBytesRead > Config.MaxDownloadSizeBytes)
                             {
-                                return Tuple.Create(true, "(file too large)");
+                                return new LinkAndInfo(link, "(file too large)", FetchErrorLevel.LastingError);
                             }
                             respStore.Write(buf, 0, bytesRead);
                         }
@@ -185,16 +184,16 @@ namespace LinkInfo
                     var httpResponse = we.Response as HttpWebResponse;
                     if (httpResponse != null)
                     {
-                        return Tuple.Create(false, string.Format("(HTTP {0})", httpResponse.StatusCode));
+                        return new LinkAndInfo(link, $"(HTTP {httpResponse.StatusCode})", FetchErrorLevel.TransientError);
                     }
                     Logger.Warn("HTTP exception thrown", we);
-                    return Tuple.Create(false, "(HTTP error)");
+                    return new LinkAndInfo(link, "(HTTP error)", FetchErrorLevel.TransientError);
                 }
 
                 switch (contentType)
                 {
                     case "application/octet-stream":
-                        return Tuple.Create(true, "(can't figure out the content type, sorry)");
+                        return new LinkAndInfo(link, "(can't figure out the content type, sorry)", FetchErrorLevel.LastingError);
                     case "text/html":
                     case "application/xhtml+xml":
                         // HTML? parse it and get the title
@@ -206,27 +205,27 @@ namespace LinkInfo
                         var titleElement = htmlDoc.DocumentNode.SelectSingleNode(".//title");
                         if (titleElement != null)
                         {
-                            return Tuple.Create(true, HtmlEntity.DeEntitize(titleElement.InnerText));
+                            return new LinkAndInfo(link, HtmlEntity.DeEntitize(titleElement.InnerText), FetchErrorLevel.Success);
                         }
                         var h1Element = htmlDoc.DocumentNode.SelectSingleNode(".//h1");
                         if (h1Element != null)
                         {
-                            return Tuple.Create(true, HtmlEntity.DeEntitize(h1Element.InnerText));
+                            return new LinkAndInfo(link, HtmlEntity.DeEntitize(h1Element.InnerText), FetchErrorLevel.Success);
                         }
-                        return Tuple.Create(true, "(HTML without a title O_o)");
+                        return new LinkAndInfo(link, "(HTML without a title O_o)", FetchErrorLevel.Success);
                     case "image/png":
-                        return Tuple.Create(true, ObtainImageInfo(link, "PNG image"));
+                        return new LinkAndInfo(link, ObtainImageInfo(link, "PNG image"), FetchErrorLevel.Success);
                     case "image/jpeg":
-                        return Tuple.Create(true, ObtainImageInfo(link, "JPEG image"));
+                        return new LinkAndInfo(link, ObtainImageInfo(link, "JPEG image"), FetchErrorLevel.Success);
                     case "image/gif":
-                        return Tuple.Create(true, ObtainImageInfo(link, "GIF image"));
+                        return new LinkAndInfo(link, ObtainImageInfo(link, "GIF image"), FetchErrorLevel.Success);
                     case "application/json":
-                        return Tuple.Create(true, "JSON");
+                        return new LinkAndInfo(link, "JSON", FetchErrorLevel.Success);
                     case "text/xml":
                     case "application/xml":
-                        return Tuple.Create(true, "XML");
+                        return new LinkAndInfo(link, "XML", FetchErrorLevel.Success);
                     default:
-                        return Tuple.Create(true, string.Format("file of type {0}", contentType));
+                        return new LinkAndInfo(link, $"file of type {contentType}", FetchErrorLevel.Success);
                 }
             }
         }
@@ -274,7 +273,7 @@ namespace LinkInfo
             }
         }
 
-        public Tuple<bool, string> ObtainLinkInfo(Uri link)
+        public LinkAndInfo ObtainLinkInfo(Uri link)
         {
             try
             {
@@ -283,13 +282,13 @@ namespace LinkInfo
             catch (Exception ex)
             {
                 Logger.Warn("link info", ex);
-                return Tuple.Create(false, "(an error occurred)");
+                return new LinkAndInfo(link, "(an error occurred)", FetchErrorLevel.TransientError);
             }
         }
 
         protected void FetchAndPostLinkInfo(IEnumerable<Uri> links, string channel)
         {
-            foreach (var linkAndInfo in links.Select(l => new LinkAndInfo(l, ObtainLinkInfo(l))))
+            foreach (var linkAndInfo in links.Select(ObtainLinkInfo))
             {
                 PostLinkInfo(linkAndInfo, channel);
             }
@@ -299,9 +298,10 @@ namespace LinkInfo
         {
             ConnectionManager.SendChannelMessageFormat(
                 channel,
-                "{0} :: {1}",
+                "{0} {2} {1}",
                 linkAndInfo.Link,
-                linkAndInfo.Info
+                linkAndInfo.Info,
+                linkAndInfo.IsError ? ":!:" : "::"
             );
         }
     }

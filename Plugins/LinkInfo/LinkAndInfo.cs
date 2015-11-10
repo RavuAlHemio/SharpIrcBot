@@ -6,22 +6,23 @@ namespace LinkInfo
     {
         public Uri Link { get; }
         public string Info { get; }
-        public bool TemporaryErrorOccurred { get; }
+        public FetchErrorLevel ErrorLevel { get; }
+        public bool IsError => ErrorLevel != FetchErrorLevel.Success;
+        public bool ShouldRefetch
+            => ErrorLevel == FetchErrorLevel.Unfetched || ErrorLevel == FetchErrorLevel.TransientError;
 
         public bool HasInfo => Info != null;
 
-        public LinkAndInfo(Uri link, string info = null, bool temporaryErrorOccurred = false)
+        public LinkAndInfo(Uri link, string info, FetchErrorLevel errorLevel)
         {
             Link = link;
             Info = info;
-            TemporaryErrorOccurred = temporaryErrorOccurred;
+            ErrorLevel = errorLevel;
         }
 
-        public LinkAndInfo(Uri link, Tuple<bool, string> successAndInfo)
+        public static LinkAndInfo CreateUnfetched(Uri link)
         {
-            Link = link;
-            Info = successAndInfo.Item2;
-            TemporaryErrorOccurred = !successAndInfo.Item1;
+            return new LinkAndInfo(link, info: null, errorLevel: FetchErrorLevel.Unfetched);
         }
     }
 }
