@@ -4,9 +4,9 @@ namespace LinkInfo
 {
     public class LinkAndInfo
     {
-        public readonly Uri Link;
-        public readonly string Info;
-        public readonly bool TemporaryErrorOccurred;
+        public Uri Link { get; }
+        public string Info { get; }
+        public bool TemporaryErrorOccurred { get; }
 
         public bool HasInfo => Info != null;
 
