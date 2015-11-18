@@ -33,6 +33,7 @@ namespace LinkInfo
             Config = new LinkInfoConfig(config);
 
             ConnectionManager.ChannelMessage += HandleChannelMessage;
+            ConnectionManager.OutgoingChannelMessage += HandleOutgoingChannelMessage;
         }
 
         private void HandleChannelMessage(object sender, IrcEventArgs args, MessageFlags flags)
@@ -86,6 +87,30 @@ namespace LinkInfo
             if (body.StartsWith("!link "))
             {
                 FetchAndPostLinkInfo(links, args.Data.Channel);
+            }
+        }
+
+        private void HandleOutgoingChannelMessage(object sender, OutgoingMessageEventArgs args)
+        {
+            try
+            {
+                ActuallyHandleOutgoingChannelMessage(sender, args);
+            }
+            catch (Exception exc)
+            {
+                Logger.Error("error handling outgoing message", exc);
+            }
+        }
+
+        protected void ActuallyHandleOutgoingChannelMessage(object sender, OutgoingMessageEventArgs args)
+        {
+            // find all the links
+            var links = FindLinks(args.OutgoingMessage);
+
+            // store the new "last link"
+            if (links.Count > 0)
+            {
+                _lastLinkAndInfo = LinkAndInfo.CreateUnfetched(links[links.Count-1]);
             }
         }
 
