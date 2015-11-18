@@ -112,7 +112,14 @@ namespace GroupPressure
                 );
 
                 // submit to group pressure
-                Connection.Client.SendMessage(msg[0] == 'A' ? SendType.Action : SendType.Message, e.Data.Channel, msg.Substring(1));
+                if (msg[0] == 'A')
+                {
+                    Connection.SendChannelAction(e.Data.Channel, msg.Substring(1));
+                }
+                else
+                {
+                    Connection.SendChannelMessage(e.Data.Channel, msg.Substring(1));
+                }
 
                 // fake this message into the backlog to prevent duplicates
                 Backlog.Enqueue(new BacklogMessage
