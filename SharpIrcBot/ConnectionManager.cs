@@ -36,6 +36,12 @@ namespace SharpIrcBot
         public event EventHandler<NickChangeEventArgs> NickChange;
         public event EventHandler<PartEventArgs> UserLeftChannel;
         public event EventHandler<QuitEventArgs> UserQuitServer;
+        public event EventHandler<OutgoingMessageEventArgs> OutgoingChannelMessage;
+        public event EventHandler<OutgoingMessageEventArgs> OutgoingChannelAction;
+        public event EventHandler<OutgoingMessageEventArgs> OutgoingChannelNotice;
+        public event EventHandler<OutgoingMessageEventArgs> OutgoingQueryMessage;
+        public event EventHandler<OutgoingMessageEventArgs> OutgoingQueryAction;
+        public event EventHandler<OutgoingMessageEventArgs> OutgoingQueryNotice;
 
         public ConnectionManager(BotConfig config)
         {
@@ -401,6 +407,54 @@ namespace SharpIrcBot
             }
         }
 
+        protected virtual void OnOutgoingChannelMessage(OutgoingMessageEventArgs e)
+        {
+            if (OutgoingChannelMessage != null)
+            {
+                OutgoingChannelMessage(this, e);
+            }
+        }
+
+        protected virtual void OnOutgoingChannelAction(OutgoingMessageEventArgs e)
+        {
+            if (OutgoingChannelAction != null)
+            {
+                OutgoingChannelAction(this, e);
+            }
+        }
+
+        protected virtual void OnOutgoingChannelNotice(OutgoingMessageEventArgs e)
+        {
+            if (OutgoingChannelNotice != null)
+            {
+                OutgoingChannelNotice(this, e);
+            }
+        }
+
+        protected virtual void OnOutgoingQueryMessage(OutgoingMessageEventArgs e)
+        {
+            if (OutgoingQueryMessage != null)
+            {
+                OutgoingQueryMessage(this, e);
+            }
+        }
+
+        protected virtual void OnOutgoingQueryAction(OutgoingMessageEventArgs e)
+        {
+            if (OutgoingQueryAction != null)
+            {
+                OutgoingQueryAction(this, e);
+            }
+        }
+
+        protected virtual void OnOutgoingQueryNotice(OutgoingMessageEventArgs e)
+        {
+            if (OutgoingQueryNotice != null)
+            {
+                OutgoingQueryNotice(this, e);
+            }
+        }
+
         public string RegisteredNameForNick(string nick)
         {
             // perform nick mapping
@@ -488,6 +542,7 @@ namespace SharpIrcBot
         {
             foreach (var line in SplitMessageToLength(message, MaxMessageLength))
             {
+                OnOutgoingChannelMessage(new OutgoingMessageEventArgs(channel, line));
                 Client.SendMessage(SendType.Message, channel, line);
             }
         }
@@ -501,6 +556,7 @@ namespace SharpIrcBot
         {
             foreach (var line in SplitMessageToLength(message, MaxMessageLength))
             {
+                OnOutgoingChannelAction(new OutgoingMessageEventArgs(channel, line));
                 Client.SendMessage(SendType.Action, channel, line);
             }
         }
@@ -514,6 +570,7 @@ namespace SharpIrcBot
         {
             foreach (var line in SplitMessageToLength(message, MaxMessageLength))
             {
+                OnOutgoingChannelNotice(new OutgoingMessageEventArgs(channel, line));
                 Client.SendMessage(SendType.Notice, channel, line);
             }
         }
@@ -527,6 +584,7 @@ namespace SharpIrcBot
         {
             foreach (var line in SplitMessageToLength(message, MaxMessageLength))
             {
+                OnOutgoingQueryMessage(new OutgoingMessageEventArgs(nick, line));
                 Client.SendMessage(SendType.Message, nick, line);
             }
         }
@@ -540,6 +598,7 @@ namespace SharpIrcBot
         {
             foreach (var line in SplitMessageToLength(message, MaxMessageLength))
             {
+                OnOutgoingQueryAction(new OutgoingMessageEventArgs(nick, line));
                 Client.SendMessage(SendType.Action, nick, line);
             }
         }
@@ -553,6 +612,7 @@ namespace SharpIrcBot
         {
             foreach (var line in SplitMessageToLength(message, MaxMessageLength))
             {
+                OnOutgoingQueryNotice(new OutgoingMessageEventArgs(nick, line));
                 Client.SendMessage(SendType.Notice, nick, line);
             }
         }
