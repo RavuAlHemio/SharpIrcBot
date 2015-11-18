@@ -56,7 +56,7 @@ namespace LinkInfo
             }
 
             var body = args.Data.Message;
-            if (body == "!lastlink")
+            if (body == "!lastlink" || body == "!ll")
             {
                 if (_lastLinkAndInfo == null)
                 {
