@@ -107,10 +107,14 @@ namespace LinkInfo
             // find all the links
             var links = FindLinks(args.OutgoingMessage);
 
-            // store the new "last link"
+            // store the new "last link" unless it's already cached
             if (links.Count > 0)
             {
-                _lastLinkAndInfo = LinkAndInfo.CreateUnfetched(links[links.Count-1]);
+                var lastLink = links[links.Count - 1];
+                if (_lastLinkAndInfo == null || _lastLinkAndInfo.Link != lastLink)
+                {
+                    _lastLinkAndInfo = LinkAndInfo.CreateUnfetched(lastLink);
+                }
             }
         }
 
