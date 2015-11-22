@@ -219,10 +219,10 @@ namespace Quotes
                 var nick = rememberMatch.Groups[1].Value;
                 var substring = rememberMatch.Groups[2].Value;
 
-                var lowercaseNick = nick.ToLowerInvariant();
                 var lowercaseSubstring = substring.ToLowerInvariant();
 
-                var lowercaseRegisteredNick = ConnectionManager.RegisteredNameForNick(lowercaseNick) ?? lowercaseNick;
+                var registeredNick = ConnectionManager.RegisteredNameForNick(nick) ?? nick;
+                var lowercaseRegisteredNick = registeredNick.ToLowerInvariant();
 
                 if (lowercaseRegisteredNick == normalizedNick.ToLowerInvariant())
                 {
