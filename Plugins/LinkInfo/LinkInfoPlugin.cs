@@ -325,10 +325,16 @@ namespace LinkInfo
 
         protected void PostLinkInfo(LinkAndInfo linkAndInfo, string channel)
         {
+            string link = linkAndInfo.Link.ToString();
+            if (linkAndInfo.ErrorLevel == FetchErrorLevel.Success && Config.FakeResponses.ContainsKey(link))
+            {
+                link = Config.FakeResponses[link];
+            }
+
             ConnectionManager.SendChannelMessageFormat(
                 channel,
                 "{0} {2} {1}",
-                linkAndInfo.Link,
+                link,
                 linkAndInfo.Info,
                 linkAndInfo.IsError ? ":!:" : "::"
             );
