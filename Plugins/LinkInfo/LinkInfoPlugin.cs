@@ -325,17 +325,18 @@ namespace LinkInfo
 
         protected void PostLinkInfo(LinkAndInfo linkAndInfo, string channel)
         {
-            string link = linkAndInfo.Link.ToString();
-            if (linkAndInfo.ErrorLevel == FetchErrorLevel.Success && Config.FakeResponses.ContainsKey(link))
+            string linkString = linkAndInfo.Link.ToString();
+            string info = linkAndInfo.Info;
+            if (linkAndInfo.ErrorLevel == FetchErrorLevel.Success && Config.FakeResponses.ContainsKey(linkString))
             {
-                link = Config.FakeResponses[link];
+                info = Config.FakeResponses[linkString];
             }
 
             ConnectionManager.SendChannelMessageFormat(
                 channel,
                 "{0} {2} {1}",
-                link,
-                linkAndInfo.Info,
+                linkString,
+                info,
                 linkAndInfo.IsError ? ":!:" : "::"
             );
         }
