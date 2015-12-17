@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Reflection;
 using log4net;
 using Meebey.SmartIrc4net;
@@ -73,7 +74,10 @@ namespace TextCommands
             if (Config.CommandsResponses.ContainsKey(lowerBody))
             {
                 Logger.DebugFormat("{0} triggered {1} in {2}", message.Nick, lowerBody, message.Channel);
-                respond(Config.CommandsResponses[lowerBody]);
+                foreach (var line in Config.CommandsResponses[lowerBody].Split('\n').Where(l => l.Length > 0))
+                {
+                    respond(line);
+                }
             }
         }
     }
