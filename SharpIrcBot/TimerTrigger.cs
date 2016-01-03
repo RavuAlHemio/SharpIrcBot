@@ -103,10 +103,14 @@ namespace SharpIrcBot
                 // find (and remove) the next event
                 lock (_whenWhat)
                 {
-                    maybeFirst = _whenWhat.FirstOrDefault();
-                    if (maybeFirst.HasValue)
+                    if (_whenWhat.Count > 0)
                     {
+                        maybeFirst = _whenWhat.First();
                         _whenWhat.Remove(maybeFirst.Value.Key);
+                    }
+                    else
+                    {
+                        maybeFirst = null;
                     }
                 }
 
