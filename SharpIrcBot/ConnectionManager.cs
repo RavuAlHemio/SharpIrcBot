@@ -17,6 +17,7 @@ namespace SharpIrcBot
 
         public BotConfig Config;
         public readonly IrcClient Client;
+        public readonly TimerTrigger Timers;
 
         protected Thread IrcThread;
         protected CancellationTokenSource Canceller;
@@ -75,6 +76,7 @@ namespace SharpIrcBot
             Client.OnRegistered += HandleRegistered;
             Client.OnPart += HandlePart;
             Client.OnQuit += HandleQuit;
+            Timers = new TimerTrigger();
             Canceller = new CancellationTokenSource();
         }
 
@@ -85,10 +87,14 @@ namespace SharpIrcBot
                 Name = "IRC thread"
             };
             IrcThread.Start();
+
+            Timers.Start();
         }
 
         public void Stop()
         {
+            Timers.Stop();
+
             Canceller.Cancel();
             DisconnectOrWhatever();
             IrcThread.Join();

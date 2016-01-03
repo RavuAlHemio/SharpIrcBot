@@ -57,6 +57,7 @@
     <Compile Include="SharpIrcBotEventHandler.cs" />
     <Compile Include="MessageFlags.cs" />
     <Compile Include="OutgoingMessageEventArgs.cs" />
+    <Compile Include="TimerTrigger.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
