@@ -77,6 +77,12 @@ namespace SharpIrcBot
             while (when > DateTimeOffset.Now)
             {
                 var howLong = when - DateTimeOffset.Now;
+
+                if (howLong.TotalMilliseconds > int.MaxValue)
+                {
+                    howLong = TimeSpan.FromMilliseconds(int.MaxValue);
+                }
+
                 try
                 {
                     Logger.DebugFormat("sleeping until {0} ({1})", when, howLong);
