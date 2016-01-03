@@ -74,7 +74,7 @@ namespace SharpIrcBot
         /// <returns><c>true</c> if interrupted, <c>false</c> if time was hit.</returns>
         private bool SleepUntilTimeOrInterrupt(DateTimeOffset when)
         {
-            do
+            while (when > DateTimeOffset.Now)
             {
                 var howLong = when - DateTimeOffset.Now;
                 try
@@ -87,8 +87,9 @@ namespace SharpIrcBot
                     // and stop
                     return true;
                 }
-            } while (when > DateTimeOffset.Now);
+            }
 
+            Logger.Debug("sleep done");
             return false;
         }
 
