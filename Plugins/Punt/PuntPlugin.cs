@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using log4net;
@@ -21,7 +22,7 @@ namespace Punt
         {
             ConnectionManager = connMgr;
             Config = new PuntConfig(config);
-            RegexCache = new Dictionary<string, Regex>(Config.Patterns.Count);
+            RegexCache = new Dictionary<string, Regex>(2 * Config.CommonPatterns.Count);
 
             ConnectionManager.ChannelAction += HandleChannelAction;
             ConnectionManager.ChannelMessage += HandleChannelMessage;
@@ -64,19 +65,47 @@ namespace Punt
             }
         }
 
+        protected static TValue FetchOrMakeAndStore<TKey, TValue>(IDictionary<TKey, TValue> dict, TKey key, Func<TValue> valueMakerIfNotFound)
+        {
+            try
+            {
+                return dict[key];
+            }
+            catch (KeyNotFoundException)
+            {
+                var ret = valueMakerIfNotFound();
+                dict[key] = ret;
+                return ret;
+            }
+        }
+
         protected virtual void ActuallyHandleMessage(string channel, string nick, string body)
         {
-            foreach (var kvp in Config.Patterns)
+            if (!Config.ChannelsPatterns.ContainsKey(channel))
             {
-                if (!RegexCache.ContainsKey(kvp.Key))
+                // don't police this channel
+                return;
+            }
+
+            var relevantPatterns = Config.CommonPatterns
+                .Concat(Config.ChannelsPatterns[channel]);
+            foreach (var pattern in relevantPatterns)
+            {
+                var nickRegex = FetchOrMakeAndStore(RegexCache, pattern.NickPattern, () => new Regex(pattern.NickPattern));
+                var bodyRegex = FetchOrMakeAndStore(RegexCache, pattern.BodyPattern, () => new Regex(pattern.BodyPattern));
+
+                var normalizedNick = ConnectionManager.RegisteredNameForNick(nick);
+
+                if (!nickRegex.IsMatch(nick) && (normalizedNick == null || !nickRegex.IsMatch(normalizedNick)))
                 {
-                    RegexCache[kvp.Key] = new Regex(kvp.Key);
+                    // wrong user
+                    continue;
                 }
 
-                if (RegexCache[kvp.Key].IsMatch(body))
+                if (bodyRegex.IsMatch(body))
                 {
                     // match! kick 'em!
-                    ConnectionManager.Client.RfcKick(channel, nick, kvp.Value);
+                    ConnectionManager.Client.RfcKick(channel, nick, pattern.KickMessage);
                     return;
                 }
             }
