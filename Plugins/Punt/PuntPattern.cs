@@ -8,6 +8,7 @@ namespace Punt
         public string NickPattern { get; set; }
         public string BodyPattern { get; set; }
         public string KickMessage { get; set; }
+        public int? ChancePercent { get; set; }
 
         public override bool Equals(object obj)
         {
@@ -18,14 +19,16 @@ namespace Punt
         {
             return 3 * (NickPattern?.GetHashCode() ?? 0)
                 + 5 * (BodyPattern?.GetHashCode() ?? 0)
-                + 7 * (KickMessage?.GetHashCode() ?? 0);
+                + 7 * (KickMessage?.GetHashCode() ?? 0)
+                + 11 * ChancePercent.GetHashCode();
         }
 
         public static bool operator ==(PuntPattern x, PuntPattern y)
         {
             return x.NickPattern == y.NickPattern
                 && x.BodyPattern == y.BodyPattern
-                && x.KickMessage == y.KickMessage;
+                && x.KickMessage == y.KickMessage
+                && x.ChancePercent == y.ChancePercent;
         }
 
         public static bool operator !=(PuntPattern x, PuntPattern y)

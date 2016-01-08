@@ -17,12 +17,14 @@ namespace Punt
         protected ConnectionManager ConnectionManager { get; }
         protected PuntConfig Config { get; }
         protected Dictionary<string, Regex> RegexCache { get; }
+        protected Random Randomizer { get; }
 
         public PuntPlugin(ConnectionManager connMgr, JObject config)
         {
             ConnectionManager = connMgr;
             Config = new PuntConfig(config);
             RegexCache = new Dictionary<string, Regex>(2 * Config.CommonPatterns.Count);
+            Randomizer = new Random();
 
             ConnectionManager.ChannelAction += HandleChannelAction;
             ConnectionManager.ChannelMessage += HandleChannelMessage;
@@ -100,6 +102,16 @@ namespace Punt
                 {
                     // wrong user
                     continue;
+                }
+
+                if (pattern.ChancePercent.HasValue)
+                {
+                    var val = Randomizer.Next(100);
+                    if (val >= pattern.ChancePercent.Value)
+                    {
+                        // luck is on their side
+                        continue;
+                    }
                 }
 
                 if (bodyRegex.IsMatch(body))
