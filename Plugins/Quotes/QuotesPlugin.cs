@@ -236,7 +236,9 @@ namespace Quotes
 
                 // find it
                 var matchedQuote = PotentialQuotesPerChannel.ContainsKey(e.Data.Channel)
-                    ? PotentialQuotesPerChannel[e.Data.Channel].FirstOrDefault(potQuote => potQuote.AuthorLowercase == lowercaseRegisteredNick && potQuote.BodyLowercase.Contains(lowercaseSubstring))
+                    ? PotentialQuotesPerChannel[e.Data.Channel]
+                        .OrderByDescending(potQuote => potQuote.Timestamp)
+                        .FirstOrDefault(potQuote => potQuote.AuthorLowercase == lowercaseRegisteredNick && potQuote.BodyLowercase.Contains(lowercaseSubstring))
                     : null;
 
                 if (matchedQuote == null)
