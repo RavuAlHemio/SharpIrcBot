@@ -41,6 +41,12 @@ namespace DontJustHighlightMe
 
         protected virtual void ActuallyHandleChannelMessage(object sender, IrcEventArgs args, MessageFlags flags)
         {
+            if (!Config.Channels.Contains(args.Data.Channel))
+            {
+                // wrong channel
+                return;
+            }
+
             var trimmedMessage = args.Data.Message.Trim();
             if (trimmedMessage.Contains(" "))
             {
