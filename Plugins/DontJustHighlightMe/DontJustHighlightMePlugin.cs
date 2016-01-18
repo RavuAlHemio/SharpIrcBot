@@ -98,6 +98,12 @@ namespace DontJustHighlightMe
                 return;
             }
 
+            if (highlightee == args.Data.Nick.ToLowerInvariant())
+            {
+                // user is naming themselves; never mind
+                return;
+            }
+
             // user found; let's see what we will do
             if (Config.TriggerPercentage.HasValue)
             {
