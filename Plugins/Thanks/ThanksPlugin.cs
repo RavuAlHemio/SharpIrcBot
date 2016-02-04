@@ -240,6 +240,38 @@ namespace Thanks
                     string.Join(", ", topStrings)
                 );
             }
+
+            if (message.Message == "!topgrateful")
+            {
+                List<NicknameAndCount> top;
+                using (var ctx = GetNewContext())
+                {
+                    top = ctx.ThanksEntries
+                        .Where(te => !te.Deleted)
+                        .GroupBy(te => te.ThankerLowercase, (thanker, thanksEntries) => new NicknameAndCount
+                        {
+                            Nickname = thanker,
+                            Count = thanksEntries.Count()
+                        })
+                        .OrderByDescending(teg => teg.Count)
+                        .Take(Config.MostThankedCount)
+                        .ToList()
+                    ;
+                }
+
+                var topStrings = new List<string>();
+                foreach (var thankerAndCount in top)
+                {
+                    topStrings.Add(string.Format("{0}: {1}", thankerAndCount.Nickname, thankerAndCount.Count));
+                }
+
+                ConnectionManager.SendChannelMessageFormat(
+                    message.Channel,
+                    "{0}: {1}",
+                    message.Nick,
+                    string.Join(", ", topStrings)
+                );
+            }
         }
 
         private ThanksContext GetNewContext()
