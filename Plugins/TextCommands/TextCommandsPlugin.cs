@@ -74,7 +74,8 @@ namespace TextCommands
             if (Config.CommandsResponses.ContainsKey(lowerBody))
             {
                 Logger.DebugFormat("{0} triggered {1} in {2}", message.Nick, lowerBody, message.Channel);
-                foreach (var line in Config.CommandsResponses[lowerBody].Split('\n').Where(l => l.Length > 0))
+                var response = Config.CommandsResponses[lowerBody].Replace("{{NICKNAME}}", message.Nick);
+                foreach (var line in response.Split('\n').Where(l => l.Length > 0))
                 {
                     respond(line);
                 }
