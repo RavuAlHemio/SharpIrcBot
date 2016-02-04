@@ -227,17 +227,11 @@ namespace Thanks
                     ;
                 }
 
-                var topStrings = new List<string>();
-                foreach (var thankeeAndCount in top)
-                {
-                    topStrings.Add(string.Format("{0}: {1}", thankeeAndCount.Nickname, thankeeAndCount.Count));
-                }
-
                 ConnectionManager.SendChannelMessageFormat(
                     message.Channel,
                     "{0}: {1}",
                     message.Nick,
-                    string.Join(", ", topStrings)
+                    string.Join(", ", top.Select(NicknameAndCountString))
                 );
             }
 
@@ -259,22 +253,25 @@ namespace Thanks
                     ;
                 }
 
-                var topStrings = new List<string>();
-                foreach (var thankerAndCount in top)
-                {
-                    topStrings.Add(string.Format("{0}: {1}", thankerAndCount.Nickname, thankerAndCount.Count));
-                }
-
                 ConnectionManager.SendChannelMessageFormat(
                     message.Channel,
                     "{0}: {1}",
                     message.Nick,
-                    string.Join(", ", topStrings)
+                    string.Join(", ", top.Select(NicknameAndCountString))
                 );
             }
         }
 
-        private ThanksContext GetNewContext()
+        protected string NicknameAndCountString(NicknameAndCount nickAndCount)
+        {
+            var actualNickname = ConnectionManager.RegisteredNameForNick(nickAndCount.Nickname) ?? nickAndCount.Nickname;
+            var noHighlightNickname = (actualNickname.Length < 2)
+                ? actualNickname
+                : actualNickname[0] + "\uFEFF" + actualNickname.Substring(1);
+            return string.Format("{0}: {1}", noHighlightNickname, nickAndCount.Count);
+        }
+
+        protected ThanksContext GetNewContext()
         {
             var conn = SharpIrcBotUtil.GetDatabaseConnection(Config);
             return new ThanksContext(conn);
