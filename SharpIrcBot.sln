@@ -62,7 +62,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Allograph", "Plugins\Allogr
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TextCommands", "Plugins\TextCommands\TextCommands.csproj", "{50975992-4CB9-4877-8B0B-7B84EC88021D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dice", "Dice\Dice.csproj", "{FE45E799-BE4F-4701-96C3-88B13F391284}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dice", "Plugins\Dice\Dice.csproj", "{FE45E799-BE4F-4701-96C3-88B13F391284}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

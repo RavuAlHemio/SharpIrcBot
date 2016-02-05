@@ -31,11 +31,11 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="log4net, Version=1.2.15.0, Culture=neutral, PublicKeyToken=669e0ddf0bb1aa2a, processorArchitecture=MSIL">
-      <HintPath>..\packages\log4net.2.0.5\lib\net45-full\log4net.dll</HintPath>
+      <HintPath>..\..\packages\log4net.2.0.5\lib\net45-full\log4net.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Newtonsoft.Json, Version=8.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>..\packages\Newtonsoft.Json.8.0.2\lib\net45\Newtonsoft.Json.dll</HintPath>
+      <HintPath>..\..\packages\Newtonsoft.Json.8.0.2\lib\net45\Newtonsoft.Json.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="System" />
@@ -47,11 +47,11 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Libraries\SmartIrc4net\SmartIrc4net.csproj">
+    <ProjectReference Include="..\..\Libraries\SmartIrc4net\SmartIrc4net.csproj">
       <Project>{91d3003b-7e65-4eaf-8ee1-da43832e7a9c}</Project>
       <Name>SmartIrc4net</Name>
     </ProjectReference>
-    <ProjectReference Include="..\SharpIrcBot\SharpIrcBot.csproj">
+    <ProjectReference Include="..\..\SharpIrcBot\SharpIrcBot.csproj">
       <Project>{ee95358b-9655-41c6-a76c-113a6eb455f2}</Project>
       <Name>SharpIrcBot</Name>
     </ProjectReference>
