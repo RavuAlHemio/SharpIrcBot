@@ -15,6 +15,10 @@ namespace Dice
 
         public List<string> DecisionSplitters { get; set; }
 
+        public List<string> SpecialDecisionAnswers { get; set; }
+
+        public int SpecialDecisionAnswerPercent { get; set; }
+
         public int MaxRollCount { get; set; }
 
         public int MaxDiceCount { get; set; }
@@ -27,7 +31,9 @@ namespace Dice
             ObstinateAnswers = new List<string>();
             YesNoAnswers = new List<string>();
             DecisionSplitters = new List<string>();
+            SpecialDecisionAnswers = new List<string>();
 
+            SpecialDecisionAnswerPercent = 10;
             MaxRollCount = 16;
             MaxDiceCount = 1024;
             MaxSideCount = 1048576;

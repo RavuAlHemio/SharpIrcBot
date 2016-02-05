@@ -75,6 +75,19 @@ namespace Dice
                     ConnectionManager.SendChannelMessageFormat(args.Data.Channel, "{0}: Uhh... that looks like only one option to decide from.", args.Data.Nick);
                     return;
                 }
+
+                if (Config.SpecialDecisionAnswers.Count > 0)
+                {
+                    int percent = RNG.Next(100);
+                    if (percent < Config.SpecialDecisionAnswerPercent)
+                    {
+                        // special answer instead!
+                        var specialAnswer = Config.SpecialDecisionAnswers[RNG.Next(Config.SpecialDecisionAnswers.Count)];
+                        ConnectionManager.SendChannelMessageFormat(args.Data.Channel, "{0}: {1}", args.Data.Nick, specialAnswer);
+                        return;
+                    }
+                }
+
                 var options = decisionString.Split(new[] {splitter}, StringSplitOptions.None);
                 var chosenOption = options[RNG.Next(options.Length)];
                 ConnectionManager.SendChannelMessageFormat(args.Data.Channel, "{0}: {1}", args.Data.Nick, chosenOption);
