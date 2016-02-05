@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
@@ -15,7 +16,8 @@ namespace Dice
     {
         private static readonly ILog Logger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        public static readonly Regex DiceThrowRegex = new Regex("^!roll +(?<firstDice>[1-9][0-9]*)?d(?<firstSides>[1-9][0-9]*)(?:[, ]+(?<moreDice>[1-9][0-9]*)?d(?<moreSides>[1-9][0-9]*))*[ ]*$", RegexOptions.IgnoreCase);
+        public static readonly Regex DiceThrowRegex = new Regex("^!roll +(?<firstRoll>(?:[1-9][0-9]*)?d[1-9][0-9]*)(?:[, ]+(?<nextRoll>(?:[1-9][0-9]*)?d[1-9][0-9]*))*[ ]*$", RegexOptions.IgnoreCase);
+        public static readonly Regex RollRegex = new Regex("^(?<dice>[1-9][0-9]*)d(?<sides>[1-9][0-9]*)$", RegexOptions.IgnoreCase);
 
         protected ConnectionManager ConnectionManager { get; set; }
         protected DiceConfig Config { get; set; }
@@ -56,8 +58,11 @@ namespace Dice
             }
 
             var diceGroups = new List<DiceGroup>();
-            int? firstDice = SharpIrcBotUtil.MaybeParseInt(match.Groups["firstDice"].Value);
-            int? firstSides = SharpIrcBotUtil.MaybeParseInt(match.Groups["firstSides"].Value);
+            var firstRollMatch = RollRegex.Match(match.Groups["firstRoll"].Value);
+            Debug.Assert(firstRollMatch.Success);
+
+            int? firstDice = MaybeParseIntGroup(firstRollMatch.Groups["dice"], defaultValue: 1);
+            int? firstSides = SharpIrcBotUtil.MaybeParseInt(firstRollMatch.Groups["sides"].Value);
             if (!firstDice.HasValue || firstDice.Value > Config.MaxDiceCount)
             {
                 ConnectionManager.SendChannelMessageFormat(args.Data.Channel, "{0}: Too many dice.", args.Data.Nick);
@@ -70,12 +75,14 @@ namespace Dice
             }
             diceGroups.Add(new DiceGroup(firstDice.Value, firstSides.Value));
 
-            var moreDiceCaptures = match.Groups["moreDice"].Captures.OfType<Capture>();
-            var moreSidesCaptures = match.Groups["moreSides"].Captures.OfType<Capture>();
-            foreach (var nextDiceAndSides in moreDiceCaptures.Zip(moreSidesCaptures, Tuple.Create))
+            var nextRollCaptures = match.Groups["nextRoll"].Captures.OfType<Capture>();
+            foreach (var nextRoll in nextRollCaptures)
             {
-                int? nextDice = SharpIrcBotUtil.MaybeParseInt(nextDiceAndSides.Item1.Value);
-                int? nextSides = SharpIrcBotUtil.MaybeParseInt(nextDiceAndSides.Item2.Value);
+                var nextRollMatch = RollRegex.Match(nextRoll.Value);
+                Debug.Assert(nextRollMatch.Success);
+
+                int? nextDice = MaybeParseIntGroup(nextRollMatch.Groups["dice"], defaultValue: 1);
+                int? nextSides = SharpIrcBotUtil.MaybeParseInt(nextRollMatch.Groups["sides"].Value);
                 if (!nextDice.HasValue || nextDice.Value > Config.MaxDiceCount)
                 {
                     ConnectionManager.SendChannelMessageFormat(args.Data.Channel, "{0}: Too many dice.", args.Data.Nick);
@@ -126,6 +133,16 @@ namespace Dice
             var allRollsString = string.Join("; ", allRolls);
 
             ConnectionManager.SendChannelMessageFormat(args.Data.Channel, "{0}: {1}", args.Data.Nick, allRollsString);
+        }
+
+        protected static int? MaybeParseIntGroup(Group grp, int? defaultValue = null)
+        {
+            if (!grp.Success)
+            {
+                return defaultValue;
+            }
+
+            return SharpIrcBotUtil.MaybeParseInt(grp.Value);
         }
     }
 }
