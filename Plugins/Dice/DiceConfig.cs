@@ -11,6 +11,10 @@ namespace Dice
 
         public List<string> ObstinateAnswers { get; set; }
 
+        public List<string> YesNoAnswers { get; set; }
+
+        public List<string> DecisionSplitters { get; set; }
+
         public int MaxRollCount { get; set; }
 
         public int MaxDiceCount { get; set; }
@@ -21,6 +25,8 @@ namespace Dice
         {
             Channels = new HashSet<string>();
             ObstinateAnswers = new List<string>();
+            YesNoAnswers = new List<string>();
+            DecisionSplitters = new List<string>();
 
             MaxRollCount = 16;
             MaxDiceCount = 1024;

@@ -52,11 +52,37 @@ namespace Dice
             }
 
             var match = DiceThrowRegex.Match(args.Data.Message);
-            if (!match.Success)
+            if (match.Success)
             {
+                HandleDiceRoll(args, match);
                 return;
             }
 
+            if (args.Data.Message.StartsWith("!yn ", StringComparison.InvariantCultureIgnoreCase))
+            {
+                var yesNoAnswer = Config.YesNoAnswers[RNG.Next(Config.YesNoAnswers.Count)];
+                ConnectionManager.SendChannelMessageFormat(args.Data.Channel, "{0}: {1}", args.Data.Nick, yesNoAnswer);
+                return;
+            }
+
+            if (args.Data.Message.StartsWith("!decide ", StringComparison.InvariantCultureIgnoreCase) && Config.DecisionSplitters.Count > 0)
+            {
+                var decisionString = args.Data.Message.Substring(("!decide ").Length).Trim();
+
+                string splitter = Config.DecisionSplitters.FirstOrDefault(ds => decisionString.Contains(ds));
+                if (splitter == null)
+                {
+                    ConnectionManager.SendChannelMessageFormat(args.Data.Channel, "{0}: Uhh... that looks like only one option to decide from.", args.Data.Nick);
+                    return;
+                }
+                var options = decisionString.Split(new[] {splitter}, StringSplitOptions.None);
+                var chosenOption = options[RNG.Next(options.Length)];
+                ConnectionManager.SendChannelMessageFormat(args.Data.Channel, "{0}: {1}", args.Data.Nick, chosenOption);
+            }
+        }
+
+        protected void HandleDiceRoll(IrcEventArgs args, Match match)
+        {
             var diceGroups = new List<DiceGroup>();
             var firstRollMatch = RollRegex.Match(match.Groups["firstRoll"].Value);
             Debug.Assert(firstRollMatch.Success);
