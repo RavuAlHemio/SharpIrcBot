@@ -58,7 +58,7 @@ namespace Dice
                 return;
             }
 
-            if (args.Data.Message.StartsWith("!yn ", StringComparison.InvariantCultureIgnoreCase))
+            if (args.Data.Message.StartsWith("!yn ", StringComparison.InvariantCultureIgnoreCase) && Config.YesNoAnswers.Count > 0)
             {
                 var yesNoAnswer = Config.YesNoAnswers[RNG.Next(Config.YesNoAnswers.Count)];
                 ConnectionManager.SendChannelMessageFormat(args.Data.Channel, "{0}: {1}", args.Data.Nick, yesNoAnswer);
