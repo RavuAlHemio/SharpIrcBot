@@ -17,7 +17,7 @@ namespace Dice
         private static readonly ILog Logger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         public static readonly Regex DiceThrowRegex = new Regex("^!roll +(?<firstRoll>(?:[1-9][0-9]*)?d[1-9][0-9]*)(?:[, ]+(?<nextRoll>(?:[1-9][0-9]*)?d[1-9][0-9]*))*[ ]*$", RegexOptions.IgnoreCase);
-        public static readonly Regex RollRegex = new Regex("^(?<dice>[1-9][0-9]*)d(?<sides>[1-9][0-9]*)$", RegexOptions.IgnoreCase);
+        public static readonly Regex RollRegex = new Regex("^(?<dice>[1-9][0-9]*)?d(?<sides>[1-9][0-9]*)$", RegexOptions.IgnoreCase);
 
         protected ConnectionManager ConnectionManager { get; set; }
         protected DiceConfig Config { get; set; }
