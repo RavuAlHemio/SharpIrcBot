@@ -513,5 +513,21 @@ namespace SharpIrcBot
 
             return list;
         }
+
+        /// <summary>
+        /// Attempts to parse an integer with zero leniency (<see cref="NumberStyles.None"/>) in the invariant culture
+        /// <see cref="CultureInfo.InvariantCulture"/>.
+        /// </summary>
+        /// <param name="text">The text to attempt to parse as an integer.</param>
+        /// <returns>The parsed integer, or <c>null</c> if parsing failed.</returns>
+        public static int? MaybeParseInt(string text)
+        {
+            int ret;
+            if (int.TryParse(text, NumberStyles.None, CultureInfo.InvariantCulture, out ret))
+            {
+                return ret;
+            }
+            return null;
+        }
     }
 }
