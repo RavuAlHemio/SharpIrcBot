@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using log4net;
@@ -73,12 +75,81 @@ namespace TextCommands
 
             if (Config.CommandsResponses.ContainsKey(lowerBody))
             {
-                Logger.DebugFormat("{0} triggered {1} in {2}", message.Nick, lowerBody, message.Channel);
-                var response = Config.CommandsResponses[lowerBody].Replace("{{NICKNAME}}", message.Nick);
-                foreach (var line in response.Split('\n').Where(l => l.Length > 0))
+                Output(respond, lowerBody, message.Nick, message.Channel, Config.CommandsResponses[lowerBody], message.Nick);
+                return;
+            }
+
+            var channelNicksEnumerable = ConnectionManager
+                .Client
+                .GetChannel(args.Data.Channel)
+                ?.Users
+                .OfType<DictionaryEntry>()
+                .Select(de => (string)de.Key);
+            var channelNicks = (channelNicksEnumerable == null)
+                ? new HashSet<string>()
+                : new HashSet<string>(channelNicksEnumerable);
+
+            foreach (var nickCommandResponse in Config.NicknamableCommandsResponses)
+            {
+                if (!lowerBody.StartsWith(nickCommandResponse.Key))
                 {
-                    respond(line);
+                    // not this command
+                    continue;
                 }
+
+                if (lowerBody.TrimEnd() == nickCommandResponse.Key)
+                {
+                    // command on its own; trigger for self
+                    Output(respond, nickCommandResponse.Key, message.Nick, message.Channel, nickCommandResponse.Value, message.Nick);
+                    return;
+                }
+
+                // trigger for someone else?
+                var targetedNick = lowerBody.Substring(nickCommandResponse.Key.Length).Trim();
+                foreach (string channelNick in channelNicks)
+                {
+                    if (channelNick.ToLowerInvariant() == targetedNick)
+                    {
+                        // nickname directly from user list
+                        Output(respond, nickCommandResponse.Key, message.Nick, message.Channel, nickCommandResponse.Value, channelNick);
+                        return;
+                    }
+                }
+
+                // registered nickname?
+                var registeredTargetNick = ConnectionManager.RegisteredNameForNick(targetedNick);
+                if (registeredTargetNick == null)
+                {
+                    // nope, targeted nick is not registered
+                    return;
+                }
+
+                foreach (string channelNick in channelNicks)
+                {
+                    var registeredChannelNick = ConnectionManager.RegisteredNameForNick(channelNick);
+                    if (registeredChannelNick == null)
+                    {
+                        // this channel nickname is not registered
+                        continue;
+                    }
+
+                    if (registeredTargetNick == registeredChannelNick)
+                    {
+                        // registered nicknames match
+                        Output(respond, nickCommandResponse.Key, message.Nick, message.Channel, nickCommandResponse.Value, channelNick);
+                        return;
+                    }
+                }
+            }
+        }
+
+        protected void Output(Action<string> respond, string command, string author, string location, string targetBody, string targetNick)
+        {
+            Logger.DebugFormat("{0} triggered {1} in {2}", author, command, location);
+            var response = targetBody.Replace("{{NICKNAME}}", targetNick);
+            foreach (var line in response.Split('\n').Where(l => l.Length > 0))
+            {
+                respond(line);
             }
         }
     }
