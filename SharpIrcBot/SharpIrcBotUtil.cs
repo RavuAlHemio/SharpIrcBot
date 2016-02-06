@@ -14,6 +14,7 @@ using log4net.Core;
 using log4net.Layout;
 using log4net.Repository.Hierarchy;
 using Newtonsoft.Json.Linq;
+using SharpIrcBot.Config;
 
 namespace SharpIrcBot
 {

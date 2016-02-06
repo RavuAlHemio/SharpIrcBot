@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Reflection;
 using Newtonsoft.Json.Linq;
+using SharpIrcBot.Config;
 
 namespace SharpIrcBot
 {

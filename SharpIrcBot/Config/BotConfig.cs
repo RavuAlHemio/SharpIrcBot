@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-namespace SharpIrcBot
+namespace SharpIrcBot.Config
 {
     [JsonObject(MemberSerialization.OptOut)]
     public class BotConfig

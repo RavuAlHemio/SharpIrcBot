@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading;
 using log4net;
 using Meebey.SmartIrc4net;
+using SharpIrcBot.Config;
 using Timer = System.Timers.Timer;
 
 namespace SharpIrcBot
