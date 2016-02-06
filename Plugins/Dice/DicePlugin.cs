@@ -16,8 +16,36 @@ namespace Dice
     {
         private static readonly ILog Logger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        public static readonly Regex DiceThrowRegex = new Regex("^!roll +(?<firstRoll>(?:[1-9][0-9]*)?d[1-9][0-9]*)(?:[, ]+(?<nextRoll>(?:[1-9][0-9]*)?d[1-9][0-9]*))*[ ]*$", RegexOptions.IgnoreCase);
-        public static readonly Regex RollRegex = new Regex("^(?<dice>[1-9][0-9]*)?d(?<sides>[1-9][0-9]*)$", RegexOptions.IgnoreCase);
+        public static readonly Regex DiceThrowRegex = new Regex(
+            "^" +
+            "!roll +" +
+            "(?<firstRoll>" +
+                "(?:[1-9][0-9]*)?" + // number of dice
+                "d" +
+                "[1-9][0-9]*" + // number of sides
+                "(?:[+-][1-9][0-9]*)?" + // add a value?
+            ")" +
+            "(?:" +
+                "[, ]+" +
+                "(?<nextRoll>" +
+                    "(?:[1-9][0-9]*)?" + // number of dice
+                    "d" +
+                    "[1-9][0-9]*" + // number of sides
+                    "(?:[+-][1-9][0-9]*)?" + // add a value?
+                ")" +
+            ")*" +
+            "[ ]*$",
+            RegexOptions.IgnoreCase
+        );
+        public static readonly Regex RollRegex = new Regex(
+            "^" +
+            "(?<dice>[1-9][0-9]*)?" +
+            "d" +
+            "(?<sides>[1-9][0-9]*)" +
+            "(?<addvalue>[+-][1-9][0-9]*)?" +
+            "$",
+            RegexOptions.IgnoreCase
+        );
 
         protected ConnectionManager ConnectionManager { get; set; }
         protected DiceConfig Config { get; set; }
@@ -94,25 +122,42 @@ namespace Dice
             }
         }
 
+        protected DiceGroup ObtainDiceGroup(Match rollMatch, string channel, string senderNick)
+        {
+            int? dice = MaybeParseIntGroup(rollMatch.Groups["dice"], defaultValue: 1);
+            int? sides = SharpIrcBotUtil.MaybeParseInt(rollMatch.Groups["sides"].Value);
+            long? addValue = MaybeParseLongGroup(rollMatch.Groups["addValue"], defaultValue: 0);
+            if (!dice.HasValue || dice.Value > Config.MaxDiceCount)
+            {
+                ConnectionManager.SendChannelMessageFormat(channel, "{0}: Too many dice.", senderNick);
+                return null;
+            }
+            if (!sides.HasValue || sides.Value > Config.MaxSideCount)
+            {
+                ConnectionManager.SendChannelMessageFormat(channel, "{0}: Too many sides.", senderNick);
+                return null;
+            }
+            if (!addValue.HasValue)
+            {
+                ConnectionManager.SendChannelMessageFormat(channel, "{0}: Value to add too large.", senderNick);
+                return null;
+            }
+            return new DiceGroup(dice.Value, sides.Value, addValue.Value);
+        }
+
         protected void HandleDiceRoll(IrcEventArgs args, Match match)
         {
             var diceGroups = new List<DiceGroup>();
             var firstRollMatch = RollRegex.Match(match.Groups["firstRoll"].Value);
             Debug.Assert(firstRollMatch.Success);
 
-            int? firstDice = MaybeParseIntGroup(firstRollMatch.Groups["dice"], defaultValue: 1);
-            int? firstSides = SharpIrcBotUtil.MaybeParseInt(firstRollMatch.Groups["sides"].Value);
-            if (!firstDice.HasValue || firstDice.Value > Config.MaxDiceCount)
+            var firstDiceGroup = ObtainDiceGroup(firstRollMatch, args.Data.Channel, args.Data.Nick);
+            if (firstDiceGroup == null)
             {
-                ConnectionManager.SendChannelMessageFormat(args.Data.Channel, "{0}: Too many dice.", args.Data.Nick);
+                // error occurred and reported; bail out
                 return;
             }
-            if (!firstSides.HasValue || firstSides.Value > Config.MaxSideCount)
-            {
-                ConnectionManager.SendChannelMessageFormat(args.Data.Channel, "{0}: Too many sides.", args.Data.Nick);
-                return;
-            }
-            diceGroups.Add(new DiceGroup(firstDice.Value, firstSides.Value));
+            diceGroups.Add(firstDiceGroup);
 
             var nextRollCaptures = match.Groups["nextRoll"].Captures.OfType<Capture>();
             foreach (var nextRoll in nextRollCaptures)
@@ -120,19 +165,13 @@ namespace Dice
                 var nextRollMatch = RollRegex.Match(nextRoll.Value);
                 Debug.Assert(nextRollMatch.Success);
 
-                int? nextDice = MaybeParseIntGroup(nextRollMatch.Groups["dice"], defaultValue: 1);
-                int? nextSides = SharpIrcBotUtil.MaybeParseInt(nextRollMatch.Groups["sides"].Value);
-                if (!nextDice.HasValue || nextDice.Value > Config.MaxDiceCount)
+                var nextDiceGroup = ObtainDiceGroup(nextRollMatch, args.Data.Channel, args.Data.Nick);
+                if (nextDiceGroup == null)
                 {
-                    ConnectionManager.SendChannelMessageFormat(args.Data.Channel, "{0}: Too many dice.", args.Data.Nick);
+                    // error occurred and reported; bail out
                     return;
                 }
-                if (!nextSides.HasValue || nextSides.Value > Config.MaxSideCount)
-                {
-                    ConnectionManager.SendChannelMessageFormat(args.Data.Channel, "{0}: Too many sides.", args.Data.Nick);
-                    return;
-                }
-                diceGroups.Add(new DiceGroup(nextDice.Value, nextSides.Value));
+                diceGroups.Add(nextDiceGroup);
 
                 if (diceGroups.Count > Config.MaxRollCount)
                 {
@@ -142,7 +181,7 @@ namespace Dice
             }
 
             // special-case 2d1
-            if (diceGroups.Count == 1 && diceGroups[0].DieCount == 2 && diceGroups[0].SideCount == 1)
+            if (diceGroups.Count == 1 && diceGroups[0].DieCount == 2 && diceGroups[0].SideCount == 1 && diceGroups[0].AddValue == 0)
             {
                 ConnectionManager.SendChannelAction(args.Data.Channel, "rolls its eyes");
                 return;
@@ -162,7 +201,7 @@ namespace Dice
                     }
                     else
                     {
-                        int roll = RNG.Next(diceGroup.SideCount) + 1;
+                        long roll = RNG.Next(diceGroup.SideCount) + 1 + diceGroup.AddValue;
                         theseRolls.Add(roll.ToString(CultureInfo.InvariantCulture));
                     }
                 }
@@ -181,7 +220,17 @@ namespace Dice
                 return defaultValue;
             }
 
-            return SharpIrcBotUtil.MaybeParseInt(grp.Value);
+            return SharpIrcBotUtil.MaybeParseInt(grp.Value, NumberStyles.AllowLeadingSign);
+        }
+
+        protected static long? MaybeParseLongGroup(Group grp, long? defaultValue = null)
+        {
+            if (!grp.Success)
+            {
+                return defaultValue;
+            }
+
+            return SharpIrcBotUtil.MaybeParseLong(grp.Value, NumberStyles.AllowLeadingSign);
         }
     }
 }
