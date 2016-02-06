@@ -81,6 +81,7 @@ namespace SharpIrcBot
             Client.OnRegistered += HandleRegistered;
             Client.OnPart += HandlePart;
             Client.OnQuit += HandleQuit;
+            Client.OnInvite += PossiblyReturnToChannel;
             Timers = new TimerTrigger();
             Canceller = new CancellationTokenSource();
         }
@@ -284,6 +285,15 @@ namespace SharpIrcBot
         protected virtual void HandlePart(object sender, PartEventArgs e)
         {
             OnUserLeftChannel(e);
+        }
+
+        protected virtual void PossiblyReturnToChannel(object sender, InviteEventArgs e)
+        {
+            if (Config.RejoinOnInvite && Config.AutoJoinChannels.Contains(e.Channel))
+            {
+                // alright, return to that channel
+                Client.RfcJoin(e.Channel);
+            }
         }
 
         protected virtual MessageFlags FlagsForNick([CanBeNull] string nick)
