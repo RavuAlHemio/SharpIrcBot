@@ -1,15 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using JetBrains.Annotations;
 
 namespace SharpIrcBot
 {
     public class FilteringSetWrapper<T> : ISet<T>
     {
+        [NotNull]
         private ISet<T> _innerSet;
+        [NotNull]
         private Func<T, T> _transformFunc;
 
-        public FilteringSetWrapper(ISet<T> innerSet, Func<T, T> transformFunc)
+        public FilteringSetWrapper([NotNull] ISet<T> innerSet, [NotNull] Func<T, T> transformFunc)
         {
             _innerSet = innerSet;
             _transformFunc = transformFunc;

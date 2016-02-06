@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Net;
+using JetBrains.Annotations;
 
 namespace SharpIrcBot
 {
     public class CookieWebClient : WebClient
     {
+        [NotNull]
         public CookieContainer CookieJar { get; set; }
         public TimeSpan Timeout { get; set; }
 

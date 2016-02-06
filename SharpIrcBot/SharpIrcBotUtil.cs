@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data.Common;
-using System.Diagnostics.Contracts;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using JetBrains.Annotations;
 using log4net;
 using log4net.Appender;
 using log4net.Config;
@@ -21,10 +21,13 @@ namespace SharpIrcBot
     public static class SharpIrcBotUtil
     {
         public const string DefaultLogFormat = "%date{yyyy-MM-dd HH:mm:ss} [%15.15thread] %-5level %30.30logger - %message%newline";
+        [NotNull]
         public static readonly Encoding Utf8NoBom = new UTF8Encoding(false, true);
+        [NotNull]
         public static readonly ISet<char> UrlSafeChars = new HashSet<char>("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.");
 
-        public static BotConfig LoadConfig(string configPath = null)
+        [NotNull]
+        public static BotConfig LoadConfig([CanBeNull] string configPath = null)
         {
             if (configPath == null)
             {
@@ -33,6 +36,7 @@ namespace SharpIrcBot
             return new BotConfig(JObject.Parse(File.ReadAllText(configPath, Encoding.UTF8)));
         }
 
+        [NotNull]
         public static string AppDirectory
         {
             get { return Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath); }
@@ -43,7 +47,8 @@ namespace SharpIrcBot
         /// </summary>
         /// <returns>The code points.</returns>
         /// <param name="str">The string to convert to code points.</param>
-        public static IEnumerable<string> StringToCodePointStrings(string str)
+        [NotNull]
+        public static IEnumerable<string> StringToCodePointStrings([NotNull] string str)
         {
             char precedingLeadSurrogate = (char)0;
             bool awaitingTrailSurrogate = false;
@@ -79,7 +84,8 @@ namespace SharpIrcBot
             }
         }
 
-        public static string RemoveControlCharactersAndTrim(string text)
+        [NotNull]
+        public static string RemoveControlCharactersAndTrim([NotNull] string text)
         {
             var ret = new StringBuilder();
             foreach (var cp in StringToCodePointStrings(text))
@@ -99,7 +105,8 @@ namespace SharpIrcBot
         /// </summary>
         /// <returns>The C# string literal.</returns>
         /// <param name="str">The string to return as a C# literal.</param>
-        public static string LiteralString(string str)
+        [NotNull]
+        public static string LiteralString([NotNull] string str)
         {
             var ret = new StringBuilder("\"");
             foreach (var pStr in StringToCodePointStrings(str))
@@ -157,7 +164,7 @@ namespace SharpIrcBot
             return ret.ToString();
         }
 
-        [Pure]
+        [Pure, CanBeNull]
         private static byte? FromHexDigit(char c)
         {
             if (c >= '0' && c <= '9')
@@ -180,7 +187,8 @@ namespace SharpIrcBot
         /// </summary>
         /// <param name="str">The string literal to unescape.</param>
         /// <returns>The unescaped string.</returns>
-        public static string UnescapeString(string str)
+        [NotNull]
+        public static string UnescapeString([NotNull] string str)
         {
             var ret = new StringBuilder(str.Length);
             // 0: normal, 1: after backslash, 2-9: digits of \U, 6-9: digits of \u, 8-9: digits of \x
@@ -368,14 +376,15 @@ namespace SharpIrcBot
             return DateTime.SpecifyKind(dt, DateTimeKind.Utc).ToLocalTime();
         }
 
-        public static DbConnection GetDatabaseConnection(IDatabaseModuleConfig config)
+        [NotNull]
+        public static DbConnection GetDatabaseConnection([NotNull] IDatabaseModuleConfig config)
         {
             var conn = DbProviderFactories.GetFactory(config.DatabaseProvider).CreateConnection();
             conn.ConnectionString = config.DatabaseConnectionString;
             return conn;
         }
 
-        public static void SetupFileLogging(Level level = null)
+        public static void SetupFileLogging([CanBeNull] Level level = null)
         {
             var logConfFile = new FileInfo(Path.Combine(AppDirectory, "LogConf.xml"));
             if (logConfFile.Exists)
@@ -409,7 +418,7 @@ namespace SharpIrcBot
             hierarchy.Configured = true;
         }
 
-        public static void SetupConsoleLogging(Level level = null)
+        public static void SetupConsoleLogging([CanBeNull] Level level = null)
         {
             var logConfFile = new FileInfo(Path.Combine(AppDirectory, "LogConf.xml"));
             if (logConfFile.Exists)
@@ -448,7 +457,8 @@ namespace SharpIrcBot
         /// <param name="charset">The charset being used.</param>
         /// <param name="spaceAsPlus">If true, encodes spaces (U+0020) as pluses (U+002B).
         /// If false, encodes spaces as the hex escape "%20".</param>
-        public static string UrlEncode(string data, Encoding charset, bool spaceAsPlus = false)
+        [CanBeNull]
+        public static string UrlEncode([CanBeNull] string data, [CanBeNull] Encoding charset, bool spaceAsPlus = false)
         {
             var ret = new StringBuilder();
             foreach (string ps in StringToCodePointStrings(data))
@@ -491,7 +501,8 @@ namespace SharpIrcBot
         /// <param name="itemsToShuffle">The enumerable whose items to return in a shuffled list.</param>
         /// <param name="rng">The random number generator to use, or <c>null</c> to create one.</param>
         /// <returns>List containing the enumerable's items in shuffled order.</returns>
-        public static List<T> ToShuffledList<T>(this IEnumerable<T> itemsToShuffle, Random rng = null)
+        [CanBeNull]
+        public static List<T> ToShuffledList<T>(this IEnumerable<T> itemsToShuffle, [CanBeNull] Random rng = null)
         {
             if (rng == null)
             {
@@ -521,7 +532,8 @@ namespace SharpIrcBot
         /// </summary>
         /// <param name="text">The text to attempt to parse as an integer.</param>
         /// <returns>The parsed integer, or <c>null</c> if parsing failed.</returns>
-        public static int? MaybeParseInt(string text)
+        [CanBeNull]
+        public static int? MaybeParseInt([NotNull] string text)
         {
             int ret;
             if (int.TryParse(text, NumberStyles.None, CultureInfo.InvariantCulture, out ret))

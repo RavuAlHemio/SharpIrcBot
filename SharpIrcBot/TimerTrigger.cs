@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
+using JetBrains.Annotations;
 using log4net;
 
 namespace SharpIrcBot
@@ -21,7 +22,7 @@ namespace SharpIrcBot
             _cancelSource = new CancellationTokenSource();
         }
 
-        public void Register(DateTimeOffset when, Action what)
+        public void Register(DateTimeOffset when, [NotNull] Action what)
         {
             lock (_whenWhat)
             {

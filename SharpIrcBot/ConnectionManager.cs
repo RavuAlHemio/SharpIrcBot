@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading;
+using JetBrains.Annotations;
 using log4net;
 using Meebey.SmartIrc4net;
 using SharpIrcBot.Config;
@@ -20,8 +21,11 @@ namespace SharpIrcBot
         public readonly IrcClient Client;
         public readonly TimerTrigger Timers;
 
+        [CanBeNull]
         protected Thread IrcThread;
+        [NotNull]
         protected CancellationTokenSource Canceller;
+        [NotNull, ItemNotNull]
         protected HashSet<string> SyncedChannels;
 
         public event SharpIrcBotEventHandler<IrcEventArgs> ChannelMessage;
@@ -282,7 +286,7 @@ namespace SharpIrcBot
             OnUserLeftChannel(e);
         }
 
-        protected virtual MessageFlags FlagsForNick(string nick)
+        protected virtual MessageFlags FlagsForNick([CanBeNull] string nick)
         {
             if (nick == null)
             {
@@ -467,7 +471,7 @@ namespace SharpIrcBot
             }
         }
 
-        public string RegisteredNameForNick(string nick)
+        public string RegisteredNameForNick([NotNull] string nick)
         {
             // perform nick mapping
             var eventArgs = new NickMappingEventArgs(nick);
@@ -477,7 +481,8 @@ namespace SharpIrcBot
         }
 
         /// <remarks><paramref name="words"/> will be modified.</remarks>
-        protected string GetLongestWordPrefix(IList<string> words, int length = 230)
+        [NotNull]
+        protected string GetLongestWordPrefix([NotNull] IList<string> words, int length = 230)
         {
             if (words.Count == 0)
             {
@@ -525,7 +530,8 @@ namespace SharpIrcBot
             return ret;
         }
 
-        public List<string> SplitMessageToLength(string message, int length = 479)
+        [NotNull]
+        public List<string> SplitMessageToLength([NotNull] string message, int length = 479)
         {
             // normalize newlines
             message = message.Replace("\r\n", "\n").Replace("\r", "\n");
@@ -550,7 +556,7 @@ namespace SharpIrcBot
             return lines;
         }
 
-        public void SendChannelMessage(string channel, string message)
+        public void SendChannelMessage([NotNull] string channel, [NotNull] string message)
         {
             foreach (var line in SplitMessageToLength(message, MaxMessageLength))
             {
@@ -559,12 +565,12 @@ namespace SharpIrcBot
             }
         }
 
-        public void SendChannelMessageFormat(string channel, string format, params object[] args)
+        public void SendChannelMessageFormat([NotNull] string channel, [NotNull] string format, [NotNull, ItemCanBeNull] params object[] args)
         {
             SendChannelMessage(channel, string.Format(format, args));
         }
 
-        public void SendChannelAction(string channel, string message)
+        public void SendChannelAction([NotNull] string channel, [NotNull] string message)
         {
             foreach (var line in SplitMessageToLength(message, MaxMessageLength))
             {
@@ -573,12 +579,12 @@ namespace SharpIrcBot
             }
         }
 
-        public void SendChannelActionFormat(string channel, string format, params object[] args)
+        public void SendChannelActionFormat([NotNull] string channel, [NotNull] string format, [NotNull, ItemCanBeNull] params object[] args)
         {
             SendChannelAction(channel, string.Format(format, args));
         }
 
-        public void SendChannelNotice(string channel, string message)
+        public void SendChannelNotice([NotNull] string channel, [NotNull] string message)
         {
             foreach (var line in SplitMessageToLength(message, MaxMessageLength))
             {
@@ -587,12 +593,12 @@ namespace SharpIrcBot
             }
         }
 
-        public void SendChannelNoticeFormat(string channel, string format, params object[] args)
+        public void SendChannelNoticeFormat([NotNull] string channel, [NotNull] string format, [NotNull, ItemCanBeNull] params object[] args)
         {
             SendChannelNotice(channel, string.Format(format, args));
         }
 
-        public void SendQueryMessage(string nick, string message)
+        public void SendQueryMessage([NotNull] string nick, [NotNull] string message)
         {
             foreach (var line in SplitMessageToLength(message, MaxMessageLength))
             {
@@ -601,12 +607,12 @@ namespace SharpIrcBot
             }
         }
 
-        public void SendQueryMessageFormat(string nick, string format, params object[] args)
+        public void SendQueryMessageFormat([NotNull] string nick, [NotNull] string format, [NotNull, ItemCanBeNull] params object[] args)
         {
             SendQueryMessage(nick, string.Format(format, args));
         }
 
-        public void SendQueryAction(string nick, string message)
+        public void SendQueryAction([NotNull] string nick, [NotNull] string message)
         {
             foreach (var line in SplitMessageToLength(message, MaxMessageLength))
             {
@@ -615,12 +621,12 @@ namespace SharpIrcBot
             }
         }
 
-        public void SendQueryActionFormat(string nick, string format, params object[] args)
+        public void SendQueryActionFormat([NotNull] string nick, [NotNull] string format, [NotNull, ItemCanBeNull] params object[] args)
         {
             SendQueryAction(nick, string.Format(format, args));
         }
 
-        public void SendQueryNotice(string nick, string message)
+        public void SendQueryNotice([NotNull] string nick, [NotNull] string message)
         {
             foreach (var line in SplitMessageToLength(message, MaxMessageLength))
             {
@@ -629,12 +635,12 @@ namespace SharpIrcBot
             }
         }
 
-        public void SendQueryNoticeFormat(string nick, string format, params object[] args)
+        public void SendQueryNoticeFormat([NotNull] string nick, [NotNull] string format, [NotNull, ItemCanBeNull] params object[] args)
         {
             SendQueryNotice(nick, string.Format(format, args));
         }
 
-        public void SendRawCommand(string cmd)
+        public void SendRawCommand([NotNull] string cmd)
         {
             Client.WriteLine(cmd);
         }

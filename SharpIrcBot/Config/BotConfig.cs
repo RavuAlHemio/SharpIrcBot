@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using JetBrains.Annotations;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -8,26 +9,38 @@ namespace SharpIrcBot.Config
     [JsonObject(MemberSerialization.OptOut)]
     public class BotConfig
     {
+        [NotNull]
         public string ServerHostname { get; set; }
         public int ServerPort { get; set; }
         public bool UseTls { get; set; }
         public bool VerifyTlsCertificate { get; set; }
 
+        [NotNull]
         public string Nickname { get; set; }
+        [NotNull]
         public string Username { get; set; }
+        [NotNull]
         public string DisplayName { get; set; }
+        [CanBeNull]
         public string ServerPassword { get; set; }
+        [NotNull]
         public string Encoding { get; set; }
 
         public int SendDelay { get; set; }
         public double CooldownIncreaseThresholdMinutes { get; set; }
+        [NotNull, ItemNotNull]
         public List<string> AutoConnectCommands { get; set; }
+        [NotNull, ItemNotNull]
         public List<string> AutoJoinChannels { get; set; }
+        [NotNull, ItemNotNull]
         public List<PluginConfig> Plugins { get; set; }
 
+        [NotNull]
         public string CtcpVersionResponse { get; set; }
+        [NotNull]
         public string CtcpFingerResponse { get; set; }
 
+        [NotNull, ItemNotNull]
         public ISet<string> BannedUsers { get; set; }
 
         public BotConfig(JObject obj)
