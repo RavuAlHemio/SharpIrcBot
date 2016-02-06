@@ -42,7 +42,7 @@ namespace Dice
             "(?<dice>[1-9][0-9]*)?" +
             "d" +
             "(?<sides>[1-9][0-9]*)" +
-            "(?<addvalue>[+-][1-9][0-9]*)?" +
+            "(?<addValue>[+-][1-9][0-9]*)?" +
             "$",
             RegexOptions.IgnoreCase
         );
