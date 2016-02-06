@@ -527,16 +527,33 @@ namespace SharpIrcBot
         }
 
         /// <summary>
-        /// Attempts to parse an integer with zero leniency (<see cref="NumberStyles.None"/>) in the invariant culture
-        /// <see cref="CultureInfo.InvariantCulture"/>.
+        /// Attempts to parse an integer in the invariant culture <see cref="CultureInfo.InvariantCulture"/>.
         /// </summary>
         /// <param name="text">The text to attempt to parse as an integer.</param>
+        /// <param name="numberStyles">Number styles to allow.</param>
         /// <returns>The parsed integer, or <c>null</c> if parsing failed.</returns>
         [CanBeNull]
-        public static int? MaybeParseInt([NotNull] string text)
+        public static int? MaybeParseInt([NotNull] string text, NumberStyles numberStyles = NumberStyles.None)
         {
             int ret;
-            if (int.TryParse(text, NumberStyles.None, CultureInfo.InvariantCulture, out ret))
+            if (int.TryParse(text, numberStyles, CultureInfo.InvariantCulture, out ret))
+            {
+                return ret;
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// Attempts to parse a long integer in the invariant culture <see cref="CultureInfo.InvariantCulture"/>.
+        /// </summary>
+        /// <param name="text">The text to attempt to parse as an integer.</param>
+        /// <param name="numberStyles">Number styles to allow.</param>
+        /// <returns>The parsed integer, or <c>null</c> if parsing failed.</returns>
+        [CanBeNull]
+        public static long? MaybeParseLong([NotNull] string text, NumberStyles numberStyles = NumberStyles.None)
+        {
+            long ret;
+            if (long.TryParse(text, numberStyles, CultureInfo.InvariantCulture, out ret))
             {
                 return ret;
             }
