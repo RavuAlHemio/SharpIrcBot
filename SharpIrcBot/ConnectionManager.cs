@@ -284,6 +284,11 @@ namespace SharpIrcBot
 
         protected virtual MessageFlags FlagsForNick(string nick)
         {
+            if (nick == null)
+            {
+                return MessageFlags.None;
+            }
+
             if (Config.BannedUsers.Contains(nick))
             {
                 return MessageFlags.UserBanned;
