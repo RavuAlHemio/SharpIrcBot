@@ -9,6 +9,7 @@ namespace Messenger.ORM
         public DbSet<MessageOnRetainer> MessagesOnRetainer { get; set; }
         public DbSet<ReplayableMessage> ReplayableMessages { get; set; }
         public DbSet<IgnoreEntry> IgnoreList { get; set; }
+        public DbSet<Quiescence> Quiescences { get; set; }
 
         static MessengerContext()
         {

@@ -22,6 +22,8 @@ namespace Messenger
         private static readonly Regex DeliverMessageRegex = new Regex("^[ ]*!deliver(?:msg|mail)[ ]+([1-9][0-9]*)[ ]*$");
         private static readonly Regex ReplayMessageRegex = new Regex("^[ ]*!replay(?:msg|mail)[ ]+([1-9][0-9]*)[ ]*$");
         private static readonly Regex IgnoreMessageRegex = new Regex("^[ ]*!((?:un)?ignore)(?:msg|mail)[ ]+([^ ]+)[ ]*$");
+        private static readonly Regex QuiesceRegex = new Regex("^[ ]*!(?:msg|mail)gone[ ]+(?<messageCount>[1-9][0-9]*)[ ]+(?<durationHours>[1-9][0-9]*)h[ ]*$");
+        private static readonly Regex UnQuiesceRegex = new Regex("^[ ]*!un(?:msg|mail)gone[ ]*$");
 
         protected MessengerConfig Config;
         protected ConnectionManager ConnectionManager;
@@ -441,6 +443,135 @@ namespace Messenger
             }
         }
 
+        protected void PotentialQuiesceRequest(IrcMessageData message)
+        {
+            var match = QuiesceRegex.Match(message.Message);
+            if (!match.Success)
+            {
+                return;
+            }
+
+            int lastMessageCount, hoursToSkip;
+            if (int.TryParse(match.Groups["messageCount"].Value, NumberStyles.None, CultureInfo.InvariantCulture, out lastMessageCount))
+            {
+                ConnectionManager.SendChannelMessageFormat(
+                    message.Channel,
+                    "{0}: That\u2019s way too many messages.",
+                    message.Nick
+                );
+                return;
+            }
+
+            const string tooManyHoursFormat = "{0}: I seriously doubt you\u2019ll live that long...";
+            if (int.TryParse(match.Groups["hoursToSkip"].Value, NumberStyles.None, CultureInfo.InvariantCulture, out hoursToSkip))
+            {
+                ConnectionManager.SendChannelMessageFormat(
+                    message.Channel,
+                    tooManyHoursFormat,
+                    message.Nick
+                );
+                return;
+            }
+
+            var quiesceUserLowercase = (ConnectionManager.RegisteredNameForNick(message.Nick) ?? message.Nick).ToLowerInvariant();
+
+            // calculate end time
+            DateTime endTime;
+            try
+            {
+                endTime = DateTime.UtcNow.AddHours(hoursToSkip);
+            }
+            catch (ArgumentOutOfRangeException)
+            {
+                ConnectionManager.SendChannelMessageFormat(
+                    message.Channel,
+                    tooManyHoursFormat,
+                    message.Nick
+                );
+                return;
+            }
+
+            int? tooFewCount = null;
+            using (var ctx = GetNewContext())
+            {
+                // add quiescence item
+                ctx.Quiescences.Add(new Quiescence
+                {
+                    UserLowercase = quiesceUserLowercase,
+                    EndTimestamp = endTime
+                });
+                ctx.SaveChanges();
+
+                // shunt chosen number of messages from replayable back to regular
+                List<ReplayableMessage> replayables = ctx.ReplayableMessages
+                    .Where(m => m.RecipientLowercase == quiesceUserLowercase)
+                    .OrderByDescending(m => m.ID)
+                    .Take(lastMessageCount)
+                    .ToList();
+                if (replayables.Count < lastMessageCount)
+                {
+                    tooFewCount = replayables.Count;
+                }
+                ctx.Messages.AddRange(replayables.Select(rm => new Message(rm)));
+                ctx.ReplayableMessages.RemoveRange(replayables);
+                ctx.SaveChanges();
+            }
+
+            if (tooFewCount.HasValue)
+            {
+                ConnectionManager.SendChannelMessageFormat(
+                    message.Channel,
+                    "{0}: Okay, I won\u2019t bug you until {1}, but I only remembered and requeued the last {2} messages...",
+                    message.Nick,
+                    endTime.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture),
+                    tooFewCount.Value
+                );
+            }
+            else
+            {
+                ConnectionManager.SendChannelMessageFormat(
+                    message.Channel,
+                    "{0}: Okay, I won\u2019t bug you until {1}, and I requeued your last {2} messages.",
+                    message.Nick,
+                    endTime.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture),
+                    lastMessageCount
+                );
+            }
+        }
+
+        protected void PotentialUnquiesceRequest(IrcMessageData message)
+        {
+            var match = UnQuiesceRegex.Match(message.Message);
+            if (!match.Success)
+            {
+                return;
+            }
+
+            var unquiesceUserLowercase = (ConnectionManager.RegisteredNameForNick(message.Nick) ?? message.Nick).ToLowerInvariant();
+            using (var ctx = GetNewContext())
+            {
+                var quiescence = ctx.Quiescences
+                    .FirstOrDefault(q => q.UserLowercase == unquiesceUserLowercase);
+                if (quiescence == null)
+                {
+                    ConnectionManager.SendChannelMessageFormat(
+                        message.Channel,
+                        "{0}: You never really were gone...",
+                        message.Nick
+                    );
+                    return;
+                }
+
+                ctx.Quiescences.Remove(quiescence);
+            }
+
+            ConnectionManager.SendChannelMessageFormat(
+                message.Channel,
+                "{0}: Welcome back!",
+                message.Nick
+            );
+        }
+
         private MessengerContext GetNewContext()
         {
             var conn = SharpIrcBotUtil.GetDatabaseConnection(Config);
@@ -481,6 +612,8 @@ namespace Messenger
                 PotentialMessageSend(message);
                 PotentialReplayRequest(message);
                 PotentialIgnoreListRequest(message);
+                PotentialQuiesceRequest(message);
+                PotentialUnquiesceRequest(message);
             }
 
             PotentialDeliverRequest(message);
@@ -497,6 +630,23 @@ namespace Messenger
             List<Message> messages;
             using (var ctx = GetNewContext())
             {
+                var quiescence = ctx.Quiescences
+                    .FirstOrDefault(q => q.UserLowercase == senderLower);
+                if (quiescence != null)
+                {
+                    if (quiescence.EndTimestamp > DateTime.Now)
+                    {
+                        // active quiescence; don't deliver yet
+                        return;
+                    }
+                    else
+                    {
+                        // delete this quiescence; it is outdated
+                        ctx.Quiescences.Remove(quiescence);
+                        ctx.SaveChanges();
+                    }
+                }
+
                 messages = ctx.Messages
                     .Where(m => m.RecipientLowercase == senderLower)
                     .OrderBy(m => m.ID)
