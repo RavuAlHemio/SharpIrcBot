@@ -529,6 +529,13 @@ namespace Messenger
             int? tooFewCount = null;
             using (var ctx = GetNewContext())
             {
+                // find existing quiescence item and remove it if necessary
+                var existingQuiescence = ctx.Quiescences.FirstOrDefault(q => q.UserLowercase == quiesceUserLowercase);
+                if (existingQuiescence != null)
+                {
+                    ctx.Quiescences.Remove(existingQuiescence);
+                }
+
                 // add quiescence item
                 ctx.Quiescences.Add(new Quiescence
                 {
