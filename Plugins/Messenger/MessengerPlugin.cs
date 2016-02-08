@@ -468,7 +468,7 @@ namespace Messenger
         protected void ActuallyHandleChannelMessage(object sender, IrcEventArgs args, MessageFlags flags)
         {
             var message = args.Data;
-            if (flags.HasFlag(MessageFlags.UserBanned) || message.Type != ReceiveType.ChannelMessage || message.Nick == ConnectionManager.Client.Nickname)
+            if (message.Type != ReceiveType.ChannelMessage || message.Nick == ConnectionManager.Client.Nickname)
             {
                 return;
             }
@@ -476,10 +476,14 @@ namespace Messenger
             var senderUser = ConnectionManager.RegisteredNameForNick(message.Nick) ?? message.Nick;
             var senderLower = senderUser.ToLowerInvariant();
 
-            PotentialMessageSend(message);
+            if (!flags.HasFlag(MessageFlags.UserBanned))
+            {
+                PotentialMessageSend(message);
+                PotentialReplayRequest(message);
+                PotentialIgnoreListRequest(message);
+            }
+
             PotentialDeliverRequest(message);
-            PotentialIgnoreListRequest(message);
-            PotentialReplayRequest(message);
 
             // even banned users get messages; they just can't respond to them
 
