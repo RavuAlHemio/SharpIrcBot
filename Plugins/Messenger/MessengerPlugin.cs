@@ -564,7 +564,7 @@ namespace Messenger
                     message.Channel,
                     "{0}: Okay, I won\u2019t bug you until {1}.",
                     message.Nick,
-                    endTime.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture)
+                    FormatUtcTimestampFromDatabase(endTime)
                 );
             }
             else if (tooFewCount.HasValue)
@@ -573,7 +573,7 @@ namespace Messenger
                     message.Channel,
                     "{0}: Okay, I won\u2019t bug you until {1}, but I only remembered and requeued the last {2} messages...",
                     message.Nick,
-                    endTime.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture),
+                    FormatUtcTimestampFromDatabase(endTime),
                     tooFewCount.Value
                 );
             }
@@ -583,7 +583,7 @@ namespace Messenger
                     message.Channel,
                     "{0}: Okay, I won\u2019t bug you until {1}, and I requeued your last {2} messages.",
                     message.Nick,
-                    endTime.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture),
+                    FormatUtcTimestampFromDatabase(endTime),
                     lastMessageCount
                 );
             }
