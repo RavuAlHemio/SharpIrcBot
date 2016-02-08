@@ -490,7 +490,7 @@ namespace Messenger
             }
 
             int lastMessageCount, hoursToSkip;
-            if (int.TryParse(match.Groups["messageCount"].Value, NumberStyles.None, CultureInfo.InvariantCulture, out lastMessageCount))
+            if (!int.TryParse(match.Groups["messageCount"].Value, NumberStyles.None, CultureInfo.InvariantCulture, out lastMessageCount))
             {
                 ConnectionManager.SendChannelMessageFormat(
                     message.Channel,
@@ -501,7 +501,7 @@ namespace Messenger
             }
 
             const string tooManyHoursFormat = "{0}: I seriously doubt you\u2019ll live that long...";
-            if (int.TryParse(match.Groups["hoursToSkip"].Value, NumberStyles.None, CultureInfo.InvariantCulture, out hoursToSkip))
+            if (!int.TryParse(match.Groups["hoursToSkip"].Value, NumberStyles.None, CultureInfo.InvariantCulture, out hoursToSkip))
             {
                 ConnectionManager.SendChannelMessageFormat(
                     message.Channel,
