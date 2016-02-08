@@ -373,7 +373,12 @@ namespace SharpIrcBot
 
         public static DateTime ToLocalTimeFromDatabase(this DateTime dt)
         {
-            return DateTime.SpecifyKind(dt, DateTimeKind.Utc).ToLocalTime();
+            var dateTime = dt;
+            if (dateTime.Kind == DateTimeKind.Unspecified)
+            {
+                dateTime = DateTime.SpecifyKind(dateTime, DateTimeKind.Utc);
+            }
+            return dateTime.ToLocalTime();
         }
 
         [NotNull]
