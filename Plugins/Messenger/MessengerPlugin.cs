@@ -22,7 +22,7 @@ namespace Messenger
         private static readonly Regex DeliverMessageRegex = new Regex("^[ ]*!deliver(?:msg|mail)[ ]+([1-9][0-9]*)[ ]*$");
         private static readonly Regex ReplayMessageRegex = new Regex("^[ ]*!replay(?:msg|mail)[ ]+([1-9][0-9]*)[ ]*$");
         private static readonly Regex IgnoreMessageRegex = new Regex("^[ ]*!((?:un)?ignore)(?:msg|mail)[ ]+([^ ]+)[ ]*$");
-        private static readonly Regex QuiesceRegex = new Regex("^[ ]*!(?:msg|mail)gone[ ]+(?<messageCount>[1-9][0-9]*)[ ]+(?<durationHours>[1-9][0-9]*)h[ ]*$");
+        private static readonly Regex QuiesceRegex = new Regex("^[ ]*!(?:msg|mail)gone[ ]+(?<messageCount>0|[1-9][0-9]*)[ ]+(?<durationHours>[1-9][0-9]*)h[ ]*$");
         private static readonly Regex UnQuiesceRegex = new Regex("^[ ]*!un(?:msg|mail)gone[ ]*$");
 
         protected MessengerConfig Config;
@@ -502,22 +502,34 @@ namespace Messenger
                 });
                 ctx.SaveChanges();
 
-                // shunt chosen number of messages from replayable back to regular
-                List<ReplayableMessage> replayables = ctx.ReplayableMessages
-                    .Where(m => m.RecipientLowercase == quiesceUserLowercase)
-                    .OrderByDescending(m => m.ID)
-                    .Take(lastMessageCount)
-                    .ToList();
-                if (replayables.Count < lastMessageCount)
+                if (lastMessageCount > 0)
                 {
-                    tooFewCount = replayables.Count;
+                    // shunt chosen number of messages from replayable back to regular
+                    List<ReplayableMessage> replayables = ctx.ReplayableMessages
+                        .Where(m => m.RecipientLowercase == quiesceUserLowercase)
+                        .OrderByDescending(m => m.ID)
+                        .Take(lastMessageCount)
+                        .ToList();
+                    if (replayables.Count < lastMessageCount)
+                    {
+                        tooFewCount = replayables.Count;
+                    }
+                    ctx.Messages.AddRange(replayables.Select(rm => new Message(rm)));
+                    ctx.ReplayableMessages.RemoveRange(replayables);
+                    ctx.SaveChanges();
                 }
-                ctx.Messages.AddRange(replayables.Select(rm => new Message(rm)));
-                ctx.ReplayableMessages.RemoveRange(replayables);
-                ctx.SaveChanges();
             }
 
-            if (tooFewCount.HasValue)
+            if (lastMessageCount == 0)
+            {
+                ConnectionManager.SendChannelMessageFormat(
+                    message.Channel,
+                    "{0}: Okay, I won\u2019t bug you until {1}.",
+                    message.Nick,
+                    endTime.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture)
+                );
+            }
+            else if (tooFewCount.HasValue)
             {
                 ConnectionManager.SendChannelMessageFormat(
                     message.Channel,
