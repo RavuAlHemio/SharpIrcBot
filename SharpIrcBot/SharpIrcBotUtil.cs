@@ -371,10 +371,10 @@ namespace SharpIrcBot
             return DateTime.SpecifyKind(dt.ToUniversalTime(), DateTimeKind.Unspecified);
         }
 
-        public static DateTime ToLocalTimeFromDatabase(this DateTime dt)
+        public static DateTime ToLocalTimeFromDatabase(this DateTime dt, bool overrideKind = false)
         {
             var dateTime = dt;
-            if (dateTime.Kind == DateTimeKind.Unspecified)
+            if (dateTime.Kind == DateTimeKind.Unspecified || overrideKind)
             {
                 dateTime = DateTime.SpecifyKind(dateTime, DateTimeKind.Utc);
             }
