@@ -18,10 +18,10 @@ namespace Messenger
     public class MessengerPlugin : IPlugin
     {
         private static readonly ILog Logger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        private static readonly Regex SendMessageRegex = new Regex("^[ ]*!(s?)(?:msg|mail)[ ]+([^ :]+):?[ ]+(.+)[ ]*$");
-        private static readonly Regex DeliverMessageRegex = new Regex("^[ ]*!deliver(?:msg|mail)[ ]+([1-9][0-9]*)[ ]*$");
-        private static readonly Regex ReplayMessageRegex = new Regex("^[ ]*!replay(?:msg|mail)[ ]+([1-9][0-9]*)[ ]*$");
-        private static readonly Regex IgnoreMessageRegex = new Regex("^[ ]*!((?:un)?ignore)(?:msg|mail)[ ]+([^ ]+)[ ]*$");
+        private static readonly Regex SendMessageRegex = new Regex("^[ ]*!(?<silence>s?)(?:msg|mail)[ ]+(?<recipient>[^ :]+):?[ ]+(?<message>.+)[ ]*$");
+        private static readonly Regex DeliverMessageRegex = new Regex("^[ ]*!deliver(?:msg|mail)[ ]+(?<count>[1-9][0-9]*)[ ]*$");
+        private static readonly Regex ReplayMessageRegex = new Regex("^[ ]*!replay(?:msg|mail)[ ]+(?<count>[1-9][0-9]*)[ ]*$");
+        private static readonly Regex IgnoreMessageRegex = new Regex("^[ ]*!(?<command>(?:un)?ignore)(?:msg|mail)[ ]+(?<target>[^ ]+)[ ]*$");
         private static readonly Regex QuiesceRegex = new Regex("^[ ]*!(?:msg|mail)gone[ ]+(?<messageCount>0|[1-9][0-9]*)[ ]+(?<durationHours>[1-9][0-9]*)h[ ]*$");
         private static readonly Regex UnQuiesceRegex = new Regex("^[ ]*!(?:msg|mail)back[ ]*$");
 
@@ -44,8 +44,8 @@ namespace Messenger
                 return;
             }
 
-            var rawRecipientNick = match.Groups[2].Value;
-            var rawBody = match.Groups[3].Value;
+            var rawRecipientNick = match.Groups["recipient"].Value;
+            var rawBody = match.Groups["message"].Value;
 
             var sender = ConnectionManager.RegisteredNameForNick(message.Nick) ?? message.Nick;
             var lowerSender = sender.ToLowerInvariant();
@@ -131,7 +131,7 @@ namespace Messenger
                 }
             }
 
-            if (match.Groups[1].Value == "s")
+            if (match.Groups["silence"].Value == "s")
             {
                 // silent msg
                 return;
@@ -190,7 +190,7 @@ namespace Messenger
             }
 
             // overflow avoidance
-            if (match.Groups[1].Length > 3)
+            if (match.Groups["count"].Length > 3)
             {
                 ConnectionManager.SendChannelMessageFormat(
                     message.Channel,
@@ -199,7 +199,7 @@ namespace Messenger
                 );
                 return;
             }
-            var fetchCount = int.Parse(match.Groups[1].Value);
+            var fetchCount = int.Parse(match.Groups["count"].Value);
             var sender = ConnectionManager.RegisteredNameForNick(message.Nick) ?? message.Nick;
             var lowerSender = sender.ToLowerInvariant();
 
@@ -293,7 +293,7 @@ namespace Messenger
                 return;
             }
 
-            if (match.Groups[1].Length > 3)
+            if (match.Groups["count"].Length > 3)
             {
                 ConnectionManager.SendChannelMessageFormat(
                     message.Channel,
@@ -303,7 +303,7 @@ namespace Messenger
                 return;
             }
 
-            var replayCount = int.Parse(match.Groups[1].Value);
+            var replayCount = int.Parse(match.Groups["count"].Value);
             if (replayCount > Config.MaxMessagesToReplay)
             {
                 ConnectionManager.SendChannelMessageFormat(
@@ -394,8 +394,8 @@ namespace Messenger
                 return;
             }
 
-            var command = match.Groups[1].Value;
-            var blockSenderNickname = match.Groups[2].Value.Trim();
+            var command = match.Groups["command"].Value;
+            var blockSenderNickname = match.Groups["target"].Value.Trim();
             var blockSender = ConnectionManager.RegisteredNameForNick(blockSenderNickname) ?? blockSenderNickname;
             var blockSenderLower = blockSender.ToLowerInvariant();
             var blockRecipient = ConnectionManager.RegisteredNameForNick(message.Nick) ?? message.Nick;
