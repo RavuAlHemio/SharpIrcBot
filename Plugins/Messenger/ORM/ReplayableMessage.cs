@@ -15,7 +15,7 @@ namespace Messenger.ORM
 
         [Required]
         [Column("timestamp", Order = 2)]
-        public DateTime Timestamp { get; set; }
+        public DateTimeOffset Timestamp { get; set; }
 
         [Required]
         [Column("sender_original", Order = 3)]

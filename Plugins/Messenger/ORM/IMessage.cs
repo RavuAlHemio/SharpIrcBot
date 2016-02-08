@@ -6,7 +6,7 @@ namespace Messenger.ORM
     {
         long ID { get; set; }
 
-        DateTime Timestamp { get; set; }
+        DateTimeOffset Timestamp { get; set; }
 
         string SenderOriginal { get; set; }
 

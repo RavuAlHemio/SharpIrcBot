@@ -105,12 +105,12 @@ namespace Messenger
                 SharpIrcBotUtil.LiteralString(sender)
             );
 
-            DateTime? quiescenceEnd = null;
+            DateTimeOffset? quiescenceEnd = null;
             using (var ctx = GetNewContext())
             {
                 var msg = new Message
                 {
-                    Timestamp = DateTime.Now.ToUniversalTimeForDatabase(),
+                    Timestamp = DateTimeOffset.Now,
                     SenderOriginal = message.Nick,
                     RecipientLowercase = lowerRecipient,
                     Body = body
@@ -119,15 +119,12 @@ namespace Messenger
                 ctx.SaveChanges();
 
                 // check for quiescence!
-                var quiescence = ctx.Quiescences.FirstOrDefault(q => q.UserLowercase == lowerRecipient);
-                if (quiescence != null)
+                quiescenceEnd = ctx.Quiescences
+                    .FirstOrDefault(q => q.UserLowercase == lowerRecipient)
+                    ?.EndTimestamp;
+                if (quiescenceEnd.HasValue && quiescenceEnd.Value <= DateTimeOffset.Now)
                 {
-                    quiescenceEnd = quiescence.EndTimestamp.ToLocalTimeFromDatabase();
-                    if (quiescenceEnd <= DateTime.Now)
-                    {
-                        // it's over
-                        quiescenceEnd = null;
-                    }
+                    quiescenceEnd = null;
                 }
             }
 
@@ -514,10 +511,10 @@ namespace Messenger
             var quiesceUserLowercase = (ConnectionManager.RegisteredNameForNick(message.Nick) ?? message.Nick).ToLowerInvariant();
 
             // calculate end time
-            DateTime endTime;
+            DateTimeOffset endTime;
             try
             {
-                endTime = DateTime.UtcNow.AddHours(hoursToSkip);
+                endTime = DateTimeOffset.Now.AddHours(hoursToSkip);
             }
             catch (ArgumentOutOfRangeException)
             {
@@ -628,9 +625,9 @@ namespace Messenger
             return new MessengerContext(conn);
         }
 
-        protected string FormatUtcTimestampFromDatabase(DateTime timestamp)
+        protected string FormatUtcTimestampFromDatabase(DateTimeOffset timestamp)
         {
-            var localTime = timestamp.ToLocalTimeFromDatabase();
+            var localTime = timestamp.ToLocalTime();
             return localTime.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
         }
 
@@ -684,7 +681,7 @@ namespace Messenger
                     .FirstOrDefault(q => q.UserLowercase == senderLower);
                 if (quiescence != null)
                 {
-                    if (quiescence.EndTimestamp > DateTime.Now)
+                    if (quiescence.EndTimestamp > DateTimeOffset.Now)
                     {
                         // active quiescence; don't deliver yet
                         return;
@@ -798,7 +795,7 @@ namespace Messenger
                     ctx.ReplayableMessages.AddRange(messages.Select(
                         m => new ReplayableMessage(m)
                         {
-                            Timestamp = m.Timestamp.ToUniversalTimeForDatabase()
+                            Timestamp = m.Timestamp
                         }
                     ));
                 }

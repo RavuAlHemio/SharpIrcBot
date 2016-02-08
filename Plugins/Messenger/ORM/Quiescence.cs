@@ -15,6 +15,6 @@ namespace Messenger.ORM
 
         [Required]
         [Column("end_timestamp", Order = 2)]
-        public DateTime EndTimestamp { get; set; }
+        public DateTimeOffset EndTimestamp { get; set; }
     }
 }
