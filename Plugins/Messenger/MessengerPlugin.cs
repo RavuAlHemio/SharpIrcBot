@@ -617,6 +617,7 @@ namespace Messenger
                 }
 
                 ctx.Quiescences.Remove(quiescence);
+                ctx.SaveChanges();
             }
 
             ConnectionManager.SendChannelMessageFormat(
