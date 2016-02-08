@@ -23,7 +23,7 @@ namespace Messenger
         private static readonly Regex ReplayMessageRegex = new Regex("^[ ]*!replay(?:msg|mail)[ ]+([1-9][0-9]*)[ ]*$");
         private static readonly Regex IgnoreMessageRegex = new Regex("^[ ]*!((?:un)?ignore)(?:msg|mail)[ ]+([^ ]+)[ ]*$");
         private static readonly Regex QuiesceRegex = new Regex("^[ ]*!(?:msg|mail)gone[ ]+(?<messageCount>0|[1-9][0-9]*)[ ]+(?<durationHours>[1-9][0-9]*)h[ ]*$");
-        private static readonly Regex UnQuiesceRegex = new Regex("^[ ]*!un(?:msg|mail)gone[ ]*$");
+        private static readonly Regex UnQuiesceRegex = new Regex("^[ ]*!(?:msg|mail)back[ ]*$");
 
         protected MessengerConfig Config;
         protected ConnectionManager ConnectionManager;
