@@ -105,6 +105,7 @@ namespace Messenger
                 SharpIrcBotUtil.LiteralString(sender)
             );
 
+            DateTime? quiescenceEnd = null;
             using (var ctx = GetNewContext())
             {
                 var msg = new Message
@@ -116,6 +117,18 @@ namespace Messenger
                 };
                 ctx.Messages.Add(msg);
                 ctx.SaveChanges();
+
+                // check for quiescence!
+                var quiescence = ctx.Quiescences.FirstOrDefault(q => q.UserLowercase == lowerRecipient);
+                if (quiescence != null)
+                {
+                    quiescenceEnd = quiescence.EndTimestamp.ToLocalTimeFromDatabase();
+                    if (quiescenceEnd <= DateTime.Now)
+                    {
+                        // it's over
+                        quiescenceEnd = null;
+                    }
+                }
             }
 
             if (match.Groups[1].Value == "s")
@@ -126,20 +139,45 @@ namespace Messenger
 
             if (lowerRecipient == lowerSender)
             {
-                ConnectionManager.SendChannelMessageFormat(
-                    message.Channel,
-                    "{0}: Talking to ourselves? Well, no skin off my back. I\u2019ll deliver your message to you right away. ;)",
-                    message.Nick
-                );
+                if (quiescenceEnd.HasValue)
+                {
+                    ConnectionManager.SendChannelMessageFormat(
+                        message.Channel,
+                        "{0}: Talking to ourselves? Well, no skin off my back. I\u2019ll deliver your message to you once I see you after {1}. ;)",
+                        message.Nick,
+                        FormatUtcTimestampFromDatabase(quiescenceEnd.Value)
+                    );
+                }
+                else
+                {
+                    ConnectionManager.SendChannelMessageFormat(
+                        message.Channel,
+                        "{0}: Talking to ourselves? Well, no skin off my back. I\u2019ll deliver your message to you right away. ;)",
+                        message.Nick
+                    );
+                }
             }
             else
             {
-                ConnectionManager.SendChannelMessageFormat(
-                    message.Channel,
-                    "{0}: Aye-aye! I\u2019ll deliver your message to {1} next time I see \u2019em!",
-                    message.Nick,
-                    recipient
-                );
+                if (quiescenceEnd.HasValue)
+                {
+                    ConnectionManager.SendChannelMessageFormat(
+                        message.Channel,
+                        "{0}: Aye-aye! I\u2019ll deliver your message to {1} next time I see \u2019em after {2}!",
+                        message.Nick,
+                        recipient,
+                        FormatUtcTimestampFromDatabase(quiescenceEnd.Value)
+                    );
+                }
+                else
+                {
+                    ConnectionManager.SendChannelMessageFormat(
+                        message.Channel,
+                        "{0}: Aye-aye! I\u2019ll deliver your message to {1} next time I see \u2019em!",
+                        message.Nick,
+                        recipient
+                    );
+                }
             }
         }
 
