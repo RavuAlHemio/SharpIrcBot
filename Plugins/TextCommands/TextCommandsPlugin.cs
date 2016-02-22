@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using JetBrains.Annotations;
 using log4net;
 using Meebey.SmartIrc4net;
 using Newtonsoft.Json.Linq;
@@ -79,9 +80,7 @@ namespace TextCommands
                 return;
             }
 
-            var channelNicksEnumerable = ConnectionManager
-                .Client
-                .GetChannel(args.Data.Channel)
+            var channelNicksEnumerable = MaybeGetChannel(args.Data.Channel)
                 ?.Users
                 .OfType<DictionaryEntry>()
                 .Select(de => (string)de.Key);
@@ -151,6 +150,17 @@ namespace TextCommands
             {
                 respond(line);
             }
+        }
+
+        [CanBeNull]
+        protected Channel MaybeGetChannel([CanBeNull] string channelName)
+        {
+            if (channelName == null)
+            {
+                return null;
+            }
+
+            return ConnectionManager.Client.GetChannel(channelName);
         }
     }
 }
