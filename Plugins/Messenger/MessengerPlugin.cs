@@ -15,7 +15,7 @@ namespace Messenger
     /// <summary>
     /// Delivers messages to users when they return.
     /// </summary>
-    public class MessengerPlugin : IPlugin
+    public class MessengerPlugin : IPlugin, IReloadableConfiguration
     {
         private static readonly ILog Logger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private static readonly Regex SendMessageRegex = new Regex("^[ ]*!(?<silence>s?)(?:msg|mail)[ ]+(?<recipient>[^ :]+):?[ ]+(?<message>.+)[ ]*$");
@@ -25,8 +25,8 @@ namespace Messenger
         private static readonly Regex QuiesceRegex = new Regex("^[ ]*!(?:msg|mail)gone[ ]+(?<messageCount>0|[1-9][0-9]*)[ ]+(?<durationHours>[1-9][0-9]*)h[ ]*$");
         private static readonly Regex UnQuiesceRegex = new Regex("^[ ]*!(?:msg|mail)back[ ]*$");
 
-        protected MessengerConfig Config;
-        protected ConnectionManager ConnectionManager;
+        protected MessengerConfig Config { get; set; }
+        protected ConnectionManager ConnectionManager { get; set; }
 
         public MessengerPlugin(ConnectionManager connMgr, JObject config)
         {
@@ -34,6 +34,11 @@ namespace Messenger
             Config = new MessengerConfig(config);
 
             ConnectionManager.ChannelMessage += HandleChannelMessage;
+        }
+
+        public void ReloadConfiguration(JObject newConfig)
+        {
+            Config = new MessengerConfig(newConfig);
         }
 
         protected void PotentialMessageSend(IrcMessageData message)

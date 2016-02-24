@@ -7,12 +7,12 @@ using Meebey.SmartIrc4net;
 
 namespace Sockpuppet
 {
-    public class SockpuppetPlugin : IPlugin
+    public class SockpuppetPlugin : IPlugin, IReloadableConfiguration
     {
         private static readonly ILog Logger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        protected ConnectionManager ConnectionManager;
-        protected SockpuppetConfig Config;
+        protected ConnectionManager ConnectionManager { get; }
+        protected SockpuppetConfig Config { get; set; }
 
         public SockpuppetPlugin(ConnectionManager connMgr, JObject config)
         {
@@ -20,6 +20,11 @@ namespace Sockpuppet
             Config = new SockpuppetConfig(config);
 
             ConnectionManager.QueryMessage += HandleQueryMessage;
+        }
+
+        public void ReloadConfiguration(JObject newConfig)
+        {
+            Config = new SockpuppetConfig(newConfig);
         }
 
         private void HandleQueryMessage(object sender, IrcEventArgs args, MessageFlags flags)
@@ -32,6 +37,44 @@ namespace Sockpuppet
             {
                 Logger.Error("error handling message", exc);
             }
+        }
+
+        protected string VerifyIdentity(IrcMessageData message)
+        {
+            var username = message.Nick;
+            if (Config.UseIrcServices)
+            {
+                username = ConnectionManager.RegisteredNameForNick(username);
+                if (username == null)
+                {
+                    Logger.InfoFormat("{0} is not logged in; ignoring", message.Nick);
+                    return null;
+                }
+            }
+
+            if (!Config.Puppeteers.Contains(username))
+            {
+                Logger.InfoFormat("{0} is not a puppeteer; ignoring", username);
+                return null;
+            }
+
+            return username;
+        }
+
+        protected void PerformSockpuppet(string username, string nick, string message)
+        {
+            var command = message.Substring("!sockpuppet ".Length);
+
+            var unescapedCommand = SharpIrcBotUtil.UnescapeString(command);
+            if (unescapedCommand == null)
+            {
+                Logger.InfoFormat("{0} bollocksed up their escapes; ignoring", username);
+                return;
+            }
+
+            Logger.InfoFormat("{0} (nick: {1}) issued the following command: {2}", username, nick, command);
+
+            ConnectionManager.SendRawCommand(unescapedCommand);
         }
 
         protected void ActuallyHandleQueryMessage(object sender, IrcEventArgs args, MessageFlags flags)
@@ -47,40 +90,27 @@ namespace Sockpuppet
                 return;
             }
 
-            if (!message.Message.StartsWith("!sockpuppet "))
+            if (message.Message.StartsWith("!sockpuppet "))
             {
-                return;
-            }
-
-            var command = message.Message.Substring("!sockpuppet ".Length);
-
-            var username = message.Nick;
-            if (Config.UseIrcServices)
-            {
-                username = ConnectionManager.RegisteredNameForNick(username);
+                string username = VerifyIdentity(message);
                 if (username == null)
                 {
-                    Logger.InfoFormat("{0} is not logged in; ignoring", message.Nick);
                     return;
                 }
-            }
-
-            if (!Config.Puppeteers.Contains(username))
-            {
-                Logger.InfoFormat("{0} is not a puppeteer; ignoring", username);
+                PerformSockpuppet(username, message.Nick, message.Message);
                 return;
             }
 
-            var unescapedCommand = SharpIrcBotUtil.UnescapeString(command);
-            if (unescapedCommand == null)
+            if (message.Message == "!reload")
             {
-                Logger.InfoFormat("{0} bollocksed up their escapes; ignoring", username);
+                string username = VerifyIdentity(message);
+                if (username == null)
+                {
+                    return;
+                }
+                ConnectionManager.ReloadConfiguration();
                 return;
             }
-
-            Logger.InfoFormat("{0} (nick: {1}) issued the following command: {2}", username, message.Nick, command);
-
-            ConnectionManager.SendRawCommand(unescapedCommand);
         }
     }
 }

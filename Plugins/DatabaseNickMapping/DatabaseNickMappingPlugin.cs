@@ -10,7 +10,7 @@ using SharpIrcBot;
 
 namespace DatabaseNickMapping
 {
-    public class DatabaseNickMappingPlugin : IPlugin
+    public class DatabaseNickMappingPlugin : IPlugin, IReloadableConfiguration
     {
         private static readonly ILog Logger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private static readonly Regex LinkRegex = new Regex("^!linknicks[ ]+([^ ]+)[ ]+([^ ]+)[ ]*$");
@@ -28,6 +28,11 @@ namespace DatabaseNickMapping
 
             ConnectionManager.ChannelMessage += HandleChannelMessage;
             ConnectionManager.NickMapping += HandleNickMapping;
+        }
+
+        public void ReloadConfiguration(JObject newConfig)
+        {
+            Config = new DatabaseNickMappingConfig(newConfig);
         }
 
         protected virtual void HandleChannelMessage(object sender, IrcEventArgs args, MessageFlags flags)

@@ -12,7 +12,7 @@ namespace GroupPressure
     /// Submit to group pressure: if enough people say a specific thing in the last X messages,
     /// join in on the fray!
     /// </summary>
-    public class GroupPressurePlugin : IPlugin
+    public class GroupPressurePlugin : IPlugin, IReloadableConfiguration
     {
         private static readonly ILog Logger = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
@@ -28,6 +28,11 @@ namespace GroupPressure
 
             Connection.ChannelMessage += HandleChannelMessageOrAction;
             Connection.ChannelAction += HandleChannelMessageOrAction;
+        }
+
+        public void ReloadConfiguration(JObject newConfig)
+        {
+            Config = new PressureConfig(newConfig);
         }
 
         private void HandleChannelMessageOrAction(object sender, IrcEventArgs args, MessageFlags flags)

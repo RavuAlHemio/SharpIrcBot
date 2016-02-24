@@ -12,7 +12,7 @@ using UnoBot.RuntimeTweaking;
 
 namespace UnoBot
 {
-    public class UnoBotPlugin : IPlugin
+    public class UnoBotPlugin : IPlugin, IReloadableConfiguration
     {
         private static readonly ILog CommunicationLogger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType.FullName + ".Communication");
         private static readonly ILog StrategyLogger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType.FullName + ".Strategy");
@@ -31,26 +31,26 @@ namespace UnoBot
         protected const string BotCommandRegexPattern = "^([?][a-z]+)[ ]+(?i){0}[ ]*$";
         protected static readonly Regex RuntimeTweakPattern = new Regex("^!unobotset[ ]+([A-Za-z]+)[ ]+(.+)$");
 
-        protected ConnectionManager ConnectionManager;
-        protected UnoBotConfig Config;
+        protected ConnectionManager ConnectionManager { get; }
+        protected UnoBotConfig Config { get; set; }
 
-        protected StringBuilder CurrentMessageJson;
-        protected int LinesLeftInMessage;
-        protected string BotCommandRegexNick;
-        protected Regex BotCommandRegex;
+        protected StringBuilder CurrentMessageJson { get; }
+        protected int LinesLeftInMessage { get; set; }
+        protected string BotCommandRegexNick { get; set; }
+        protected Regex BotCommandRegex { get; set; }
 
-        protected Card TopCard;
-        protected List<Card> CurrentHand;
-        protected Dictionary<string, int> CurrentCardCounts;
-        protected HashSet<string> CurrentPlayers;
-        protected string NextPlayer;
-        protected string NextButOnePlayer;
-        protected string PreviousPlayer;
-        protected int LastHandCount;
-        protected CardColor? ColorRequest;
-        protected bool DrewLast;
-        protected int DrawsSinceLastPlay;
-        protected Random Randomizer;
+        protected Card TopCard { get; set; }
+        protected List<Card> CurrentHand { get; set; }
+        protected Dictionary<string, int> CurrentCardCounts { get; }
+        protected HashSet<string> CurrentPlayers { get; }
+        protected string NextPlayer { get; set; }
+        protected string NextButOnePlayer { get; set; }
+        protected string PreviousPlayer { get; set; }
+        protected int LastHandCount { get; set; }
+        protected CardColor? ColorRequest { get; set; }
+        protected bool DrewLast { get; set; }
+        protected int DrawsSinceLastPlay { get; set; }
+        protected Random Randomizer { get; }
 
         public UnoBotPlugin(ConnectionManager connMgr, JObject config)
         {
@@ -76,6 +76,11 @@ namespace UnoBot
             DrewLast = false;
             DrawsSinceLastPlay = 0;
             Randomizer = new Random();
+        }
+
+        public void ReloadConfiguration(JObject newConfig)
+        {
+            Config = new UnoBotConfig(newConfig);
         }
 
         public static string StripColors(string str)

@@ -3,15 +3,14 @@ using SharpIrcBot;
 
 namespace SharpIrcBotCLI
 {
-    class MainClass
+    class Program
     {
         public static void Main(string[] args)
         {
             SharpIrcBotUtil.SetupConsoleLogging();
 
-            var config = SharpIrcBotUtil.LoadConfig(args.Length > 0 ? args[0] : null);
-            var connMgr = new ConnectionManager(config);
-            var pluginMgr = new PluginManager(config);
+            var connMgr = new ConnectionManager(args.Length > 0 ? args[0] : null);
+            var pluginMgr = new PluginManager(connMgr.Config);
 
             pluginMgr.LoadPlugins(connMgr);
             connMgr.Start();

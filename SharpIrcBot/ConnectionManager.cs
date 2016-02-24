@@ -8,7 +8,6 @@ using JetBrains.Annotations;
 using log4net;
 using Meebey.SmartIrc4net;
 using SharpIrcBot.Config;
-using Timer = System.Timers.Timer;
 
 namespace SharpIrcBot
 {
@@ -17,16 +16,22 @@ namespace SharpIrcBot
         private static readonly ILog Logger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         public static int MaxMessageLength = 230;
 
-        public BotConfig Config;
-        public readonly IrcClient Client;
-        public readonly TimerTrigger Timers;
+        private bool ConfigFilePathKnown { get; set; }
+        public string ConfigPath { get; }
+        public BotConfig Config { get; set; }
+        public IrcClient Client { get; }
+        public TimerTrigger Timers { get; }
 
         [CanBeNull]
-        protected Thread IrcThread;
+        protected Thread IrcThread { get; set; }
         [NotNull]
-        protected CancellationTokenSource Canceller;
+        protected CancellationTokenSource Canceller { get; }
         [NotNull, ItemNotNull]
-        protected HashSet<string> SyncedChannels;
+        protected HashSet<string> SyncedChannels { get; }
+
+        /// <remarks>For on-demand configuration reloading.</remarks>
+        [CanBeNull]
+        public PluginManager PluginManager { get; set; }
 
         public event SharpIrcBotEventHandler<IrcEventArgs> ChannelMessage;
         public event SharpIrcBotEventHandler<ActionEventArgs> ChannelAction;
@@ -49,7 +54,14 @@ namespace SharpIrcBot
         public event EventHandler<OutgoingMessageEventArgs> OutgoingQueryAction;
         public event EventHandler<OutgoingMessageEventArgs> OutgoingQueryNotice;
 
-        public ConnectionManager(BotConfig config)
+        public ConnectionManager([CanBeNull] string configPath)
+            : this(SharpIrcBotUtil.LoadConfig(configPath))
+        {
+            ConfigFilePathKnown = true;
+            ConfigPath = configPath;
+        }
+
+        public ConnectionManager([NotNull] BotConfig config)
         {
             SyncedChannels = new HashSet<string>();
 
@@ -84,6 +96,9 @@ namespace SharpIrcBot
             Client.OnInvite += PossiblyReturnToChannel;
             Timers = new TimerTrigger();
             Canceller = new CancellationTokenSource();
+
+            ConfigFilePathKnown = false;
+            ConfigPath = null;
         }
 
         public void Start()
@@ -115,6 +130,23 @@ namespace SharpIrcBot
             catch (NotConnectedException)
             {
             }
+        }
+
+        public void ReloadConfiguration()
+        {
+            if (!ConfigFilePathKnown)
+            {
+                Logger.Warn("cannot reload configuration: configuration file path unknown");
+            }
+
+            Config = SharpIrcBotUtil.LoadConfig(ConfigPath);
+
+            if (PluginManager == null)
+            {
+                Logger.Warn("cannot reload plugin configuration: plugin manager is null");
+                return;
+            }
+            PluginManager.ReloadConfigurations(Config.Plugins);
         }
 
         protected virtual void OuterProc()

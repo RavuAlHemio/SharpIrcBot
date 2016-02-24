@@ -13,7 +13,7 @@ using SharpIrcBot;
 
 namespace LinkInfo
 {
-    public class LinkInfoPlugin : IPlugin
+    public class LinkInfoPlugin : IPlugin, IReloadableConfiguration
     {
         private static readonly ILog Logger = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
@@ -22,10 +22,10 @@ namespace LinkInfo
         public const string GoogleImageSearchByImageUrlPattern = "https://{0}/searchbyimage?hl=en&image_url={1}";
         public const int DownloadBufferSize = 4 * 1024 * 1024;
 
-        protected ConnectionManager ConnectionManager;
-        protected LinkInfoConfig Config;
+        protected ConnectionManager ConnectionManager { get; set; }
+        protected LinkInfoConfig Config { get; set; }
 
-        private LinkAndInfo _lastLinkAndInfo = null;
+        protected LinkAndInfo LastLinkAndInfo { get; set; }
 
         public LinkInfoPlugin(ConnectionManager connMgr, JObject config)
         {
@@ -34,6 +34,11 @@ namespace LinkInfo
 
             ConnectionManager.ChannelMessage += HandleChannelMessage;
             ConnectionManager.OutgoingChannelMessage += HandleOutgoingChannelMessage;
+        }
+
+        public void ReloadConfiguration(JObject newConfig)
+        {
+            Config = new LinkInfoConfig(newConfig);
         }
 
         private void HandleChannelMessage(object sender, IrcEventArgs args, MessageFlags flags)
@@ -58,18 +63,18 @@ namespace LinkInfo
             var body = args.Data.Message;
             if (body == "!lastlink" || body == "!ll")
             {
-                if (_lastLinkAndInfo == null)
+                if (LastLinkAndInfo == null)
                 {
                     ConnectionManager.SendChannelMessage(args.Data.Channel, "No last link!");
                 }
                 else
                 {
                     // fetch if not fetched yet or a transient error occurred last time
-                    if (_lastLinkAndInfo.ShouldRefetch)
+                    if (LastLinkAndInfo.ShouldRefetch)
                     {
-                        _lastLinkAndInfo = ObtainLinkInfo(_lastLinkAndInfo.Link);
+                        LastLinkAndInfo = ObtainLinkInfo(LastLinkAndInfo.Link);
                     }
-                    PostLinkInfo(_lastLinkAndInfo, args.Data.Channel);
+                    PostLinkInfo(LastLinkAndInfo, args.Data.Channel);
                 }
                 return;
             }
@@ -80,7 +85,7 @@ namespace LinkInfo
             // store the new "last link"
             if (links.Count > 0)
             {
-                _lastLinkAndInfo = LinkAndInfo.CreateUnfetched(links[links.Count-1]);
+                LastLinkAndInfo = LinkAndInfo.CreateUnfetched(links[links.Count-1]);
             }
 
             // respond?
@@ -111,9 +116,9 @@ namespace LinkInfo
             if (links.Count > 0)
             {
                 var lastLink = links[links.Count - 1];
-                if (_lastLinkAndInfo == null || _lastLinkAndInfo.Link != lastLink)
+                if (LastLinkAndInfo == null || LastLinkAndInfo.Link != lastLink)
                 {
-                    _lastLinkAndInfo = LinkAndInfo.CreateUnfetched(lastLink);
+                    LastLinkAndInfo = LinkAndInfo.CreateUnfetched(lastLink);
                 }
             }
         }

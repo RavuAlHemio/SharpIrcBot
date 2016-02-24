@@ -7,12 +7,12 @@ using SharpIrcBot;
 
 namespace Smileys
 {
-    public class SmileysPlugin : IPlugin
+    public class SmileysPlugin : IPlugin, IReloadableConfiguration
     {
         private static readonly ILog Logger = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
-        protected ConnectionManager ConnectionManager;
-        protected SmileysConfig Config;
+        protected ConnectionManager ConnectionManager { get; }
+        protected SmileysConfig Config { get; set; }
 
         public SmileysPlugin(ConnectionManager connMgr, JObject config)
         {
@@ -21,6 +21,11 @@ namespace Smileys
 
             ConnectionManager.ChannelMessage += HandleChannelOrQueryMessage;
             ConnectionManager.QueryMessage += HandleChannelOrQueryMessage;
+        }
+
+        public void ReloadConfiguration(JObject newConfig)
+        {
+            Config = new SmileysConfig(newConfig);
         }
 
         void HandleChannelOrQueryMessage(object sender, IrcEventArgs e, MessageFlags flags)

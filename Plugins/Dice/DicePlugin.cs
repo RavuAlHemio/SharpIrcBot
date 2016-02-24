@@ -12,7 +12,7 @@ using SharpIrcBot;
 
 namespace Dice
 {
-    public class DicePlugin : IPlugin
+    public class DicePlugin : IPlugin, IReloadableConfiguration
     {
         private static readonly ILog Logger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
@@ -58,6 +58,11 @@ namespace Dice
             RNG = new Random();
 
             ConnectionManager.ChannelMessage += HandleChannelMessage;
+        }
+
+        public void ReloadConfiguration(JObject newConfig)
+        {
+            Config = new DiceConfig(newConfig);
         }
 
         private void HandleChannelMessage(object sender, IrcEventArgs args, MessageFlags flags)

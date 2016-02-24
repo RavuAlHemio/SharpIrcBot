@@ -10,12 +10,12 @@ using SharpIrcBot;
 
 namespace Punt
 {
-    public class PuntPlugin : IPlugin
+    public class PuntPlugin : IPlugin, IReloadableConfiguration
     {
         private static readonly ILog Logger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         protected ConnectionManager ConnectionManager { get; }
-        protected PuntConfig Config { get; }
+        protected PuntConfig Config { get; set; }
         protected Dictionary<string, Regex> RegexCache { get; }
         protected Random Randomizer { get; }
 
@@ -29,6 +29,12 @@ namespace Punt
             ConnectionManager.ChannelAction += HandleChannelAction;
             ConnectionManager.ChannelMessage += HandleChannelMessage;
             ConnectionManager.ChannelNotice += HandleChannelNotice;
+        }
+
+        public void ReloadConfiguration(JObject newConfig)
+        {
+            Config = new PuntConfig(newConfig);
+            RegexCache.Clear();
         }
 
         protected void HandleChannelAction(object sender, ActionEventArgs e, MessageFlags flags)
@@ -67,7 +73,7 @@ namespace Punt
             }
         }
 
-        protected static TValue FetchOrMakeAndStore<TKey, TValue>(IDictionary<TKey, TValue> dict, TKey key, Func<TValue> valueMakerIfNotFound)
+        protected static TValue FetchOrMakeAndStore<TKey, TValue>(IDictionary<TKey, TValue> dict, TKey key, Func<TKey, TValue> valueDerivatorIfNotFound)
         {
             try
             {
@@ -75,7 +81,7 @@ namespace Punt
             }
             catch (KeyNotFoundException)
             {
-                var ret = valueMakerIfNotFound();
+                var ret = valueDerivatorIfNotFound(key);
                 dict[key] = ret;
                 return ret;
             }
@@ -93,8 +99,8 @@ namespace Punt
                 .Concat(Config.ChannelsPatterns[channel]);
             foreach (var pattern in relevantPatterns)
             {
-                var nickRegex = FetchOrMakeAndStore(RegexCache, pattern.NickPattern, () => new Regex(pattern.NickPattern));
-                var bodyRegex = FetchOrMakeAndStore(RegexCache, pattern.BodyPattern, () => new Regex(pattern.BodyPattern));
+                var nickRegex = FetchOrMakeAndStore(RegexCache, pattern.NickPattern, r => new Regex(r));
+                var bodyRegex = FetchOrMakeAndStore(RegexCache, pattern.BodyPattern, r => new Regex(r));
 
                 var normalizedNick = ConnectionManager.RegisteredNameForNick(nick);
 

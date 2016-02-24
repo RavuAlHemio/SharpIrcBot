@@ -10,14 +10,14 @@ using SharpIrcBot;
 
 namespace WhoisLoginNickMapping
 {
-    public class WhoisLoginPlugin : IPlugin
+    public class WhoisLoginPlugin : IPlugin, IReloadableConfiguration
     {
         private static readonly ILog Logger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        protected ConnectionManager ConnectionManager;
-        protected WhoisLoginConfig Config;
-        protected Timer WhoisEveryoneTimer;
-        protected Dictionary<string, string> NicksToLogins;
+        protected ConnectionManager ConnectionManager { get; }
+        protected WhoisLoginConfig Config { get; set; }
+        protected Timer WhoisEveryoneTimer { get; set; }
+        protected Dictionary<string, string> NicksToLogins { get; }
 
         public WhoisLoginPlugin(ConnectionManager connMgr, JObject config)
         {
@@ -32,6 +32,13 @@ namespace WhoisLoginNickMapping
             ConnectionManager.NamesInChannel += HandleNamesInChannel;
             ConnectionManager.NickChange += HandleNickChange;
             ConnectionManager.RawMessage += HandleRawMessage;
+        }
+
+        public void ReloadConfiguration(JObject newConfig)
+        {
+            Config = new WhoisLoginConfig(newConfig);
+
+            WhoisEveryoneTimer?.Change(TimeSpan.Zero, TimeSpan.FromMinutes(Config.ChannelSyncPeriodMinutes));
         }
 
         protected virtual void HandleConnectedToServer(object sender, EventArgs args)

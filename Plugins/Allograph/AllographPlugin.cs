@@ -9,11 +9,11 @@ using System.Collections.Generic;
 
 namespace Allograph
 {
-    public class AllographPlugin : IPlugin
+    public class AllographPlugin : IPlugin, IReloadableConfiguration
     {
         private static readonly ILog Logger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        protected readonly AllographConfig Config;
+        protected AllographConfig Config;
         protected readonly Random Random;
         protected readonly ConnectionManager ConnectionManager;
         protected readonly Dictionary<string, List<int>> CooldownsPerChannel;
@@ -26,6 +26,12 @@ namespace Allograph
             CooldownsPerChannel = new Dictionary<string, List<int>>();
 
             ConnectionManager.ChannelMessage += HandleChannelMessage;
+        }
+
+        public void ReloadConfiguration(JObject newConfig)
+        {
+            Config = new AllographConfig(newConfig);
+            CooldownsPerChannel.Clear();
         }
 
         private void HandleChannelMessage(object sender, IrcEventArgs args, MessageFlags flags)

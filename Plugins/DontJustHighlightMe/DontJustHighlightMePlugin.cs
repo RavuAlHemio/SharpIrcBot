@@ -10,7 +10,7 @@ using SharpIrcBot;
 
 namespace DontJustHighlightMe
 {
-    public class DontJustHighlightMePlugin : IPlugin
+    public class DontJustHighlightMePlugin : IPlugin, IReloadableConfiguration
     {
         private static readonly ILog Logger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
@@ -25,6 +25,11 @@ namespace DontJustHighlightMe
             RNG = new Random();
 
             ConnectionManager.ChannelMessage += HandleChannelMessage;
+        }
+
+        public void ReloadConfiguration(JObject newConfig)
+        {
+            Config = new DJHMConfig(newConfig);
         }
 
         private void HandleChannelMessage(object sender, IrcEventArgs args, MessageFlags flags)

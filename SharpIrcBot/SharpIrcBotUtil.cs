@@ -187,7 +187,7 @@ namespace SharpIrcBot
         /// </summary>
         /// <param name="str">The string literal to unescape.</param>
         /// <returns>The unescaped string.</returns>
-        [NotNull]
+        [CanBeNull]
         public static string UnescapeString([NotNull] string str)
         {
             var ret = new StringBuilder(str.Length);

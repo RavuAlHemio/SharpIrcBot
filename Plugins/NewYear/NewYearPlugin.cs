@@ -6,12 +6,12 @@ using Newtonsoft.Json.Linq;
 
 namespace NewYear
 {
-    public class NewYearPlugin : IPlugin
+    public class NewYearPlugin : IPlugin, IReloadableConfiguration
     {
         private static readonly ILog Logger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         protected ConnectionManager ConnectionManager { get; }
-        protected NewYearConfig Config { get; }
+        protected NewYearConfig Config { get; set; }
 
         public NewYearPlugin(ConnectionManager connMgr, JObject config)
         {
@@ -19,6 +19,11 @@ namespace NewYear
             Config = new NewYearConfig(config);
 
             ScheduleNewYear();
+        }
+
+        public void ReloadConfiguration(JObject newConfig)
+        {
+            Config = new NewYearConfig(newConfig);
         }
 
         protected virtual void ScheduleNewYear()

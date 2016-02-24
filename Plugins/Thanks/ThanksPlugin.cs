@@ -11,14 +11,14 @@ using Thanks.ORM;
 
 namespace Thanks
 {
-    public class ThanksPlugin : IPlugin
+    public class ThanksPlugin : IPlugin, IReloadableConfiguration
     {
         private static readonly ILog Logger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private static readonly Regex ThankRegex = new Regex("^[ ]*!(?:thank|thanks|thx)[ ]+(--force[ ]+)?([^ ]+)[ ]*$");
         private static readonly Regex ThankedRegex = new Regex("^[ ]*!thanked[ ]+(--raw[ ]+)?([^ ]+)[ ]*$");
 
-        protected ConnectionManager ConnectionManager;
-        protected ThanksConfig Config;
+        protected ConnectionManager ConnectionManager { get; }
+        protected ThanksConfig Config { get; set; }
 
         public ThanksPlugin(ConnectionManager connMgr, JObject config)
         {
@@ -26,6 +26,11 @@ namespace Thanks
             Config = new ThanksConfig(config);
 
             ConnectionManager.ChannelMessage += HandleChannelMessage;
+        }
+
+        public void ReloadConfiguration(JObject newConfig)
+        {
+            Config = new ThanksConfig(newConfig);
         }
 
         private void HandleChannelMessage(object sender, IrcEventArgs args, MessageFlags flags)

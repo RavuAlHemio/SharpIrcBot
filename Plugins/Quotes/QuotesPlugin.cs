@@ -12,7 +12,7 @@ using SharpIrcBot;
 
 namespace Quotes
 {
-    public class QuotesPlugin : IPlugin
+    public class QuotesPlugin : IPlugin, IReloadableConfiguration
     {
         private static readonly ILog Logger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private static readonly Regex AddQuoteRegex = new Regex("^!addquote[ ]+(.+)$");
@@ -21,11 +21,11 @@ namespace Quotes
         private static readonly Regex QuoteUserRegex = new Regex("^!(any|bad)?(r)?quoteuser[ ]+([^ ]+)$");
         private static readonly Regex NextQuoteRegex = new Regex("^!next(any|bad)?(r)?quote[ ]*$");
 
-        protected ConnectionManager ConnectionManager;
-        protected QuotesConfig Config;
-        protected Dictionary<string, List<Quote>> PotentialQuotesPerChannel;
-        protected Dictionary<string, long> LastQuoteIDs;
-        protected Random Randomizer;
+        protected ConnectionManager ConnectionManager { get; }
+        protected QuotesConfig Config { get; set; }
+        protected Dictionary<string, List<Quote>> PotentialQuotesPerChannel { get; }
+        protected Dictionary<string, long> LastQuoteIDs { get; }
+        protected Random Randomizer { get; }
 
         protected List<Quote> ShuffledGoodQuotes { get; set; }
         protected List<Quote> ShuffledAnyQuotes { get; set; }
@@ -45,6 +45,16 @@ namespace Quotes
             ConnectionManager.ChannelMessage += HandleChannelMessage;
             ConnectionManager.ChannelAction += HandleChannelAction;
             ConnectionManager.QueryMessage += HandleQueryMessage;
+        }
+
+        public void ReloadConfiguration(JObject newConfig)
+        {
+            Config = new QuotesConfig(newConfig);
+
+            // invalidate
+            ShuffledAnyQuotes = null;
+            ShuffledBadQuotes = null;
+            ShuffledGoodQuotes = null;
         }
 
         protected virtual IQueryable<Quote> GetFilteredQuotes(IQueryable<Quote> quotes, IQueryable<QuoteVote> votes, QuoteRating requestedRating)

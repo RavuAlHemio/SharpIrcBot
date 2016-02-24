@@ -11,12 +11,12 @@ using SharpIrcBot;
 
 namespace TextCommands
 {
-    public class TextCommandsPlugin : IPlugin
+    public class TextCommandsPlugin : IPlugin, IReloadableConfiguration
     {
         private static readonly ILog Logger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        protected readonly TextCommandsConfig Config;
-        protected readonly ConnectionManager ConnectionManager;
+        protected TextCommandsConfig Config { get; set; }
+        protected ConnectionManager ConnectionManager { get; }
 
         public TextCommandsPlugin(ConnectionManager connMgr, JObject config)
         {
@@ -25,6 +25,11 @@ namespace TextCommands
 
             ConnectionManager.ChannelMessage += HandleChannelMessage;
             ConnectionManager.QueryMessage += HandlePrivateMessage;
+        }
+
+        public void ReloadConfiguration(JObject newConfig)
+        {
+            Config = new TextCommandsConfig(newConfig);
         }
 
         private void HandleChannelMessage(object sender, IrcEventArgs args, MessageFlags flags)

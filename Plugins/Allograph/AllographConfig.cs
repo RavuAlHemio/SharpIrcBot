@@ -15,7 +15,7 @@ namespace Allograph
             {
                 get
                 {
-                    return Regex == null ? null : Regex.ToString();
+                    return Regex?.ToString();
                 }
 
                 set
