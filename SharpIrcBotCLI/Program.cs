@@ -11,6 +11,7 @@ namespace SharpIrcBotCLI
 
             var connMgr = new ConnectionManager(args.Length > 0 ? args[0] : null);
             var pluginMgr = new PluginManager(connMgr.Config);
+            connMgr.PluginManager = pluginMgr;
 
             pluginMgr.LoadPlugins(connMgr);
             connMgr.Start();
