@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
+using System.Text.RegularExpressions;
 using Fizzler.Systems.HtmlAgilityPack;
 using HtmlAgilityPack;
 using log4net;
@@ -21,6 +22,7 @@ namespace LinkInfo
         public const string GoogleImageSearchUrlPattern = "https://{0}/imghp?hl=en&tab=wi";
         public const string GoogleImageSearchByImageUrlPattern = "https://{0}/searchbyimage?hl=en&image_url={1}";
         public const int DownloadBufferSize = 4 * 1024 * 1024;
+        public static readonly Regex WhiteSpaceRegex = new Regex("\\s+");
 
         protected ConnectionManager ConnectionManager { get; set; }
         protected LinkInfoConfig Config { get; set; }
@@ -142,6 +144,11 @@ namespace LinkInfo
             return ret;                
         }
 
+        public static string FoldWhitespace(string str)
+        {
+            return WhiteSpaceRegex.Replace(str, " ");
+        }
+
         public LinkAndInfo RealObtainLinkInfo(Uri link)
         {
             // check URL blacklist
@@ -239,12 +246,12 @@ namespace LinkInfo
                         var titleElement = htmlDoc.DocumentNode.SelectSingleNode(".//title");
                         if (titleElement != null)
                         {
-                            return new LinkAndInfo(link, HtmlEntity.DeEntitize(titleElement.InnerText), FetchErrorLevel.Success);
+                            return new LinkAndInfo(link, FoldWhitespace(HtmlEntity.DeEntitize(titleElement.InnerText)), FetchErrorLevel.Success);
                         }
                         var h1Element = htmlDoc.DocumentNode.SelectSingleNode(".//h1");
                         if (h1Element != null)
                         {
-                            return new LinkAndInfo(link, HtmlEntity.DeEntitize(h1Element.InnerText), FetchErrorLevel.Success);
+                            return new LinkAndInfo(link, FoldWhitespace(HtmlEntity.DeEntitize(h1Element.InnerText)), FetchErrorLevel.Success);
                         }
                         return new LinkAndInfo(link, "(HTML without a title O_o)", FetchErrorLevel.Success);
                     case "image/png":
