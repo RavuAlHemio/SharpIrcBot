@@ -26,6 +26,7 @@ namespace Thanks
             Config = new ThanksConfig(config);
 
             ConnectionManager.ChannelMessage += HandleChannelMessage;
+            ConnectionManager.BaseNickChanged += HandleBaseNickChanged;
         }
 
         public void ReloadConfiguration(JObject newConfig)
@@ -42,6 +43,18 @@ namespace Thanks
             catch (Exception exc)
             {
                 Logger.Error("error handling message", exc);
+            }
+        }
+
+        private void HandleBaseNickChanged(object sender, BaseNickChangedEventArgs args)
+        {
+            try
+            {
+                ActuallyHandleBaseNickChanged(sender, args);
+            }
+            catch (Exception exc)
+            {
+                Logger.Error("error handling base nick change", exc);
             }
         }
 
@@ -264,6 +277,46 @@ namespace Thanks
                     message.Nick,
                     string.Join(", ", top.Select(NicknameAndCountString))
                 );
+            }
+        }
+
+        protected virtual void ActuallyHandleBaseNickChanged(object sender, BaseNickChangedEventArgs args)
+        {
+            var oldNickLower = args.OldBaseNick.ToLowerInvariant();
+            var newNickLower = args.NewBaseNick.ToLowerInvariant();
+
+            using (var ctx = GetNewContext())
+            {
+                var thanksEntries = ctx.ThanksEntries
+                    .Where(te => te.ThankerLowercase == oldNickLower || te.ThankeeLowercase == oldNickLower);
+                foreach (var thanksEntry in thanksEntries)
+                {
+                    if (thanksEntry.ThankerLowercase == oldNickLower)
+                    {
+                        if (thanksEntry.ThankeeLowercase == newNickLower)
+                        {
+                            // self-thanks are not allowed; remove
+                            ctx.ThanksEntries.Remove(thanksEntry);
+                        }
+                        else
+                        {
+                            thanksEntry.ThankerLowercase = newNickLower;
+                        }
+                    }
+                    else if (thanksEntry.ThankeeLowercase == oldNickLower)
+                    {
+                        if (thanksEntry.ThankerLowercase == newNickLower)
+                        {
+                            // self-thanks are not allowed; remove
+                            ctx.ThanksEntries.Remove(thanksEntry);
+                        }
+                        else
+                        {
+                            thanksEntry.ThankeeLowercase = newNickLower;
+                        }
+                    }
+                }
+                ctx.SaveChanges();
             }
         }
 

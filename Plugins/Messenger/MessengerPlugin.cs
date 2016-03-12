@@ -34,6 +34,7 @@ namespace Messenger
             Config = new MessengerConfig(config);
 
             ConnectionManager.ChannelMessage += HandleChannelMessage;
+            ConnectionManager.BaseNickChanged += HandleBaseNickChanged;
         }
 
         public void ReloadConfiguration(JObject newConfig)
@@ -656,6 +657,18 @@ namespace Messenger
             }
         }
 
+        private void HandleBaseNickChanged(object sender, BaseNickChangedEventArgs e)
+        {
+            try
+            {
+                ActuallyHandleBaseNickChanged(sender, e);
+            }
+            catch (Exception exc)
+            {
+                Logger.Error("error handling base nick change", exc);
+            }
+        }
+
         protected void ActuallyHandleChannelMessage(object sender, IrcEventArgs args, MessageFlags flags)
         {
             var message = args.Data;
@@ -832,6 +845,72 @@ namespace Messenger
                 ctx.Messages.RemoveRange(messages);
 
                 // commit
+                ctx.SaveChanges();
+            }
+        }
+
+        protected virtual void ReassignMessages(IQueryable<IMessage> messages, string oldNick, string newNick)
+        {
+            var lowerOldNick = oldNick.ToLowerInvariant();
+            var lowerNewNick = newNick.ToLowerInvariant();
+
+            var sentMessages = messages
+                .Where(m => m.SenderOriginal.ToLowerInvariant() == lowerOldNick);
+            foreach (var sentMessage in sentMessages)
+            {
+                sentMessage.SenderOriginal = newNick;
+            }
+
+            var receivedMessages = messages
+                .Where(m => m.RecipientLowercase == lowerOldNick);
+            foreach (var receivedMessage in receivedMessages)
+            {
+                receivedMessage.RecipientLowercase = lowerNewNick;
+            }
+        }
+
+        protected virtual void ActuallyHandleBaseNickChanged(object sender, BaseNickChangedEventArgs e)
+        {
+            using (var ctx = GetNewContext())
+            {
+                // reassign all messages from the old to the new nick
+                ReassignMessages(ctx.Messages, e.OldBaseNick, e.NewBaseNick);
+                ReassignMessages(ctx.ReplayableMessages, e.OldBaseNick, e.NewBaseNick);
+                ReassignMessages(ctx.MessagesOnRetainer, e.OldBaseNick, e.NewBaseNick);
+                ctx.SaveChanges();
+
+                var lowerOldNick = e.OldBaseNick.ToLowerInvariant();
+                var lowerNewNick = e.NewBaseNick.ToLowerInvariant();
+
+                // update ignore lists
+                var ignorances = ctx.IgnoreList
+                    .Where(ie => ie.SenderLowercase == lowerOldNick || ie.RecipientLowercase == lowerOldNick);
+                foreach (var ignorance in ignorances)
+                {
+                    if (ignorance.SenderLowercase == lowerOldNick)
+                    {
+                        ignorance.SenderLowercase = lowerNewNick;
+                    }
+                    else if (ignorance.RecipientLowercase == lowerOldNick)
+                    {
+                        ignorance.RecipientLowercase = lowerNewNick;
+                    }
+
+                    // delete if this became a self-ignorance
+                    if (ignorance.SenderLowercase == ignorance.RecipientLowercase)
+                    {
+                        ctx.IgnoreList.Remove(ignorance);
+                    }
+                }
+                ctx.SaveChanges();
+
+                // update quiescences
+                var quiescences = ctx.Quiescences
+                    .Where(q => q.UserLowercase == lowerOldNick);
+                foreach (var quiescence in quiescences)
+                {
+                    quiescence.UserLowercase = lowerNewNick;
+                }
                 ctx.SaveChanges();
             }
         }

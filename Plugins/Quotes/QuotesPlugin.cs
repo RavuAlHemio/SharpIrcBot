@@ -45,6 +45,7 @@ namespace Quotes
             ConnectionManager.ChannelMessage += HandleChannelMessage;
             ConnectionManager.ChannelAction += HandleChannelAction;
             ConnectionManager.QueryMessage += HandleQueryMessage;
+            ConnectionManager.BaseNickChanged += HandleBaseNickChanged;
         }
 
         public void ReloadConfiguration(JObject newConfig)
@@ -179,6 +180,18 @@ namespace Quotes
             catch (Exception exc)
             {
                 Logger.Error("error handling query message", exc);
+            }
+        }
+
+        protected void HandleBaseNickChanged(object sender, BaseNickChangedEventArgs e)
+        {
+            try
+            {
+                ActuallyHandleBaseNickChanged(sender, e);
+            }
+            catch (Exception exc)
+            {
+                Logger.Error("error handling base nick change", exc);
             }
         }
 
@@ -492,6 +505,45 @@ namespace Quotes
             }
 
             return false;
+        }
+
+        protected virtual void ActuallyHandleBaseNickChanged(object sender, BaseNickChangedEventArgs e)
+        {
+            var oldNickLower = e.OldBaseNick.ToLowerInvariant();
+            var newNickLower = e.NewBaseNick.ToLowerInvariant();
+
+            using (var ctx = GetNewContext())
+            {
+                // fix up quote ownership
+                var authorQuotes = ctx.Quotes
+                    .Where(q => q.AuthorLowercase == oldNickLower);
+                foreach (var authorQuote in authorQuotes)
+                {
+                    authorQuote.Author = e.NewBaseNick;
+                    authorQuote.AuthorLowercase = newNickLower;
+                }
+                ctx.SaveChanges();
+
+                // fix up quote votes
+                var votes = ctx.QuoteVotes
+                    .Where(qv => qv.VoterLowercase == oldNickLower || qv.VoterLowercase == newNickLower)
+                    .ToList();
+                foreach (var oldNickVote in votes.Where(qv => qv.VoterLowercase == oldNickLower))
+                {
+                    // did the new nick vote for the same quote?
+                    if (votes.Any(qv => qv.QuoteID == oldNickVote.QuoteID && qv.VoterLowercase == newNickLower))
+                    {
+                        // yes; delete this one to prevent a duplicate
+                        ctx.QuoteVotes.Remove(oldNickVote);
+                    }
+                    else
+                    {
+                        // no; update this one
+                        oldNickVote.VoterLowercase = newNickLower;
+                    }
+                }
+                ctx.SaveChanges();
+            }
         }
 
         protected void UpsertVote(string voter, long quoteID, short points)
