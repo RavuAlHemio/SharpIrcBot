@@ -140,6 +140,9 @@ namespace DatabaseNickMapping
                     ctx.NickMappings.Add(mappingEntry);
                     ctx.SaveChanges();
 
+                    // trigger update
+                    ConnectionManager.ReportBaseNickChange(aliasNick, baseNick);
+
                     ConnectionManager.SendChannelMessageFormat(channel, "{0}: {1} is now an alias for {2}.", requestor, aliasNick, baseNick);
                 }
             }
