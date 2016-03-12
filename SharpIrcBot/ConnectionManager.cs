@@ -53,6 +53,7 @@ namespace SharpIrcBot
         public event EventHandler<OutgoingMessageEventArgs> OutgoingQueryMessage;
         public event EventHandler<OutgoingMessageEventArgs> OutgoingQueryAction;
         public event EventHandler<OutgoingMessageEventArgs> OutgoingQueryNotice;
+        public event EventHandler<BaseNickChangedEventArgs> BaseNickChanged;
 
         public ConnectionManager([CanBeNull] string configPath)
             : this(SharpIrcBotUtil.LoadConfig(configPath))
@@ -513,6 +514,11 @@ namespace SharpIrcBot
             }
         }
 
+        protected virtual void OnBaseNickChanged(BaseNickChangedEventArgs e)
+        {
+            BaseNickChanged?.Invoke(this, e);
+        }
+
         public string RegisteredNameForNick([NotNull] string nick)
         {
             // perform nick mapping
@@ -520,6 +526,14 @@ namespace SharpIrcBot
             OnNickMapping(eventArgs);
 
             return eventArgs.MapsTo.FirstOrDefault();
+        }
+
+        public void ReportBaseNickChange(string oldBaseNick, string newBaseNick)
+        {
+            // trigger update among plugins
+            Logger.InfoFormat("reporting base nick change from {0} to {1}", oldBaseNick, newBaseNick);
+            var e = new BaseNickChangedEventArgs(oldBaseNick, newBaseNick);
+            OnBaseNickChanged(e);
         }
 
         /// <remarks><paramref name="words"/> will be modified.</remarks>
