@@ -13,9 +13,9 @@ namespace SharpIrcBot
     {
         private static readonly ILog Logger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        private SortedDictionary<DateTimeOffset, List<Action>> _whenWhat;
+        private readonly SortedDictionary<DateTimeOffset, List<Action>> _whenWhat;
         private Thread _performThread;
-        private CancellationTokenSource _cancelSource;
+        private readonly CancellationTokenSource _cancelSource;
         private readonly ManualResetEvent _interruptor;
 
         public TimerTrigger()
