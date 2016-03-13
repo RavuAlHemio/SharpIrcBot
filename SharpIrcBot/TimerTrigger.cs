@@ -41,6 +41,27 @@ namespace SharpIrcBot
             _interruptor.Set();
         }
 
+        public bool Unregister(DateTimeOffset when, [NotNull] Action what)
+        {
+            lock (_whenWhat)
+            {
+                if (!_whenWhat.ContainsKey(when))
+                {
+                    return false;
+                }
+
+                if (!_whenWhat[when].Remove(what))
+                {
+                    return false;
+                }
+            }
+
+            // wake up the sleeper thread
+            _interruptor.Set();
+
+            return true;
+        }
+
         public void Start()
         {
             _performThread = new Thread(Proc)
