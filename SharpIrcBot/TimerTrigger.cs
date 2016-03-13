@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
@@ -15,11 +16,13 @@ namespace SharpIrcBot
         private SortedDictionary<DateTimeOffset, List<Action>> _whenWhat;
         private Thread _performThread;
         private CancellationTokenSource _cancelSource;
+        private readonly ManualResetEvent _interruptor;
 
         public TimerTrigger()
         {
             _whenWhat = new SortedDictionary<DateTimeOffset, List<Action>>();
             _cancelSource = new CancellationTokenSource();
+            _interruptor = new ManualResetEvent(initialState: false);
         }
 
         public void Register(DateTimeOffset when, [NotNull] Action what)
@@ -35,7 +38,7 @@ namespace SharpIrcBot
             }
 
             // wake up the sleeper thread
-            _performThread?.Interrupt();
+            _interruptor.Set();
         }
 
         public void Start()
@@ -51,29 +54,36 @@ namespace SharpIrcBot
         public void Stop()
         {
             _cancelSource.Cancel();
-            _performThread.Interrupt();
             _performThread.Join();
             _performThread = null;
         }
 
-        private void SleepUntilInterrupt()
+        private void SleepUntilInterrupt(CancellationToken cancelToken = default(CancellationToken))
         {
             bool interrupted = false;
             while (!interrupted)
             {
-                try
+                _interruptor.Reset();
+                int waited = WaitHandle.WaitAny(new WaitHandle[] {cancelToken.WaitHandle, _interruptor}, TimeSpan.FromMinutes(1.0));
+                switch (waited)
                 {
-                    Thread.Sleep(TimeSpan.FromMinutes(1.0));
-                }
-                catch (ThreadInterruptedException)
-                {
-                    interrupted = true;
+                    case 0:
+                        throw new OperationCanceledException();
+                    case 1:
+                        interrupted = true;
+                        break;
+                    case WaitHandle.WaitTimeout:
+                        // loop again
+                        break;
+                    default:
+                        Trace.Fail("unexpected switch value");
+                        break;
                 }
             }
         }
 
         /// <returns><c>true</c> if interrupted, <c>false</c> if time was hit.</returns>
-        private bool SleepUntilTimeOrInterrupt(DateTimeOffset when)
+        private bool SleepUntilTimeOrInterrupt(DateTimeOffset when, CancellationToken cancelToken = default(CancellationToken))
         {
             while (when > DateTimeOffset.Now)
             {
@@ -84,15 +94,19 @@ namespace SharpIrcBot
                     howLong = TimeSpan.FromMilliseconds(int.MaxValue);
                 }
 
-                try
+                Logger.DebugFormat("sleeping until {0} ({1})", when, howLong);
+                _interruptor.Reset();
+                int waited = WaitHandle.WaitAny(new WaitHandle[] {cancelToken.WaitHandle, _interruptor}, howLong);
+                switch (waited)
                 {
-                    Logger.DebugFormat("sleeping until {0} ({1})", when, howLong);
-                    Thread.Sleep(howLong);
-                }
-                catch (TargetInvocationException)
-                {
-                    // and stop
-                    return true;
+                    case 0:
+                        throw new OperationCanceledException();
+                    case 1:
+                        // and stop
+                        return true;
+                    case WaitHandle.WaitTimeout:
+                        // loop again
+                        break;
                 }
             }
 
@@ -104,7 +118,7 @@ namespace SharpIrcBot
         {
             var token = _cancelSource.Token;
 
-            while (!_cancelSource.IsCancellationRequested)
+            while (!token.IsCancellationRequested)
             {
                 KeyValuePair<DateTimeOffset, List<Action>>? maybeFirst;
 
@@ -124,14 +138,14 @@ namespace SharpIrcBot
 
                 if (!maybeFirst.HasValue)
                 {
-                    SleepUntilInterrupt();
+                    SleepUntilInterrupt(token);
                     continue;
                 }
 
                 var first = maybeFirst.Value;
 
                 // sleep until that event
-                if (SleepUntilTimeOrInterrupt(first.Key))
+                if (SleepUntilTimeOrInterrupt(first.Key, token))
                 {
                     // interrupted; something might have changed
 
