@@ -7,7 +7,7 @@ namespace Weather.Wunderground
     public class WundergroundObservation
     {
         [JsonProperty("temp_c")]
-        public int Temperature { get; set; }
+        public decimal Temperature { get; set; }
 
         [NotNull, JsonProperty("relative_humidity")]
         public string Humidity { get; set; }
@@ -16,6 +16,6 @@ namespace Weather.Wunderground
         public string WeatherDescription { get; set; }
         
         [JsonProperty("feelslike_c")]
-        public int FeelsLikeTemperature { get; set; }
+        public decimal FeelsLikeTemperature { get; set; }
     }
 }
