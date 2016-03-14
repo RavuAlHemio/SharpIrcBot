@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Text.RegularExpressions;
 using log4net;
 using Meebey.SmartIrc4net;
 using Newtonsoft.Json.Linq;
@@ -13,6 +14,8 @@ namespace Weather
     public class WeatherPlugin : IPlugin, IReloadableConfiguration
     {
         private static readonly ILog Logger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+
+        protected static readonly Regex WeatherRegex = new Regex("^!(?<lucky>l)?weather(?:\\s+(?<location>.+)\\s*)?$");
 
         protected ConnectionManager ConnectionManager { get; }
         protected WeatherConfig Config { get; set; }
@@ -106,24 +109,15 @@ namespace Weather
                 return;
             }
 
-            string location;
-            if (args.Data.Message == "!weather")
-            {
-                location = Config.DefaultLocation;
-            }
-            else if (!args.Data.Message.StartsWith("!weather "))
+            var match = WeatherRegex.Match(args.Data.Message);
+            if (!match.Success)
             {
                 return;
-            }
-            else
-            {
-                location = args.Data.Message.Substring(("!weather ").Length).Trim();
             }
 
-            if (location.Length == 0)
-            {
-                return;
-            }
+            string location = match.Groups["location"].Success
+                ? match.Groups["location"].Value
+                : Config.DefaultLocation;
 
             if (!CheckIsCoolEnough())
             {
@@ -180,9 +174,9 @@ namespace Weather
 
             var weather = new StringBuilder();
             weather.Append($"{args.Data.Nick}: ");
-            if (response.CurrentWeather?.DisplayLocation.FullName != null)
+            if (!match.Groups["lucky"].Success && response.CurrentWeather?.DisplayLocation.FullName != null)
             {
-                weather.Append($"{response.CurrentWeather.DisplayLocation.FullName}");
+                weather.Append($"{response.CurrentWeather.DisplayLocation.FullName}: ");
             }
             if (response.CurrentWeather?.WeatherDescription != null)
             {
