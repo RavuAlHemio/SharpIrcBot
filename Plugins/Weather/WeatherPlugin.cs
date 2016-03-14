@@ -178,7 +178,7 @@ namespace Weather
             {
                 weather.Append($"{response.CurrentWeather.DisplayLocation.FullName}: ");
             }
-            if (response.CurrentWeather?.WeatherDescription != null)
+            if (!string.IsNullOrWhiteSpace(response.CurrentWeather?.WeatherDescription))
             {
                 weather.Append($"{response.CurrentWeather.WeatherDescription}, ");
             }
