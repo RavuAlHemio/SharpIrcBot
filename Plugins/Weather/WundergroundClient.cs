@@ -18,7 +18,7 @@ namespace Weather
         {
             var escapedApiKey = Uri.EscapeUriString(apiKey);
             var escapedLocation = Uri.EscapeUriString(location);
-            var json = _client.DownloadString($"http://api.wunderground.com/api/{escapedApiKey}/geolookup/conditions/q/{escapedLocation}.json");
+            var json = _client.DownloadString($"http://api.wunderground.com/api/{escapedApiKey}/geolookup/conditions/forecast/q/{escapedLocation}.json");
 
             var response = new WundergroundResponse();
             JsonConvert.PopulateObject(json, response);
