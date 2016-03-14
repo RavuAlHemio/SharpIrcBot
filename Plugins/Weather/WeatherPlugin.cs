@@ -139,7 +139,7 @@ namespace Weather
             if (response.Metadata.LocationMatches?.Count > 1)
             {
                 // pick the first
-                GetWeatherForLocation(response.Metadata.LocationMatches.First().WundergroundLocationID, channel, nick, lucky);
+                GetWeatherForLocation("zmw:" + response.Metadata.LocationMatches.First().WundergroundLocationID, channel, nick, lucky);
                 return;
             }
 
