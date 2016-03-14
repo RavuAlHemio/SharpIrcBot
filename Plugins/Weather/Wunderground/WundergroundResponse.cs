@@ -11,5 +11,8 @@ namespace Weather.Wunderground
 
         [CanBeNull, JsonProperty("current_observation")]
         public WundergroundObservation CurrentWeather { get; set; }
+
+        [CanBeNull, JsonProperty("forecast")]
+        public WundergroundForecast Forecast { get; set; }
     }
 }

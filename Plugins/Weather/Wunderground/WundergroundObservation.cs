@@ -17,5 +17,8 @@ namespace Weather.Wunderground
         
         [JsonProperty("feelslike_c")]
         public decimal FeelsLikeTemperature { get; set; }
+
+        [NotNull, JsonProperty("display_location")]
+        public WundergroundLocation DisplayLocation { get; set; }
     }
 }

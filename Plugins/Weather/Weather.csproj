@@ -49,11 +49,17 @@
     <Compile Include="WeatherPlugin.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="WundergroundClient.cs" />
+    <Compile Include="Wunderground\WundergroundDate.cs" />
     <Compile Include="Wunderground\WundergroundError.cs" />
+    <Compile Include="Wunderground\WundergroundForecast.cs" />
+    <Compile Include="Wunderground\WundergroundLocation.cs" />
     <Compile Include="Wunderground\WundergroundLocationMatch.cs" />
     <Compile Include="Wunderground\WundergroundMetadata.cs" />
     <Compile Include="Wunderground\WundergroundObservation.cs" />
     <Compile Include="Wunderground\WundergroundResponse.cs" />
+    <Compile Include="Wunderground\WundergroundSimpleForecast.cs" />
+    <Compile Include="Wunderground\WundergroundSimpleForecastDay.cs" />
+    <Compile Include="Wunderground\WundergroundTemperature.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Libraries\SmartIrc4net\SmartIrc4net.csproj">

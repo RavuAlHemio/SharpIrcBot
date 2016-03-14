@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 using log4net;
 using Meebey.SmartIrc4net;
 using Newtonsoft.Json.Linq;
@@ -177,8 +178,36 @@ namespace Weather
                 return;
             }
 
-            string weather = $"{args.Data.Nick}: {response.CurrentWeather.WeatherDescription}, {response.CurrentWeather.Temperature}°C (feels like {response.CurrentWeather.FeelsLikeTemperature}°C), {response.CurrentWeather.Humidity} humidity";
-            ConnectionManager.SendChannelMessage(args.Data.Channel, weather);
+            var weather = new StringBuilder();
+            weather.Append($"{args.Data.Nick}: ");
+            if (response.CurrentWeather?.DisplayLocation.FullName != null)
+            {
+                weather.Append($"{response.CurrentWeather.DisplayLocation.FullName}");
+            }
+            if (response.CurrentWeather?.WeatherDescription != null)
+            {
+                weather.Append($"{response.CurrentWeather.WeatherDescription}, ");
+            }
+            weather.Append($"{response.CurrentWeather.Temperature}°C (feels like {response.CurrentWeather.FeelsLikeTemperature}°C), {response.CurrentWeather.Humidity} humidity");
+
+            if (response.Forecast?.Simple?.Days != null && response.Forecast.Simple.Days.Count > 0)
+            {
+                weather.Append("; forecast: ");
+                var forecastBits = new List<string>();
+                foreach (var day in response.Forecast.Simple.Days)
+                {
+                    var bit = new StringBuilder($"{day.Date.Year}-{day.Date.Month}-{day.Date.Day}");
+                    if (day.Conditions != null)
+                    {
+                        bit.Append($" {day.Conditions}");
+                    }
+                    bit.Append($" {day.LowTemperature.Celsius}°C\u2013{day.HighTemperature.Celsius}°C");
+                    forecastBits.Add(bit.ToString());
+                }
+                weather.Append(string.Join(", ", forecastBits));
+            }
+            
+            ConnectionManager.SendChannelMessage(args.Data.Channel, weather.ToString());
         }
     }
 }
