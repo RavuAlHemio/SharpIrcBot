@@ -49,6 +49,7 @@
     <Compile Include="WeatherPlugin.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="WundergroundClient.cs" />
+    <Compile Include="Wunderground\WundergroundError.cs" />
     <Compile Include="Wunderground\WundergroundLocationMatch.cs" />
     <Compile Include="Wunderground\WundergroundMetadata.cs" />
     <Compile Include="Wunderground\WundergroundObservation.cs" />

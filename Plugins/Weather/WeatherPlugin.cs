@@ -155,6 +155,20 @@ namespace Weather
                 return;
             }
 
+            if (response.Error != null)
+            {
+                if (response.Error.Type == "querynotfound")
+                {
+                    ConnectionManager.SendChannelMessage(args.Data.Channel, "Location not found.");
+                }
+                else
+                {
+                    ConnectionManager.SendChannelMessage(args.Data.Channel, "Something went wrong!");
+                    Logger.Error($"Wunderground error of type {response.Error.Type} with description: {response.Error.Description}");
+                }
+                return;
+            }
+
             string weather = $"{response.CurrentWeather.WeatherDescription}, {response.CurrentWeather.Temperature}°C (feels like {response.CurrentWeather.FeelsLikeTemperature}°C), {response.CurrentWeather.Humidity} humidity";
             ConnectionManager.SendChannelMessage(args.Data.Channel, weather);
         }
