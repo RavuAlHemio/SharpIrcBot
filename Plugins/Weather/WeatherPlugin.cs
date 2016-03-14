@@ -15,7 +15,7 @@ namespace Weather
     {
         private static readonly ILog Logger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        protected static readonly Regex WeatherRegex = new Regex("^!(?<lucky>l)?weather(?:\\s+(?<location>.+)\\s*)?$");
+        protected static readonly Regex WeatherRegex = new Regex("^!(?<lucky>l)?weather(?:\\s+(?<location>.+))?\\s*$");
 
         protected ConnectionManager ConnectionManager { get; }
         protected WeatherConfig Config { get; set; }
@@ -102,23 +102,8 @@ namespace Weather
             return true;
         }
 
-        protected virtual void ActuallyHandleChannelMessage(object sender, IrcEventArgs args, MessageFlags flags)
+        protected virtual void GetWeatherForLocation(string location, string channel, string nick, bool lucky)
         {
-            if (flags.HasFlag(MessageFlags.UserBanned))
-            {
-                return;
-            }
-
-            var match = WeatherRegex.Match(args.Data.Message);
-            if (!match.Success)
-            {
-                return;
-            }
-
-            string location = match.Groups["location"].Success
-                ? match.Groups["location"].Value
-                : Config.DefaultLocation;
-
             if (!CheckIsCoolEnough())
             {
                 string coolDownResponse;
@@ -131,7 +116,7 @@ namespace Weather
                     coolDownResponse = "I'm being rate-limited; sorry!";
                 }
 
-                ConnectionManager.SendChannelMessage(args.Data.Channel, coolDownResponse);
+                ConnectionManager.SendChannelMessage(channel, coolDownResponse);
                 return;
             }
 
@@ -153,8 +138,8 @@ namespace Weather
 
             if (response.Metadata.LocationMatches?.Count > 1)
             {
-                // FIXME: make a choice available?
-                ConnectionManager.SendChannelMessage(args.Data.Channel, "More than one location matched; please make your query more precise!");
+                // pick the first
+                GetWeatherForLocation(response.Metadata.LocationMatches.First().WundergroundLocationID, channel, nick, lucky);
                 return;
             }
 
@@ -162,19 +147,19 @@ namespace Weather
             {
                 if (response.Metadata.Error.Type == "querynotfound")
                 {
-                    ConnectionManager.SendChannelMessage(args.Data.Channel, "Location not found.");
+                    ConnectionManager.SendChannelMessage(channel, "Location not found.");
                 }
                 else
                 {
-                    ConnectionManager.SendChannelMessage(args.Data.Channel, "Something went wrong!");
+                    ConnectionManager.SendChannelMessage(channel, "Something went wrong!");
                     Logger.Error($"Wunderground error of type {response.Metadata.Error.Type} with description: {response.Metadata.Error.Description}");
                 }
                 return;
             }
 
             var weather = new StringBuilder();
-            weather.Append($"{args.Data.Nick}: ");
-            if (!match.Groups["lucky"].Success && response.CurrentWeather?.DisplayLocation.FullName != null)
+            weather.Append($"{nick}: ");
+            if (!lucky && response.CurrentWeather?.DisplayLocation.FullName != null)
             {
                 weather.Append($"{response.CurrentWeather.DisplayLocation.FullName}: ");
             }
@@ -200,8 +185,28 @@ namespace Weather
                 }
                 weather.Append(string.Join(", ", forecastBits));
             }
-            
-            ConnectionManager.SendChannelMessage(args.Data.Channel, weather.ToString());
+
+            ConnectionManager.SendChannelMessage(channel, weather.ToString());
+        }
+
+        protected virtual void ActuallyHandleChannelMessage(object sender, IrcEventArgs args, MessageFlags flags)
+        {
+            if (flags.HasFlag(MessageFlags.UserBanned))
+            {
+                return;
+            }
+
+            var match = WeatherRegex.Match(args.Data.Message);
+            if (!match.Success)
+            {
+                return;
+            }
+
+            string location = match.Groups["location"].Success
+                ? match.Groups["location"].Value
+                : Config.DefaultLocation;
+
+            GetWeatherForLocation(location, args.Data.Channel, args.Data.Nick, match.Groups["lucky"].Success);
         }
     }
 }
