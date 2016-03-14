@@ -190,12 +190,12 @@ namespace Weather
                 var forecastBits = new List<string>();
                 foreach (var day in response.Forecast.Simple.Days)
                 {
-                    var bit = new StringBuilder($"{day.Date.Year}-{day.Date.Month}-{day.Date.Day}");
+                    var bit = new StringBuilder($"{day.Date.Year:D4}-{day.Date.Month:D2}-{day.Date.Day:D2}");
                     if (day.Conditions != null)
                     {
                         bit.Append($" {day.Conditions}");
                     }
-                    bit.Append($" {day.LowTemperature.Celsius}°C\u2013{day.HighTemperature.Celsius}°C");
+                    bit.Append($" {day.LowTemperature.Celsius}\u2013{day.HighTemperature.Celsius}°C");
                     forecastBits.Add(bit.ToString());
                 }
                 weather.Append(string.Join(", ", forecastBits));
