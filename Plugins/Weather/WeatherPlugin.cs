@@ -105,12 +105,20 @@ namespace Weather
                 return;
             }
 
-            if (!args.Data.Message.StartsWith("!weather "))
+            string location;
+            if (args.Data.Message == "!weather")
+            {
+                location = Config.DefaultLocation;
+            }
+            else if (!args.Data.Message.StartsWith("!weather "))
             {
                 return;
             }
+            else
+            {
+                location = args.Data.Message.Substring(("!weather ").Length).Trim();
+            }
 
-            var location = args.Data.Message.Substring(("!weather ").Length).Trim();
             if (location.Length == 0)
             {
                 return;
@@ -155,21 +163,21 @@ namespace Weather
                 return;
             }
 
-            if (response.Error != null)
+            if (response.Metadata.Error != null)
             {
-                if (response.Error.Type == "querynotfound")
+                if (response.Metadata.Error.Type == "querynotfound")
                 {
                     ConnectionManager.SendChannelMessage(args.Data.Channel, "Location not found.");
                 }
                 else
                 {
                     ConnectionManager.SendChannelMessage(args.Data.Channel, "Something went wrong!");
-                    Logger.Error($"Wunderground error of type {response.Error.Type} with description: {response.Error.Description}");
+                    Logger.Error($"Wunderground error of type {response.Metadata.Error.Type} with description: {response.Metadata.Error.Description}");
                 }
                 return;
             }
 
-            string weather = $"{response.CurrentWeather.WeatherDescription}, {response.CurrentWeather.Temperature}°C (feels like {response.CurrentWeather.FeelsLikeTemperature}°C), {response.CurrentWeather.Humidity} humidity";
+            string weather = $"{args.Data.Nick}: {response.CurrentWeather.WeatherDescription}, {response.CurrentWeather.Temperature}°C (feels like {response.CurrentWeather.FeelsLikeTemperature}°C), {response.CurrentWeather.Humidity} humidity";
             ConnectionManager.SendChannelMessage(args.Data.Channel, weather);
         }
     }

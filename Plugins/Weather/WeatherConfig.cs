@@ -9,6 +9,8 @@ namespace Weather
     {
         public string WunderApiKey { get; set; }
 
+        public string DefaultLocation { get; set; }
+
         public int MaxRequestsPerMinute { get; set; }
 
         public int MaxRequestsPerESTDay { get; set; }
