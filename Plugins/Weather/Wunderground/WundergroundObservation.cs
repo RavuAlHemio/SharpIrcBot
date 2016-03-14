@@ -1,0 +1,21 @@
+﻿using JetBrains.Annotations;
+using Newtonsoft.Json;
+
+namespace Weather.Wunderground
+{
+    [JsonObject]
+    public class WundergroundObservation
+    {
+        [JsonProperty("temp_c")]
+        public int Temperature { get; set; }
+
+        [NotNull, JsonProperty("relative_humidity")]
+        public string Humidity { get; set; }
+
+        [NotNull, JsonProperty("weather")]
+        public string WeatherDescription { get; set; }
+        
+        [JsonProperty("feelslike_c")]
+        public int FeelsLikeTemperature { get; set; }
+    }
+}

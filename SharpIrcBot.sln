@@ -64,6 +64,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TextCommands", "Plugins\Tex
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dice", "Plugins\Dice\Dice.csproj", "{FE45E799-BE4F-4701-96C3-88B13F391284}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Weather", "Plugins\Weather\Weather.csproj", "{DE3CF485-0B6A-426C-8BCE-5C910CD67594}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -158,6 +160,10 @@ Global
 		{FE45E799-BE4F-4701-96C3-88B13F391284}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FE45E799-BE4F-4701-96C3-88B13F391284}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FE45E799-BE4F-4701-96C3-88B13F391284}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DE3CF485-0B6A-426C-8BCE-5C910CD67594}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DE3CF485-0B6A-426C-8BCE-5C910CD67594}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DE3CF485-0B6A-426C-8BCE-5C910CD67594}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DE3CF485-0B6A-426C-8BCE-5C910CD67594}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -183,6 +189,7 @@ Global
 		{280C7F7E-EB57-4A88-B2E5-A07D71ECF8CD} = {38B2DE66-B368-4274-A9EE-ACC23B38A636}
 		{50975992-4CB9-4877-8B0B-7B84EC88021D} = {38B2DE66-B368-4274-A9EE-ACC23B38A636}
 		{FE45E799-BE4F-4701-96C3-88B13F391284} = {38B2DE66-B368-4274-A9EE-ACC23B38A636}
+		{DE3CF485-0B6A-426C-8BCE-5C910CD67594} = {38B2DE66-B368-4274-A9EE-ACC23B38A636}
 	EndGlobalSection
 	GlobalSection(MonoDevelopProperties) = preSolution
 		Policies = $0
