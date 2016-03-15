@@ -13,5 +13,8 @@ namespace Weather.Wunderground
 
         [JsonProperty("day")]
         public int Day { get; set; }
+
+        [JsonProperty("weekday_short")]
+        public string WeekdayShort { get; set; }
     }
 }

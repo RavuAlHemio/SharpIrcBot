@@ -175,7 +175,7 @@ namespace Weather
                 var forecastBits = new List<string>();
                 foreach (var day in response.Forecast.Simple.Days)
                 {
-                    var bit = new StringBuilder($"{day.Date.Year:D4}-{day.Date.Month:D2}-{day.Date.Day:D2}");
+                    var bit = new StringBuilder($"{day.Date.WeekdayShort.Substring(0, 2)} {day.Date.Day:D1}.{day.Date.Month:D2}.");
                     if (day.Conditions != null)
                     {
                         bit.Append($" {day.Conditions}");
