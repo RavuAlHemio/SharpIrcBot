@@ -43,8 +43,6 @@ namespace SharpIrcBot.Config
         [NotNull, ItemNotNull]
         public ISet<string> BannedUsers { get; set; }
 
-        public bool RejoinOnInvite { get; set; }
-
         public BotConfig(JObject obj)
         {
             ServerPort = 6669;
@@ -67,8 +65,6 @@ namespace SharpIrcBot.Config
                 new HashSet<string>(),
                 s => s.ToLowerInvariant()
             );
-
-            RejoinOnInvite = true;
 
             JsonSerializer.CreateDefault().Populate(obj.CreateReader(), this);
 
