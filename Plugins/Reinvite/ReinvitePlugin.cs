@@ -7,7 +7,7 @@ using SharpIrcBot;
 
 namespace Reinvite
 {
-    public class ReinvitePlugin : IReloadableConfiguration
+    public class ReinvitePlugin : IPlugin, IReloadableConfiguration
     {
         private static readonly ILog Logger = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
         private static readonly Regex InviteRegex = new Regex("^!invite[ ]+(?<channel>[#&][^ ]{1,256})[ ]*$");
