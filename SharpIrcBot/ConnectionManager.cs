@@ -54,6 +54,7 @@ namespace SharpIrcBot
         public event EventHandler<OutgoingMessageEventArgs> OutgoingQueryAction;
         public event EventHandler<OutgoingMessageEventArgs> OutgoingQueryNotice;
         public event EventHandler<BaseNickChangedEventArgs> BaseNickChanged;
+        public event EventHandler<InviteEventArgs> Invited;
 
         public ConnectionManager([CanBeNull] string configPath)
             : this(SharpIrcBotUtil.LoadConfig(configPath))
@@ -94,7 +95,7 @@ namespace SharpIrcBot
             Client.OnRegistered += HandleRegistered;
             Client.OnPart += HandlePart;
             Client.OnQuit += HandleQuit;
-            Client.OnInvite += PossiblyReturnToChannel;
+            Client.OnInvite += HandleInvite;
             Timers = new TimerTrigger();
             Canceller = new CancellationTokenSource();
 
@@ -320,13 +321,9 @@ namespace SharpIrcBot
             OnUserLeftChannel(e);
         }
 
-        protected virtual void PossiblyReturnToChannel(object sender, InviteEventArgs e)
+        protected virtual void HandleInvite(object sender, InviteEventArgs e)
         {
-            if (Config.RejoinOnInvite && Config.AutoJoinChannels.Contains(e.Channel))
-            {
-                // alright, return to that channel
-                Client.RfcJoin(e.Channel);
-            }
+            OnInvited(e);
         }
 
         protected virtual MessageFlags FlagsForNick([CanBeNull] string nick)
@@ -517,6 +514,11 @@ namespace SharpIrcBot
         protected virtual void OnBaseNickChanged(BaseNickChangedEventArgs e)
         {
             BaseNickChanged?.Invoke(this, e);
+        }
+
+        protected virtual void OnInvited(InviteEventArgs e)
+        {
+            Invited?.Invoke(this, e);
         }
 
         public string RegisteredNameForNick([NotNull] string nick)
