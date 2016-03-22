@@ -116,7 +116,7 @@ namespace Weather
                     coolDownResponse = "I'm being rate-limited; sorry!";
                 }
 
-                ConnectionManager.SendChannelMessage(channel, coolDownResponse);
+                ConnectionManager.SendChannelMessage(channel, $"{nick}: {coolDownResponse}");
                 return;
             }
 
@@ -147,11 +147,11 @@ namespace Weather
             {
                 if (response.Metadata.Error.Type == "querynotfound")
                 {
-                    ConnectionManager.SendChannelMessage(channel, "Location not found.");
+                    ConnectionManager.SendChannelMessage(channel, $"{nick}: Location not found.");
                 }
                 else
                 {
-                    ConnectionManager.SendChannelMessage(channel, "Something went wrong!");
+                    ConnectionManager.SendChannelMessage(channel, $"{nick}: Something went wrong!");
                     Logger.Error($"Wunderground error of type {response.Metadata.Error.Type} with description: {response.Metadata.Error.Description}");
                 }
                 return;
