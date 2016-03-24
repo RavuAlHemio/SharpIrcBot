@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using log4net;
 using Meebey.SmartIrc4net;
 using Newtonsoft.Json.Linq;
@@ -12,6 +13,7 @@ namespace Allograph
     public class AllographPlugin : IPlugin, IReloadableConfiguration
     {
         private static readonly ILog Logger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        protected static readonly Regex StatsRegex = new Regex("^!allostats +(?<channel>[#&][^ ]+) *$");
 
         protected AllographConfig Config;
         protected readonly Random Random;
@@ -26,6 +28,7 @@ namespace Allograph
             CooldownsPerChannel = new Dictionary<string, List<int>>();
 
             ConnectionManager.ChannelMessage += HandleChannelMessage;
+            ConnectionManager.QueryMessage += HandleQueryMessage;
         }
 
         public void ReloadConfiguration(JObject newConfig)
@@ -46,7 +49,19 @@ namespace Allograph
             }
         }
 
-        protected void ActuallyHandleChannelMessage(object sender, IrcEventArgs args, MessageFlags flags)
+        private void HandleQueryMessage(object sender, IrcEventArgs args, MessageFlags flags)
+        {
+            try
+            {
+                ActuallyHandleQueryMessage(sender, args, flags);
+            }
+            catch (Exception exc)
+            {
+                Logger.Error("error handling message", exc);
+            }
+        }
+
+        protected virtual void ActuallyHandleChannelMessage(object sender, IrcEventArgs args, MessageFlags flags)
         {
             if (flags.HasFlag(MessageFlags.UserBanned))
             {
@@ -154,6 +169,41 @@ namespace Allograph
             {
                 Logger.DebugFormat("{0:F2} >= {1:F2}; not posting {2}", thisProbabilityValue, Config.ProbabilityPercent, newBody);
             }
+        }
+
+        protected virtual void ActuallyHandleQueryMessage(object sender, IrcEventArgs args, MessageFlags flags)
+        {
+            var nick = args.Data.Nick;
+            var registeredNick = ConnectionManager.RegisteredNameForNick(nick);
+            if (registeredNick == null || !Config.Stewards.Contains(registeredNick))
+            {
+                // nope
+                return;
+            }
+
+            var match = StatsRegex.Match(args.Data.Message);
+            if (!match.Success)
+            {
+                return;
+            }
+
+            var channel = match.Groups["channel"].Value;
+            if (!CooldownsPerChannel.ContainsKey(channel))
+            {
+                ConnectionManager.SendQueryMessageFormat(nick, "No cooldowns for {0}.", channel);
+                return;
+            }
+
+            ConnectionManager.SendQueryMessageFormat(nick, "Allograph stats for {0}:", channel);
+            var cooldowns = CooldownsPerChannel[channel];
+            for (int i = 0; i < Config.Replacements.Count; ++i)
+            {
+                var replacement = Config.Replacements[i];
+                var cooldown = cooldowns[i];
+
+                ConnectionManager.SendQueryMessageFormat(nick, "{0} :::: {1}", replacement.RegexString, cooldown);
+            }
+            ConnectionManager.SendQueryMessage(nick, "End.");
         }
     }
 }

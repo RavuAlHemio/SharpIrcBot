@@ -52,6 +52,8 @@ namespace Allograph
 
         public HashSet<string> ChannelBlacklist { get; set; }
 
+        public HashSet<string> Stewards { get; set; }
+
         public double ProbabilityPercent { get; set; }
 
         public int CooldownIncreasePerHit { get; set; }
@@ -60,6 +62,7 @@ namespace Allograph
         {
             Replacements = new List<Replacement>();
             ChannelBlacklist = new HashSet<string>();
+            Stewards = new HashSet<string>();
             ProbabilityPercent = 100.0;
             CooldownIncreasePerHit = 5;
 
