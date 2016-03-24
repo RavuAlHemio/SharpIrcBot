@@ -75,6 +75,7 @@ namespace Sockpuppet
             Logger.InfoFormat("{0} (nick: {1}) issued the following command: {2}", username, nick, command);
 
             ConnectionManager.SendRawCommand(unescapedCommand);
+            ConnectionManager.SendQueryMessage(nick, "OK");
         }
 
         protected void ActuallyHandleQueryMessage(object sender, IrcEventArgs args, MessageFlags flags)
@@ -109,6 +110,7 @@ namespace Sockpuppet
                     return;
                 }
                 ConnectionManager.ReloadConfiguration();
+                ConnectionManager.SendQueryMessage(message.Nick, "OK");
                 return;
             }
         }
