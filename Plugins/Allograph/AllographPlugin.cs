@@ -13,7 +13,7 @@ namespace Allograph
     public class AllographPlugin : IPlugin, IReloadableConfiguration
     {
         private static readonly ILog Logger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        protected static readonly Regex StatsRegex = new Regex("^!allostats +(?<channel>[#&][^ ]+) *$");
+        protected static readonly Regex StatsRegex = new Regex("^!allostats +(?<channel>[#&][^ ]+)(?: +(?<testmsg>.+))? *$");
 
         protected AllographConfig Config;
         protected readonly Random Random;
@@ -194,12 +194,22 @@ namespace Allograph
                 return;
             }
 
+            string testMessage = match.Groups["testmsg"].Success
+                ? match.Groups["testmsg"].Value
+                : null;
+
             ConnectionManager.SendQueryMessageFormat(nick, "Allograph stats for {0}:", channel);
             var cooldowns = CooldownsPerChannel[channel];
             for (int i = 0; i < Config.Replacements.Count; ++i)
             {
                 var replacement = Config.Replacements[i];
                 var cooldown = cooldowns[i];
+
+                if (testMessage != null && !replacement.Regex.IsMatch(testMessage))
+                {
+                    // skip
+                    continue;
+                }
 
                 ConnectionManager.SendQueryMessageFormat(nick, "{0} :::: {1}", replacement.RegexString, cooldown);
             }
