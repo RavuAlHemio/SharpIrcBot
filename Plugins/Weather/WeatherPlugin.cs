@@ -147,7 +147,7 @@ namespace Weather
             {
                 if (response.Metadata.Error.Type == "querynotfound")
                 {
-                    ConnectionManager.SendChannelMessage(channel, $"{nick}: Location not found.");
+                    ConnectionManager.SendChannelMessage(channel, $"{nick}: Wunderground cannot find that location.");
                 }
                 else
                 {
