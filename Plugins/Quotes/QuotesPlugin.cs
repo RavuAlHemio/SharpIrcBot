@@ -215,10 +215,8 @@ namespace Quotes
                         Timestamp = DateTime.Now.ToUniversalTimeForDatabase(),
                         Channel = e.Data.Channel,
                         Author = normalizedNick,
-                        AuthorLowercase = normalizedNick.ToLowerInvariant(),
                         MessageType = "F",
-                        Body = addMatch.Groups[1].Value,
-                        BodyLowercase = addMatch.Groups[1].Value.ToLowerInvariant()
+                        Body = addMatch.Groups[1].Value
                     };
                     ctx.Quotes.Add(newFreeFormQuote);
                     ctx.SaveChanges();
@@ -262,7 +260,7 @@ namespace Quotes
                 var matchedQuote = PotentialQuotesPerChannel.ContainsKey(e.Data.Channel)
                     ? PotentialQuotesPerChannel[e.Data.Channel]
                         .OrderByDescending(potQuote => potQuote.Timestamp)
-                        .FirstOrDefault(potQuote => potQuote.AuthorLowercase == lowercaseRegisteredNick && potQuote.BodyLowercase.Contains(lowercaseSubstring))
+                        .FirstOrDefault(potQuote => potQuote.Author.ToLower() == lowercaseRegisteredNick && potQuote.Body.ToLower().Contains(lowercaseSubstring))
                     : null;
 
                 if (matchedQuote == null)
@@ -315,10 +313,8 @@ namespace Quotes
                 Timestamp = DateTime.Now.ToUniversalTimeForDatabase(),
                 Channel = e.Data.Channel,
                 Author = normalizedNick,
-                AuthorLowercase = normalizedNick.ToLowerInvariant(),
                 MessageType = "M",
-                Body = body,
-                BodyLowercase = body.ToLowerInvariant()
+                Body = body
             };
             AddPotentialQuote(newQuote, e.Data.Channel);
 
@@ -339,10 +335,8 @@ namespace Quotes
                 Timestamp = DateTime.Now.ToUniversalTimeForDatabase(),
                 Channel = e.Data.Channel,
                 Author = normalizedNick,
-                AuthorLowercase = normalizedNick.ToLowerInvariant(),
                 MessageType = "A",
-                Body = e.ActionMessage,
-                BodyLowercase = e.ActionMessage.ToLowerInvariant()
+                Body = e.ActionMessage
             };
             AddPotentialQuote(quote, e.Data.Channel);
 
@@ -403,7 +397,7 @@ namespace Quotes
                 using (var ctx = GetNewContext())
                 {
                     var quotes = (lowercaseSubject != null)
-                        ? ctx.Quotes.Where(q => q.BodyLowercase.Contains(lowercaseSubject))
+                        ? ctx.Quotes.Where(q => q.Body.ToLower().Contains(lowercaseSubject))
                         : ctx.Quotes;
 
                     PostRandomQuote(sender, location, quotes, ctx.QuoteVotes, rating, addMyRating, postReply);
@@ -422,7 +416,7 @@ namespace Quotes
 
                 using (var ctx = GetNewContext())
                 {
-                    var quotes = ctx.Quotes.Where(q => q.AuthorLowercase == lowercaseNick);
+                    var quotes = ctx.Quotes.Where(q => q.Author.ToLower() == lowercaseNick);
 
                     PostRandomQuote(sender, location, quotes, ctx.QuoteVotes, rating, addMyRating, postReply);
                 }
@@ -516,11 +510,10 @@ namespace Quotes
             {
                 // fix up quote ownership
                 var authorQuotes = ctx.Quotes
-                    .Where(q => q.AuthorLowercase == oldNickLower);
+                    .Where(q => q.Author.ToLower() == oldNickLower);
                 foreach (var authorQuote in authorQuotes)
                 {
                     authorQuote.Author = e.NewBaseNick;
-                    authorQuote.AuthorLowercase = newNickLower;
                 }
                 ctx.SaveChanges();
 

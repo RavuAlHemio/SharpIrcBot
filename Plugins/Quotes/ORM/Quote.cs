@@ -28,11 +28,6 @@ namespace Quotes.ORM
         public string Author { get; set; }
 
         [Required]
-        [Column("author_lowercase", Order = 5)]
-        [MaxLength(255)]
-        public string AuthorLowercase { get; set; }
-
-        [Required]
         [Column("message_type", Order = 6)]
         [MaxLength(1)]
         public string MessageType { get; set; }
@@ -40,9 +35,5 @@ namespace Quotes.ORM
         [Required]
         [Column("body", Order = 7)]
         public string Body { get; set; }
-
-        [Required]
-        [Column("body_lowercase", Order = 8)]
-        public string BodyLowercase { get; set; }
     }
 }

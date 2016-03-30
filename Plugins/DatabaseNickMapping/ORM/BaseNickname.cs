@@ -13,11 +13,6 @@ namespace DatabaseNickMapping.ORM
         [MaxLength(255)]
         public string Nickname { get; set; }
 
-        [Required]
-        [Column("nickname_lower", Order = 2)]
-        [MaxLength(255)]
-        public string NicknameLowercase { get; set; }
-
         public virtual ICollection<NickMapping> Mappings { get; set; }
     }
 }

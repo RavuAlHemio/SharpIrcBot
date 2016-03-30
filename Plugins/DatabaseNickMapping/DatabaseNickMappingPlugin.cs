@@ -106,8 +106,7 @@ namespace DatabaseNickMapping
                             // perform new registration
                             var baseNickEntry = new BaseNickname
                             {
-                                Nickname = baseNickInput,
-                                NicknameLowercase = baseNickInput.ToLowerInvariant()
+                                Nickname = baseNickInput
                             };
                             ctx.BaseNicknames.Add(baseNickEntry);
                             ctx.SaveChanges();
@@ -154,7 +153,7 @@ namespace DatabaseNickMapping
                     var unlinkNickInput = unlinkMatch.Groups[1].Value;
                     var unlinkNickLower = unlinkNickInput.ToLowerInvariant();
 
-                    var unlinkBaseObject = ctx.BaseNicknames.FirstOrDefault(bn => bn.NicknameLowercase == unlinkNickLower);
+                    var unlinkBaseObject = ctx.BaseNicknames.FirstOrDefault(bn => bn.Nickname.ToLower() == unlinkNickLower);
                     if (unlinkBaseObject != null)
                     {
                         ConnectionManager.SendChannelMessageFormat(channel, "{0}: {1} is the base nickname and cannot be unlinked.", requestor, unlinkNickInput);
@@ -185,7 +184,7 @@ namespace DatabaseNickMapping
 
                     if (unregister)
                     {
-                        var foundEntry = ctx.BaseNicknames.FirstOrDefault(bn => bn.NicknameLowercase == nickToRegisterLowercase);
+                        var foundEntry = ctx.BaseNicknames.FirstOrDefault(bn => bn.Nickname.ToLower() == nickToRegisterLowercase);
                         if (foundEntry == null)
                         {
                             ConnectionManager.SendChannelMessageFormat(channel, "{0}: The nickname {1} is not registered.", requestor, nickToRegister);
@@ -210,8 +209,7 @@ namespace DatabaseNickMapping
 
                         var newEntry = new BaseNickname
                         {
-                            Nickname = nickToRegister,
-                            NicknameLowercase = nickToRegisterLowercase
+                            Nickname = nickToRegister
                         };
                         ctx.BaseNicknames.Add(newEntry);
                         ctx.SaveChanges();
@@ -263,7 +261,7 @@ namespace DatabaseNickMapping
                 return meAsTarget.BaseNickname;
             }
 
-            var meAsBase = ctx.BaseNicknames.FirstOrDefault(bn => bn.NicknameLowercase == lowerNickname);
+            var meAsBase = ctx.BaseNicknames.FirstOrDefault(bn => bn.Nickname.ToLower() == lowerNickname);
             if (meAsBase != null)
             {
                 Logger.DebugFormat("{0} is the base nickname ({1})", nick, meAsBase.Nickname);
