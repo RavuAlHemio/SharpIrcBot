@@ -712,6 +712,7 @@ namespace UnoBot
                 return;
             }
 
+            // PreviousPlayer is null if it would equal NextPlayer otherwise
             if (PreviousPlayer != null && CurrentCardCounts.ContainsKey(PreviousPlayer) && CurrentCardCounts[PreviousPlayer] <= Config.PlayToWinThreshold)
             {
                 StrategyLogger.DebugFormat("previous player ({0}) has {1} cards or less ({2}); filtering out reverses", PreviousPlayer, Config.PlayToWinThreshold, CurrentCardCounts[PreviousPlayer]);
@@ -730,9 +731,36 @@ namespace UnoBot
                 return;
             }
 
-            if (NextButOnePlayer != null && CurrentCardCounts.ContainsKey(NextButOnePlayer) && CurrentCardCounts[NextButOnePlayer] <= Config.PlayToWinThreshold)
+            bool nextButOnePlayerHasTooFewCards = (
+                NextButOnePlayer != null
+                && CurrentCardCounts.ContainsKey(NextButOnePlayer)
+                && CurrentCardCounts[NextButOnePlayer] <= Config.PlayToWinThreshold
+            );
+            bool nextPlayerHasTooFewCards = (
+                NextPlayer != null
+                && CurrentCardCounts.ContainsKey(NextPlayer)
+                && CurrentCardCounts[NextPlayer] <= Config.PlayToWinThreshold
+            );
+
+            if (nextButOnePlayerHasTooFewCards)
             {
-                StrategyLogger.DebugFormat("next-but-one player ({0}) has {1} cards or less ({2}); filtering out cards that would skip my successor (their predecessor)", NextButOnePlayer, Config.PlayToWinThreshold, CurrentCardCounts[NextButOnePlayer]);
+                int nextButOneCount = CurrentCardCounts[NextButOnePlayer];
+                if (nextPlayerHasTooFewCards)
+                {
+                    int nextCount = CurrentCardCounts[NextPlayer];
+                    if (nextCount < nextButOneCount)
+                    {
+                        StrategyLogger.Debug($"both next ({NextPlayer}) and next-but-one ({NextButOnePlayer}) player have <= {Config.PlayToWinThreshold} cards, but next has fewer ({nextCount}) than next-but-one ({nextButOneCount}); not filtering out cards that would skip next and make it next-but-one's turn");
+                        return;
+                    }
+
+                    StrategyLogger.Debug($"both next ({NextPlayer}) and next-but-one ({NextButOnePlayer}) have <= {Config.PlayToWinThreshold} cards, but next has more ({nextCount}) than next-but-one ({nextButOneCount}); filtering out cards that would skip next and make it next-but-one's turn");
+                }
+                else
+                {
+                    StrategyLogger.Debug($"next-but-one player ({NextButOnePlayer}) has <= {Config.PlayToWinThreshold} cards and next ({NextPlayer}) is not a danger; filtering out cards that would skip next and make it next-but-one's turn");
+                }
+
                 possibleCards.RemoveAll(c => c.Value == CardValue.DrawTwo || c.Value == CardValue.WildDrawFour || c.Value == CardValue.Skip);
             }
         }
