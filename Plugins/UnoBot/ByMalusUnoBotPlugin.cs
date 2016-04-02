@@ -17,19 +17,27 @@ namespace UnoBot
         {
         }
 
+        protected StrategyContinuation StrategyAnyCard(List<Card> possibleCards)
+        {
+            // just anything
+            possibleCards.AddRange(CurrentHand.Where(IsCardPlayable));
+            return StrategyContinuation.ContinueToNextStrategy;
+        }
+
         protected override StrategyFunction[] AssembleStrategies()
         {
             // don't weight cards by type
             return new StrategyFunction[]
-                    {
+            {
                 StrategyDestroyNextPlayerIfDangerous,
-                StrategyHonorColorRequests
+                StrategyHonorColorRequests,
+                StrategyAnyCard
             };
         }
 
         protected override Card? PerformFinalPick(List<Card> possibleCards)
         {
-            var cardToPlay = CurrentHand
+            var cardToPlay = possibleCards
                 .Where(IsCardPlayable)
                 .OrderBy(c => c.Malus)
                 .Select(c => (Card?)c)

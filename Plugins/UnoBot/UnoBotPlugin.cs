@@ -582,7 +582,7 @@ namespace UnoBot
 
             if (possibleCards.Count > 0)
             {
-                StrategyLogger.Debug("we have an evil card for the next player");
+                StrategyLogger.DebugFormat("we have at least one evil card for the next player ({0})", string.Join(", ", possibleCards));
 
                 // don't add the next pick
                 return StrategyContinuation.SkipAllOtherStrategies;
