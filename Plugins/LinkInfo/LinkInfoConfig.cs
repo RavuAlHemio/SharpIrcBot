@@ -7,6 +7,7 @@ namespace LinkInfo
     [JsonObject(MemberSerialization.OptOut)]
     public class LinkInfoConfig
     {
+        public bool AutoShowLinkInfo { get; set; }
         public long MaxDownloadSizeBytes { get; set; }
         public double TimeoutSeconds { get; set; }
         public double ImageInfoTimeoutSeconds { get; set; }

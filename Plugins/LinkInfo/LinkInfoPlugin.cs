@@ -91,7 +91,7 @@ namespace LinkInfo
             }
 
             // respond?
-            if (body.StartsWith("!link "))
+            if (Config.AutoShowLinkInfo || body.StartsWith("!link "))
             {
                 FetchAndPostLinkInfo(links, args.Data.Channel);
             }
