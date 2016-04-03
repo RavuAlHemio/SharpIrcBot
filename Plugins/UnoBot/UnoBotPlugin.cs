@@ -585,7 +585,7 @@ namespace UnoBot
                 StrategyLogger.DebugFormat("we have at least one evil card for the next player ({0})", string.Join(", ", possibleCards));
 
                 // don't add the next pick
-                return StrategyContinuation.SkipAllOtherStrategies;
+                return StrategyContinuation.SkipAllOtherStrategiesUnlessFilteredEmpty;
             }
             else if (!DrewLast)
             {
@@ -640,7 +640,7 @@ namespace UnoBot
             if (possibleCards.Count > 0)
             {
                 // alright, no need for the standard pick
-                return StrategyContinuation.SkipAllOtherStrategies;
+                return StrategyContinuation.SkipAllOtherStrategiesUnlessFilteredEmpty;
             }
 
             return StrategyContinuation.ContinueToNextStrategy;
@@ -863,6 +863,18 @@ namespace UnoBot
             foreach (var strategy in strategies)
             {
                 var continuation = strategy(possibleCards);
+
+                if (continuation == StrategyContinuation.SkipAllOtherStrategies)
+                {
+                    break;
+                }
+
+                // apply filters
+                foreach (var filter in filters)
+                {
+                    filter(possibleCards);
+                }
+
                 if (continuation == StrategyContinuation.ContinueToNextStrategy)
                 {
                     continue;
@@ -871,16 +883,17 @@ namespace UnoBot
                 {
                     return;
                 }
-                else if (continuation == StrategyContinuation.SkipAllOtherStrategies)
+                else if (continuation == StrategyContinuation.SkipAllOtherStrategiesUnlessFilteredEmpty)
                 {
-                    break;
+                    if (possibleCards.Any())
+                    {
+                        break;
+                    }
+                    else
+                    {
+                        continue;
+                    }
                 }
-            }
-
-            // apply filters
-            foreach (var filter in filters)
-            {
-                filter(possibleCards);
             }
 
             // perform the final pick
