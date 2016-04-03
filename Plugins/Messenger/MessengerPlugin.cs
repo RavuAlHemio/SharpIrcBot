@@ -50,87 +50,103 @@ namespace Messenger
                 return;
             }
 
-            var rawRecipientNick = match.Groups["recipient"].Value;
+            string rawRecipientNickString = match.Groups["recipient"].Value;
+            string[] rawRecipientNicks = rawRecipientNickString.Split(';');
+            if (rawRecipientNicks.Length > 1 && !Config.AllowMulticast)
+            {
+                ConnectionManager.SendChannelMessageFormat(message.Channel, "{0}: Sorry, multicasting is not allowed!", message.Nick);
+                return;
+            }
+
             var rawBody = match.Groups["message"].Value;
+            var body = SharpIrcBotUtil.RemoveControlCharactersAndTrim(rawBody);
 
             var sender = ConnectionManager.RegisteredNameForNick(message.Nick) ?? message.Nick;
             var lowerSender = sender.ToLowerInvariant();
 
-            var recipientNick = SharpIrcBotUtil.RemoveControlCharactersAndTrim(rawRecipientNick);
-            var recipient = ConnectionManager.RegisteredNameForNick(recipientNick) ?? recipientNick;
-            var lowerRecipient = recipient.ToLowerInvariant();
-
-            var body = SharpIrcBotUtil.RemoveControlCharactersAndTrim(rawBody);
-
-            if (lowerRecipient.Length == 0)
-            {
-                ConnectionManager.SendChannelMessageFormat(message.Channel, "{0}: You must specify a name to deliver to!", message.Nick);
-                return;
-            }
             if (body.Length == 0)
             {
                 ConnectionManager.SendChannelMessageFormat(message.Channel, "{0}: You must specify a message to deliver!", message.Nick);
                 return;
             }
-            if (lowerRecipient == ConnectionManager.Client.Nickname.ToLowerInvariant())
-            {
-                ConnectionManager.SendChannelMessageFormat(message.Channel, "{0}: Sorry, I don\u2019t deliver to myself!", message.Nick);
-                return;
-            }
 
-            // check ignore list
-            bool isIgnored;
-            using (var ctx = GetNewContext())
-            {
-                isIgnored = ctx.IgnoreList.Any(il => il.SenderLowercase == lowerSender && il.RecipientLowercase == lowerRecipient);
-            }
+            IEnumerable<RecipientInfo> recipientEnumerable = rawRecipientNicks
+                .Select(SharpIrcBotUtil.RemoveControlCharactersAndTrim)
+                .Select(rn => new RecipientInfo(rn, ConnectionManager.RegisteredNameForNick(rn)));
+            var recipients = new HashSet<RecipientInfo>(recipientEnumerable, new RecipientInfo.LowerRecipientComparer());
 
-            if (isIgnored)
+            foreach (var recipient in recipients)
             {
-                Logger.DebugFormat(
-                    "{0} ({3}) wants to send message {1} to {2}, but the recipient is ignoring the sender",
-                    SharpIrcBotUtil.LiteralString(message.Nick),
-                    SharpIrcBotUtil.LiteralString(body),
-                    SharpIrcBotUtil.LiteralString(recipient),
-                    SharpIrcBotUtil.LiteralString(sender)
-                );
-                ConnectionManager.SendChannelMessageFormat(
-                    message.Channel,
-                    "{0}: Can\u2019t send a message to {1}\u2014they\u2019re ignoring you.",
-                    message.Nick,
-                    recipient
-                );
-                return;
+                if (recipient.LowerRecipient.Length == 0)
+                {
+                    ConnectionManager.SendChannelMessageFormat(message.Channel, "{0}: You must specify a name to deliver to!", message.Nick);
+                    return;
+                }
+                if (recipient.LowerRecipient == ConnectionManager.Client.Nickname.ToLowerInvariant())
+                {
+                    ConnectionManager.SendChannelMessageFormat(message.Channel, "{0}: Sorry, I don\u2019t deliver to myself!", message.Nick);
+                    return;
+                }
+
+                // check ignore list
+                bool isIgnored;
+                using (var ctx = GetNewContext())
+                {
+                    string lowerRecipient = recipient.LowerRecipient;
+                    isIgnored = ctx.IgnoreList.Any(il => il.SenderLowercase == lowerSender && il.RecipientLowercase == lowerRecipient);
+                }
+
+                if (isIgnored)
+                {
+                    Logger.DebugFormat(
+                        "{0} ({3}) wants to send message {1} to {2}, but the recipient is ignoring the sender",
+                        SharpIrcBotUtil.LiteralString(message.Nick),
+                        SharpIrcBotUtil.LiteralString(body),
+                        SharpIrcBotUtil.LiteralString(recipient.Recipient),
+                        SharpIrcBotUtil.LiteralString(sender)
+                    );
+                    ConnectionManager.SendChannelMessageFormat(
+                        message.Channel,
+                        "{0}: Can\u2019t send a message to {1}\u2014they\u2019re ignoring you.",
+                        message.Nick,
+                        recipient.Recipient
+                    );
+                    return;
+                }
             }
 
             Logger.DebugFormat(
                 "{0} ({3}) sending message {1} to {2}",
                 SharpIrcBotUtil.LiteralString(message.Nick),
                 SharpIrcBotUtil.LiteralString(body),
-                SharpIrcBotUtil.LiteralString(recipient),
+                string.Join(", ", recipients.Select(r => SharpIrcBotUtil.LiteralString(r.Recipient))),
                 SharpIrcBotUtil.LiteralString(sender)
             );
 
             DateTimeOffset? quiescenceEnd = null;
             using (var ctx = GetNewContext())
             {
-                var msg = new Message
+                foreach (var recipient in recipients)
                 {
-                    Timestamp = DateTimeOffset.Now,
-                    SenderOriginal = message.Nick,
-                    RecipientLowercase = lowerRecipient,
-                    Body = body
-                };
-                ctx.Messages.Add(msg);
-                ctx.SaveChanges();
+                    var msg = new Message
+                    {
+                        Timestamp = DateTimeOffset.Now,
+                        SenderOriginal = message.Nick,
+                        RecipientLowercase = recipient.LowerRecipient,
+                        Body = body
+                    };
+                    ctx.Messages.Add(msg);
+                    ctx.SaveChanges();
 
-                // check for quiescence!
-                quiescenceEnd = ctx.Quiescences
-                    .FirstOrDefault(q => q.UserLowercase == lowerRecipient)
-                    ?.EndTimestamp;
-                if (quiescenceEnd.HasValue && quiescenceEnd.Value <= DateTimeOffset.Now)
-                {
-                    quiescenceEnd = null;
+                    // check for quiescence!
+                    string lowerRecipient = recipient.LowerRecipient;
+                    quiescenceEnd = ctx.Quiescences
+                        .FirstOrDefault(q => q.UserLowercase == lowerRecipient)
+                        ?.EndTimestamp;
+                    if (quiescenceEnd.HasValue && quiescenceEnd.Value <= DateTimeOffset.Now)
+                    {
+                        quiescenceEnd = null;
+                    }
                 }
             }
 
@@ -140,7 +156,17 @@ namespace Messenger
                 return;
             }
 
-            if (lowerRecipient == lowerSender)
+            if (recipients.Count > 1)
+            {
+                ConnectionManager.SendChannelMessageFormat(
+                    message.Channel,
+                    "{0}: Aye-aye! I\u2019ll deliver your message to its recipients as soon as possible!"
+                );
+                return;
+            }
+
+            var singleRecipient = recipients.First();
+            if (singleRecipient.LowerRecipient == lowerSender)
             {
                 if (quiescenceEnd.HasValue)
                 {
@@ -168,7 +194,7 @@ namespace Messenger
                         message.Channel,
                         "{0}: Aye-aye! I\u2019ll deliver your message to {1} next time I see \u2019em after {2}!",
                         message.Nick,
-                        recipient,
+                        singleRecipient.Recipient,
                         FormatUtcTimestampFromDatabase(quiescenceEnd.Value)
                     );
                 }
@@ -178,7 +204,7 @@ namespace Messenger
                         message.Channel,
                         "{0}: Aye-aye! I\u2019ll deliver your message to {1} next time I see \u2019em!",
                         message.Nick,
-                        recipient
+                        singleRecipient.Recipient
                     );
                 }
             }

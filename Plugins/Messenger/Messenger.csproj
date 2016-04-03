@@ -64,6 +64,7 @@
     <Compile Include="ORM\ReplayableMessage.cs" />
     <Compile Include="MessengerPlugin.cs" />
     <Compile Include="MessengerConfig.cs" />
+    <Compile Include="RecipientInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup />

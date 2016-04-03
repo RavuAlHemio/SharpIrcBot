@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using SharpIrcBot;
@@ -13,12 +12,14 @@ namespace Messenger
         public string DatabaseConnectionString { get; set; }
         public int TooManyMessages { get; set; }
         public int MaxMessagesToReplay { get; set; }
+        public bool AllowMulticast { get; set; }
         public ISet<string> DeliveryChannels { get; set; }
 
         public MessengerConfig(JObject obj)
         {
             TooManyMessages = 10;
             MaxMessagesToReplay = 10;
+            AllowMulticast = false;
             DeliveryChannels = new HashSet<string>();
 
             var ser = new JsonSerializer();
