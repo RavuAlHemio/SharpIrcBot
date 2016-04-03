@@ -6,9 +6,9 @@ namespace Weather.Wunderground
     public class WundergroundTemperature
     {
         [JsonProperty("fahrenheit")]
-        public decimal Fahrenheit { get; set; }
+        public decimal? Fahrenheit { get; set; }
 
         [JsonProperty("celsius")]
-        public decimal Celsius { get; set; }
+        public decimal? Celsius { get; set; }
     }
 }
