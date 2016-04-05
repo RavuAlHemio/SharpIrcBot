@@ -166,7 +166,17 @@ namespace SharpIrcBot
                 var first = maybeFirst.Value;
 
                 // sleep until that event
-                if (SleepUntilTimeOrInterrupt(first.Key, token))
+                bool interrupted;
+                try
+                {
+                    interrupted = SleepUntilTimeOrInterrupt(first.Key, token);
+                }
+                catch (OperationCanceledException)
+                {
+                    return;
+                }
+
+                if (interrupted)
                 {
                     // interrupted; something might have changed
 
