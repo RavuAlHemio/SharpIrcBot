@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
-VisualStudioVersion = 14.0.24720.0
+VisualStudioVersion = 14.0.25123.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharpIrcBot", "SharpIrcBot\SharpIrcBot.csproj", "{EE95358B-9655-41C6-A76C-113A6EB455F2}"
 EndProject
@@ -67,6 +67,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Weather", "Plugins\Weather\Weather.csproj", "{DE3CF485-0B6A-426C-8BCE-5C910CD67594}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Reinvite", "Plugins\Reinvite\Reinvite.csproj", "{5B83A981-96E3-450D-83DC-1039C99B6EBE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AlsoKnownAs", "Plugins\AlsoKnownAs\AlsoKnownAs.csproj", "{97310AE0-EBA3-449C-B637-946AC7BD7AC5}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -170,6 +172,10 @@ Global
 		{5B83A981-96E3-450D-83DC-1039C99B6EBE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5B83A981-96E3-450D-83DC-1039C99B6EBE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5B83A981-96E3-450D-83DC-1039C99B6EBE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{97310AE0-EBA3-449C-B637-946AC7BD7AC5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{97310AE0-EBA3-449C-B637-946AC7BD7AC5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{97310AE0-EBA3-449C-B637-946AC7BD7AC5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{97310AE0-EBA3-449C-B637-946AC7BD7AC5}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -197,6 +203,7 @@ Global
 		{FE45E799-BE4F-4701-96C3-88B13F391284} = {38B2DE66-B368-4274-A9EE-ACC23B38A636}
 		{DE3CF485-0B6A-426C-8BCE-5C910CD67594} = {38B2DE66-B368-4274-A9EE-ACC23B38A636}
 		{5B83A981-96E3-450D-83DC-1039C99B6EBE} = {38B2DE66-B368-4274-A9EE-ACC23B38A636}
+		{97310AE0-EBA3-449C-B637-946AC7BD7AC5} = {38B2DE66-B368-4274-A9EE-ACC23B38A636}
 	EndGlobalSection
 	GlobalSection(MonoDevelopProperties) = preSolution
 		Policies = $0
