@@ -33,6 +33,7 @@ namespace AlsoKnownAs
             ConnectionManager.QueryMessage += HandleQueryMessage;
             ConnectionManager.JoinedChannel += HandleJoinedChannel;
             ConnectionManager.NickChange += HandleNickChange;
+            ConnectionManager.RawMessage += HandleRawMessage;
         }
 
         public void ReloadConfiguration(JObject newConfig)
@@ -70,7 +71,7 @@ namespace AlsoKnownAs
             }
         }
 
-        private void HandleJoinedChannel([CanBeNull] object sender, [CanBeNull] JoinEventArgs e)
+        private void HandleJoinedChannel([CanBeNull] object sender, [NotNull] JoinEventArgs e)
         {
             try
             {
@@ -82,7 +83,7 @@ namespace AlsoKnownAs
             }
         }
 
-        private void HandleNickChange([CanBeNull] object sender, [CanBeNull] NickChangeEventArgs e)
+        private void HandleNickChange([CanBeNull] object sender, [NotNull] NickChangeEventArgs e)
         {
             try
             {
@@ -94,7 +95,19 @@ namespace AlsoKnownAs
             }
         }
 
-        protected virtual void ActuallyHandleChannelOrQueryMessage([CanBeNull] object sender, [CanBeNull] IrcEventArgs e, MessageFlags flags, [NotNull] Action<string> respond)
+        private void HandleRawMessage([CanBeNull] object sender, [NotNull] IrcEventArgs e)
+        {
+            try
+            {
+                ActuallyHandleRawMessage(sender, e);
+            }
+            catch (Exception exc)
+            {
+                Logger.Error("error handling raw message", exc);
+            }
+        }
+
+        protected virtual void ActuallyHandleChannelOrQueryMessage([CanBeNull] object sender, [NotNull] IrcEventArgs e, MessageFlags flags, [NotNull] Action<string> respond)
         {
             if (flags.HasFlag(MessageFlags.UserBanned))
             {
@@ -145,7 +158,7 @@ namespace AlsoKnownAs
             return new HostnameUserIdentifier(host);
         }
 
-        protected virtual void RegisterNickname(string host, string nick)
+        protected virtual void RegisterNickname([NotNull] string host, [NotNull] string nick)
         {
             var identifier = GetUserIdentifier(host);
 
@@ -161,14 +174,28 @@ namespace AlsoKnownAs
             NickToMostRecentHost[nick] = identifier;
         }
 
-        protected virtual void ActuallyHandleJoinedChannel(object sender, JoinEventArgs e)
+        protected virtual void ActuallyHandleJoinedChannel(object sender, [NotNull] JoinEventArgs e)
         {
             RegisterNickname(e.Data.Host, e.Data.Nick);
         }
 
-        protected virtual void ActuallyHandleNickChange(object sender, NickChangeEventArgs e)
+        protected virtual void ActuallyHandleNickChange(object sender, [NotNull] NickChangeEventArgs e)
         {
             RegisterNickname(e.Data.Host, e.Data.Nick);
+        }
+
+        protected virtual void ActuallyHandleRawMessage([CanBeNull] object sender, [NotNull] IrcEventArgs e)
+        {
+            if (e.Data.ReplyCode != ReplyCode.WhoIsUser)
+            {
+                return;
+            }
+
+            // :irc.example.com 311 MYNICK THEIRNICK THEIRUSER THEIRHOST * :REALNAME
+            var theirNick = e.Data.RawMessageArray[3];
+            var theirHost = e.Data.RawMessageArray[5];
+
+            RegisterNickname(theirHost, theirNick);
         }
     }
 }
