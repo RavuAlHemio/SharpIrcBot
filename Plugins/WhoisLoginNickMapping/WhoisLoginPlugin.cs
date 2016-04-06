@@ -172,7 +172,7 @@ namespace WhoisLoginNickMapping
             }
             else if (args.Data.ReplyCode == ReplyCode.WhoIsUser)
             {
-                // :irc.example.com 311 MYNICK THEIRNICK THEIRHOST * :REALNAME
+                // :irc.example.com 311 MYNICK THEIRNICK THEIRUSER THEIRHOST * :REALNAME
                 // mark that we have at least seen this user
                 lock (NicksToLogins)
                 {
