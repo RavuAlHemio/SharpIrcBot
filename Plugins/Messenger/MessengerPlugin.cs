@@ -881,7 +881,7 @@ namespace Messenger
             var lowerNewNick = newNick.ToLowerInvariant();
 
             var sentMessages = messages
-                .Where(m => m.SenderOriginal.ToLowerInvariant() == lowerOldNick);
+                .Where(m => m.SenderOriginal.ToLower() == lowerOldNick);
             foreach (var sentMessage in sentMessages)
             {
                 sentMessage.SenderOriginal = newNick;
