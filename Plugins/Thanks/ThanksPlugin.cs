@@ -14,8 +14,8 @@ namespace Thanks
     public class ThanksPlugin : IPlugin, IReloadableConfiguration
     {
         private static readonly ILog Logger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        private static readonly Regex ThankRegex = new Regex("^[ ]*!(?:thank|thanks|thx)[ ]+(--force[ ]+)?([^ ]+)[ ]*$");
-        private static readonly Regex ThankedRegex = new Regex("^[ ]*!thanked[ ]+(--raw[ ]+)?([^ ]+)[ ]*$");
+        private static readonly Regex ThankRegex = new Regex("^[ ]*!(?:thank|thanks|thx)[ ]+(?<force>--force[ ]+)?(?<thankee>[^ ]+)(?:[ ]+(?<reason>.+))?$");
+        private static readonly Regex ThankedRegex = new Regex("^[ ]*!thanked[ ]+(?<raw>--raw[ ]+)?(?<thankee>[^ ]+)[ ]*$");
 
         protected ConnectionManager ConnectionManager { get; }
         protected ThanksConfig Config { get; set; }
@@ -76,8 +76,14 @@ namespace Thanks
             {
                 var thankerNick = message.Nick;
 
-                bool forceThanks = thankMatch.Groups[1].Success;
-                var thankeeNick = thankMatch.Groups[2].Value;
+                bool forceThanks = thankMatch.Groups["force"].Success;
+                var thankeeNick = thankMatch.Groups["thankee"].Value;
+                var reason = thankMatch.Groups["reason"].Value.Trim();
+
+                if (reason.Length == 0)  // trimmed!
+                {
+                    reason = null;
+                }
 
                 string thanker;
                 string thankee;
@@ -136,7 +142,8 @@ namespace Thanks
                         ThankerLowercase = thankerLower,
                         ThankeeLowercase = thankeeLower,
                         Timestamp = DateTime.Now.ToUniversalTimeForDatabase(),
-                        Deleted = false
+                        Deleted = false,
+                        Reason = reason
                     };
                     ctx.ThanksEntries.Add(entry);
                     ctx.SaveChanges();
@@ -157,8 +164,8 @@ namespace Thanks
             var thankedMatch = ThankedRegex.Match(message.Message);
             if (thankedMatch.Success)
             {
-                bool raw = thankedMatch.Groups[1].Success;
-                var nickname = thankedMatch.Groups[2].Value;
+                bool raw = thankedMatch.Groups["raw"].Success;
+                var nickname = thankedMatch.Groups["thankee"].Value;
                 if (!raw)
                 {
                     var username = ConnectionManager.RegisteredNameForNick(nickname);

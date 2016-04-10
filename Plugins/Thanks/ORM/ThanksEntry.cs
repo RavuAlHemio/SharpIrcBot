@@ -1,6 +1,8 @@
 ﻿using System;
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using JetBrains.Annotations;
 
 namespace Thanks.ORM
 {
@@ -32,8 +34,13 @@ namespace Thanks.ORM
         [MaxLength(255)]
         public string Channel { get; set; }
 
+        [CanBeNull, DefaultValue(null)]
+        [Column("reason", Order = 6)]
+        [MaxLength(255)]
+        public string Reason { get; set; }
+
         [Required]
-        [Column("deleted", Order = 6)]
+        [Column("deleted", Order = 7)]
         public bool Deleted { get; set; }
     }
 }
