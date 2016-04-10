@@ -2,9 +2,12 @@ language: csharp
 solution: SharpIrcBot.sln
 mono:
   - latest
+before_install:
+  - git submodule update --init --recursive
 install:
-  - nuget restore SharpIrcBot.sln
-  - nuget install xunit.runner.console -Prerelease -OutputDirectory testrunner
+  - curl -L -o nuget.exe https://dist.nuget.org/win-x86-commandline/latest/nuget.exe
+  - mono nuget.exe restore SharpIrcBot.sln
+  - mono nuget.exe install xunit.runner.console -Prerelease -OutputDirectory testrunner
 script:
   - xbuild /p:Configuration=Release SharpIrcBot.sln
   - mono ./testrunner/xunit.runner.console.*/tools/xunit.console.exe Tests/SharpIrcBotTests/bin/Debug/SharpIrcBotTests.dll
