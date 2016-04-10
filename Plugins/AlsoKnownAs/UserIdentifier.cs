@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Immutable;
 using JetBrains.Annotations;
 
 namespace AlsoKnownAs
@@ -18,5 +19,11 @@ namespace AlsoKnownAs
         }
 
         public abstract override int GetHashCode();
+
+        /// <summary>
+        /// The parts of this identifier, stored most-significant-first (i.e. IP addresses in canonical representation,
+        /// hostnames reversed).
+        /// </summary>
+        public abstract ImmutableList<string> Parts { get; }
     }
 }

@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Immutable;
 using System.Net;
+using System.Net.Sockets;
 using JetBrains.Annotations;
 
 namespace AlsoKnownAs
@@ -53,6 +55,24 @@ namespace AlsoKnownAs
         public override string ToString()
         {
             return Address.ToString();
+        }
+
+        public override ImmutableList<string> Parts
+        {
+            get
+            {
+                switch (Address.AddressFamily)
+                {
+                    case AddressFamily.InterNetwork:
+                        // IPv4
+                        return Address.ToString().Split('.').ToImmutableList();
+                    case AddressFamily.InterNetworkV6:
+                        // IPv6
+                        return Address.ToString().Split(':').ToImmutableList();
+                    default:
+                        throw new FormatException($"unexpected address family {Address.AddressFamily}");
+                }
+            }
         }
     }
 }

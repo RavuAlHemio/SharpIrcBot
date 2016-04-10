@@ -49,5 +49,7 @@ namespace AlsoKnownAs
         {
             return string.Join(".", HostnameParts.Reverse());
         }
+
+        public override ImmutableList<string> Parts => HostnameParts;
     }
 }

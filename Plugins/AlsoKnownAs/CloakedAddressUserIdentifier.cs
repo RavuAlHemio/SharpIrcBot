@@ -49,5 +49,7 @@ namespace AlsoKnownAs
         {
             return string.Join(".", CloakedAddressParts.Reverse());
         }
+
+        public override ImmutableList<string> Parts => CloakedAddressParts;
     }
 }

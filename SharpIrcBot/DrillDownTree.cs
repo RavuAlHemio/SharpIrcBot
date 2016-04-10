@@ -71,6 +71,13 @@ namespace SharpIrcBot
             }
         }
 
+        public bool ContainsKey(ImmutableList<TKey> keyList)
+        {
+            ImmutableList<TValue> matches;
+            int finalDepth;
+            return (TryRecursiveGet(Root, keyList, 0, out matches, out finalDepth) == ItemMatch.FullMatch);
+        }
+
         protected static ItemMatch TryRecursiveGet(Branch root, ImmutableList<TKey> keyList, int currentDepth, out ImmutableList<TValue> values, out int finalDepth)
         {
             finalDepth = currentDepth;

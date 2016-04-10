@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Text.RegularExpressions;
 using JetBrains.Annotations;
@@ -18,7 +19,7 @@ namespace AlsoKnownAs
         protected ConnectionManager ConnectionManager { get; set; }
         protected AlsoKnownAsConfig Config { get; set; }
 
-        protected Dictionary<UserIdentifier, HashSet<string>> HostToNicks { get; }
+        protected DrillDownTree<string, HashSet<string>> HostToNicks { get; }
         protected Dictionary<string, UserIdentifier> NickToMostRecentHost { get; }
 
         public AlsoKnownAsPlugin(ConnectionManager connMgr, JObject config)
@@ -26,7 +27,7 @@ namespace AlsoKnownAs
             ConnectionManager = connMgr;
             Config = new AlsoKnownAsConfig(config);
 
-            HostToNicks = new Dictionary<UserIdentifier, HashSet<string>>();
+            HostToNicks = new DrillDownTree<string, HashSet<string>>();
             NickToMostRecentHost = new Dictionary<string, UserIdentifier>();
 
             ConnectionManager.ChannelMessage += HandleChannelMessage;
@@ -41,7 +42,7 @@ namespace AlsoKnownAs
             Config = new AlsoKnownAsConfig(newConfig);
         }
 
-        private void HandleChannelMessage([CanBeNull] object sender, [CanBeNull] IrcEventArgs e, MessageFlags flags)
+        private void HandleChannelMessage([CanBeNull] object sender, [NotNull] IrcEventArgs e, MessageFlags flags)
         {
             try
             {
@@ -56,7 +57,7 @@ namespace AlsoKnownAs
             }
         }
 
-        private void HandleQueryMessage([CanBeNull] object sender, [CanBeNull] IrcEventArgs e, MessageFlags flags)
+        private void HandleQueryMessage([CanBeNull] object sender, [NotNull] IrcEventArgs e, MessageFlags flags)
         {
             try
             {
@@ -129,16 +130,28 @@ namespace AlsoKnownAs
             }
 
             var identifier = NickToMostRecentHost[nickToSearch];
-            if (!HostToNicks.ContainsKey(identifier))
+            var identifierParts = identifier.Parts;
+
+            ImmutableList<HashSet<string>> matches;
+            int matchDepth = HostToNicks.GetBestMatches(identifierParts, out matches);
+            if (matchDepth == -1)
             {
                 respond($"I don\u2019t remember any other nickname from {identifier} than {nickToSearch}.");
                 return;
             }
 
-            var otherNicks = HostToNicks[identifier]
-                .Select(id => id.ToString())
+            var otherNicks = matches
+                .SelectMany(x => x)
                 .OrderBy(id => id);
-            respond($"{identifier}: {string.Join(", ", otherNicks)}");
+
+            if (matchDepth == identifierParts.Count)
+            {
+                respond($"{identifier}: {string.Join(", ", otherNicks)}");
+            }
+            else
+            {
+                respond($"{identifier} fuzzy match ({matchDepth}/{identifierParts.Count}): {string.Join(", ", otherNicks)}");
+            }
         }
 
         protected virtual UserIdentifier GetUserIdentifier(string host)
@@ -161,14 +174,15 @@ namespace AlsoKnownAs
         protected virtual void RegisterNickname([NotNull] string host, [NotNull] string nick)
         {
             var identifier = GetUserIdentifier(host);
+            var identifierParts = identifier.Parts;
 
-            if (HostToNicks.ContainsKey(identifier))
+            if (HostToNicks.ContainsKey(identifierParts))
             {
-                HostToNicks[identifier].Add(nick);
+                HostToNicks[identifierParts].Add(nick);
             }
             else
             {
-                HostToNicks[identifier] = new HashSet<string> { nick };
+                HostToNicks[identifierParts] = new HashSet<string> { nick };
             }
 
             NickToMostRecentHost[nick] = identifier;
