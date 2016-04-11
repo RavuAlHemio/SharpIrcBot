@@ -4,12 +4,11 @@ using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
-using JetBrains.Annotations;
 using log4net;
 
 namespace SharpIrcBot
 {
-    public class TimerTrigger
+    public class TimerTrigger : ITimerTrigger
     {
         private static readonly ILog Logger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
@@ -25,7 +24,7 @@ namespace SharpIrcBot
             _interruptor = new ManualResetEvent(initialState: false);
         }
 
-        public void Register(DateTimeOffset when, [NotNull] Action what)
+        public void Register(DateTimeOffset when, Action what)
         {
             lock (_whenWhat)
             {
@@ -41,7 +40,7 @@ namespace SharpIrcBot
             _interruptor.Set();
         }
 
-        public bool Unregister(DateTimeOffset when, [NotNull] Action what)
+        public bool Unregister(DateTimeOffset when, Action what)
         {
             lock (_whenWhat)
             {

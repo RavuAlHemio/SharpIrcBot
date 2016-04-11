@@ -17,7 +17,7 @@ namespace Weather
 
         protected static readonly Regex WeatherRegex = new Regex("^!(?<lucky>l)?weather(?:\\s+(?<location>.+))?\\s*$");
 
-        protected ConnectionManager ConnectionManager { get; }
+        protected IConnectionManager ConnectionManager { get; }
         protected WeatherConfig Config { get; set; }
         protected WundergroundClient Client { get; set; }
 
@@ -27,7 +27,7 @@ namespace Weather
         protected int RequestsTodayEST { get; set; }
         protected Random RNG { get; set; }
 
-        public WeatherPlugin(ConnectionManager connMgr, JObject config)
+        public WeatherPlugin(IConnectionManager connMgr, JObject config)
         {
             ConnectionManager = connMgr;
             Config = new WeatherConfig(config);

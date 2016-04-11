@@ -17,10 +17,10 @@ namespace Thanks
         private static readonly Regex ThankRegex = new Regex("^[ ]*!(?:thank|thanks|thx)[ ]+(?<force>--force[ ]+)?(?<thankee>[^ ]+)(?:[ ]+(?<reason>.+))?$");
         private static readonly Regex ThankedRegex = new Regex("^[ ]*!thanked[ ]+(?<raw>--raw[ ]+)?(?<thankee>[^ ]+)[ ]*$");
 
-        protected ConnectionManager ConnectionManager { get; }
+        protected IConnectionManager ConnectionManager { get; }
         protected ThanksConfig Config { get; set; }
 
-        public ThanksPlugin(ConnectionManager connMgr, JObject config)
+        public ThanksPlugin(IConnectionManager connMgr, JObject config)
         {
             ConnectionManager = connMgr;
             Config = new ThanksConfig(config);
@@ -66,7 +66,7 @@ namespace Thanks
             }
 
             var message = args.Data;
-            if (message.Type != ReceiveType.ChannelMessage || message.Nick == ConnectionManager.Client.Nickname)
+            if (message.Type != ReceiveType.ChannelMessage || message.Nick == ConnectionManager.MyNickname)
             {
                 return;
             }

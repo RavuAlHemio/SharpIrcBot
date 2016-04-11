@@ -18,10 +18,10 @@ namespace DatabaseNickMapping
         private static readonly Regex BaseNickRegex = new Regex("^!basenick[ ]+([^ ]+)[ ]*$");
         private static readonly Regex PseudoRegisterRegex = new Regex("^!pseudo(un)?register[ ]+([^ ]+)[ ]*$");
 
-        protected ConnectionManager ConnectionManager;
+        protected IConnectionManager ConnectionManager;
         protected DatabaseNickMappingConfig Config;
 
-        public DatabaseNickMappingPlugin(ConnectionManager connMgr, JObject config)
+        public DatabaseNickMappingPlugin(IConnectionManager connMgr, JObject config)
         {
             ConnectionManager = connMgr;
             Config = new DatabaseNickMappingConfig(config);
@@ -76,7 +76,7 @@ namespace DatabaseNickMapping
 
             if (linkMatch.Success || unlinkMatch.Success || pseudoRegisterMatch.Success)
             {
-                if (!ConnectionManager.Client.GetChannelUser(channel, requestor).IsOp)
+                if (ConnectionManager.GetChannelLevelForUser(channel, requestor) < ChannelUserLevel.HalfOp)
                 {
                     ConnectionManager.SendChannelMessageFormat(channel, "{0}: You need to be an op to do that.", requestor);
                     return;

@@ -24,12 +24,12 @@ namespace LinkInfo
         public const int DownloadBufferSize = 4 * 1024 * 1024;
         public static readonly Regex WhiteSpaceRegex = new Regex("\\s+");
 
-        protected ConnectionManager ConnectionManager { get; set; }
+        protected IConnectionManager ConnectionManager { get; set; }
         protected LinkInfoConfig Config { get; set; }
 
         protected LinkAndInfo LastLinkAndInfo { get; set; }
 
-        public LinkInfoPlugin(ConnectionManager connMgr, JObject config)
+        public LinkInfoPlugin(IConnectionManager connMgr, JObject config)
         {
             ConnectionManager = connMgr;
             Config = new LinkInfoConfig(config);

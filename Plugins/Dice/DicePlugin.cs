@@ -47,11 +47,11 @@ namespace Dice
             RegexOptions.IgnoreCase
         );
 
-        protected ConnectionManager ConnectionManager { get; set; }
+        protected IConnectionManager ConnectionManager { get; set; }
         protected DiceConfig Config { get; set; }
         protected Random RNG { get; set; }
 
-        public DicePlugin(ConnectionManager connMgr, JObject config)
+        public DicePlugin(IConnectionManager connMgr, JObject config)
         {
             ConnectionManager = connMgr;
             Config = new DiceConfig(config);

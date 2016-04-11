@@ -11,10 +11,10 @@ namespace Sockpuppet
     {
         private static readonly ILog Logger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        protected ConnectionManager ConnectionManager { get; }
+        protected IConnectionManager ConnectionManager { get; }
         protected SockpuppetConfig Config { get; set; }
 
-        public SockpuppetPlugin(ConnectionManager connMgr, JObject config)
+        public SockpuppetPlugin(IConnectionManager connMgr, JObject config)
         {
             ConnectionManager = connMgr;
             Config = new SockpuppetConfig(config);
@@ -86,7 +86,7 @@ namespace Sockpuppet
             }
 
             var message = args.Data;
-            if (message.Type != ReceiveType.QueryMessage || message.Nick == ConnectionManager.Client.Nickname)
+            if (message.Type != ReceiveType.QueryMessage || message.Nick == ConnectionManager.MyNickname)
             {
                 return;
             }

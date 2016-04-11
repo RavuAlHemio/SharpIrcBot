@@ -1,5 +1,4 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using SharpIrcBot;
 using Newtonsoft.Json.Linq;
 
@@ -7,7 +6,7 @@ namespace UnoBot
 {
     public class NaiveUnoBotPlugin : UnoBotPlugin
     {
-        public NaiveUnoBotPlugin(ConnectionManager connMgr, JObject config)
+        public NaiveUnoBotPlugin(IConnectionManager connMgr, JObject config)
             : base(connMgr, config)
         {
         }

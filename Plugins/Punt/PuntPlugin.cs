@@ -14,12 +14,12 @@ namespace Punt
     {
         private static readonly ILog Logger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        protected ConnectionManager ConnectionManager { get; }
+        protected IConnectionManager ConnectionManager { get; }
         protected PuntConfig Config { get; set; }
         protected Dictionary<string, Regex> RegexCache { get; }
         protected Random Randomizer { get; }
 
-        public PuntPlugin(ConnectionManager connMgr, JObject config)
+        public PuntPlugin(IConnectionManager connMgr, JObject config)
         {
             ConnectionManager = connMgr;
             Config = new PuntConfig(config);
@@ -123,7 +123,7 @@ namespace Punt
                 if (bodyRegex.IsMatch(body))
                 {
                     // match! kick 'em!
-                    ConnectionManager.Client.RfcKick(channel, nick, pattern.KickMessage);
+                    ConnectionManager.KickChannelUser(channel, nick, pattern.KickMessage);
                     return;
                 }
             }

@@ -16,9 +16,9 @@ namespace TextCommands
         private static readonly ILog Logger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         protected TextCommandsConfig Config { get; set; }
-        protected ConnectionManager ConnectionManager { get; }
+        protected IConnectionManager ConnectionManager { get; }
 
-        public TextCommandsPlugin(ConnectionManager connMgr, JObject config)
+        public TextCommandsPlugin(IConnectionManager connMgr, JObject config)
         {
             ConnectionManager = connMgr;
             Config = new TextCommandsConfig(config);
@@ -72,7 +72,7 @@ namespace TextCommands
             }
 
             var message = args.Data;
-            if (message.Nick == ConnectionManager.Client.Nickname)
+            if (message.Nick == ConnectionManager.MyNickname)
             {
                 return;
             }
@@ -85,10 +85,7 @@ namespace TextCommands
                 return;
             }
 
-            var channelNicksEnumerable = MaybeGetChannel(args.Data.Channel)
-                ?.Users
-                .OfType<DictionaryEntry>()
-                .Select(de => (string)de.Key);
+            var channelNicksEnumerable = ConnectionManager.NicknamesInChannel(args.Data.Channel);
             var channelNicks = (channelNicksEnumerable == null)
                 ? new HashSet<string>()
                 : new HashSet<string>(channelNicksEnumerable);
@@ -155,17 +152,6 @@ namespace TextCommands
             {
                 respond(line);
             }
-        }
-
-        [CanBeNull]
-        protected Channel MaybeGetChannel([CanBeNull] string channelName)
-        {
-            if (channelName == null)
-            {
-                return null;
-            }
-
-            return ConnectionManager.Client.GetChannel(channelName);
         }
     }
 }

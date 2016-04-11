@@ -9,9 +9,9 @@ namespace IdentityNickMapping
     {
         private static readonly ILog Logger = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
-        protected ConnectionManager ConnectionManager;
+        protected IConnectionManager ConnectionManager;
 
-        public IdentityPlugin(ConnectionManager connMgr, JObject config)
+        public IdentityPlugin(IConnectionManager connMgr, JObject config)
         {
             ConnectionManager = connMgr;
 

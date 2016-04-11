@@ -16,9 +16,9 @@ namespace Belch
 
         private static readonly int[] SkittlesCodes = {1, 2, 3, 4, 5, 6, 7, 10, 12, 13};
 
-        protected ConnectionManager ConnectionManager;
+        protected IConnectionManager ConnectionManager;
 
-        public BelchPlugin(ConnectionManager connMgr, JObject config)
+        public BelchPlugin(IConnectionManager connMgr, JObject config)
         {
             ConnectionManager = connMgr;
             ConnectionManager.ChannelMessage += HandleChannelMessage;

@@ -18,9 +18,9 @@ namespace GroupPressure
 
         protected Queue<BacklogMessage> Backlog;
         protected PressureConfig Config;
-        protected ConnectionManager Connection;
+        protected IConnectionManager Connection;
 
-        public GroupPressurePlugin(ConnectionManager connMgr, JObject config)
+        public GroupPressurePlugin(IConnectionManager connMgr, JObject config)
         {
             Backlog = new Queue<BacklogMessage>();
             Config = new PressureConfig(config);
@@ -86,7 +86,7 @@ namespace GroupPressure
             foreach (var backMessage in Backlog)
             {
                 var actualBody = (backMessage.Action ? 'A' : 'M') + backMessage.Body;
-                if (backMessage.Sender == Connection.Config.Nickname)
+                if (backMessage.Sender == Connection.MyNickname)
                 {
                     // this is my message -- start counting from zero, so to speak
                     messageToSenders[actualBody] = new HashSet<string>();
@@ -129,7 +129,7 @@ namespace GroupPressure
                 // fake this message into the backlog to prevent duplicates
                 Backlog.Enqueue(new BacklogMessage
                 {
-                    Sender = Connection.Config.Username,
+                    Sender = Connection.MyUsername,
                     Body = body,
                     Action = (e.Data.Type == ReceiveType.ChannelAction)
                 });

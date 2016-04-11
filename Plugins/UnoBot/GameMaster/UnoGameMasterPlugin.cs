@@ -24,7 +24,7 @@ namespace UnoBot.GameMaster
         protected static readonly Regex PlayCardRegex = new Regex("^!p(?:lay)?[ ]+([A-Za-z0-9]+)[ ]+([A-Za-z0-9]+)$");
         protected static readonly Regex BotTestRegex = new Regex("^!bottest[ ]+([0-9]+)$");
 
-        protected ConnectionManager ConnectionManager;
+        protected IConnectionManager ConnectionManager;
         protected GameMasterConfig Config;
 
         protected bool AttackMode;
@@ -43,7 +43,7 @@ namespace UnoBot.GameMaster
         protected int BotTestCount;
         protected DateTime? BotTestJoinRequested;
 
-        public UnoGameMasterPlugin(ConnectionManager connMgr, JObject config)
+        public UnoGameMasterPlugin(IConnectionManager connMgr, JObject config)
         {
             ConnectionManager = connMgr;
             Config = new GameMasterConfig(config);

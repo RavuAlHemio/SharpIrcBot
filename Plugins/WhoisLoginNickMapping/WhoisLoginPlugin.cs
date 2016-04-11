@@ -14,12 +14,12 @@ namespace WhoisLoginNickMapping
     {
         private static readonly ILog Logger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        protected ConnectionManager ConnectionManager { get; }
+        protected IConnectionManager ConnectionManager { get; }
         protected WhoisLoginConfig Config { get; set; }
         protected Timer WhoisEveryoneTimer { get; set; }
         protected Dictionary<string, string> NicksToLogins { get; }
 
-        public WhoisLoginPlugin(ConnectionManager connMgr, JObject config)
+        public WhoisLoginPlugin(IConnectionManager connMgr, JObject config)
         {
             ConnectionManager = connMgr;
             Config = new WhoisLoginConfig(config);
@@ -194,10 +194,10 @@ namespace WhoisLoginNickMapping
 
         protected virtual void WhoisEveryone(object blah)
         {
-            foreach (var channel in ConnectionManager.Client.JoinedChannels)
+            foreach (var channel in ConnectionManager.JoinedChannels)
             {
                 // perform NAMES on the channel; the names response triggers the WHOIS waterfall
-                ConnectionManager.Client.RfcNames(channel);
+                ConnectionManager.RequestNicknamesInChannel(channel);
             }
         }
 
@@ -214,7 +214,7 @@ namespace WhoisLoginNickMapping
 
             for (int i = 0; i < nicknames.Length; i += packageSize)
             {
-                ConnectionManager.Client.RfcWhois(nicknames.Skip(i).Take(packageSize).ToArray());
+                ConnectionManager.RequestUserInfo(nicknames.Skip(i).Take(packageSize).ToArray());
             }
         }
     }

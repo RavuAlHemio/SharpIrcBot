@@ -51,8 +51,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ChannelUserLevel.cs" />
+    <Compile Include="ConnectionManagerExtensions.cs" />
     <Compile Include="DrillDownTree.cs" />
+    <Compile Include="IConnectionManager.cs" />
     <Compile Include="IReloadableConfiguration.cs" />
+    <Compile Include="ITimerTrigger.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ConnectionManager.cs" />
     <Compile Include="Config\BotConfig.cs" />

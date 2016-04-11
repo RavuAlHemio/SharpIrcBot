@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using log4net;
@@ -12,7 +11,7 @@ namespace UnoBot
     {
         private static readonly ILog StrategyLogger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType.FullName + ".Strategy");
 
-        public ByMalusUnoBotPlugin(ConnectionManager connMgr, JObject config)
+        public ByMalusUnoBotPlugin(IConnectionManager connMgr, JObject config)
             : base(connMgr, config)
         {
         }

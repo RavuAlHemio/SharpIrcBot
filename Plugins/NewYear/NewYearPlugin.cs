@@ -10,10 +10,10 @@ namespace NewYear
     {
         private static readonly ILog Logger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        protected ConnectionManager ConnectionManager { get; }
+        protected IConnectionManager ConnectionManager { get; }
         protected NewYearConfig Config { get; set; }
 
-        public NewYearPlugin(ConnectionManager connMgr, JObject config)
+        public NewYearPlugin(IConnectionManager connMgr, JObject config)
         {
             ConnectionManager = connMgr;
             Config = new NewYearConfig(config);

@@ -31,7 +31,7 @@ namespace UnoBot
         protected const string BotCommandRegexPattern = "^([?][a-z]+)[ ]+(?i){0}[ ]*$";
         protected static readonly Regex RuntimeTweakPattern = new Regex("^!unobotset[ ]+([A-Za-z]+)[ ]+(.+)$");
 
-        protected ConnectionManager ConnectionManager { get; }
+        protected IConnectionManager ConnectionManager { get; }
         protected UnoBotConfig Config { get; set; }
 
         protected StringBuilder CurrentMessageJson { get; }
@@ -52,7 +52,7 @@ namespace UnoBot
         protected int DrawsSinceLastPlay { get; set; }
         protected Random Randomizer { get; }
 
-        public UnoBotPlugin(ConnectionManager connMgr, JObject config)
+        public UnoBotPlugin(IConnectionManager connMgr, JObject config)
         {
             ConnectionManager = connMgr;
             Config = new UnoBotConfig(config);
@@ -179,7 +179,7 @@ namespace UnoBot
             }
 
             // ?join MyBot
-            var botNick = ConnectionManager.Client.Nickname;
+            var botNick = ConnectionManager.MyNickname;
             if (BotCommandRegexNick != botNick)
             {
                 BotCommandRegexNick = botNick;
@@ -203,7 +203,7 @@ namespace UnoBot
             }
 
             var message = args.Data;
-            if (message.Type != ReceiveType.ChannelMessage || message.Nick == ConnectionManager.Client.Nickname)
+            if (message.Type != ReceiveType.ChannelMessage || message.Nick == ConnectionManager.MyNickname)
             {
                 return;
             }
@@ -318,7 +318,7 @@ namespace UnoBot
             }
 
             var message = args.Data;
-            if (message.Nick == ConnectionManager.Client.Nickname)
+            if (message.Nick == ConnectionManager.MyNickname)
             {
                 return;
             }
@@ -372,14 +372,14 @@ namespace UnoBot
                 {
                     // my turn? not my turn? (legacy)
                     var currentPlayer = (string) evt["player"];
-                    playNow = (currentPlayer == ConnectionManager.Client.Nickname);
+                    playNow = (currentPlayer == ConnectionManager.MyNickname);
                     break;
                 }
                 case CurrentPlayerOrderEventName:
                 {
                     // my turn? not my turn?
                     var upcomingPlayers = (JArray) evt["order"];
-                    playNow = ((string)upcomingPlayers[0] == ConnectionManager.Client.Nickname);
+                    playNow = ((string)upcomingPlayers[0] == ConnectionManager.MyNickname);
                     NextPlayer = (upcomingPlayers.Count > 1)
                         ? (string)upcomingPlayers[1]
                         : null;
@@ -399,7 +399,7 @@ namespace UnoBot
                 {
                     var cardCounts = (JArray) evt["counts"];
                     CurrentCardCounts.Clear();
-                    foreach (JObject playerAndCount in cardCounts)
+                    foreach (var playerAndCount in cardCounts.OfType<JObject>())
                     {
                         var player = (string) playerAndCount["player"];
                         var count = (int) playerAndCount["count"];
@@ -432,7 +432,7 @@ namespace UnoBot
                 case CardDrawnEventName:
                 {
                     var player = (string)evt["player"];
-                    if (player == ConnectionManager.Client.Nickname)
+                    if (player == ConnectionManager.MyNickname)
                     {
                         playNow = true;
                     }
@@ -692,7 +692,7 @@ namespace UnoBot
                         hc.Value == CardValue.Skip
                     )
                 )
-            );
+            ).ToList();
             for (int i = 0; i < Config.StandardReorderPriority; ++i)
             {
                 possibleCards.AddRange(reorderCards);

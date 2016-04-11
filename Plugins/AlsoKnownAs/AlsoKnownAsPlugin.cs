@@ -16,13 +16,13 @@ namespace AlsoKnownAs
         private static readonly ILog Logger = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
         protected static readonly Regex AlsoKnownAsRegex = new Regex("^!aka\\s+(?<nickname>[^ ]+)\\s*");
 
-        protected ConnectionManager ConnectionManager { get; set; }
+        protected IConnectionManager ConnectionManager { get; set; }
         protected AlsoKnownAsConfig Config { get; set; }
 
         protected DrillDownTree<string, HashSet<string>> HostToNicks { get; }
         protected Dictionary<string, UserIdentifier> NickToMostRecentHost { get; }
 
-        public AlsoKnownAsPlugin(ConnectionManager connMgr, JObject config)
+        public AlsoKnownAsPlugin(IConnectionManager connMgr, JObject config)
         {
             ConnectionManager = connMgr;
             Config = new AlsoKnownAsConfig(config);

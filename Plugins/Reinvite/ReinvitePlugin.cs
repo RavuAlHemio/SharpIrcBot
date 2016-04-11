@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Text.RegularExpressions;
 using log4net;
 using Meebey.SmartIrc4net;
@@ -12,10 +13,10 @@ namespace Reinvite
         private static readonly ILog Logger = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
         private static readonly Regex InviteRegex = new Regex("^!invite[ ]+(?<channel>[#&][^ ]{1,256})[ ]*$");
 
-        protected ConnectionManager ConnectionManager { get; }
+        protected IConnectionManager ConnectionManager { get; }
         protected ReinviteConfig Config { get; set; }
 
-        public ReinvitePlugin(ConnectionManager connMgr, JObject config)
+        public ReinvitePlugin(IConnectionManager connMgr, JObject config)
         {
             ConnectionManager = connMgr;
             Config = new ReinviteConfig(config);
@@ -72,12 +73,12 @@ namespace Reinvite
             }
 
             var channel = match.Groups["channel"].Value;
-            if (Config.AutoJoinedChannelsOnly && !ConnectionManager.Config.AutoJoinChannels.Contains(channel))
+            if (Config.AutoJoinedChannelsOnly && !ConnectionManager.AutoJoinChannels.Contains(channel))
             {
                 return;
             }
 
-            ConnectionManager.Client.RfcJoin(channel);
+            ConnectionManager.JoinChannel(channel);
         }
 
         protected void ActuallyHandleInvite(object sender, InviteEventArgs e)
@@ -87,12 +88,12 @@ namespace Reinvite
                 return;
             }
 
-            if (Config.AutoJoinedChannelsOnly && !ConnectionManager.Config.AutoJoinChannels.Contains(e.Channel))
+            if (Config.AutoJoinedChannelsOnly && !ConnectionManager.AutoJoinChannels.Contains(e.Channel))
             {
                 return;
             }
 
-            ConnectionManager.Client.RfcJoin(e.Channel);
+            ConnectionManager.JoinChannel(e.Channel);
         }
     }
 }

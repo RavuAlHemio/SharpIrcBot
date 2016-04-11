@@ -26,9 +26,9 @@ namespace Messenger
         private static readonly Regex UnQuiesceRegex = new Regex("^[ ]*!(?:msg|mail)back[ ]*$");
 
         protected MessengerConfig Config { get; set; }
-        protected ConnectionManager ConnectionManager { get; set; }
+        protected IConnectionManager ConnectionManager { get; set; }
 
-        public MessengerPlugin(ConnectionManager connMgr, JObject config)
+        public MessengerPlugin(IConnectionManager connMgr, JObject config)
         {
             ConnectionManager = connMgr;
             Config = new MessengerConfig(config);
@@ -82,7 +82,7 @@ namespace Messenger
                     ConnectionManager.SendChannelMessageFormat(message.Channel, "{0}: You must specify a name to deliver to!", message.Nick);
                     return;
                 }
-                if (recipient.LowerRecipient == ConnectionManager.Client.Nickname.ToLowerInvariant())
+                if (recipient.LowerRecipient == ConnectionManager.MyNickname.ToLowerInvariant())
                 {
                     ConnectionManager.SendChannelMessageFormat(message.Channel, "{0}: Sorry, I don\u2019t deliver to myself!", message.Nick);
                     return;
@@ -698,7 +698,7 @@ namespace Messenger
         protected void ActuallyHandleChannelMessage(object sender, IrcEventArgs args, MessageFlags flags)
         {
             var message = args.Data;
-            if (message.Type != ReceiveType.ChannelMessage || message.Nick == ConnectionManager.Client.Nickname)
+            if (message.Type != ReceiveType.ChannelMessage || message.Nick == ConnectionManager.MyNickname)
             {
                 return;
             }

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -14,11 +13,11 @@ namespace DontJustHighlightMe
     {
         private static readonly ILog Logger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        protected ConnectionManager ConnectionManager { get; set; }
+        protected IConnectionManager ConnectionManager { get; set; }
         protected DJHMConfig Config { get; set; }
         protected Random RNG { get; set; }
 
-        public DontJustHighlightMePlugin(ConnectionManager connMgr, JObject config)
+        public DontJustHighlightMePlugin(IConnectionManager connMgr, JObject config)
         {
             ConnectionManager = connMgr;
             Config = new DJHMConfig(config);
@@ -63,11 +62,8 @@ namespace DontJustHighlightMe
             string highlightee = null;
 
             var lowercaseChannelUsernameEnumerable = ConnectionManager
-                .Client
-                .GetChannel(args.Data.Channel)
-                .Users
-                .OfType<DictionaryEntry>()
-                .Select(de => ((string)de.Key).ToLowerInvariant());
+                .NicknamesInChannel(args.Data.Channel)
+                .Select(nick => nick.ToLowerInvariant());
             var lowercaseChannelUsernames = new HashSet<string>(lowercaseChannelUsernameEnumerable);
 
             // is it a username of a user in the list?
@@ -129,7 +125,7 @@ namespace DontJustHighlightMe
                     args.Data.Channel,
                     highlightee
                 );
-                ConnectionManager.Client.RfcKick(args.Data.Channel, args.Data.Nick, Config.KickMessage);
+                ConnectionManager.KickChannelUser(args.Data.Channel, args.Data.Nick, Config.KickMessage);
             }
             else
             {

@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -11,16 +13,21 @@ using SharpIrcBot.Config;
 
 namespace SharpIrcBot
 {
-    public class ConnectionManager
+    public class ConnectionManager : IConnectionManager
     {
         private static readonly ILog Logger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        public static int MaxMessageLength = 230;
 
         private bool ConfigFilePathKnown { get; set; }
         public string ConfigPath { get; }
         public BotConfig Config { get; set; }
         public IrcClient Client { get; }
-        public TimerTrigger Timers { get; }
+        protected TimerTrigger ActualTimers { get; }
+
+        public string MyNickname => Client.Nickname;
+        public string MyUsername => Client.Username;
+        public ITimerTrigger Timers => ActualTimers;
+        public IReadOnlyList<string> AutoJoinChannels => Config.AutoJoinChannels.ToImmutableList();
+        public IReadOnlyList<string> JoinedChannels => Client.JoinedChannels.OfType<string>().ToImmutableList();
 
         [CanBeNull]
         protected Thread IrcThread { get; set; }
@@ -32,6 +39,8 @@ namespace SharpIrcBot
         /// <remarks>For on-demand configuration reloading.</remarks>
         [CanBeNull]
         public PluginManager PluginManager { get; set; }
+
+        public int MaxMessageLength => 230;
 
         public event SharpIrcBotEventHandler<IrcEventArgs> ChannelMessage;
         public event SharpIrcBotEventHandler<ActionEventArgs> ChannelAction;
@@ -96,7 +105,7 @@ namespace SharpIrcBot
             Client.OnPart += HandlePart;
             Client.OnQuit += HandleQuit;
             Client.OnInvite += HandleInvite;
-            Timers = new TimerTrigger();
+            ActualTimers = new TimerTrigger();
             Canceller = new CancellationTokenSource();
 
             ConfigFilePathKnown = false;
@@ -111,12 +120,12 @@ namespace SharpIrcBot
             };
             IrcThread.Start();
 
-            Timers.Start();
+            ActualTimers.Start();
         }
 
         public void Stop()
         {
-            Timers.Stop();
+            ActualTimers.Stop();
 
             Canceller.Cancel();
             DisconnectOrWhatever();
@@ -521,7 +530,7 @@ namespace SharpIrcBot
             Invited?.Invoke(this, e);
         }
 
-        public string RegisteredNameForNick([NotNull] string nick)
+        public string RegisteredNameForNick(string nick)
         {
             // perform nick mapping
             var eventArgs = new NickMappingEventArgs(nick);
@@ -614,7 +623,7 @@ namespace SharpIrcBot
             return lines;
         }
 
-        public void SendChannelMessage([NotNull] string channel, [NotNull] string message)
+        public void SendChannelMessage(string channel, string message)
         {
             foreach (var line in SplitMessageToLength(message, MaxMessageLength))
             {
@@ -623,12 +632,7 @@ namespace SharpIrcBot
             }
         }
 
-        public void SendChannelMessageFormat([NotNull] string channel, [NotNull] string format, [NotNull, ItemCanBeNull] params object[] args)
-        {
-            SendChannelMessage(channel, string.Format(format, args));
-        }
-
-        public void SendChannelAction([NotNull] string channel, [NotNull] string message)
+        public void SendChannelAction(string channel, string message)
         {
             foreach (var line in SplitMessageToLength(message, MaxMessageLength))
             {
@@ -637,12 +641,7 @@ namespace SharpIrcBot
             }
         }
 
-        public void SendChannelActionFormat([NotNull] string channel, [NotNull] string format, [NotNull, ItemCanBeNull] params object[] args)
-        {
-            SendChannelAction(channel, string.Format(format, args));
-        }
-
-        public void SendChannelNotice([NotNull] string channel, [NotNull] string message)
+        public void SendChannelNotice(string channel, string message)
         {
             foreach (var line in SplitMessageToLength(message, MaxMessageLength))
             {
@@ -651,12 +650,7 @@ namespace SharpIrcBot
             }
         }
 
-        public void SendChannelNoticeFormat([NotNull] string channel, [NotNull] string format, [NotNull, ItemCanBeNull] params object[] args)
-        {
-            SendChannelNotice(channel, string.Format(format, args));
-        }
-
-        public void SendQueryMessage([NotNull] string nick, [NotNull] string message)
+        public void SendQueryMessage(string nick, string message)
         {
             foreach (var line in SplitMessageToLength(message, MaxMessageLength))
             {
@@ -665,12 +659,7 @@ namespace SharpIrcBot
             }
         }
 
-        public void SendQueryMessageFormat([NotNull] string nick, [NotNull] string format, [NotNull, ItemCanBeNull] params object[] args)
-        {
-            SendQueryMessage(nick, string.Format(format, args));
-        }
-
-        public void SendQueryAction([NotNull] string nick, [NotNull] string message)
+        public void SendQueryAction(string nick, string message)
         {
             foreach (var line in SplitMessageToLength(message, MaxMessageLength))
             {
@@ -679,12 +668,7 @@ namespace SharpIrcBot
             }
         }
 
-        public void SendQueryActionFormat([NotNull] string nick, [NotNull] string format, [NotNull, ItemCanBeNull] params object[] args)
-        {
-            SendQueryAction(nick, string.Format(format, args));
-        }
-
-        public void SendQueryNotice([NotNull] string nick, [NotNull] string message)
+        public void SendQueryNotice(string nick, string message)
         {
             foreach (var line in SplitMessageToLength(message, MaxMessageLength))
             {
@@ -693,14 +677,86 @@ namespace SharpIrcBot
             }
         }
 
-        public void SendQueryNoticeFormat([NotNull] string nick, [NotNull] string format, [NotNull, ItemCanBeNull] params object[] args)
-        {
-            SendQueryNotice(nick, string.Format(format, args));
-        }
-
-        public void SendRawCommand([NotNull] string cmd)
+        public void SendRawCommand(string cmd)
         {
             Client.WriteLine(cmd);
+        }
+
+        public void KickChannelUser(string channel, string nick, string message)
+        {
+            if (message == null)
+            {
+                Client.RfcKick(channel, nick);
+            }
+            else
+            {
+                Client.RfcKick(channel, nick, message);
+            }
+        }
+
+        public void JoinChannel(string channel)
+        {
+            Client.RfcJoin(channel);
+        }
+
+        public void RequestNicknamesInChannel(string channel)
+        {
+            Client.RfcNames(channel);
+        }
+
+        public void RequestUserInfo(params string[] nicknames)
+        {
+            Client.RfcWhois(nicknames);
+        }
+
+        public IReadOnlyList<string> NicknamesInChannel(string channel)
+        {
+            if (channel == null)
+            {
+                return null;
+            }
+
+            var channelObject = Client.GetChannel(channel);
+            return channelObject
+                ?.Users
+                .OfType<DictionaryEntry>()
+                .Select(de => (string) de.Key)
+                .ToImmutableList();
+        }
+
+        public ChannelUserLevel GetChannelLevelForUser(string channel, string nick)
+        {
+            var user = Client.GetChannelUser(channel, nick);
+            var nonRfcUser = user as NonRfcChannelUser;
+
+            if (nonRfcUser != null)
+            {
+                if (nonRfcUser.IsOwner)
+                {
+                    return ChannelUserLevel.Owner;
+                }
+                if (nonRfcUser.IsChannelAdmin)
+                {
+                    return ChannelUserLevel.ChannelAdmin;
+                }
+            }
+
+            if (user.IsOp)
+            {
+                return ChannelUserLevel.Op;
+            }
+
+            if (nonRfcUser != null && nonRfcUser.IsHalfop)
+            {
+                return ChannelUserLevel.HalfOp;
+            }
+
+            if (user.IsVoice)
+            {
+                return ChannelUserLevel.Voice;
+            }
+
+            return ChannelUserLevel.Normal;
         }
     }
 }

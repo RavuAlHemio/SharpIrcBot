@@ -21,7 +21,7 @@ namespace Quotes
         private static readonly Regex QuoteUserRegex = new Regex("^!(any|bad)?(r)?quoteuser[ ]+([^ ]+)$");
         private static readonly Regex NextQuoteRegex = new Regex("^!next(any|bad)?(r)?quote[ ]*$");
 
-        protected ConnectionManager ConnectionManager { get; }
+        protected IConnectionManager ConnectionManager { get; }
         protected QuotesConfig Config { get; set; }
         protected Dictionary<string, List<Quote>> PotentialQuotesPerChannel { get; }
         protected Dictionary<string, long> LastQuoteIDs { get; }
@@ -34,7 +34,7 @@ namespace Quotes
         protected int ShuffledAnyQuotesIndex { get; set; }
         protected int ShuffledBadQuotesIndex { get; set; }
 
-        public QuotesPlugin(ConnectionManager connMgr, JObject config)
+        public QuotesPlugin(IConnectionManager connMgr, JObject config)
         {
             ConnectionManager = connMgr;
             Config = new QuotesConfig(config);

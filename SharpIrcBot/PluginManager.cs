@@ -24,7 +24,7 @@ namespace SharpIrcBot
             Plugins = new List<IPlugin>();
         }
 
-        public void LoadPlugins([NotNull] ConnectionManager connManager)
+        public void LoadPlugins([NotNull] IConnectionManager connManager)
         {
             foreach (var plugin in Config.Plugins)
             {
@@ -34,7 +34,7 @@ namespace SharpIrcBot
                 {
                     throw new ArgumentException("class is not a plugin");
                 }
-                var ctor = type.GetConstructor(new [] {typeof(ConnectionManager), typeof(JObject)});
+                var ctor = type.GetConstructor(new [] {typeof(IConnectionManager), typeof(JObject)});
                 var pluginObject = (IPlugin)ctor.Invoke(new object[] {connManager, plugin.Config});
                 Plugins.Add(pluginObject);
             }

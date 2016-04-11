@@ -11,10 +11,10 @@ namespace Smileys
     {
         private static readonly ILog Logger = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
-        protected ConnectionManager ConnectionManager { get; }
+        protected IConnectionManager ConnectionManager { get; }
         protected SmileysConfig Config { get; set; }
 
-        public SmileysPlugin(ConnectionManager connMgr, JObject config)
+        public SmileysPlugin(IConnectionManager connMgr, JObject config)
         {
             ConnectionManager = connMgr;
             Config = new SmileysConfig(config);

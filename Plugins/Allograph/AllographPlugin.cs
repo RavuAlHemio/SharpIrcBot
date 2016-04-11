@@ -17,10 +17,10 @@ namespace Allograph
 
         protected AllographConfig Config;
         protected readonly Random Random;
-        protected readonly ConnectionManager ConnectionManager;
+        protected readonly IConnectionManager ConnectionManager;
         protected readonly Dictionary<string, List<int>> CooldownsPerChannel;
         
-        public AllographPlugin(ConnectionManager connMgr, JObject config)
+        public AllographPlugin(IConnectionManager connMgr, JObject config)
         {
             ConnectionManager = connMgr;
             Config = new AllographConfig(config);
@@ -69,7 +69,7 @@ namespace Allograph
             }
 
             var message = args.Data;
-            if (message.Type != ReceiveType.ChannelMessage || message.Nick == ConnectionManager.Client.Nickname)
+            if (message.Type != ReceiveType.ChannelMessage || message.Nick == ConnectionManager.MyNickname)
             {
                 return;
             }
