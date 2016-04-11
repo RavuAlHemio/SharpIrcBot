@@ -6,8 +6,8 @@ using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using log4net;
-using Meebey.SmartIrc4net;
 using SharpIrcBot;
+using SharpIrcBot.Events.Irc;
 using UnoBot.RuntimeTweaking;
 
 namespace UnoBot
@@ -146,7 +146,7 @@ namespace UnoBot
             return ret.ToString();
         }
 
-        private void HandleChannelMessage(object sender, IrcEventArgs args, MessageFlags flags)
+        private void HandleChannelMessage(object sender, IChannelMessageEventArgs args, MessageFlags flags)
         {
             try
             {
@@ -158,7 +158,7 @@ namespace UnoBot
             }
         }
 
-        private void HandleQueryMessage(object sender, IrcEventArgs args, MessageFlags flags)
+        private void HandleQueryMessage(object sender, IPrivateMessageEventArgs args, MessageFlags flags)
         {
             try
             {
@@ -195,27 +195,26 @@ namespace UnoBot
             return false;
         }
 
-        protected virtual void ActuallyHandleChannelMessage(object sender, IrcEventArgs args, MessageFlags flags)
+        protected virtual void ActuallyHandleChannelMessage(object sender, IChannelMessageEventArgs args, MessageFlags flags)
         {
             if (flags.HasFlag(MessageFlags.UserBanned))
             {
                 return;
             }
 
-            var message = args.Data;
-            if (message.Type != ReceiveType.ChannelMessage || message.Nick == ConnectionManager.MyNickname)
+            if (args.SenderNickname == ConnectionManager.MyNickname)
             {
                 return;
             }
 
-            if (Config.UnoChannel != message.Channel)
+            if (Config.UnoChannel != args.Channel)
             {
                 return;
             }
 
-            if (IsBotCommand(message.Message, "?join"))
+            if (IsBotCommand(args.Message, "?join"))
             {
-                ConnectionManager.SendChannelMessage(message.Channel, "!botjoin");
+                ConnectionManager.SendChannelMessage(args.Channel, "!botjoin");
 
                 // don't curse if the number of cards jumps up from 1 to 7 ;)
                 LastHandCount = 0;
@@ -223,51 +222,51 @@ namespace UnoBot
                 return;
             }
 
-            if (IsBotCommand(message.Message, "?leave"))
+            if (IsBotCommand(args.Message, "?leave"))
             {
-                ConnectionManager.SendChannelMessage(message.Channel, "!leave");
+                ConnectionManager.SendChannelMessage(args.Channel, "!leave");
                 return;
             }
 
-            if (message.Message.StartsWith("??color "))
+            if (args.Message.StartsWith("??color "))
             {
                 var denyColor = false;
-                if (!CurrentPlayers.Contains(message.Nick))
+                if (!CurrentPlayers.Contains(args.SenderNickname))
                 {
                     // player is not taking part
-                    StrategyLogger.DebugFormat("denying {0}'s color request because they are a spectator", message.Nick);
+                    StrategyLogger.DebugFormat("denying {0}'s color request because they are a spectator", args.SenderNickname);
                     denyColor = true;
                 }
                 if (CurrentCardCounts.Values.All(v => v > Config.PlayToWinThreshold))
                 {
                     // everybody has more than two cards
-                    StrategyLogger.DebugFormat("denying {0}'s color request because everybody has more than {1} cards", message.Nick, Config.PlayToWinThreshold);
+                    StrategyLogger.DebugFormat("denying {0}'s color request because everybody has more than {1} cards", args.SenderNickname, Config.PlayToWinThreshold);
                     denyColor = true;
                 }
-                if (CurrentCardCounts.ContainsKey(message.Nick) && CurrentCardCounts[message.Nick] <= Config.PlayToWinThreshold)
+                if (CurrentCardCounts.ContainsKey(args.SenderNickname) && CurrentCardCounts[args.SenderNickname] <= Config.PlayToWinThreshold)
                 {
                     // the person who is asking has two cards or less
-                    StrategyLogger.DebugFormat("denying {0}'s color request because they have {1} cards or fewer ({2})", message.Nick, Config.PlayToWinThreshold, CurrentCardCounts[message.Nick]);
+                    StrategyLogger.DebugFormat("denying {0}'s color request because they have {1} cards or fewer ({2})", args.SenderNickname, Config.PlayToWinThreshold, CurrentCardCounts[args.SenderNickname]);
                     denyColor = true;
                 }
                 if (CurrentHand.Count <= Config.PlayToWinThreshold)
                 {
                     // I have two cards or less
-                    StrategyLogger.DebugFormat("denying {0}'s color request because I have {1} cards or fewer ({2})", message.Nick, Config.PlayToWinThreshold, CurrentHand.Count);
+                    StrategyLogger.DebugFormat("denying {0}'s color request because I have {1} cards or fewer ({2})", args.SenderNickname, Config.PlayToWinThreshold, CurrentHand.Count);
                     denyColor = true;
                 }
 
                 if (denyColor)
                 {
-                    ConnectionManager.SendChannelMessageFormat(message.Channel, "Sorry, {0}, no can do.", message.Nick);
+                    ConnectionManager.SendChannelMessageFormat(args.Channel, "Sorry, {0}, no can do.", args.SenderNickname);
                     return;
                 }
 
-                var colorString = message.Message.Substring(("??color ").Length);
+                var colorString = args.Message.Substring(("??color ").Length);
                 var color = CardUtils.ParseColor(colorString);
                 if (!color.HasValue || color == CardColor.Wild)
                 {
-                    ConnectionManager.SendChannelMessage(message.Channel, "Uhh, what color is that?");
+                    ConnectionManager.SendChannelMessage(args.Channel, "Uhh, what color is that?");
                     return;
                 }
 
@@ -276,22 +275,22 @@ namespace UnoBot
                 // can I change the color?
                 if (CurrentHand.Any(c => c.Color == color || c.Color == CardColor.Wild))
                 {
-                    ConnectionManager.SendChannelMessageFormat(message.Channel, "Yeah, I think that's doable, {0}.", message.Nick);
+                    ConnectionManager.SendChannelMessageFormat(args.Channel, "Yeah, I think that's doable, {0}.", args.SenderNickname);
                 }
                 else
                 {
-                    ConnectionManager.SendChannelMessageFormat(message.Channel, "{0}, I'll do my best, but don't count on me...", message.Nick);
+                    ConnectionManager.SendChannelMessageFormat(args.Channel, "{0}, I'll do my best, but don't count on me...", args.SenderNickname);
                 }
 
                 return;
             }
 
-            var runtimeTweakMatch = RuntimeTweakPattern.Match(message.Message);
+            var runtimeTweakMatch = RuntimeTweakPattern.Match(args.Message);
             if (runtimeTweakMatch.Success)
             {
                 if (!Config.RuntimeTweakable)
                 {
-                    ConnectionManager.SendChannelMessageFormat(message.Channel, "Sorry, {0}, I'm not allowed to do that.", message.Nick);
+                    ConnectionManager.SendChannelMessageFormat(args.Channel, "Sorry, {0}, I'm not allowed to do that.", args.SenderNickname);
                     return;
                 }
 
@@ -301,29 +300,28 @@ namespace UnoBot
                 }
                 catch (ArgumentException ae)
                 {
-                    ConnectionManager.SendChannelMessageFormat(message.Channel, "That didn't work out, {0}: {1}", message.Nick, ae.Message);
+                    ConnectionManager.SendChannelMessageFormat(args.Channel, "That didn't work out, {0}: {1}", args.SenderNickname, ae.Message);
                     return;
                 }
-                ConnectionManager.SendChannelMessageFormat(message.Channel, "{0}: Done.", message.Nick);
+                ConnectionManager.SendChannelMessageFormat(args.Channel, "{0}: Done.", args.SenderNickname);
 
                 return;
             }
         }
 
-        protected virtual void ActuallyHandleQueryMessage(object sender, IrcEventArgs args, MessageFlags flags)
+        protected virtual void ActuallyHandleQueryMessage(object sender, IPrivateMessageEventArgs args, MessageFlags flags)
         {
             if (flags.HasFlag(MessageFlags.UserBanned))
             {
                 return;
             }
 
-            var message = args.Data;
-            if (message.Nick == ConnectionManager.MyNickname)
+            if (args.SenderNickname == ConnectionManager.MyNickname)
             {
                 return;
             }
 
-            var messageBody = message.Message;
+            var messageBody = args.Message;
 
             if (LinesLeftInMessage > 0)
             {

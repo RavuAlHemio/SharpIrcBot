@@ -5,10 +5,10 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using JetBrains.Annotations;
 using log4net;
-using Meebey.SmartIrc4net;
 using Newtonsoft.Json.Linq;
 using SharpIrcBot;
 using SharpIrcBot.Collections;
+using SharpIrcBot.Events.Irc;
 
 namespace AlsoKnownAs
 {
@@ -43,13 +43,13 @@ namespace AlsoKnownAs
             Config = new AlsoKnownAsConfig(newConfig);
         }
 
-        private void HandleChannelMessage([CanBeNull] object sender, [NotNull] IrcEventArgs e, MessageFlags flags)
+        private void HandleChannelMessage([CanBeNull] object sender, [NotNull] IChannelMessageEventArgs e, MessageFlags flags)
         {
             try
             {
                 ActuallyHandleChannelOrQueryMessage(
                     sender, e, flags,
-                    txt => ConnectionManager.SendChannelMessage(e.Data.Channel, $"{e.Data.Nick}: {txt}")
+                    txt => ConnectionManager.SendChannelMessage(e.Channel, $"{e.SenderNickname}: {txt}")
                 );
             }
             catch (Exception exc)
@@ -58,13 +58,13 @@ namespace AlsoKnownAs
             }
         }
 
-        private void HandleQueryMessage([CanBeNull] object sender, [NotNull] IrcEventArgs e, MessageFlags flags)
+        private void HandleQueryMessage([CanBeNull] object sender, [NotNull] IPrivateMessageEventArgs e, MessageFlags flags)
         {
             try
             {
                 ActuallyHandleChannelOrQueryMessage(
                     sender, e, flags,
-                    txt => ConnectionManager.SendQueryMessage(e.Data.Nick, txt)
+                    txt => ConnectionManager.SendQueryMessage(e.SenderNickname, txt)
                 );
             }
             catch (Exception exc)
@@ -73,7 +73,7 @@ namespace AlsoKnownAs
             }
         }
 
-        private void HandleJoinedChannel([CanBeNull] object sender, [NotNull] JoinEventArgs e)
+        private void HandleJoinedChannel([CanBeNull] object sender, [NotNull] IUserJoinedChannelEventArgs e)
         {
             try
             {
@@ -85,7 +85,7 @@ namespace AlsoKnownAs
             }
         }
 
-        private void HandleNickChange([CanBeNull] object sender, [NotNull] NickChangeEventArgs e)
+        private void HandleNickChange([CanBeNull] object sender, [NotNull] INickChangeEventArgs e)
         {
             try
             {
@@ -97,7 +97,7 @@ namespace AlsoKnownAs
             }
         }
 
-        private void HandleRawMessage([CanBeNull] object sender, [NotNull] IrcEventArgs e)
+        private void HandleRawMessage([CanBeNull] object sender, [NotNull] IRawMessageEventArgs e)
         {
             try
             {
@@ -109,14 +109,14 @@ namespace AlsoKnownAs
             }
         }
 
-        protected virtual void ActuallyHandleChannelOrQueryMessage([CanBeNull] object sender, [NotNull] IrcEventArgs e, MessageFlags flags, [NotNull] Action<string> respond)
+        protected virtual void ActuallyHandleChannelOrQueryMessage([CanBeNull] object sender, [NotNull] IUserMessageEventArgs e, MessageFlags flags, [NotNull] Action<string> respond)
         {
             if (flags.HasFlag(MessageFlags.UserBanned))
             {
                 return;
             }
 
-            var akaMatch = AlsoKnownAsRegex.Match(e.Data.Message);
+            var akaMatch = AlsoKnownAsRegex.Match(e.Message);
             if (!akaMatch.Success)
             {
                 return;
@@ -189,26 +189,26 @@ namespace AlsoKnownAs
             NickToMostRecentHost[nick] = identifier;
         }
 
-        protected virtual void ActuallyHandleJoinedChannel(object sender, [NotNull] JoinEventArgs e)
+        protected virtual void ActuallyHandleJoinedChannel(object sender, [NotNull] IUserJoinedChannelEventArgs e)
         {
-            RegisterNickname(e.Data.Host, e.Data.Nick);
+            RegisterNickname(e.Host, e.Nickname);
         }
 
-        protected virtual void ActuallyHandleNickChange(object sender, [NotNull] NickChangeEventArgs e)
+        protected virtual void ActuallyHandleNickChange(object sender, [NotNull] INickChangeEventArgs e)
         {
-            RegisterNickname(e.Data.Host, e.Data.Nick);
+            RegisterNickname(e.Host, e.NewNickname);
         }
 
-        protected virtual void ActuallyHandleRawMessage([CanBeNull] object sender, [NotNull] IrcEventArgs e)
+        protected virtual void ActuallyHandleRawMessage([CanBeNull] object sender, [NotNull] IRawMessageEventArgs e)
         {
-            if (e.Data.ReplyCode != ReplyCode.WhoIsUser)
+            if (e.ReplyCode != 311)
             {
                 return;
             }
 
             // :irc.example.com 311 MYNICK THEIRNICK THEIRUSER THEIRHOST * :REALNAME
-            var theirNick = e.Data.RawMessageArray[3];
-            var theirHost = e.Data.RawMessageArray[5];
+            var theirNick = e.RawMessageParts[3];
+            var theirHost = e.RawMessageParts[5];
 
             RegisterNickname(theirHost, theirNick);
         }

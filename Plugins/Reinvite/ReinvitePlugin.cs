@@ -2,9 +2,9 @@
 using System.Linq;
 using System.Text.RegularExpressions;
 using log4net;
-using Meebey.SmartIrc4net;
 using Newtonsoft.Json.Linq;
 using SharpIrcBot;
+using SharpIrcBot.Events.Irc;
 
 namespace Reinvite
 {
@@ -30,7 +30,7 @@ namespace Reinvite
             Config = new ReinviteConfig(newConfig);
         }
 
-        protected void HandleQueryMessage(object sender, IrcEventArgs e, MessageFlags flags)
+        protected void HandleQueryMessage(object sender, IPrivateMessageEventArgs e, MessageFlags flags)
         {
             try
             {
@@ -42,7 +42,7 @@ namespace Reinvite
             }
         }
 
-        protected void HandleInvite(object sender, InviteEventArgs e)
+        protected void HandleInvite(object sender, IUserInvitedToChannelEventArgs e)
         {
             try
             {
@@ -54,7 +54,7 @@ namespace Reinvite
             }
         }
 
-        protected virtual void ActuallyHandleQueryMessage(object sender, IrcEventArgs e, MessageFlags flags)
+        protected virtual void ActuallyHandleQueryMessage(object sender, IPrivateMessageEventArgs e, MessageFlags flags)
         {
             if (!Config.RejoinOnPrivateMessage)
             {
@@ -66,7 +66,7 @@ namespace Reinvite
                 return;
             }
 
-            var match = InviteRegex.Match(e.Data.Message);
+            var match = InviteRegex.Match(e.Message);
             if (!match.Success)
             {
                 return;
@@ -81,7 +81,7 @@ namespace Reinvite
             ConnectionManager.JoinChannel(channel);
         }
 
-        protected void ActuallyHandleInvite(object sender, InviteEventArgs e)
+        protected void ActuallyHandleInvite(object sender, IUserInvitedToChannelEventArgs e)
         {
             if (!Config.RejoinOnInvite)
             {

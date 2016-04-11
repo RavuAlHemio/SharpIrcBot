@@ -3,10 +3,10 @@ using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using log4net;
-using Meebey.SmartIrc4net;
 using Newtonsoft.Json.Linq;
 using SharpIrcBot;
 using System.Collections.Generic;
+using SharpIrcBot.Events.Irc;
 
 namespace Allograph
 {
@@ -37,7 +37,7 @@ namespace Allograph
             CooldownsPerChannel.Clear();
         }
 
-        private void HandleChannelMessage(object sender, IrcEventArgs args, MessageFlags flags)
+        private void HandleChannelMessage(object sender, IChannelMessageEventArgs args, MessageFlags flags)
         {
             try
             {
@@ -49,7 +49,7 @@ namespace Allograph
             }
         }
 
-        private void HandleQueryMessage(object sender, IrcEventArgs args, MessageFlags flags)
+        private void HandleQueryMessage(object sender, IPrivateMessageEventArgs args, MessageFlags flags)
         {
             try
             {
@@ -61,22 +61,21 @@ namespace Allograph
             }
         }
 
-        protected virtual void ActuallyHandleChannelMessage(object sender, IrcEventArgs args, MessageFlags flags)
+        protected virtual void ActuallyHandleChannelMessage(object sender, IChannelMessageEventArgs args, MessageFlags flags)
         {
             if (flags.HasFlag(MessageFlags.UserBanned))
             {
                 return;
             }
 
-            var message = args.Data;
-            if (message.Type != ReceiveType.ChannelMessage || message.Nick == ConnectionManager.MyNickname)
+            if (args.SenderNickname == ConnectionManager.MyNickname)
             {
                 return;
             }
 
-            var originalBody = message.Message;
+            var originalBody = args.Message;
             var newBody = originalBody;
-            var channel = message.Channel;
+            var channel = args.Channel;
 
             if (Config.ChannelBlacklist.Contains(channel))
             {
@@ -112,7 +111,7 @@ namespace Allograph
                 }
 
                 // substitute the username in the replacement string
-                var replacementStringWithUser = repl.ReplacementString.Replace("{{{username}}}", message.Nick);
+                var replacementStringWithUser = repl.ReplacementString.Replace("{{{username}}}", args.SenderNickname);
                 var nextNewBody = repl.Regex.Replace(newBody, replacementStringWithUser);
 
                 if (Config.CooldownIncreasePerHit >= 0 || repl.CustomCooldownIncreasePerHit >= 0)
@@ -163,7 +162,7 @@ namespace Allograph
             if (thisProbabilityValue < Config.ProbabilityPercent)
             {
                 Logger.DebugFormat("{0:F2} < {1:F2}; posting {2}", thisProbabilityValue, Config.ProbabilityPercent, newBody);
-                ConnectionManager.SendChannelMessage(message.Channel, newBody);
+                ConnectionManager.SendChannelMessage(args.Channel, newBody);
             }
             else
             {
@@ -171,9 +170,9 @@ namespace Allograph
             }
         }
 
-        protected virtual void ActuallyHandleQueryMessage(object sender, IrcEventArgs args, MessageFlags flags)
+        protected virtual void ActuallyHandleQueryMessage(object sender, IPrivateMessageEventArgs args, MessageFlags flags)
         {
-            var nick = args.Data.Nick;
+            var nick = args.SenderNickname;
             var registeredNick = ConnectionManager.RegisteredNameForNick(nick);
             if (registeredNick == null || !Config.Stewards.Contains(registeredNick))
             {
@@ -181,7 +180,7 @@ namespace Allograph
                 return;
             }
 
-            var match = StatsRegex.Match(args.Data.Message);
+            var match = StatsRegex.Match(args.Message);
             if (!match.Success)
             {
                 return;

@@ -3,7 +3,7 @@ using System.Reflection;
 using log4net;
 using Newtonsoft.Json.Linq;
 using SharpIrcBot;
-using Meebey.SmartIrc4net;
+using SharpIrcBot.Events.Irc;
 
 namespace Sockpuppet
 {
@@ -27,7 +27,7 @@ namespace Sockpuppet
             Config = new SockpuppetConfig(newConfig);
         }
 
-        private void HandleQueryMessage(object sender, IrcEventArgs args, MessageFlags flags)
+        private void HandleQueryMessage(object sender, IPrivateMessageEventArgs args, MessageFlags flags)
         {
             try
             {
@@ -39,15 +39,15 @@ namespace Sockpuppet
             }
         }
 
-        protected string VerifyIdentity(IrcMessageData message)
+        protected string VerifyIdentity(IUserMessageEventArgs message)
         {
-            var username = message.Nick;
+            var username = message.SenderNickname;
             if (Config.UseIrcServices)
             {
                 username = ConnectionManager.RegisteredNameForNick(username);
                 if (username == null)
                 {
-                    Logger.InfoFormat("{0} is not logged in; ignoring", message.Nick);
+                    Logger.InfoFormat("{0} is not logged in; ignoring", message.SenderNickname);
                     return null;
                 }
             }
@@ -78,39 +78,38 @@ namespace Sockpuppet
             ConnectionManager.SendQueryMessage(nick, "OK");
         }
 
-        protected void ActuallyHandleQueryMessage(object sender, IrcEventArgs args, MessageFlags flags)
+        protected void ActuallyHandleQueryMessage(object sender, IPrivateMessageEventArgs args, MessageFlags flags)
         {
             if (flags.HasFlag(MessageFlags.UserBanned))
             {
                 return;
             }
 
-            var message = args.Data;
-            if (message.Type != ReceiveType.QueryMessage || message.Nick == ConnectionManager.MyNickname)
+            if (args.SenderNickname == ConnectionManager.MyNickname)
             {
                 return;
             }
 
-            if (message.Message.StartsWith("!sockpuppet "))
+            if (args.Message.StartsWith("!sockpuppet "))
             {
-                string username = VerifyIdentity(message);
+                string username = VerifyIdentity(args);
                 if (username == null)
                 {
                     return;
                 }
-                PerformSockpuppet(username, message.Nick, message.Message);
+                PerformSockpuppet(username, args.SenderNickname, args.Message);
                 return;
             }
 
-            if (message.Message == "!reload")
+            if (args.Message == "!reload")
             {
-                string username = VerifyIdentity(message);
+                string username = VerifyIdentity(args);
                 if (username == null)
                 {
                     return;
                 }
                 ConnectionManager.ReloadConfiguration();
-                ConnectionManager.SendQueryMessage(message.Nick, "OK");
+                ConnectionManager.SendQueryMessage(args.SenderNickname, "OK");
                 return;
             }
         }

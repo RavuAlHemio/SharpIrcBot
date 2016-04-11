@@ -1,13 +1,11 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using JetBrains.Annotations;
 using log4net;
-using Meebey.SmartIrc4net;
 using Newtonsoft.Json.Linq;
 using SharpIrcBot;
+using SharpIrcBot.Events.Irc;
 
 namespace TextCommands
 {
@@ -32,12 +30,12 @@ namespace TextCommands
             Config = new TextCommandsConfig(newConfig);
         }
 
-        private void HandleChannelMessage(object sender, IrcEventArgs args, MessageFlags flags)
+        private void HandleChannelMessage(object sender, IChannelMessageEventArgs args, MessageFlags flags)
         {
             try
             {
                 ActuallyHandleMessage(
-                    message => ConnectionManager.SendChannelMessage(args.Data.Channel, message),
+                    message => ConnectionManager.SendChannelMessage(args.Channel, message),
                     args,
                     flags
                 );
@@ -48,12 +46,12 @@ namespace TextCommands
             }
         }
 
-        private void HandlePrivateMessage(object sender, IrcEventArgs args, MessageFlags flags)
+        private void HandlePrivateMessage(object sender, IPrivateMessageEventArgs args, MessageFlags flags)
         {
             try
             {
                 ActuallyHandleMessage(
-                    message => ConnectionManager.SendQueryMessage(args.Data.Nick, message),
+                    message => ConnectionManager.SendQueryMessage(args.SenderNickname, message),
                     args,
                     flags
                 );
@@ -64,31 +62,36 @@ namespace TextCommands
             }
         }
 
-        protected void ActuallyHandleMessage(Action<string> respond, IrcEventArgs args, MessageFlags flags)
+        protected void ActuallyHandleMessage(Action<string> respond, IUserMessageEventArgs args, MessageFlags flags)
         {
             if (flags.HasFlag(MessageFlags.UserBanned))
             {
                 return;
             }
 
-            var message = args.Data;
-            if (message.Nick == ConnectionManager.MyNickname)
+            if (args.SenderNickname == ConnectionManager.MyNickname)
             {
                 return;
             }
 
-            var lowerBody = message.Message.ToLowerInvariant();
+            var lowerBody = args.Message.ToLowerInvariant();
 
             if (Config.CommandsResponses.ContainsKey(lowerBody))
             {
-                Output(respond, lowerBody, message.Nick, message.Channel, Config.CommandsResponses[lowerBody], message.Nick);
+                Output(respond, args, lowerBody, Config.CommandsResponses[lowerBody], args.SenderNickname);
                 return;
             }
 
-            var channelNicksEnumerable = ConnectionManager.NicknamesInChannel(args.Data.Channel);
-            var channelNicks = (channelNicksEnumerable == null)
-                ? new HashSet<string>()
-                : new HashSet<string>(channelNicksEnumerable);
+            var channelNicks = new HashSet<string>();
+            var channelMessage = args as IChannelMessageEventArgs;
+            if (channelMessage != null)
+            {
+                var nicknamesInChannel = ConnectionManager.NicknamesInChannel(channelMessage.Channel);
+                if (nicknamesInChannel != null)
+                {
+                    channelNicks.UnionWith(nicknamesInChannel);
+                }
+            }
 
             foreach (var nickCommandResponse in Config.NicknamableCommandsResponses)
             {
@@ -101,7 +104,7 @@ namespace TextCommands
                 if (lowerBody.TrimEnd() == nickCommandResponse.Key)
                 {
                     // command on its own; trigger for self
-                    Output(respond, nickCommandResponse.Key, message.Nick, message.Channel, nickCommandResponse.Value, message.Nick);
+                    Output(respond, args, nickCommandResponse.Key, nickCommandResponse.Value, args.SenderNickname);
                     return;
                 }
 
@@ -112,7 +115,7 @@ namespace TextCommands
                     if (channelNick.ToLowerInvariant() == targetedNick)
                     {
                         // nickname directly from user list
-                        Output(respond, nickCommandResponse.Key, message.Nick, message.Channel, nickCommandResponse.Value, channelNick);
+                        Output(respond, args, nickCommandResponse.Key, nickCommandResponse.Value, channelNick);
                         return;
                     }
                 }
@@ -137,16 +140,18 @@ namespace TextCommands
                     if (registeredTargetNick == registeredChannelNick)
                     {
                         // registered nicknames match
-                        Output(respond, nickCommandResponse.Key, message.Nick, message.Channel, nickCommandResponse.Value, channelNick);
+                        Output(respond, args, nickCommandResponse.Key, nickCommandResponse.Value, channelNick);
                         return;
                     }
                 }
             }
         }
 
-        protected void Output(Action<string> respond, string command, string author, string location, string targetBody, string targetNick)
+        protected void Output(Action<string> respond, IUserMessageEventArgs message, string command, string targetBody, string targetNick)
         {
-            Logger.DebugFormat("{0} triggered {1} in {2}", author, command, location);
+            var channelMessage = message as IChannelMessageEventArgs;
+
+            Logger.DebugFormat("{0} triggered {1} in {2}", message.SenderNickname, command, channelMessage?.Channel ?? "private message");
             var response = targetBody.Replace("{{NICKNAME}}", targetNick);
             foreach (var line in response.Split('\n').Where(l => l.Length > 0))
             {

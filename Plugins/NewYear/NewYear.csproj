@@ -48,10 +48,6 @@
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
-    <ProjectReference Include="..\..\Libraries\SmartIrc4net\SmartIrc4net.csproj">
-      <Project>{91D3003B-7E65-4EAF-8EE1-DA43832E7A9C}</Project>
-      <Name>SmartIrc4net</Name>
-    </ProjectReference>
     <ProjectReference Include="..\..\SharpIrcBot\SharpIrcBot.csproj">
       <Project>{EE95358B-9655-41C6-A76C-113A6EB455F2}</Project>
       <Name>SharpIrcBot</Name>

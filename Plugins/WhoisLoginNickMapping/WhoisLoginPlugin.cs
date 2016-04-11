@@ -4,10 +4,10 @@ using System.Linq;
 using System.Reflection;
 using System.Threading;
 using log4net;
-using Meebey.SmartIrc4net;
 using Newtonsoft.Json.Linq;
 using SharpIrcBot;
 using SharpIrcBot.Events;
+using SharpIrcBot.Events.Irc;
 
 namespace WhoisLoginNickMapping
 {
@@ -66,7 +66,7 @@ namespace WhoisLoginNickMapping
             }
         }
 
-        protected virtual void HandleNamesInChannel(object sender, NamesEventArgs args)
+        protected virtual void HandleNamesInChannel(object sender, INameListEventArgs args)
         {
             try
             {
@@ -78,7 +78,7 @@ namespace WhoisLoginNickMapping
             }
         }
 
-        protected virtual void HandleJoinedChannel(object sender, JoinEventArgs args)
+        protected virtual void HandleJoinedChannel(object sender, IUserJoinedChannelEventArgs args)
         {
             try
             {
@@ -90,7 +90,7 @@ namespace WhoisLoginNickMapping
             }
         }
 
-        protected virtual void HandleRawMessage(object sender, IrcEventArgs args)
+        protected virtual void HandleRawMessage(object sender, IRawMessageEventArgs args)
         {
             try
             {
@@ -102,7 +102,7 @@ namespace WhoisLoginNickMapping
             }
         }
 
-        protected virtual void HandleNickChange(object sender, NickChangeEventArgs args)
+        protected virtual void HandleNickChange(object sender, INickChangeEventArgs args)
         {
             try
             {
@@ -145,51 +145,51 @@ namespace WhoisLoginNickMapping
             Logger.DebugFormat("regname: {0} is not registered (not contained)", lowerNick);
         }
 
-        protected virtual void ActuallyHandleNamesInChannel(object sender, NamesEventArgs args)
+        protected virtual void ActuallyHandleNamesInChannel(object sender, INameListEventArgs args)
         {
-            CheckRegistrationsOn(args.UserList);
+            CheckRegistrationsOn(args.Nicknames);
         }
 
-        protected virtual void ActuallyHandleJoinedChannel(object sender, JoinEventArgs args)
+        protected virtual void ActuallyHandleJoinedChannel(object sender, IUserJoinedChannelEventArgs args)
         {
-            CheckRegistrationsOn(args.Who);
+            CheckRegistrationsOn(args.Nickname);
         }
 
-        protected virtual void ActuallyHandleNickChange(object sender, NickChangeEventArgs args)
+        protected virtual void ActuallyHandleNickChange(object sender, INickChangeEventArgs args)
         {
             CheckRegistrationsOn(args.OldNickname, args.NewNickname);
         }
 
-        protected virtual void ActuallyHandleRawMessage(object sender, IrcEventArgs args)
+        protected virtual void ActuallyHandleRawMessage(object sender, IRawMessageEventArgs args)
         {
-            if ((int)args.Data.ReplyCode == 330)
+            if (args.ReplyCode == 330)
             {
                 // :irc.example.com 330 MYNICK THEIRNICK THEIRLOGIN :is logged in as
                 lock (NicksToLogins)
                 {
-                    NicksToLogins[args.Data.RawMessageArray[3].ToLowerInvariant()] = args.Data.RawMessageArray[4];
+                    NicksToLogins[args.RawMessageParts[3].ToLowerInvariant()] = args.RawMessageParts[4];
                 }
-                Logger.DebugFormat("registered that {0} is logged in as {1}", args.Data.RawMessageArray[3], args.Data.RawMessageArray[4]);
+                Logger.DebugFormat("registered that {0} is logged in as {1}", args.RawMessageParts[3], args.RawMessageParts[4]);
             }
-            else if (args.Data.ReplyCode == ReplyCode.WhoIsUser)
+            else if (args.ReplyCode == 311)
             {
                 // :irc.example.com 311 MYNICK THEIRNICK THEIRUSER THEIRHOST * :REALNAME
                 // mark that we have at least seen this user
                 lock (NicksToLogins)
                 {
-                    NicksToLogins[args.Data.RawMessageArray[3].ToLowerInvariant()] = null;
+                    NicksToLogins[args.RawMessageParts[3].ToLowerInvariant()] = null;
                 }
-                Logger.DebugFormat("registered that {0} exists (and might not be logged in)", args.Data.RawMessageArray[3]);
+                Logger.DebugFormat("registered that {0} exists (and might not be logged in)", args.RawMessageParts[3]);
             }
-            else if (args.Data.ReplyCode == ReplyCode.ErrorNoSuchNickname)
+            else if (args.ReplyCode == 401)
             {
                 // :irc.example.com 401 MYNICK THEIRNICK :No such nick/channel
                 // remove that user
                 lock (NicksToLogins)
                 {
-                    NicksToLogins[args.Data.RawMessageArray[3].ToLowerInvariant()] = null;
+                    NicksToLogins[args.RawMessageParts[3].ToLowerInvariant()] = null;
                 }
-                Logger.DebugFormat("registered that {0} is gone and thereby not logged in", args.Data.RawMessageArray[3]);
+                Logger.DebugFormat("registered that {0} is gone and thereby not logged in", args.RawMessageParts[3]);
             }
         }
 
@@ -204,6 +204,11 @@ namespace WhoisLoginNickMapping
 
         protected virtual void CheckRegistrationsOn(params string[] nicknames)
         {
+            CheckRegistrationsOn((IReadOnlyList<string>) nicknames);
+        }
+
+        protected virtual void CheckRegistrationsOn(IReadOnlyList<string> nicknames)
+        {
             if (Logger.IsDebugEnabled)
             {
                 Logger.DebugFormat("performing reg check on: {0}", string.Join(" ", nicknames));
@@ -213,7 +218,7 @@ namespace WhoisLoginNickMapping
             // do this in packages to reduce traffic
             const int packageSize = 10;
 
-            for (int i = 0; i < nicknames.Length; i += packageSize)
+            for (int i = 0; i < nicknames.Count; i += packageSize)
             {
                 ConnectionManager.RequestUserInfo(nicknames.Skip(i).Take(packageSize).ToArray());
             }

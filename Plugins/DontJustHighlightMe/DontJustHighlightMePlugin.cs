@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using log4net;
-using Meebey.SmartIrc4net;
 using Newtonsoft.Json.Linq;
 using SharpIrcBot;
+using SharpIrcBot.Events.Irc;
 
 namespace DontJustHighlightMe
 {
@@ -31,7 +31,7 @@ namespace DontJustHighlightMe
             Config = new DJHMConfig(newConfig);
         }
 
-        private void HandleChannelMessage(object sender, IrcEventArgs args, MessageFlags flags)
+        private void HandleChannelMessage(object sender, IChannelMessageEventArgs args, MessageFlags flags)
         {
             try
             {
@@ -43,15 +43,15 @@ namespace DontJustHighlightMe
             }
         }
 
-        protected virtual void ActuallyHandleChannelMessage(object sender, IrcEventArgs args, MessageFlags flags)
+        protected virtual void ActuallyHandleChannelMessage(object sender, IChannelMessageEventArgs args, MessageFlags flags)
         {
-            if (!Config.Channels.Contains(args.Data.Channel))
+            if (!Config.Channels.Contains(args.Channel))
             {
                 // wrong channel
                 return;
             }
 
-            var trimmedMessage = args.Data.Message.Trim();
+            var trimmedMessage = args.Message.Trim();
             if (trimmedMessage.Contains(" "))
             {
                 // more than one word => no highlight-only message
@@ -62,7 +62,7 @@ namespace DontJustHighlightMe
             string highlightee = null;
 
             var lowercaseChannelUsernameEnumerable = ConnectionManager
-                .NicknamesInChannel(args.Data.Channel)
+                .NicknamesInChannel(args.Channel)
                 .Select(nick => nick.ToLowerInvariant());
             var lowercaseChannelUsernames = new HashSet<string>(lowercaseChannelUsernameEnumerable);
 
@@ -99,7 +99,7 @@ namespace DontJustHighlightMe
                 return;
             }
 
-            if (highlightee == args.Data.Nick.ToLowerInvariant())
+            if (highlightee == args.SenderNickname.ToLowerInvariant())
             {
                 // user is naming themselves; never mind
                 return;
@@ -121,22 +121,22 @@ namespace DontJustHighlightMe
                 // punt the perpetrator out of the channel
                 Logger.DebugFormat(
                     "punting {0} from {1} for highlighting {2}",
-                    args.Data.Nick,
-                    args.Data.Channel,
+                    args.SenderNickname,
+                    args.Channel,
                     highlightee
                 );
-                ConnectionManager.KickChannelUser(args.Data.Channel, args.Data.Nick, Config.KickMessage);
+                ConnectionManager.KickChannelUser(args.Channel, args.SenderNickname, Config.KickMessage);
             }
             else
             {
                 // highlight the perpetrator as retribution
                 Logger.DebugFormat(
                     "re-highlighting {0} in {1} for highlighting {2}",
-                    args.Data.Nick,
-                    args.Data.Channel,
+                    args.SenderNickname,
+                    args.Channel,
                     highlightee
                 );
-                ConnectionManager.SendChannelMessage(args.Data.Channel, args.Data.Nick);
+                ConnectionManager.SendChannelMessage(args.Channel, args.SenderNickname);
             }
         }
     }

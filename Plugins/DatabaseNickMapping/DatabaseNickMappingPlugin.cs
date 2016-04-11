@@ -4,10 +4,10 @@ using System.Reflection;
 using System.Text.RegularExpressions;
 using DatabaseNickMapping.ORM;
 using log4net;
-using Meebey.SmartIrc4net;
 using Newtonsoft.Json.Linq;
 using SharpIrcBot;
 using SharpIrcBot.Events;
+using SharpIrcBot.Events.Irc;
 
 namespace DatabaseNickMapping
 {
@@ -36,7 +36,7 @@ namespace DatabaseNickMapping
             Config = new DatabaseNickMappingConfig(newConfig);
         }
 
-        protected virtual void HandleChannelMessage(object sender, IrcEventArgs args, MessageFlags flags)
+        protected virtual void HandleChannelMessage(object sender, IChannelMessageEventArgs args, MessageFlags flags)
         {
             try
             {
@@ -60,16 +60,16 @@ namespace DatabaseNickMapping
             }
         }
 
-        protected virtual void ActuallyHandleChannelMessage(object sender, IrcEventArgs args, MessageFlags flags)
+        protected virtual void ActuallyHandleChannelMessage(object sender, IChannelMessageEventArgs args, MessageFlags flags)
         {
             if (flags.HasFlag(MessageFlags.UserBanned))
             {
                 return;
             }
 
-            var message = args.Data.Message;
-            var channel = args.Data.Channel;
-            var requestor = args.Data.Nick;
+            var message = args.Message;
+            var channel = args.Channel;
+            var requestor = args.SenderNickname;
 
             var linkMatch = LinkRegex.Match(message);
             var unlinkMatch = UnlinkRegex.Match(message);

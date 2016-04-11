@@ -4,10 +4,10 @@ using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using log4net;
-using Meebey.SmartIrc4net;
 using Newtonsoft.Json.Linq;
 using SharpIrcBot;
 using SharpIrcBot.Events;
+using SharpIrcBot.Events.Irc;
 using Thanks.ORM;
 
 namespace Thanks
@@ -35,7 +35,7 @@ namespace Thanks
             Config = new ThanksConfig(newConfig);
         }
 
-        private void HandleChannelMessage(object sender, IrcEventArgs args, MessageFlags flags)
+        private void HandleChannelMessage(object sender, IChannelMessageEventArgs args, MessageFlags flags)
         {
             try
             {
@@ -59,23 +59,22 @@ namespace Thanks
             }
         }
 
-        protected void ActuallyHandleChannelMessage(object sender, IrcEventArgs args, MessageFlags flags)
+        protected void ActuallyHandleChannelMessage(object sender, IChannelMessageEventArgs args, MessageFlags flags)
         {
             if (flags.HasFlag(MessageFlags.UserBanned))
             {
                 return;
             }
 
-            var message = args.Data;
-            if (message.Type != ReceiveType.ChannelMessage || message.Nick == ConnectionManager.MyNickname)
+            if (args.SenderNickname == ConnectionManager.MyNickname)
             {
                 return;
             }
 
-            var thankMatch = ThankRegex.Match(message.Message);
+            var thankMatch = ThankRegex.Match(args.Message);
             if (thankMatch.Success)
             {
-                var thankerNick = message.Nick;
+                var thankerNick = args.SenderNickname;
 
                 bool forceThanks = thankMatch.Groups["force"].Success;
                 var thankeeNick = thankMatch.Groups["thankee"].Value;
@@ -99,7 +98,7 @@ namespace Thanks
                     if (thanker == null)
                     {
                         ConnectionManager.SendChannelMessageFormat(
-                            message.Channel,
+                            args.Channel,
                             "{0}: You can't use this unless you're logged in with NickServ.",
                             thankerNick
                         );
@@ -110,7 +109,7 @@ namespace Thanks
                     if (thankee == null)
                     {
                         ConnectionManager.SendChannelMessageFormat(
-                            message.Channel,
+                            args.Channel,
                             "{0}: Unfortunately, {1} doesn't seem to be logged in with NickServ.",
                             thankerNick,
                             thankeeNick
@@ -125,7 +124,7 @@ namespace Thanks
                 if (thankeeLower == thankerLower)
                 {
                     ConnectionManager.SendChannelMessageFormat(
-                        message.Channel,
+                        args.Channel,
                         "You are so full of yourself, {0}.",
                         thankerNick
                     );
@@ -139,7 +138,7 @@ namespace Thanks
                 {
                     var entry = new ThanksEntry
                     {
-                        Channel = message.Channel,
+                        Channel = args.Channel,
                         ThankerLowercase = thankerLower,
                         ThankeeLowercase = thankeeLower,
                         Timestamp = DateTime.Now.ToUniversalTimeForDatabase(),
@@ -153,16 +152,16 @@ namespace Thanks
                 }
 
                 ConnectionManager.SendChannelMessageFormat(
-                    message.Channel,
+                    args.Channel,
                     "{0}: Alright! By the way, {1} has been thanked {2} until now.",
-                    message.Nick,
+                    args.SenderNickname,
                     thankee,
                     (thankedCount == 1) ? "once" : (thankedCount + " times")
                 );
                 return;
             }
 
-            var thankedMatch = ThankedRegex.Match(message.Message);
+            var thankedMatch = ThankedRegex.Match(args.Message);
             if (thankedMatch.Success)
             {
                 bool raw = thankedMatch.Groups["raw"].Success;
@@ -226,16 +225,16 @@ namespace Thanks
                 }
 
                 ConnectionManager.SendChannelMessageFormat(
-                    message.Channel,
+                    args.Channel,
                     "{0}: {1} has {2} until now.{3}",
-                    message.Nick,
+                    args.SenderNickname,
                     nickname,
                     countPhrase,
                     statsString
                 );
             }
 
-            if (message.Message == "!topthanked")
+            if (args.Message == "!topthanked")
             {
                 List<NicknameAndCount> top;
                 using (var ctx = GetNewContext())
@@ -254,14 +253,14 @@ namespace Thanks
                 }
 
                 ConnectionManager.SendChannelMessageFormat(
-                    message.Channel,
+                    args.Channel,
                     "{0}: {1}",
-                    message.Nick,
+                    args.SenderNickname,
                     string.Join(", ", top.Select(NicknameAndCountString))
                 );
             }
 
-            if (message.Message == "!topgrateful")
+            if (args.Message == "!topgrateful")
             {
                 List<NicknameAndCount> top;
                 using (var ctx = GetNewContext())
@@ -280,9 +279,9 @@ namespace Thanks
                 }
 
                 ConnectionManager.SendChannelMessageFormat(
-                    message.Channel,
+                    args.Channel,
                     "{0}: {1}",
-                    message.Nick,
+                    args.SenderNickname,
                     string.Join(", ", top.Select(NicknameAndCountString))
                 );
             }

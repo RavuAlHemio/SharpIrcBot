@@ -1,27 +1,27 @@
 ﻿using System;
 using System.Collections.Generic;
 using JetBrains.Annotations;
-using Meebey.SmartIrc4net;
 using SharpIrcBot.Events;
+using SharpIrcBot.Events.Irc;
 
 namespace SharpIrcBot
 {
     public interface IConnectionManager
     {
-		event SharpIrcBotEventHandler<IrcEventArgs> ChannelMessage;
-        event SharpIrcBotEventHandler<ActionEventArgs> ChannelAction;
-        event SharpIrcBotEventHandler<IrcEventArgs> ChannelNotice;
-        event SharpIrcBotEventHandler<IrcEventArgs> QueryMessage;
-        event SharpIrcBotEventHandler<ActionEventArgs> QueryAction;
-        event SharpIrcBotEventHandler<IrcEventArgs> QueryNotice;
+		event SharpIrcBotEventHandler<IChannelMessageEventArgs> ChannelMessage;
+        event SharpIrcBotEventHandler<IChannelMessageEventArgs> ChannelAction;
+        event SharpIrcBotEventHandler<IChannelMessageEventArgs> ChannelNotice;
+        event SharpIrcBotEventHandler<IPrivateMessageEventArgs> QueryMessage;
+        event SharpIrcBotEventHandler<IPrivateMessageEventArgs> QueryAction;
+        event SharpIrcBotEventHandler<IPrivateMessageEventArgs> QueryNotice;
         event EventHandler<EventArgs> ConnectedToServer;
         event EventHandler<NickMappingEventArgs> NickMapping;
-        event EventHandler<IrcEventArgs> RawMessage;
-        event EventHandler<NamesEventArgs> NamesInChannel;
-        event EventHandler<JoinEventArgs> JoinedChannel;
-        event EventHandler<NickChangeEventArgs> NickChange;
-        event EventHandler<PartEventArgs> UserLeftChannel;
-        event EventHandler<QuitEventArgs> UserQuitServer;
+        event EventHandler<IRawMessageEventArgs> RawMessage;
+        event EventHandler<INameListEventArgs> NamesInChannel;
+        event EventHandler<IUserJoinedChannelEventArgs> JoinedChannel;
+        event EventHandler<INickChangeEventArgs> NickChange;
+        event EventHandler<IUserLeftChannelEventArgs> UserLeftChannel;
+        event EventHandler<IUserQuitServerEventArgs> UserQuitServer;
         event EventHandler<OutgoingMessageEventArgs> OutgoingChannelMessage;
         event EventHandler<OutgoingMessageEventArgs> OutgoingChannelAction;
         event EventHandler<OutgoingMessageEventArgs> OutgoingChannelNotice;
@@ -29,7 +29,7 @@ namespace SharpIrcBot
         event EventHandler<OutgoingMessageEventArgs> OutgoingQueryAction;
         event EventHandler<OutgoingMessageEventArgs> OutgoingQueryNotice;
         event EventHandler<BaseNickChangedEventArgs> BaseNickChanged;
-        event EventHandler<InviteEventArgs> Invited;
+        event EventHandler<IUserInvitedToChannelEventArgs> Invited;
 
         [NotNull] string MyNickname { get; }
         [NotNull] string MyUsername { get; }

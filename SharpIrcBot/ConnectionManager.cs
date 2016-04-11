@@ -11,6 +11,8 @@ using log4net;
 using Meebey.SmartIrc4net;
 using SharpIrcBot.Config;
 using SharpIrcBot.Events;
+using SharpIrcBot.Events.Irc;
+using SharpIrcBot.Events.Irc.Specific;
 
 namespace SharpIrcBot
 {
@@ -43,20 +45,20 @@ namespace SharpIrcBot
 
         public int MaxMessageLength => 230;
 
-        public event SharpIrcBotEventHandler<IrcEventArgs> ChannelMessage;
-        public event SharpIrcBotEventHandler<ActionEventArgs> ChannelAction;
-        public event SharpIrcBotEventHandler<IrcEventArgs> ChannelNotice;
-        public event SharpIrcBotEventHandler<IrcEventArgs> QueryMessage;
-        public event SharpIrcBotEventHandler<ActionEventArgs> QueryAction;
-        public event SharpIrcBotEventHandler<IrcEventArgs> QueryNotice;
+        public event SharpIrcBotEventHandler<IChannelMessageEventArgs> ChannelMessage;
+        public event SharpIrcBotEventHandler<IChannelMessageEventArgs> ChannelAction;
+        public event SharpIrcBotEventHandler<IChannelMessageEventArgs> ChannelNotice;
+        public event SharpIrcBotEventHandler<IPrivateMessageEventArgs> QueryMessage;
+        public event SharpIrcBotEventHandler<IPrivateMessageEventArgs> QueryAction;
+        public event SharpIrcBotEventHandler<IPrivateMessageEventArgs> QueryNotice;
         public event EventHandler<EventArgs> ConnectedToServer;
         public event EventHandler<NickMappingEventArgs> NickMapping;
-        public event EventHandler<IrcEventArgs> RawMessage;
-        public event EventHandler<NamesEventArgs> NamesInChannel;
-        public event EventHandler<JoinEventArgs> JoinedChannel;
-        public event EventHandler<NickChangeEventArgs> NickChange;
-        public event EventHandler<PartEventArgs> UserLeftChannel;
-        public event EventHandler<QuitEventArgs> UserQuitServer;
+        public event EventHandler<IRawMessageEventArgs> RawMessage;
+        public event EventHandler<INameListEventArgs> NamesInChannel;
+        public event EventHandler<IUserJoinedChannelEventArgs> JoinedChannel;
+        public event EventHandler<INickChangeEventArgs> NickChange;
+        public event EventHandler<IUserLeftChannelEventArgs> UserLeftChannel;
+        public event EventHandler<IUserQuitServerEventArgs> UserQuitServer;
         public event EventHandler<OutgoingMessageEventArgs> OutgoingChannelMessage;
         public event EventHandler<OutgoingMessageEventArgs> OutgoingChannelAction;
         public event EventHandler<OutgoingMessageEventArgs> OutgoingChannelNotice;
@@ -64,7 +66,7 @@ namespace SharpIrcBot
         public event EventHandler<OutgoingMessageEventArgs> OutgoingQueryAction;
         public event EventHandler<OutgoingMessageEventArgs> OutgoingQueryNotice;
         public event EventHandler<BaseNickChangedEventArgs> BaseNickChanged;
-        public event EventHandler<InviteEventArgs> Invited;
+        public event EventHandler<IUserInvitedToChannelEventArgs> Invited;
 
         public ConnectionManager([CanBeNull] string configPath)
             : this(SharpIrcBotUtil.LoadConfig(configPath))
@@ -255,7 +257,7 @@ namespace SharpIrcBot
             {
                 return;
             }
-            OnChannelMessage(e);
+            OnChannelMessage(new ChannelMessageEventArgs(e.Data));
         }
 
         protected virtual void HandleChannelAction(object sender, ActionEventArgs e)
@@ -264,7 +266,7 @@ namespace SharpIrcBot
             {
                 return;
             }
-            OnChannelAction(e);
+            OnChannelAction(new ChannelActionEventArgs(e));
         }
 
         protected virtual void HandleChannelNotice(object sender, IrcEventArgs e)
@@ -273,22 +275,22 @@ namespace SharpIrcBot
             {
                 return;
             }
-            OnChannelNotice(e);
+            OnChannelNotice(new ChannelMessageEventArgs(e.Data));
         }
 
         protected virtual void HandleQueryMessage(object sender, IrcEventArgs e)
         {
-            OnQueryMessage(e);
+            OnQueryMessage(new PrivateMessageEventArgs(e.Data));
         }
 
         protected virtual void HandleQueryAction(object sender, ActionEventArgs e)
         {
-            OnQueryAction(e);
+            OnQueryAction(new PrivateActionEventArgs(e));
         }
 
         protected virtual void HandleQueryNotice(object sender, IrcEventArgs e)
         {
-            OnQueryNotice(e);
+            OnQueryNotice(new PrivateMessageEventArgs(e.Data));
         }
 
         protected virtual void HandleChannelSynced(object sender, IrcEventArgs e)
@@ -298,22 +300,22 @@ namespace SharpIrcBot
 
         protected virtual void HandleRawMessage(object sender, IrcEventArgs e)
         {
-            OnRawMessage(e);
+            OnRawMessage(new RawMessageEventArgs(e.Data));
         }
 
         protected virtual void HandleJoin(object sender, JoinEventArgs e)
         {
-            OnJoinedChannel(e);
+            OnJoinedChannel(new UserJoinedChannelEventArgs(e));
         }
 
         protected virtual void HandleNames(object sender, NamesEventArgs e)
         {
-            OnNamesInChannel(e);
+            OnNamesInChannel(new NameListEventArgs(e));
         }
 
-        protected virtual void HandleNickChange(object sender, NickChangeEventArgs e)
+        protected virtual void HandleNickChange(object sender, Meebey.SmartIrc4net.NickChangeEventArgs e)
         {
-            OnNickChange(e);
+            OnNickChange(new Events.Irc.Specific.NickChangeEventArgs(e));
         }
 
         protected virtual void HandleRegistered(object sender, EventArgs e)
@@ -323,17 +325,17 @@ namespace SharpIrcBot
 
         protected virtual void HandleQuit(object sender, QuitEventArgs e)
         {
-            OnUserQuitServer(e);
+            OnUserQuitServer(new UserQuitServerEventArgs(e));
         }
 
         protected virtual void HandlePart(object sender, PartEventArgs e)
         {
-            OnUserLeftChannel(e);
+            OnUserLeftChannel(new UserLeftChannelEventArgs(e));
         }
 
         protected virtual void HandleInvite(object sender, InviteEventArgs e)
         {
-            OnInvited(e);
+            OnInvited(new UserInvitedToChannelEventArgs(e));
         }
 
         protected virtual MessageFlags FlagsForNick([CanBeNull] string nick)
@@ -355,56 +357,56 @@ namespace SharpIrcBot
             return MessageFlags.None;
         }
 
-        protected virtual void OnChannelMessage(IrcEventArgs e)
+        protected virtual void OnChannelMessage(IChannelMessageEventArgs e)
         {
             if (ChannelMessage != null)
             {
-                var flags = FlagsForNick(e.Data.Nick);
+                var flags = FlagsForNick(e.SenderNickname);
                 ChannelMessage(this, e, flags);
             }
         }
 
-        protected virtual void OnChannelAction(ActionEventArgs e)
+        protected virtual void OnChannelAction(IChannelMessageEventArgs e)
         {
             if (ChannelAction != null)
             {
-                var flags = FlagsForNick(e.Data.Nick);
+                var flags = FlagsForNick(e.SenderNickname);
                 ChannelAction(this, e, flags);
             }
         }
 
-        protected virtual void OnChannelNotice(IrcEventArgs e)
+        protected virtual void OnChannelNotice(IChannelMessageEventArgs e)
         {
             if (ChannelNotice != null)
             {
-                var flags = FlagsForNick(e.Data.Nick);
+                var flags = FlagsForNick(e.SenderNickname);
                 ChannelNotice(this, e, flags);
             }
         }
 
-        protected virtual void OnQueryMessage(IrcEventArgs e)
+        protected virtual void OnQueryMessage(IPrivateMessageEventArgs e)
         {
             if (QueryMessage != null)
             {
-                var flags = FlagsForNick(e.Data.Nick);
+                var flags = FlagsForNick(e.SenderNickname);
                 QueryMessage(this, e, flags);
             }
         }
 
-        protected virtual void OnQueryAction(ActionEventArgs e)
+        protected virtual void OnQueryAction(IPrivateMessageEventArgs e)
         {
             if (QueryAction != null)
             {
-                var flags = FlagsForNick(e.Data.Nick);
+                var flags = FlagsForNick(e.SenderNickname);
                 QueryAction(this, e, flags);
             }
         }
 
-        protected virtual void OnQueryNotice(IrcEventArgs e)
+        protected virtual void OnQueryNotice(IPrivateMessageEventArgs e)
         {
             if (QueryNotice != null)
             {
-                var flags = FlagsForNick(e.Data.Nick);
+                var flags = FlagsForNick(e.SenderNickname);
                 QueryNotice(this, e, flags);
             }
         }
@@ -425,7 +427,7 @@ namespace SharpIrcBot
             }
         }
 
-        protected virtual void OnRawMessage(IrcEventArgs e)
+        protected virtual void OnRawMessage(IRawMessageEventArgs e)
         {
             if (RawMessage != null)
             {
@@ -433,7 +435,7 @@ namespace SharpIrcBot
             }
         }
 
-        protected virtual void OnNamesInChannel(NamesEventArgs e)
+        protected virtual void OnNamesInChannel(INameListEventArgs e)
         {
             if (NamesInChannel != null)
             {
@@ -441,7 +443,7 @@ namespace SharpIrcBot
             }
         }
 
-        protected virtual void OnJoinedChannel(JoinEventArgs e)
+        protected virtual void OnJoinedChannel(IUserJoinedChannelEventArgs e)
         {
             if (JoinedChannel != null)
             {
@@ -449,7 +451,7 @@ namespace SharpIrcBot
             }
         }
 
-        protected virtual void OnNickChange(NickChangeEventArgs e)
+        protected virtual void OnNickChange(INickChangeEventArgs e)
         {
             if (NickChange != null)
             {
@@ -457,7 +459,7 @@ namespace SharpIrcBot
             }
         }
 
-        protected virtual void OnUserLeftChannel(PartEventArgs e)
+        protected virtual void OnUserLeftChannel(IUserLeftChannelEventArgs e)
         {
             if (UserLeftChannel != null)
             {
@@ -465,7 +467,7 @@ namespace SharpIrcBot
             }
         }
 
-        protected virtual void OnUserQuitServer(QuitEventArgs e)
+        protected virtual void OnUserQuitServer(IUserQuitServerEventArgs e)
         {
             if (UserQuitServer != null)
             {
@@ -526,7 +528,7 @@ namespace SharpIrcBot
             BaseNickChanged?.Invoke(this, e);
         }
 
-        protected virtual void OnInvited(InviteEventArgs e)
+        protected virtual void OnInvited(IUserInvitedToChannelEventArgs e)
         {
             Invited?.Invoke(this, e);
         }

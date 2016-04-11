@@ -7,10 +7,10 @@ using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using log4net;
-using Meebey.SmartIrc4net;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using SharpIrcBot;
+using SharpIrcBot.Events.Irc;
 using Timer = System.Threading.Timer;
 
 namespace UnoBot.GameMaster
@@ -409,7 +409,7 @@ namespace UnoBot.GameMaster
             }
         }
 
-        protected virtual void HandleChannelMessage(object sender, IrcEventArgs e, MessageFlags flags)
+        protected virtual void HandleChannelMessage(object sender, IChannelMessageEventArgs e, MessageFlags flags)
         {
             try
             {
@@ -421,7 +421,7 @@ namespace UnoBot.GameMaster
             }
         }
 
-        protected virtual void HandleNickChange(object sender, NickChangeEventArgs e)
+        protected virtual void HandleNickChange(object sender, INickChangeEventArgs e)
         {
             try
             {
@@ -433,11 +433,11 @@ namespace UnoBot.GameMaster
             }
         }
 
-        protected virtual void HandleUserLeftChannel(object sender, PartEventArgs e)
+        protected virtual void HandleUserLeftChannel(object sender, IUserLeftChannelEventArgs e)
         {
             try
             {
-                ActuallyHandleUserLeaving(sender, e.Who);
+                ActuallyHandleUserLeaving(sender, e.User);
             }
             catch (Exception exc)
             {
@@ -445,11 +445,11 @@ namespace UnoBot.GameMaster
             }
         }
 
-        protected virtual void HandleUserQuitServer(object sender, QuitEventArgs e)
+        protected virtual void HandleUserQuitServer(object sender, IUserQuitServerEventArgs e)
         {
             try
             {
-                ActuallyHandleUserLeaving(sender, e.Who);
+                ActuallyHandleUserLeaving(sender, e.User);
             }
             catch (Exception exc)
             {
@@ -457,30 +457,30 @@ namespace UnoBot.GameMaster
             }
         }
 
-        protected virtual void ActuallyHandleChannelMessage(object sender, IrcEventArgs e, MessageFlags flags)
+        protected virtual void ActuallyHandleChannelMessage(object sender, IChannelMessageEventArgs e, MessageFlags flags)
         {
             if (flags.HasFlag(MessageFlags.UserBanned))
             {
                 return;
             }
 
-            if (e.Data.Channel != Config.UnoChannel)
+            if (e.Channel != Config.UnoChannel)
             {
                 return;
             }
 
             lock (TurnLock)
             {
-                var body = e.Data.Message;
+                var body = e.Message;
                 var bodyTrimmedEnd = body.TrimEnd();
 
                 // !play or !p
                 var playCardMatch = PlayCardRegex.Match(bodyTrimmedEnd);
                 if (playCardMatch.Success)
                 {
-                    if (CurrentPlayer.Nick != e.Data.Nick)
+                    if (CurrentPlayer.Nick != e.SenderNickname)
                     {
-                        ConnectionManager.SendChannelMessageFormat(Config.UnoChannel, "It's not your turn, {0}.", e.Data.Nick);
+                        ConnectionManager.SendChannelMessageFormat(Config.UnoChannel, "It's not your turn, {0}.", e.SenderNickname);
                         return;
                     }
 
@@ -496,7 +496,7 @@ namespace UnoBot.GameMaster
                         CardColor? chosenColor = CardUtils.ParseColor(secondaryString);
                         if (!value.HasValue || (value.Value != CardValue.Wild && value.Value != CardValue.WildDrawFour) || !chosenColor.HasValue)
                         {
-                            ConnectionManager.SendChannelMessageFormat(Config.UnoChannel, "{0}: Play a card using !play COLOR VALUE for normal cards or !play VALUE CHOSENCOLOR for wild cards!", e.Data.Nick);
+                            ConnectionManager.SendChannelMessageFormat(Config.UnoChannel, "{0}: Play a card using !play COLOR VALUE for normal cards or !play VALUE CHOSENCOLOR for wild cards!", e.SenderNickname);
                             return;
                         }
 
@@ -506,7 +506,7 @@ namespace UnoBot.GameMaster
                         var requestedCard = new Card(CardColor.Wild, value.Value);
                         if (!CurrentPlayer.Hand.Remove(requestedCard))
                         {
-                            ConnectionManager.SendChannelMessageFormat(Config.UnoChannel, "{0}: You don't have that card.", e.Data.Nick);
+                            ConnectionManager.SendChannelMessageFormat(Config.UnoChannel, "{0}: You don't have that card.", e.SenderNickname);
                             return;
                         }
 
@@ -531,14 +531,14 @@ namespace UnoBot.GameMaster
                         CardValue? value = CardUtils.ParseValue(secondaryString);
                         if (!value.HasValue)
                         {
-                            ConnectionManager.SendChannelMessageFormat(Config.UnoChannel, "{0}: Play a card using !play COLOR VALUE for normal cards or !play VALUE CHOSENCOLOR for wild cards!", e.Data.Nick);
+                            ConnectionManager.SendChannelMessageFormat(Config.UnoChannel, "{0}: Play a card using !play COLOR VALUE for normal cards or !play VALUE CHOSENCOLOR for wild cards!", e.SenderNickname);
                             return;
                         }
 
                         // see if this card is playable at all
                         if (TopCard.Color != color.Value && TopCard.Value != value.Value)
                         {
-                            ConnectionManager.SendChannelMessageFormat(Config.UnoChannel, "{0}: You cannot play this card.", e.Data.Nick);
+                            ConnectionManager.SendChannelMessageFormat(Config.UnoChannel, "{0}: You cannot play this card.", e.SenderNickname);
                             return;
                         }
 
@@ -546,7 +546,7 @@ namespace UnoBot.GameMaster
                         var requestedCard = new Card(color.Value, value.Value);
                         if (!CurrentPlayer.Hand.Remove(requestedCard))
                         {
-                            ConnectionManager.SendChannelMessageFormat(Config.UnoChannel, "{0}: You don't have that card.", e.Data.Nick);
+                            ConnectionManager.SendChannelMessageFormat(Config.UnoChannel, "{0}: You don't have that card.", e.SenderNickname);
                             return;
                         }
 
@@ -618,7 +618,7 @@ namespace UnoBot.GameMaster
                     {
                         case GameState.Preparation:
                         case GameState.InProgress:
-                            Logger.DebugFormat("{0} is trying to start a game although one is already in progress", e.Data.Nick);
+                            Logger.DebugFormat("{0} is trying to start a game although one is already in progress", e.SenderNickname);
                             return;
                         case GameState.NoGame:
                             // continue below
@@ -650,9 +650,9 @@ namespace UnoBot.GameMaster
                     PrepareGame();
 
                     // add player who launched the game
-                    Players.Add(Player.Create(e.Data.Nick));
+                    Players.Add(Player.Create(e.SenderNickname));
 
-                    ConnectionManager.SendChannelMessageFormat(Config.UnoChannel, "{0} started a game of Uno!", e.Data.Nick);
+                    ConnectionManager.SendChannelMessageFormat(Config.UnoChannel, "{0} started a game of Uno!", e.SenderNickname);
 
                     return;
                 }
@@ -662,7 +662,7 @@ namespace UnoBot.GameMaster
                 {
                     BotTestCount = int.Parse(botTestMatch.Groups[1].Value, CultureInfo.InvariantCulture);
 
-                    ConnectionManager.SendChannelMessageFormat(Config.UnoChannel, "{0} engaged bot test mode; {1} games left!", e.Data.Nick, BotTestCount);
+                    ConnectionManager.SendChannelMessageFormat(Config.UnoChannel, "{0} engaged bot test mode; {1} games left!", e.SenderNickname, BotTestCount);
 
                     // prepare a game
                     PrepareGame();
@@ -682,7 +682,7 @@ namespace UnoBot.GameMaster
                     switch (CurrentGameState)
                     {
                         case GameState.NoGame:
-                            Logger.DebugFormat("{0} is trying to join no game", e.Data.Nick);
+                            Logger.DebugFormat("{0} is trying to join no game", e.SenderNickname);
                             return;
                         default:
                             Logger.Error("invalid game state when trying to add player to game");
@@ -693,18 +693,18 @@ namespace UnoBot.GameMaster
                             break;
                     }
 
-                    var existingPlayer = Players.FirstOrDefault(p => p.Nick == e.Data.Nick);
+                    var existingPlayer = Players.FirstOrDefault(p => p.Nick == e.SenderNickname);
                     if (existingPlayer != null)
                     {
                         // player already joined
                         // they become what they chose
                         existingPlayer.IsBot = isBot;
-                        ConnectionManager.SendChannelMessageFormat(Config.UnoChannel, "{0} became {1}!", e.Data.Nick, isBot ? "a bot" : "human");
+                        ConnectionManager.SendChannelMessageFormat(Config.UnoChannel, "{0} became {1}!", e.SenderNickname, isBot ? "a bot" : "human");
                     }
                     else
                     {
                         // add them
-                        var newPlayer = Player.Create(e.Data.Nick, isBot);
+                        var newPlayer = Player.Create(e.SenderNickname, isBot);
 
                         if (CurrentGameState == GameState.InProgress)
                         {
@@ -715,19 +715,19 @@ namespace UnoBot.GameMaster
 
                         Players.Add(newPlayer);
 
-                        ConnectionManager.SendChannelMessageFormat(Config.UnoChannel, "{0} joined the fray!", e.Data.Nick);
+                        ConnectionManager.SendChannelMessageFormat(Config.UnoChannel, "{0} joined the fray!", e.SenderNickname);
                     }
                 }
                 else if (bodyTrimmedEnd == "!leave")
                 {
-                    RemovePlayerFromGame(e.Data.Nick);
+                    RemovePlayerFromGame(e.SenderNickname);
                 }
                 else if (bodyTrimmedEnd == "!deal")
                 {
                     switch (CurrentGameState)
                     {
                         case GameState.NoGame:
-                            Logger.DebugFormat("{0} is trying to deal no game", e.Data.Nick);
+                            Logger.DebugFormat("{0} is trying to deal no game", e.SenderNickname);
                             return;
                         default:
                             Logger.Error("invalid game state when trying to add player to game");
@@ -742,15 +742,15 @@ namespace UnoBot.GameMaster
                 }
                 else if (bodyTrimmedEnd == "!draw")
                 {
-                    if (CurrentPlayer.Nick != e.Data.Nick)
+                    if (CurrentPlayer.Nick != e.SenderNickname)
                     {
-                        ConnectionManager.SendChannelMessageFormat(Config.UnoChannel, "It's not your turn, {0}.", e.Data.Nick);
+                        ConnectionManager.SendChannelMessageFormat(Config.UnoChannel, "It's not your turn, {0}.", e.SenderNickname);
                         return;
                     }
 
                     if (DrewLast)
                     {
-                        ConnectionManager.SendChannelMessageFormat(Config.UnoChannel, "You already drew, {0}.", e.Data.Nick);
+                        ConnectionManager.SendChannelMessageFormat(Config.UnoChannel, "You already drew, {0}.", e.SenderNickname);
                         return;
                     }
 
@@ -788,15 +788,15 @@ namespace UnoBot.GameMaster
                 }
                 else if (bodyTrimmedEnd == "!pass")
                 {
-                    if (CurrentPlayer.Nick != e.Data.Nick)
+                    if (CurrentPlayer.Nick != e.SenderNickname)
                     {
-                        ConnectionManager.SendChannelMessageFormat(Config.UnoChannel, "It's not your turn, {0}.", e.Data.Nick);
+                        ConnectionManager.SendChannelMessageFormat(Config.UnoChannel, "It's not your turn, {0}.", e.SenderNickname);
                         return;
                     }
 
                     if (!DrewLast)
                     {
-                        ConnectionManager.SendChannelMessageFormat(Config.UnoChannel, "You have to draw first, {0}.", e.Data.Nick);
+                        ConnectionManager.SendChannelMessageFormat(Config.UnoChannel, "You have to draw first, {0}.", e.SenderNickname);
                         return;
                     }
 
@@ -884,7 +884,7 @@ namespace UnoBot.GameMaster
             StartNewTurn();
         }
 
-        protected virtual void ActuallyHandleNickChange(object sender, NickChangeEventArgs e)
+        protected virtual void ActuallyHandleNickChange(object sender, INickChangeEventArgs e)
         {
             lock (TurnLock)
             {

@@ -8,10 +8,10 @@ using System.Text.RegularExpressions;
 using Fizzler.Systems.HtmlAgilityPack;
 using HtmlAgilityPack;
 using log4net;
-using Meebey.SmartIrc4net;
 using Newtonsoft.Json.Linq;
 using SharpIrcBot;
 using SharpIrcBot.Events;
+using SharpIrcBot.Events.Irc;
 
 namespace LinkInfo
 {
@@ -44,7 +44,7 @@ namespace LinkInfo
             Config = new LinkInfoConfig(newConfig);
         }
 
-        private void HandleChannelMessage(object sender, IrcEventArgs args, MessageFlags flags)
+        private void HandleChannelMessage(object sender, IChannelMessageEventArgs args, MessageFlags flags)
         {
             try
             {
@@ -56,19 +56,19 @@ namespace LinkInfo
             }
         }
 
-        protected void ActuallyHandleChannelMessage(object sender, IrcEventArgs args, MessageFlags flags)
+        protected void ActuallyHandleChannelMessage(object sender, IChannelMessageEventArgs args, MessageFlags flags)
         {
             if (flags.HasFlag(MessageFlags.UserBanned))
             {
                 return;
             }
 
-            var body = args.Data.Message;
+            var body = args.Message;
             if (body == "!lastlink" || body == "!ll")
             {
                 if (LastLinkAndInfo == null)
                 {
-                    ConnectionManager.SendChannelMessage(args.Data.Channel, "No last link!");
+                    ConnectionManager.SendChannelMessage(args.Channel, "No last link!");
                 }
                 else
                 {
@@ -77,7 +77,7 @@ namespace LinkInfo
                     {
                         LastLinkAndInfo = ObtainLinkInfo(LastLinkAndInfo.Link);
                     }
-                    PostLinkInfo(LastLinkAndInfo, args.Data.Channel);
+                    PostLinkInfo(LastLinkAndInfo, args.Channel);
                 }
                 return;
             }
@@ -94,7 +94,7 @@ namespace LinkInfo
             // respond?
             if (Config.AutoShowLinkInfo || body.StartsWith("!link "))
             {
-                FetchAndPostLinkInfo(links, args.Data.Channel);
+                FetchAndPostLinkInfo(links, args.Channel);
             }
         }
 

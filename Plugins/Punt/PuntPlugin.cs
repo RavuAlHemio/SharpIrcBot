@@ -4,9 +4,9 @@ using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using log4net;
-using Meebey.SmartIrc4net;
 using Newtonsoft.Json.Linq;
 using SharpIrcBot;
+using SharpIrcBot.Events.Irc;
 
 namespace Punt
 {
@@ -37,11 +37,11 @@ namespace Punt
             RegexCache.Clear();
         }
 
-        protected void HandleChannelAction(object sender, ActionEventArgs e, MessageFlags flags)
+        protected void HandleChannelAction(object sender, IChannelMessageEventArgs e, MessageFlags flags)
         {
             try
             {
-                ActuallyHandleMessage(e.Data.Channel, e.Data.Nick, e.ActionMessage);
+                ActuallyHandleMessage(e.Channel, e.SenderNickname, e.Message);
             }
             catch (Exception exc)
             {
@@ -49,11 +49,11 @@ namespace Punt
             }
         }
 
-        protected void HandleChannelMessage(object sender, IrcEventArgs e, MessageFlags flags)
+        protected void HandleChannelMessage(object sender, IChannelMessageEventArgs e, MessageFlags flags)
         {
             try
             {
-                ActuallyHandleMessage(e.Data.Channel, e.Data.Nick, e.Data.Message);
+                ActuallyHandleMessage(e.Channel, e.SenderNickname, e.Message);
             }
             catch (Exception exc)
             {
@@ -61,11 +61,11 @@ namespace Punt
             }
         }
 
-        protected void HandleChannelNotice(object sender, IrcEventArgs e, MessageFlags flags)
+        protected void HandleChannelNotice(object sender, IChannelMessageEventArgs e, MessageFlags flags)
         {
             try
             {
-                ActuallyHandleMessage(e.Data.Channel, e.Data.Nick, e.Data.Message);
+                ActuallyHandleMessage(e.Channel, e.SenderNickname, e.Message);
             }
             catch (Exception exc)
             {

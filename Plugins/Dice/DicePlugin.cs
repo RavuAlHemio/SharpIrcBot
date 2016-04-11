@@ -6,9 +6,9 @@ using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using log4net;
-using Meebey.SmartIrc4net;
 using Newtonsoft.Json.Linq;
 using SharpIrcBot;
+using SharpIrcBot.Events.Irc;
 
 namespace Dice
 {
@@ -65,7 +65,7 @@ namespace Dice
             Config = new DiceConfig(newConfig);
         }
 
-        private void HandleChannelMessage(object sender, IrcEventArgs args, MessageFlags flags)
+        private void HandleChannelMessage(object sender, IChannelMessageEventArgs args, MessageFlags flags)
         {
             try
             {
@@ -77,35 +77,35 @@ namespace Dice
             }
         }
 
-        protected virtual void ActuallyHandleChannelMessage(object sender, IrcEventArgs args, MessageFlags flags)
+        protected virtual void ActuallyHandleChannelMessage(object sender, IChannelMessageEventArgs args, MessageFlags flags)
         {
             if (flags.HasFlag(MessageFlags.UserBanned))
             {
                 return;
             }
 
-            var match = DiceThrowRegex.Match(args.Data.Message);
+            var match = DiceThrowRegex.Match(args.Message);
             if (match.Success)
             {
                 HandleDiceRoll(args, match);
                 return;
             }
 
-            if (args.Data.Message.StartsWith("!yn ", StringComparison.InvariantCultureIgnoreCase) && Config.YesNoAnswers.Count > 0)
+            if (args.Message.StartsWith("!yn ", StringComparison.InvariantCultureIgnoreCase) && Config.YesNoAnswers.Count > 0)
             {
                 var yesNoAnswer = Config.YesNoAnswers[RNG.Next(Config.YesNoAnswers.Count)];
-                ConnectionManager.SendChannelMessageFormat(args.Data.Channel, "{0}: {1}", args.Data.Nick, yesNoAnswer);
+                ConnectionManager.SendChannelMessageFormat(args.Channel, "{0}: {1}", args.SenderNickname, yesNoAnswer);
                 return;
             }
 
-            if (args.Data.Message.StartsWith("!decide ", StringComparison.InvariantCultureIgnoreCase) && Config.DecisionSplitters.Count > 0)
+            if (args.Message.StartsWith("!decide ", StringComparison.InvariantCultureIgnoreCase) && Config.DecisionSplitters.Count > 0)
             {
-                var decisionString = args.Data.Message.Substring(("!decide ").Length).Trim();
+                var decisionString = args.Message.Substring(("!decide ").Length).Trim();
 
                 string splitter = Config.DecisionSplitters.FirstOrDefault(ds => decisionString.Contains(ds));
                 if (splitter == null)
                 {
-                    ConnectionManager.SendChannelMessageFormat(args.Data.Channel, "{0}: Uhh... that looks like only one option to decide from.", args.Data.Nick);
+                    ConnectionManager.SendChannelMessageFormat(args.Channel, "{0}: Uhh... that looks like only one option to decide from.", args.SenderNickname);
                     return;
                 }
 
@@ -116,14 +116,14 @@ namespace Dice
                     {
                         // special answer instead!
                         var specialAnswer = Config.SpecialDecisionAnswers[RNG.Next(Config.SpecialDecisionAnswers.Count)];
-                        ConnectionManager.SendChannelMessageFormat(args.Data.Channel, "{0}: {1}", args.Data.Nick, specialAnswer);
+                        ConnectionManager.SendChannelMessageFormat(args.Channel, "{0}: {1}", args.SenderNickname, specialAnswer);
                         return;
                     }
                 }
 
                 var options = decisionString.Split(new[] {splitter}, StringSplitOptions.None);
                 var chosenOption = options[RNG.Next(options.Length)];
-                ConnectionManager.SendChannelMessageFormat(args.Data.Channel, "{0}: {1}", args.Data.Nick, chosenOption);
+                ConnectionManager.SendChannelMessageFormat(args.Channel, "{0}: {1}", args.SenderNickname, chosenOption);
             }
         }
 
@@ -150,13 +150,13 @@ namespace Dice
             return new DiceGroup(dice.Value, sides.Value, addValue.Value);
         }
 
-        protected void HandleDiceRoll(IrcEventArgs args, Match match)
+        protected void HandleDiceRoll(IChannelMessageEventArgs args, Match match)
         {
             var diceGroups = new List<DiceGroup>();
             var firstRollMatch = RollRegex.Match(match.Groups["firstRoll"].Value);
             Debug.Assert(firstRollMatch.Success);
 
-            var firstDiceGroup = ObtainDiceGroup(firstRollMatch, args.Data.Channel, args.Data.Nick);
+            var firstDiceGroup = ObtainDiceGroup(firstRollMatch, args.Channel, args.SenderNickname);
             if (firstDiceGroup == null)
             {
                 // error occurred and reported; bail out
@@ -170,7 +170,7 @@ namespace Dice
                 var nextRollMatch = RollRegex.Match(nextRoll.Value);
                 Debug.Assert(nextRollMatch.Success);
 
-                var nextDiceGroup = ObtainDiceGroup(nextRollMatch, args.Data.Channel, args.Data.Nick);
+                var nextDiceGroup = ObtainDiceGroup(nextRollMatch, args.Channel, args.SenderNickname);
                 if (nextDiceGroup == null)
                 {
                     // error occurred and reported; bail out
@@ -180,7 +180,7 @@ namespace Dice
 
                 if (diceGroups.Count > Config.MaxRollCount)
                 {
-                    ConnectionManager.SendChannelMessageFormat(args.Data.Channel, "{0}: Too many rolls.", args.Data.Nick);
+                    ConnectionManager.SendChannelMessageFormat(args.Channel, "{0}: Too many rolls.", args.SenderNickname);
                     return;
                 }
             }
@@ -188,7 +188,7 @@ namespace Dice
             // special-case 2d1
             if (diceGroups.Count == 1 && diceGroups[0].DieCount == 2 && diceGroups[0].SideCount == 1 && diceGroups[0].AddValue == 0)
             {
-                ConnectionManager.SendChannelAction(args.Data.Channel, "rolls its eyes");
+                ConnectionManager.SendChannelAction(args.Channel, "rolls its eyes");
                 return;
             }
 
@@ -215,7 +215,7 @@ namespace Dice
             }
             var allRollsString = string.Join("; ", allRolls);
 
-            ConnectionManager.SendChannelMessageFormat(args.Data.Channel, "{0}: {1}", args.Data.Nick, allRollsString);
+            ConnectionManager.SendChannelMessageFormat(args.Channel, "{0}: {1}", args.SenderNickname, allRollsString);
         }
 
         protected static int? MaybeParseIntGroup(Group grp, int? defaultValue = null)

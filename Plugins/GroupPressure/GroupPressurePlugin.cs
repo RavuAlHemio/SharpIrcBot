@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using log4net;
-using Meebey.SmartIrc4net;
 using Newtonsoft.Json.Linq;
 using SharpIrcBot;
+using SharpIrcBot.Events.Irc;
 
 namespace GroupPressure
 {
@@ -26,8 +26,8 @@ namespace GroupPressure
             Config = new PressureConfig(config);
             Connection = connMgr;
 
-            Connection.ChannelMessage += HandleChannelMessageOrAction;
-            Connection.ChannelAction += HandleChannelMessageOrAction;
+            Connection.ChannelMessage += HandleChannelMessage;
+            Connection.ChannelAction += HandleChannelAction;
         }
 
         public void ReloadConfiguration(JObject newConfig)
@@ -35,11 +35,11 @@ namespace GroupPressure
             Config = new PressureConfig(newConfig);
         }
 
-        private void HandleChannelMessageOrAction(object sender, IrcEventArgs args, MessageFlags flags)
+        private void HandleChannelMessage(object sender, IChannelMessageEventArgs args, MessageFlags flags)
         {
             try
             {
-                ActuallyHandleChannelMessageOrAction(sender, args, flags);
+                ActuallyHandleChannelMessageOrAction(sender, args, flags, action: false);
             }
             catch (Exception exc)
             {
@@ -47,20 +47,32 @@ namespace GroupPressure
             }
         }
 
-        private void ActuallyHandleChannelMessageOrAction(object sender, IrcEventArgs e, MessageFlags flags)
+        private void HandleChannelAction(object sender, IChannelMessageEventArgs args, MessageFlags flags)
+        {
+            try
+            {
+                ActuallyHandleChannelMessageOrAction(sender, args, flags, action: true);
+            }
+            catch (Exception exc)
+            {
+                Logger.Error("error handling action", exc);
+            }
+        }
+
+        private void ActuallyHandleChannelMessageOrAction(object sender, IChannelMessageEventArgs e, MessageFlags flags, bool action)
         {
             if (flags.HasFlag(MessageFlags.UserBanned))
             {
                 return;
             }
 
-            var body = e.Data.Message;
+            var body = e.Message;
             if (body.Length == 0)
             {
                 return;
             }
 
-            if (!Config.Channels.Contains(e.Data.Channel))
+            if (!Config.Channels.Contains(e.Channel))
             {
                 return;
             }
@@ -71,14 +83,14 @@ namespace GroupPressure
                 Backlog.Dequeue();
             }
 
-            var normalizedSender = Connection.RegisteredNameForNick(e.Data.Nick) ?? e.Data.Nick;
+            var normalizedSender = Connection.RegisteredNameForNick(e.SenderNickname) ?? e.SenderNickname;
 
             // append the message
             Backlog.Enqueue(new BacklogMessage
             {
                 Sender = normalizedSender,
                 Body = body,
-                Action = (e.Data.Type == ReceiveType.ChannelAction)
+                Action = action
             });
 
             // perform accounting
@@ -117,13 +129,16 @@ namespace GroupPressure
                 );
 
                 // submit to group pressure
+                bool lastAction;
                 if (msg[0] == 'A')
                 {
-                    Connection.SendChannelAction(e.Data.Channel, msg.Substring(1));
+                    Connection.SendChannelAction(e.Channel, msg.Substring(1));
+                    lastAction = true;
                 }
                 else
                 {
-                    Connection.SendChannelMessage(e.Data.Channel, msg.Substring(1));
+                    Connection.SendChannelMessage(e.Channel, msg.Substring(1));
+                    lastAction = false;
                 }
 
                 // fake this message into the backlog to prevent duplicates
@@ -131,7 +146,7 @@ namespace GroupPressure
                 {
                     Sender = Connection.MyUsername,
                     Body = body,
-                    Action = (e.Data.Type == ReceiveType.ChannelAction)
+                    Action = lastAction
                 });
             }
         }

@@ -5,9 +5,9 @@ using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using log4net;
-using Meebey.SmartIrc4net;
 using Newtonsoft.Json.Linq;
 using SharpIrcBot;
+using SharpIrcBot.Events.Irc;
 
 namespace Weather
 {
@@ -46,7 +46,7 @@ namespace Weather
             Config = new WeatherConfig(newConfig);
         }
 
-        private void HandleChannelMessage(object sender, IrcEventArgs args, MessageFlags flags)
+        private void HandleChannelMessage(object sender, IChannelMessageEventArgs args, MessageFlags flags)
         {
             try
             {
@@ -209,14 +209,14 @@ namespace Weather
             ConnectionManager.SendChannelMessage(channel, weather.ToString());
         }
 
-        protected virtual void ActuallyHandleChannelMessage(object sender, IrcEventArgs args, MessageFlags flags)
+        protected virtual void ActuallyHandleChannelMessage(object sender, IChannelMessageEventArgs args, MessageFlags flags)
         {
             if (flags.HasFlag(MessageFlags.UserBanned))
             {
                 return;
             }
 
-            var match = WeatherRegex.Match(args.Data.Message);
+            var match = WeatherRegex.Match(args.Message);
             if (!match.Success)
             {
                 return;
@@ -226,7 +226,7 @@ namespace Weather
                 ? match.Groups["location"].Value
                 : Config.DefaultLocation;
 
-            GetWeatherForLocation(location, args.Data.Channel, args.Data.Nick, match.Groups["lucky"].Success);
+            GetWeatherForLocation(location, args.Channel, args.SenderNickname, match.Groups["lucky"].Success);
         }
     }
 }

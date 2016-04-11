@@ -1,12 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 using System.Text;
 using log4net;
-using Meebey.SmartIrc4net;
 using Newtonsoft.Json.Linq;
 using SharpIrcBot;
+using SharpIrcBot.Events.Irc;
 
 namespace Belch
 {
@@ -24,7 +23,7 @@ namespace Belch
             ConnectionManager.ChannelMessage += HandleChannelMessage;
         }
 
-        private void HandleChannelMessage(object sender, IrcEventArgs args, MessageFlags flags)
+        private void HandleChannelMessage(object sender, IChannelMessageEventArgs args, MessageFlags flags)
         {
             try
             {
@@ -36,23 +35,22 @@ namespace Belch
             }
         }
 
-        private void ActuallyHandleChannelMessage(object sender, IrcEventArgs args, MessageFlags flags)
+        private void ActuallyHandleChannelMessage(object sender, IChannelMessageEventArgs args, MessageFlags flags)
         {
             if (flags.HasFlag(MessageFlags.UserBanned))
             {
                 return;
             }
 
-            var msgArr = args.Data.MessageArray;
-            if (msgArr.Length == 1 && string.Equals(msgArr[0], "!belch"))
+            if (string.Equals(args.Message, "!belch"))
             {
-                ConnectionManager.SendChannelAction(args.Data.Channel, "belches loudly");
+                ConnectionManager.SendChannelAction(args.Channel, "belches loudly");
             }
 
-            if (msgArr.Length > 1 && msgArr[0] == "!skittles")
+            if (args.Message.StartsWith("!skittles "))
             {
                 const string formatReset = "\x0F";
-                var message = string.Join(" ", msgArr.Skip(1));
+                var message = args.Message.Substring(("!skittles ").Length);
                 var currentPiece = new StringBuilder();
                 var skittledPieces = new List<string>();
                 var colorCodeOffset = new Random().Next(SkittlesCodes.Length);
@@ -75,7 +73,7 @@ namespace Belch
 
                 foreach (var piece in skittledPieces)
                 {
-                    ConnectionManager.SendChannelMessage(args.Data.Channel, piece);
+                    ConnectionManager.SendChannelMessage(args.Channel, piece);
                 }
             }
         }

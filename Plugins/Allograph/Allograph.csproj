@@ -54,10 +54,6 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\Libraries\SmartIrc4net\SmartIrc4net.csproj">
-      <Project>{91D3003B-7E65-4EAF-8EE1-DA43832E7A9C}</Project>
-      <Name>SmartIrc4net</Name>
-    </ProjectReference>
     <ProjectReference Include="..\..\SharpIrcBot\SharpIrcBot.csproj">
       <Project>{ee95358b-9655-41c6-a76c-113a6eb455f2}</Project>
       <Name>SharpIrcBot</Name>

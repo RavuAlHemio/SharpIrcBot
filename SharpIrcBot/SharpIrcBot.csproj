@@ -55,6 +55,27 @@
     <Compile Include="Collections\DrillDownTree.cs" />
     <Compile Include="ConnectionManagerExtensions.cs" />
     <Compile Include="Events\BaseNickChangedEventArgs.cs" />
+    <Compile Include="Events\Irc\IChannelMessageEventArgs.cs" />
+    <Compile Include="Events\Irc\IUserMessageEventArgs.cs" />
+    <Compile Include="Events\Irc\INameListEventArgs.cs" />
+    <Compile Include="Events\Irc\INickChangeEventArgs.cs" />
+    <Compile Include="Events\Irc\IPrivateMessageEventArgs.cs" />
+    <Compile Include="Events\Irc\IRawMessageEventArgs.cs" />
+    <Compile Include="Events\Irc\IUserJoinedChannelEventArgs.cs" />
+    <Compile Include="Events\Irc\IUserLeftChannelEventArgs.cs" />
+    <Compile Include="Events\Irc\IUserQuitServerEventArgs.cs" />
+    <Compile Include="Events\Irc\Specific\ChannelActionEventArgs.cs" />
+    <Compile Include="Events\Irc\Specific\ChannelMessageEventArgs.cs" />
+    <Compile Include="Events\Irc\Specific\NickChangeEventArgs.cs" />
+    <Compile Include="Events\Irc\Specific\PrivateActionEventArgs.cs" />
+    <Compile Include="Events\Irc\Specific\UserJoinedChannelEventArgs.cs" />
+    <Compile Include="Events\Irc\Specific\UserInvitedToChannelEventArgs.cs" />
+    <Compile Include="Events\Irc\Specific\NameListEventArgs.cs" />
+    <Compile Include="Events\Irc\Specific\PrivateMessageEventArgs.cs" />
+    <Compile Include="Events\Irc\Specific\RawMessageEventArgs.cs" />
+    <Compile Include="Events\Irc\IUserInvitedToChannelEventArgs.cs" />
+    <Compile Include="Events\Irc\Specific\UserLeftChannelEventArgs.cs" />
+    <Compile Include="Events\Irc\Specific\UserQuitServerEventArgs.cs" />
     <Compile Include="Events\NickMappingEventArgs.cs" />
     <Compile Include="Events\OutgoingMessageEventArgs.cs" />
     <Compile Include="IConnectionManager.cs" />
@@ -91,6 +112,8 @@
   <ItemGroup>
     <Folder Include="Collections" />
     <Folder Include="Events" />
+    <Folder Include="Events\Irc" />
+    <Folder Include="Events\Irc\Specific" />
   </ItemGroup>
   <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

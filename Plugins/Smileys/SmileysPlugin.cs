@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Text;
 using log4net;
-using Meebey.SmartIrc4net;
 using Newtonsoft.Json.Linq;
 using SharpIrcBot;
+using SharpIrcBot.Events.Irc;
 
 namespace Smileys
 {
@@ -28,7 +28,7 @@ namespace Smileys
             Config = new SmileysConfig(newConfig);
         }
 
-        void HandleChannelOrQueryMessage(object sender, IrcEventArgs e, MessageFlags flags)
+        void HandleChannelOrQueryMessage(object sender, IUserMessageEventArgs e, MessageFlags flags)
         {
             if (flags.HasFlag(MessageFlags.UserBanned))
             {
@@ -37,9 +37,9 @@ namespace Smileys
 
             try
             {
-                if (e.Data.Message == "!smileys" || e.Data.Message == "!smilies")
+                if (e.Message == "!smileys" || e.Message == "!smilies")
                 {
-                    SendSmileysTo(e.Data.Nick);
+                    SendSmileysTo(e.SenderNickname);
                 }
             }
             catch (Exception exc)

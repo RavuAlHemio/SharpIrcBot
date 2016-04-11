@@ -5,11 +5,11 @@ using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using log4net;
-using Meebey.SmartIrc4net;
 using Newtonsoft.Json.Linq;
 using Quotes.ORM;
 using SharpIrcBot;
 using SharpIrcBot.Events;
+using SharpIrcBot.Events.Irc;
 
 namespace Quotes
 {
@@ -148,7 +148,7 @@ namespace Quotes
             }
         }
 
-        protected void HandleChannelMessage(object sender, IrcEventArgs e, MessageFlags flags)
+        protected void HandleChannelMessage(object sender, IChannelMessageEventArgs e, MessageFlags flags)
         {
             try
             {
@@ -160,7 +160,7 @@ namespace Quotes
             }
         }
 
-        protected void HandleChannelAction(object sender, ActionEventArgs e, MessageFlags flags)
+        protected void HandleChannelAction(object sender, IChannelMessageEventArgs e, MessageFlags flags)
         {
             try
             {
@@ -172,7 +172,7 @@ namespace Quotes
             }
         }
 
-        protected void HandleQueryMessage(object sender, IrcEventArgs e, MessageFlags flags)
+        protected void HandleQueryMessage(object sender, IPrivateMessageEventArgs e, MessageFlags flags)
         {
             try
             {
@@ -196,15 +196,15 @@ namespace Quotes
             }
         }
 
-        protected virtual void ActuallyHandleChannelMessage(object sender, IrcEventArgs e, MessageFlags flags)
+        protected virtual void ActuallyHandleChannelMessage(object sender, IChannelMessageEventArgs e, MessageFlags flags)
         {
             if (flags.HasFlag(MessageFlags.UserBanned))
             {
                 return;
             }
 
-            var body = e.Data.Message;
-            var normalizedNick = ConnectionManager.RegisteredNameForNick(e.Data.Nick) ?? e.Data.Nick;
+            var body = e.Message;
+            var normalizedNick = ConnectionManager.RegisteredNameForNick(e.SenderNickname) ?? e.SenderNickname;
 
             var addMatch = AddQuoteRegex.Match(body);
             if (addMatch.Success)
@@ -214,17 +214,17 @@ namespace Quotes
                     var newFreeFormQuote = new Quote
                     {
                         Timestamp = DateTime.Now.ToUniversalTimeForDatabase(),
-                        Channel = e.Data.Channel,
+                        Channel = e.Channel,
                         Author = normalizedNick,
                         MessageType = "F",
                         Body = addMatch.Groups[1].Value
                     };
                     ctx.Quotes.Add(newFreeFormQuote);
                     ctx.SaveChanges();
-                    LastQuoteIDs[e.Data.Channel] = newFreeFormQuote.ID;
+                    LastQuoteIDs[e.Channel] = newFreeFormQuote.ID;
                 }
                 ConnectionManager.SendChannelMessage(
-                    e.Data.Channel,
+                    e.Channel,
                     "Done."
                 );
 
@@ -250,16 +250,16 @@ namespace Quotes
                 if (lowercaseRegisteredNick == normalizedNick.ToLowerInvariant())
                 {
                     ConnectionManager.SendChannelMessageFormat(
-                        e.Data.Channel,
+                        e.Channel,
                         "Sorry, {0}, someone else has to remember your quotes.",
-                        e.Data.Nick
+                        e.SenderNickname
                     );
                     return;
                 }
 
                 // find it
-                var matchedQuote = PotentialQuotesPerChannel.ContainsKey(e.Data.Channel)
-                    ? PotentialQuotesPerChannel[e.Data.Channel]
+                var matchedQuote = PotentialQuotesPerChannel.ContainsKey(e.Channel)
+                    ? PotentialQuotesPerChannel[e.Channel]
                         .OrderByDescending(potQuote => potQuote.Timestamp)
                         .FirstOrDefault(potQuote => potQuote.Author.ToLower() == lowercaseRegisteredNick && potQuote.Body.ToLower().Contains(lowercaseSubstring))
                     : null;
@@ -267,9 +267,9 @@ namespace Quotes
                 if (matchedQuote == null)
                 {
                     ConnectionManager.SendChannelMessageFormat(
-                        e.Data.Channel,
+                        e.Channel,
                         "Sorry, {0}, I don't remember what {1} said about \"{2}\".",
-                        e.Data.Nick,
+                        e.SenderNickname,
                         nick,
                         substring
                     );
@@ -280,11 +280,11 @@ namespace Quotes
                 {
                     ctx.Quotes.Add(matchedQuote);
                     ctx.SaveChanges();
-                    LastQuoteIDs[e.Data.Channel] = matchedQuote.ID;
+                    LastQuoteIDs[e.Channel] = matchedQuote.ID;
                 }
 
                 ConnectionManager.SendChannelMessageFormat(
-                    e.Data.Channel,
+                    e.Channel,
                     "Remembering {0}",
                     FormatQuote(matchedQuote, 0)
                 );
@@ -298,10 +298,10 @@ namespace Quotes
             }
 
             if (ActuallyHandleChannelOrQueryMessage(
-                e.Data.Nick,
-                e.Data.Channel,
-                e.Data.Message,
-                m => ConnectionManager.SendChannelMessage(e.Data.Channel, m))
+                e.SenderNickname,
+                e.Channel,
+                e.Message,
+                m => ConnectionManager.SendChannelMessage(e.Channel, m))
             )
             {
                 // handled
@@ -312,17 +312,17 @@ namespace Quotes
             var newQuote = new Quote
             {
                 Timestamp = DateTime.Now.ToUniversalTimeForDatabase(),
-                Channel = e.Data.Channel,
+                Channel = e.Channel,
                 Author = normalizedNick,
                 MessageType = "M",
                 Body = body
             };
-            AddPotentialQuote(newQuote, e.Data.Channel);
+            AddPotentialQuote(newQuote, e.Channel);
 
-            CleanOutPotentialQuotes(e.Data.Channel);
+            CleanOutPotentialQuotes(e.Channel);
         }
 
-        protected virtual void ActuallyHandleChannelAction(object sender, ActionEventArgs e, MessageFlags flags)
+        protected virtual void ActuallyHandleChannelAction(object sender, IChannelMessageEventArgs e, MessageFlags flags)
         {
             if (flags.HasFlag(MessageFlags.UserBanned))
             {
@@ -330,21 +330,21 @@ namespace Quotes
             }
 
             // put into backlog
-            var normalizedNick = ConnectionManager.RegisteredNameForNick(e.Data.Nick) ?? e.Data.Nick;
+            var normalizedNick = ConnectionManager.RegisteredNameForNick(e.SenderNickname) ?? e.SenderNickname;
             var quote = new Quote
             {
                 Timestamp = DateTime.Now.ToUniversalTimeForDatabase(),
-                Channel = e.Data.Channel,
+                Channel = e.Channel,
                 Author = normalizedNick,
                 MessageType = "A",
-                Body = e.ActionMessage
+                Body = e.Message
             };
-            AddPotentialQuote(quote, e.Data.Channel);
+            AddPotentialQuote(quote, e.Channel);
 
-            CleanOutPotentialQuotes(e.Data.Channel);
+            CleanOutPotentialQuotes(e.Channel);
         }
 
-        protected virtual void ActuallyHandleQueryMessage(object sender, IrcEventArgs e, MessageFlags flags)
+        protected virtual void ActuallyHandleQueryMessage(object sender, IPrivateMessageEventArgs e, MessageFlags flags)
         {
             if (flags.HasFlag(MessageFlags.UserBanned))
             {
@@ -352,10 +352,10 @@ namespace Quotes
             }
 
             if (ActuallyHandleChannelOrQueryMessage(
-                e.Data.Nick,
-                e.Data.Nick,
-                e.Data.Message,
-                m => ConnectionManager.SendQueryMessage(e.Data.Nick, m))
+                e.SenderNickname,
+                e.SenderNickname,
+                e.Message,
+                m => ConnectionManager.SendQueryMessage(e.SenderNickname, m))
             )
             {
                 // handled
