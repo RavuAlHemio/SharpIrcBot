@@ -9,6 +9,7 @@ using Meebey.SmartIrc4net;
 using Newtonsoft.Json.Linq;
 using Quotes.ORM;
 using SharpIrcBot;
+using SharpIrcBot.Events;
 
 namespace Quotes
 {

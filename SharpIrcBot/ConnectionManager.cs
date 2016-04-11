@@ -10,6 +10,7 @@ using JetBrains.Annotations;
 using log4net;
 using Meebey.SmartIrc4net;
 using SharpIrcBot.Config;
+using SharpIrcBot.Events;
 
 namespace SharpIrcBot
 {

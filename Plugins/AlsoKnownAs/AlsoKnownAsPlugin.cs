@@ -8,6 +8,7 @@ using log4net;
 using Meebey.SmartIrc4net;
 using Newtonsoft.Json.Linq;
 using SharpIrcBot;
+using SharpIrcBot.Collections;
 
 namespace AlsoKnownAs
 {

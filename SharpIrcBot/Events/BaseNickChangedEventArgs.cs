@@ -1,7 +1,7 @@
 ﻿using System;
 using JetBrains.Annotations;
 
-namespace SharpIrcBot
+namespace SharpIrcBot.Events
 {
     public class BaseNickChangedEventArgs : EventArgs
     {

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 
-namespace SharpIrcBot
+namespace SharpIrcBot.Collections
 {
     public class DrillDownTree<TKey, TValue>
     {

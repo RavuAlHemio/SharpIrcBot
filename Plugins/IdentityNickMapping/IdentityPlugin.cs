@@ -2,6 +2,7 @@
 using log4net;
 using Newtonsoft.Json.Linq;
 using SharpIrcBot;
+using SharpIrcBot.Events;
 
 namespace IdentityNickMapping
 {

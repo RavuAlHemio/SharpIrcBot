@@ -52,8 +52,11 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ChannelUserLevel.cs" />
+    <Compile Include="Collections\DrillDownTree.cs" />
     <Compile Include="ConnectionManagerExtensions.cs" />
-    <Compile Include="DrillDownTree.cs" />
+    <Compile Include="Events\BaseNickChangedEventArgs.cs" />
+    <Compile Include="Events\NickMappingEventArgs.cs" />
+    <Compile Include="Events\OutgoingMessageEventArgs.cs" />
     <Compile Include="IConnectionManager.cs" />
     <Compile Include="IReloadableConfiguration.cs" />
     <Compile Include="ITimerTrigger.cs" />
@@ -68,13 +71,10 @@
     <Compile Include="CookieWebClient.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="NickMappingEventArgs.cs" />
     <Compile Include="FilteringSetWrapper.cs" />
     <Compile Include="SharpIrcBotEventHandler.cs" />
     <Compile Include="MessageFlags.cs" />
-    <Compile Include="OutgoingMessageEventArgs.cs" />
     <Compile Include="TimerTrigger.cs" />
-    <Compile Include="BaseNickChangedEventArgs.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
@@ -82,12 +82,15 @@
     <None Include="Configurations\Postgresql.config" />
     <None Include="Configurations\SQLite.config" />
   </ItemGroup>
-  <ItemGroup />
   <ItemGroup>
     <ProjectReference Include="..\Libraries\SmartIrc4net\SmartIrc4net.csproj">
       <Project>{91D3003B-7E65-4EAF-8EE1-DA43832E7A9C}</Project>
       <Name>SmartIrc4net</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Collections" />
+    <Folder Include="Events" />
   </ItemGroup>
   <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

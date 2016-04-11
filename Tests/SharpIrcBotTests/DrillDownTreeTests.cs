@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Immutable;
-using SharpIrcBot;
+using SharpIrcBot.Collections;
 using Xunit;
 
 namespace SharpIrcBotTests

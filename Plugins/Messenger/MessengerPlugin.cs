@@ -9,6 +9,7 @@ using Meebey.SmartIrc4net;
 using Messenger.ORM;
 using Newtonsoft.Json.Linq;
 using SharpIrcBot;
+using SharpIrcBot.Events;
 
 namespace Messenger
 {

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using JetBrains.Annotations;
 
-namespace SharpIrcBot
+namespace SharpIrcBot.Events
 {
     public class NickMappingEventArgs : EventArgs
     {
