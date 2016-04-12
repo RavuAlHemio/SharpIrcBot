@@ -12,7 +12,7 @@ namespace SharpIrcBot.Events.Irc.Specific
         public string Channel => IrcData.Channel;
         public string Message => IrcData.Message;
 
-        public ChannelMessageEventArgs(IrcMessageData ircData)
+        public ChannelMessageEventArgs([NotNull] IrcMessageData ircData)
         {
             IrcData = ircData;
             RawMessage = new RawMessageEventArgs(IrcData);

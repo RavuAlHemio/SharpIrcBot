@@ -11,7 +11,7 @@ namespace SharpIrcBot.Events
         [NotNull, ItemNotNull]
         public IList<string> MapsTo { get; private set; }
 
-        public NickMappingEventArgs(string nickname)
+        public NickMappingEventArgs([NotNull] string nickname)
             : base()
         {
             Nickname = nickname;

@@ -11,7 +11,7 @@ namespace SharpIrcBot.Events.Irc.Specific
         public string User => QuitArgs.Who;
         public string Message => QuitArgs.QuitMessage;
 
-        public UserQuitServerEventArgs(QuitEventArgs quitArgs)
+        public UserQuitServerEventArgs([NotNull] QuitEventArgs quitArgs)
         {
             QuitArgs = quitArgs;
             RawMessage = new RawMessageEventArgs(QuitArgs.Data);

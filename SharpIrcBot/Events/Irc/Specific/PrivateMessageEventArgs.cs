@@ -11,7 +11,7 @@ namespace SharpIrcBot.Events.Irc.Specific
         public string SenderNickname => IrcData.Nick;
         public string Message => IrcData.Message;
 
-        public PrivateMessageEventArgs(IrcMessageData ircData)
+        public PrivateMessageEventArgs([NotNull] IrcMessageData ircData)
         {
             IrcData = ircData;
             RawMessage = new RawMessageEventArgs(IrcData);

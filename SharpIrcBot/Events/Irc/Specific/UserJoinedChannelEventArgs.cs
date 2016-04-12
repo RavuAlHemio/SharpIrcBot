@@ -13,7 +13,7 @@ namespace SharpIrcBot.Events.Irc.Specific
         public string Username => JoinArgs.Data.Ident;
         public string Channel => JoinArgs.Channel;
 
-        public UserJoinedChannelEventArgs(JoinEventArgs joinArgs)
+        public UserJoinedChannelEventArgs([NotNull] JoinEventArgs joinArgs)
         {
             JoinArgs = joinArgs;
             RawMessage = new RawMessageEventArgs(JoinArgs.Data);

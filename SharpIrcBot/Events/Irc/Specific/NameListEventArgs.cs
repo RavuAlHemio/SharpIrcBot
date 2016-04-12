@@ -11,7 +11,7 @@ namespace SharpIrcBot.Events.Irc.Specific
 
         public IReadOnlyList<string> Nicknames => NamesArgs.UserList;
 
-        public NameListEventArgs(NamesEventArgs namesArgs)
+        public NameListEventArgs([NotNull] NamesEventArgs namesArgs)
         {
             NamesArgs = namesArgs;
             RawMessage = new RawMessageEventArgs(NamesArgs.Data);

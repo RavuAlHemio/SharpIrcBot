@@ -1,9 +1,10 @@
-﻿using Newtonsoft.Json.Linq;
+﻿using JetBrains.Annotations;
+using Newtonsoft.Json.Linq;
 
 namespace SharpIrcBot
 {
     public interface IReloadableConfiguration
     {
-        void ReloadConfiguration(JObject newConfig);
+        void ReloadConfiguration([NotNull] JObject newConfig);
     }
 }

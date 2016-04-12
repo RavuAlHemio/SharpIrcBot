@@ -12,7 +12,7 @@ namespace SharpIrcBot.Events.Irc.Specific
         public string Channel => PartArgs.Channel;
         public string Message => PartArgs.PartMessage;
 
-        public UserLeftChannelEventArgs(PartEventArgs partArgs)
+        public UserLeftChannelEventArgs([NotNull] PartEventArgs partArgs)
         {
             PartArgs = partArgs;
             RawMessage = new RawMessageEventArgs(PartArgs.Data);

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using JetBrains.Annotations;
 
 namespace SharpIrcBot.Collections
 {
@@ -13,7 +14,7 @@ namespace SharpIrcBot.Collections
 
         protected sealed class Branch : Node
         {
-            public Dictionary<TKey, Node> Children { get; set; }
+            [NotNull] public Dictionary<TKey, Node> Children { get; set; }
             public Branch() { Children = new Dictionary<TKey, Node>(); }
         }
 
@@ -30,14 +31,14 @@ namespace SharpIrcBot.Collections
             PrefixMatch = 2
         }
 
-        protected Branch Root { get; set; }
+        [NotNull] protected Branch Root { get; set; }
 
         public DrillDownTree()
         {
             Root = new Branch();
         }
 
-        public TValue this[ImmutableList<TKey> keyList]
+        public TValue this[[NotNull] ImmutableList<TKey> keyList]
         {
             get
             {
@@ -56,7 +57,7 @@ namespace SharpIrcBot.Collections
             }
         }
 
-        public int GetBestMatches(ImmutableList<TKey> keyList, out ImmutableList<TValue> matches)
+        public int GetBestMatches([NotNull] ImmutableList<TKey> keyList, [NotNull] out ImmutableList<TValue> matches)
         {
             int finalDepth;
 
@@ -71,14 +72,14 @@ namespace SharpIrcBot.Collections
             }
         }
 
-        public bool ContainsKey(ImmutableList<TKey> keyList)
+        public bool ContainsKey([NotNull] ImmutableList<TKey> keyList)
         {
             ImmutableList<TValue> matches;
             int finalDepth;
             return (TryRecursiveGet(Root, keyList, 0, out matches, out finalDepth) == ItemMatch.FullMatch);
         }
 
-        protected static ItemMatch TryRecursiveGet(Branch root, ImmutableList<TKey> keyList, int currentDepth, out ImmutableList<TValue> values, out int finalDepth)
+        protected static ItemMatch TryRecursiveGet([NotNull] Branch root, [NotNull] ImmutableList<TKey> keyList, int currentDepth, [NotNull] out ImmutableList<TValue> values, out int finalDepth)
         {
             finalDepth = currentDepth;
 
@@ -139,7 +140,7 @@ namespace SharpIrcBot.Collections
             }
         }
 
-        protected static void RecursiveSet(Branch root, ImmutableList<TKey> keyList, TValue value)
+        protected static void RecursiveSet([NotNull] Branch root, [NotNull] ImmutableList<TKey> keyList, TValue value)
         {
             if (keyList.Count == 0)
             {
@@ -167,7 +168,7 @@ namespace SharpIrcBot.Collections
             }
         }
 
-        protected static ImmutableList<TValue> CollectChildren(Node root)
+        protected static ImmutableList<TValue> CollectChildren([NotNull] Node root)
         {
             var rootBranch = root as Branch;
             var ret = ImmutableList.CreateBuilder<TValue>();
@@ -187,7 +188,7 @@ namespace SharpIrcBot.Collections
             return ret.ToImmutable();
         }
 
-        private static void Debug(string message)
+        private static void Debug([CanBeNull] string message)
         {
 #if DRILL_DOWN_TREE_LOGGING
 			Console.Error.WriteLine(message);

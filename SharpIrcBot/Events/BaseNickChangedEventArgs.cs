@@ -10,7 +10,7 @@ namespace SharpIrcBot.Events
         [NotNull]
         public string NewBaseNick { get; private set; }
 
-        public BaseNickChangedEventArgs(string oldBaseNick, string newBaseNick)
+        public BaseNickChangedEventArgs([NotNull] string oldBaseNick, [NotNull] string newBaseNick)
             : base()
         {
             OldBaseNick = oldBaseNick;

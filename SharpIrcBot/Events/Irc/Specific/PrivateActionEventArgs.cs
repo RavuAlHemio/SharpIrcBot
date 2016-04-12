@@ -11,7 +11,7 @@ namespace SharpIrcBot.Events.Irc.Specific
         public string SenderNickname => ActionArgs.Data.Nick;
         public string Message => ActionArgs.ActionMessage;
 
-        public PrivateActionEventArgs(ActionEventArgs actionArgs)
+        public PrivateActionEventArgs([NotNull] ActionEventArgs actionArgs)
         {
             ActionArgs = actionArgs;
             RawMessage = new RawMessageEventArgs(ActionArgs.Data);

@@ -5,9 +5,9 @@ namespace Messenger
 {
     public class RecipientInfo
     {
-        public string RecipientNick { get; }
-        public string Recipient { get; }
-        public string LowerRecipient { get; }
+        [NotNull] public string RecipientNick { get; }
+        [NotNull] public string Recipient { get; }
+        [NotNull] public string LowerRecipient { get; }
 
         public RecipientInfo([NotNull] string recipientNick, [CanBeNull] string recipient)
         {
@@ -18,14 +18,14 @@ namespace Messenger
 
         public class LowerRecipientComparer : EqualityComparer<RecipientInfo>
         {
-            public override bool Equals(RecipientInfo x, RecipientInfo y)
+            public override bool Equals([NotNull] RecipientInfo x, [NotNull] RecipientInfo y)
             {
                 return x.LowerRecipient.Equals(y.LowerRecipient);
             }
 
             public override int GetHashCode(RecipientInfo obj)
             {
-                return obj.LowerRecipient.GetHashCode();
+                return obj?.LowerRecipient.GetHashCode() ?? 0;
             }
         }
     }

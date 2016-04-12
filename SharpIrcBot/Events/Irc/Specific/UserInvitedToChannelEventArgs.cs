@@ -11,7 +11,7 @@ namespace SharpIrcBot.Events.Irc.Specific
         public string Invitee => InviteArgs.Who;
         public string Channel => InviteArgs.Channel;
 
-        public UserInvitedToChannelEventArgs(InviteEventArgs inviteArgs)
+        public UserInvitedToChannelEventArgs([NotNull] InviteEventArgs inviteArgs)
         {
             InviteArgs = inviteArgs;
             RawMessage = new RawMessageEventArgs(InviteArgs.Data);
