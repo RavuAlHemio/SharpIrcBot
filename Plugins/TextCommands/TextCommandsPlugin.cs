@@ -13,13 +13,15 @@ namespace TextCommands
     {
         private static readonly ILog Logger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        protected TextCommandsConfig Config { get; set; }
         protected IConnectionManager ConnectionManager { get; }
+        protected TextCommandsConfig Config { get; set; }
+        protected Random RNG { get; }
 
         public TextCommandsPlugin(IConnectionManager connMgr, JObject config)
         {
             ConnectionManager = connMgr;
             Config = new TextCommandsConfig(config);
+            RNG = new Random();
 
             ConnectionManager.ChannelMessage += HandleChannelMessage;
             ConnectionManager.QueryMessage += HandlePrivateMessage;
@@ -147,9 +149,22 @@ namespace TextCommands
             }
         }
 
-        protected void Output(Action<string> respond, IUserMessageEventArgs message, string command, string targetBody, string targetNick)
+        protected void Output(Action<string> respond, IUserMessageEventArgs message, string command, List<string> targetBodyCandidates, string targetNick)
         {
             var channelMessage = message as IChannelMessageEventArgs;
+
+            string targetBody;
+            switch (targetBodyCandidates.Count)
+            {
+                case 0:
+                    return;
+                case 1:
+                    targetBody = targetBodyCandidates[0];
+                    break;
+                default:
+                    targetBody = targetBodyCandidates[RNG.Next(targetBodyCandidates.Count)];
+                    break;
+            }
 
             Logger.DebugFormat("{0} triggered {1} in {2}", message.SenderNickname, command, channelMessage?.Channel ?? "private message");
             var response = targetBody.Replace("{{NICKNAME}}", targetNick);

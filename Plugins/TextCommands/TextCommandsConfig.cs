@@ -7,13 +7,13 @@ namespace TextCommands
     [JsonObject(MemberSerialization.OptOut)]
     public class TextCommandsConfig
     {
-        public Dictionary<string, string> CommandsResponses { get; set; }
-        public Dictionary<string, string> NicknamableCommandsResponses { get; set; }
+        public Dictionary<string, List<string>> CommandsResponses { get; set; }
+        public Dictionary<string, List<string>> NicknamableCommandsResponses { get; set; }
 
         public TextCommandsConfig(JObject obj)
         {
-            CommandsResponses = new Dictionary<string, string>();
-            NicknamableCommandsResponses = new Dictionary<string, string>();
+            CommandsResponses = new Dictionary<string, List<string>>();
+            NicknamableCommandsResponses = new Dictionary<string, List<string>>();
 
             var ser = new JsonSerializer();
             ser.Populate(obj.CreateReader(), this);
