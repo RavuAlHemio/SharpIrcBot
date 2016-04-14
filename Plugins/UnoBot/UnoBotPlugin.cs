@@ -27,9 +27,9 @@ namespace UnoBot
         protected const string CardCountsEventName = "card_counts";
         protected const string CardDrawnEventName = "player_drew_card";
 
-        protected static readonly Regex UnoBotFirstMessage = new Regex("^([1-9][0-9]*) (.*)", RegexOptions.Compiled);
-        protected const string BotCommandRegexPattern = "^([?][a-z]+)[ ]+(?i){0}[ ]*$";
-        protected static readonly Regex RuntimeTweakPattern = new Regex("^!unobotset[ ]+([A-Za-z]+)[ ]+(.+)$", RegexOptions.Compiled);
+        public static readonly Regex UnoBotFirstMessage = new Regex("^([1-9][0-9]*) (.*)", RegexOptions.Compiled);
+        public const string BotCommandRegexPattern = "^(?<command>[?][a-z]+)\\s+(?i){0}\\s*$";
+        public static readonly Regex RuntimeTweakPattern = new Regex("^!unobotset\\s+(?<property>[A-Za-z]+)\\s+(?<value>.+)$", RegexOptions.Compiled);
 
         protected IConnectionManager ConnectionManager { get; }
         protected UnoBotConfig Config { get; set; }
@@ -187,7 +187,7 @@ namespace UnoBot
                 BotCommandRegex = new Regex(pattern, RegexOptions.Compiled);
             }
             var match = BotCommandRegex.Match(message);
-            if (match.Success && string.Equals(match.Groups[1].Value, expectedCommand, StringComparison.InvariantCultureIgnoreCase))
+            if (match.Success && string.Equals(match.Groups["command"].Value, expectedCommand, StringComparison.InvariantCultureIgnoreCase))
             {
                 return true;
             }
@@ -296,7 +296,7 @@ namespace UnoBot
 
                 try
                 {
-                    ConfigTweaking.TweakConfig(Config, runtimeTweakMatch.Groups[1].Value, runtimeTweakMatch.Groups[2].Value);
+                    ConfigTweaking.TweakConfig(Config, runtimeTweakMatch.Groups["property"].Value, runtimeTweakMatch.Groups["value"].Value);
                 }
                 catch (ArgumentException ae)
                 {

@@ -11,7 +11,7 @@ namespace Reinvite
     public class ReinvitePlugin : IPlugin, IReloadableConfiguration
     {
         private static readonly ILog Logger = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
-        private static readonly Regex InviteRegex = new Regex("^!invite[ ]+(?<channel>[#&][^ ]{1,256})[ ]*$", RegexOptions.Compiled);
+        public static readonly Regex InviteRegex = new Regex("^!invite\\s+(?<channel>[#&]\\S{1,256})\\s*$", RegexOptions.Compiled);
 
         protected IConnectionManager ConnectionManager { get; }
         protected ReinviteConfig Config { get; set; }

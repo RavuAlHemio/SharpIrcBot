@@ -20,9 +20,9 @@ namespace UnoBot.GameMaster
         private static readonly ILog Logger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         protected static readonly CardColor[] RegularColors = { CardColor.Red, CardColor.Green, CardColor.Blue, CardColor.Yellow };
-        protected static readonly Regex StartGameRegex = new Regex("^!uno(?:[ ]+\\+([a-zA-Z]))*$", RegexOptions.Compiled);
-        protected static readonly Regex PlayCardRegex = new Regex("^!p(?:lay)?[ ]+([A-Za-z0-9]+)[ ]+([A-Za-z0-9]+)$", RegexOptions.Compiled);
-        protected static readonly Regex BotTestRegex = new Regex("^!bottest[ ]+([0-9]+)$", RegexOptions.Compiled);
+        public static readonly Regex StartGameRegex = new Regex("^!uno(?:\\s+\\+([a-zA-Z]))*\\s*$", RegexOptions.Compiled);
+        public static readonly Regex PlayCardRegex = new Regex("^!p(?:lay)?\\s+([A-Za-z0-9]+)\\s+([A-Za-z0-9]+)\\s*$", RegexOptions.Compiled);
+        public static readonly Regex BotTestRegex = new Regex("^!bottest\\s+([0-9]+)\\s*$", RegexOptions.Compiled);
 
         protected IConnectionManager ConnectionManager;
         protected GameMasterConfig Config;

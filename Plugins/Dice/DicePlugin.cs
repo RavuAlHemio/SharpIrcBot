@@ -18,7 +18,7 @@ namespace Dice
 
         public static readonly Regex DiceThrowRegex = new Regex(
             "^" +
-            "!roll +" +
+            "!roll\\s+" +
             "(?<firstRoll>" +
                 "(?:[1-9][0-9]*)?" + // number of dice
                 "d" +
@@ -26,7 +26,7 @@ namespace Dice
                 "(?:[+-][1-9][0-9]*)?" + // add a value?
             ")" +
             "(?:" +
-                "[, ]+" +
+                "(?:[,]|\\s)+" +
                 "(?<nextRoll>" +
                     "(?:[1-9][0-9]*)?" + // number of dice
                     "d" +
@@ -34,7 +34,7 @@ namespace Dice
                     "(?:[+-][1-9][0-9]*)?" + // add a value?
                 ")" +
             ")*" +
-            "[ ]*$",
+            "\\s*$",
             RegexOptions.Compiled | RegexOptions.IgnoreCase
         );
         public static readonly Regex RollRegex = new Regex(

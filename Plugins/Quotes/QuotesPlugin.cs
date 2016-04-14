@@ -16,11 +16,11 @@ namespace Quotes
     public class QuotesPlugin : IPlugin, IReloadableConfiguration
     {
         private static readonly ILog Logger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        private static readonly Regex AddQuoteRegex = new Regex("^!addquote[ ]+(.+)$", RegexOptions.Compiled);
-        private static readonly Regex RememberRegex = new Regex("^!remember[ ]+([^ ]+)[ ]+(.+)$", RegexOptions.Compiled);
-        private static readonly Regex QuoteRegex = new Regex("^!(any|bad)?(r)?quote(?:[ ]+(.+))?$", RegexOptions.Compiled);
-        private static readonly Regex QuoteUserRegex = new Regex("^!(any|bad)?(r)?quoteuser[ ]+([^ ]+)$", RegexOptions.Compiled);
-        private static readonly Regex NextQuoteRegex = new Regex("^!next(any|bad)?(r)?quote[ ]*$", RegexOptions.Compiled);
+        public static readonly Regex AddQuoteRegex = new Regex("^!addquote\\s+(?<quote>.+)$", RegexOptions.Compiled);
+        public static readonly Regex RememberRegex = new Regex("^!remember\\s+(?<nick>\\S+)\\s+(?<pattern>.+)$", RegexOptions.Compiled);
+        public static readonly Regex QuoteRegex = new Regex("^!(?<rated>any|bad)?(?<showRating>r)?quote(?:\\s+(?<search>.+))?\\s*$", RegexOptions.Compiled);
+        public static readonly Regex QuoteUserRegex = new Regex("^!(?<rated>any|bad)?(?<showRating>r)?quoteuser\\s+(?<username>\\S+)\\s*$", RegexOptions.Compiled);
+        public static readonly Regex NextQuoteRegex = new Regex("^!next(?<rated>any|bad)?(?<showRating>r)?quote\\s*$", RegexOptions.Compiled);
 
         protected IConnectionManager ConnectionManager { get; }
         protected QuotesConfig Config { get; set; }
@@ -217,7 +217,7 @@ namespace Quotes
                         Channel = e.Channel,
                         Author = normalizedNick,
                         MessageType = "F",
-                        Body = addMatch.Groups[1].Value
+                        Body = addMatch.Groups["quote"].Value
                     };
                     ctx.Quotes.Add(newFreeFormQuote);
                     ctx.SaveChanges();
@@ -239,8 +239,8 @@ namespace Quotes
             var rememberMatch = RememberRegex.Match(body);
             if (rememberMatch.Success)
             {
-                var nick = rememberMatch.Groups[1].Value;
-                var substring = rememberMatch.Groups[2].Value;
+                var nick = rememberMatch.Groups["nick"].Value;
+                var substring = rememberMatch.Groups["pattern"].Value;
 
                 var lowercaseSubstring = substring.ToLowerInvariant();
 
@@ -390,10 +390,10 @@ namespace Quotes
             var quoteMatch = QuoteRegex.Match(message);
             if (quoteMatch.Success)
             {
-                var rating = QuoteRatingFromRegexGroup(quoteMatch.Groups[1]);
-                bool addMyRating = quoteMatch.Groups[2].Success;
-                var subject = quoteMatch.Groups[3].Success ? quoteMatch.Groups[3].Value : null;
-                var lowercaseSubject = (subject != null) ? subject.ToLowerInvariant() : null;
+                var rating = QuoteRatingFromRegexGroup(quoteMatch.Groups["rated"]);
+                bool addMyRating = quoteMatch.Groups["showRating"].Success;
+                var subject = quoteMatch.Groups["search"].Success ? quoteMatch.Groups["search"].Value : null;
+                var lowercaseSubject = subject?.ToLowerInvariant();
 
                 using (var ctx = GetNewContext())
                 {
@@ -410,9 +410,9 @@ namespace Quotes
             var quoteUserMatch = QuoteUserRegex.Match(message);
             if (quoteUserMatch.Success)
             {
-                var rating = QuoteRatingFromRegexGroup(quoteMatch.Groups[1]);
-                bool addMyRating = quoteMatch.Groups[2].Success;
-                var nick = quoteMatch.Groups[3].Value;
+                var rating = QuoteRatingFromRegexGroup(quoteMatch.Groups["rated"]);
+                bool addMyRating = quoteMatch.Groups["showRating"].Success;
+                var nick = quoteMatch.Groups["username"].Value;
                 var lowercaseNick = nick.ToLowerInvariant();
 
                 using (var ctx = GetNewContext())
@@ -428,8 +428,8 @@ namespace Quotes
             var nextQuoteMatch = NextQuoteRegex.Match(message);
             if (nextQuoteMatch.Success)
             {
-                var rating = QuoteRatingFromRegexGroup(nextQuoteMatch.Groups[1]);
-                bool addMyRating = nextQuoteMatch.Groups[2].Success;
+                var rating = QuoteRatingFromRegexGroup(nextQuoteMatch.Groups["rated"]);
+                bool addMyRating = nextQuoteMatch.Groups["showRating"].Success;
                 
                 using (var ctx = GetNewContext())
                 {

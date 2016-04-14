@@ -14,10 +14,10 @@ namespace DatabaseNickMapping
     public class DatabaseNickMappingPlugin : IPlugin, IReloadableConfiguration
     {
         private static readonly ILog Logger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        private static readonly Regex LinkRegex = new Regex("^!linknicks[ ]+([^ ]+)[ ]+([^ ]+)[ ]*$", RegexOptions.Compiled);
-        private static readonly Regex UnlinkRegex = new Regex("^!unlinknick[ ]+([^ ]+)[ ]*$", RegexOptions.Compiled);
-        private static readonly Regex BaseNickRegex = new Regex("^!basenick[ ]+([^ ]+)[ ]*$", RegexOptions.Compiled);
-        private static readonly Regex PseudoRegisterRegex = new Regex("^!pseudo(un)?register[ ]+([^ ]+)[ ]*$", RegexOptions.Compiled);
+        public static readonly Regex LinkRegex = new Regex("^!linknicks\\s+(?<baseNick>\\S+)\\s+(?<aliasNick>\\S+)\\s*$", RegexOptions.Compiled);
+        public static readonly Regex UnlinkRegex = new Regex("^!unlinknick\\s+(?<nick>\\S+)\\s*$", RegexOptions.Compiled);
+        public static readonly Regex BaseNickRegex = new Regex("^!basenick\\s+(?<nick>\\S+)\\s*$", RegexOptions.Compiled);
+        public static readonly Regex PseudoRegisterRegex = new Regex("^!pseudo(?<unregister>un)?register\\s+(?<nick>\\S+)\\s*$", RegexOptions.Compiled);
 
         protected IConnectionManager ConnectionManager;
         protected DatabaseNickMappingConfig Config;
@@ -86,8 +86,8 @@ namespace DatabaseNickMapping
 
             if (linkMatch.Success)
             {
-                var baseNickInput = linkMatch.Groups[1].Value;
-                var aliasNickInput = linkMatch.Groups[2].Value;
+                var baseNickInput = linkMatch.Groups["baseNick"].Value;
+                var aliasNickInput = linkMatch.Groups["aliasNick"].Value;
 
                 Logger.InfoFormat("{0} in {1} creating {2} alias {3}", requestor, channel, baseNickInput, aliasNickInput);
 
@@ -151,7 +151,7 @@ namespace DatabaseNickMapping
             {
                 using (var ctx = GetNewContext())
                 {
-                    var unlinkNickInput = unlinkMatch.Groups[1].Value;
+                    var unlinkNickInput = unlinkMatch.Groups["nick"].Value;
                     var unlinkNickLower = unlinkNickInput.ToLowerInvariant();
 
                     var unlinkBaseObject = ctx.BaseNicknames.FirstOrDefault(bn => bn.Nickname.ToLower() == unlinkNickLower);
@@ -179,8 +179,8 @@ namespace DatabaseNickMapping
             {
                 using (var ctx = GetNewContext())
                 {
-                    bool unregister = pseudoRegisterMatch.Groups[1].Success;
-                    var nickToRegister = pseudoRegisterMatch.Groups[2].Value;
+                    bool unregister = pseudoRegisterMatch.Groups["unregister"].Success;
+                    var nickToRegister = pseudoRegisterMatch.Groups["nick"].Value;
                     var nickToRegisterLowercase = nickToRegister.ToLowerInvariant();
 
                     if (unregister)
@@ -223,7 +223,7 @@ namespace DatabaseNickMapping
             var baseNickMatch = BaseNickRegex.Match(message);
             if (baseNickMatch.Success)
             {
-                var whichNick = baseNickMatch.Groups[1].Value;
+                var whichNick = baseNickMatch.Groups["nick"].Value;
                 using (var ctx = GetNewContext())
                 {
                     var baseNick = FindBaseNickFor(whichNick, ctx);

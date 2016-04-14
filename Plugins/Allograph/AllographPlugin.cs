@@ -13,7 +13,7 @@ namespace Allograph
     public class AllographPlugin : IPlugin, IReloadableConfiguration
     {
         private static readonly ILog Logger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        protected static readonly Regex StatsRegex = new Regex("^!allostats +(?<channel>[#&][^ ]+)(?: +(?<testmsg>.+))? *$", RegexOptions.Compiled);
+        public static readonly Regex StatsRegex = new Regex("^!allostats\\s+(?<channel>[#&]\\S+)(?:\\s+(?<testmsg>\\S+(?:\\s+\\S+)*))?\\s*$", RegexOptions.Compiled);
 
         protected AllographConfig Config;
         protected readonly Random Random;

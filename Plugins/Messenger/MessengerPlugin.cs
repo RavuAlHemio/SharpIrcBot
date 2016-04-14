@@ -19,12 +19,12 @@ namespace Messenger
     public class MessengerPlugin : IPlugin, IReloadableConfiguration
     {
         private static readonly ILog Logger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        private static readonly Regex SendMessageRegex = new Regex("^[ ]*!(?<silence>s?)(?:msg|mail)[ ]+(?<recipient>[^ :]+):?[ ]+(?<message>.+)[ ]*$", RegexOptions.Compiled);
-        private static readonly Regex DeliverMessageRegex = new Regex("^[ ]*!deliver(?:msg|mail)[ ]+(?<count>[1-9][0-9]*)[ ]*$", RegexOptions.Compiled);
-        private static readonly Regex ReplayMessageRegex = new Regex("^[ ]*!replay(?:msg|mail)[ ]+(?<count>[1-9][0-9]*)[ ]*$", RegexOptions.Compiled);
-        private static readonly Regex IgnoreMessageRegex = new Regex("^[ ]*!(?<command>(?:un)?ignore)(?:msg|mail)[ ]+(?<target>[^ ]+)[ ]*$", RegexOptions.Compiled);
-        private static readonly Regex QuiesceRegex = new Regex("^[ ]*!(?:msg|mail)gone[ ]+(?<messageCount>0|[1-9][0-9]*)[ ]+(?<durationHours>[1-9][0-9]*)h[ ]*$", RegexOptions.Compiled);
-        private static readonly Regex UnQuiesceRegex = new Regex("^[ ]*!(?:msg|mail)back[ ]*$", RegexOptions.Compiled);
+        public static readonly Regex SendMessageRegex = new Regex("^!(?<silence>s?)(?:msg|mail)\\s+(?<recipient>[^ :]+):?\\s+(?<message>.+)\\s*$", RegexOptions.Compiled);
+        public static readonly Regex DeliverMessageRegex = new Regex("^!deliver(?:msg|mail)\\s+(?<count>[1-9][0-9]*)\\s*$", RegexOptions.Compiled);
+        public static readonly Regex ReplayMessageRegex = new Regex("^!replay(?:msg|mail)\\s+(?<count>[1-9][0-9]*)\\s*$", RegexOptions.Compiled);
+        public static readonly Regex IgnoreMessageRegex = new Regex("^!(?<command>(?:un)?ignore)(?:msg|mail)\\s+(?<target>\\S+)\\s*$", RegexOptions.Compiled);
+        public static readonly Regex QuiesceRegex = new Regex("^!(?:msg|mail)gone\\s+(?<messageCount>0|[1-9][0-9]*)\\s+(?<durationHours>[1-9][0-9]*)h\\s*$", RegexOptions.Compiled);
+        public static readonly Regex UnQuiesceRegex = new Regex("^!(?:msg|mail)back\\s*$", RegexOptions.Compiled);
 
         protected MessengerConfig Config { get; set; }
         protected IConnectionManager ConnectionManager { get; set; }
