@@ -4,7 +4,7 @@ namespace SharpIrcBot.Events.Irc
 {
     public interface IUserInvitedToChannelEventArgs
     {
-		[NotNull] IRawMessageEventArgs RawMessage { get; }
+        [NotNull] IRawMessageEventArgs RawMessage { get; }
         [NotNull] string Invitee { get; }
         [NotNull] string Channel { get; }
     }

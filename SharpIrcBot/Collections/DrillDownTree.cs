@@ -26,7 +26,7 @@ namespace SharpIrcBot.Collections
 
         protected enum ItemMatch
         {
-			NoneFound = 0,
+            NoneFound = 0,
             FullMatch = 1,
             PrefixMatch = 2
         }
@@ -191,7 +191,7 @@ namespace SharpIrcBot.Collections
         private static void Debug([CanBeNull] string message)
         {
 #if DRILL_DOWN_TREE_LOGGING
-			Console.Error.WriteLine(message);
+            Console.Error.WriteLine(message);
 #endif
         }
     }

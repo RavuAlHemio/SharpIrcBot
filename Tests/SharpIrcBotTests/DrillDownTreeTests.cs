@@ -48,7 +48,7 @@ namespace SharpIrcBotTests
             tree[einsZwei] = 12;
             tree[einsElf] = 22;
 
-			Assert.Equal(4, tree[oneTwoThree]);
+            Assert.Equal(4, tree[oneTwoThree]);
             Assert.Equal(5, tree[oneTwoFour]);
             Assert.Throws<IndexOutOfRangeException>(() => tree[oneTwoFive]);
             Assert.Equal(12, tree[einsZwei]);

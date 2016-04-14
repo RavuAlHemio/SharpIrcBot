@@ -8,7 +8,7 @@ namespace SharpIrcBot
 {
     public interface IConnectionManager
     {
-		event SharpIrcBotEventHandler<IChannelMessageEventArgs> ChannelMessage;
+        event SharpIrcBotEventHandler<IChannelMessageEventArgs> ChannelMessage;
         event SharpIrcBotEventHandler<IChannelMessageEventArgs> ChannelAction;
         event SharpIrcBotEventHandler<IChannelMessageEventArgs> ChannelNotice;
         event SharpIrcBotEventHandler<IPrivateMessageEventArgs> QueryMessage;

@@ -7,7 +7,7 @@
         /// </summary>
         ContinueToNextStrategy = 0,
 
-		/// <summary>
+        /// <summary>
         /// Apply filters and then skip directly to the final pick.
         /// </summary>
         SkipAllOtherStrategies = 1,

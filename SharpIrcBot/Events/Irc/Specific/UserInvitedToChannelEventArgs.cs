@@ -6,7 +6,7 @@ namespace SharpIrcBot.Events.Irc.Specific
     internal class UserInvitedToChannelEventArgs : IUserInvitedToChannelEventArgs
     {
         [NotNull] protected InviteEventArgs InviteArgs { get; }
-		public IRawMessageEventArgs RawMessage { get; }
+        public IRawMessageEventArgs RawMessage { get; }
 
         public string Invitee => InviteArgs.Who;
         public string Channel => InviteArgs.Channel;
