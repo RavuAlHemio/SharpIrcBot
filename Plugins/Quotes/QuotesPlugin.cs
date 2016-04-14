@@ -16,9 +16,9 @@ namespace Quotes
     public class QuotesPlugin : IPlugin, IReloadableConfiguration
     {
         private static readonly ILog Logger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        public static readonly Regex AddQuoteRegex = new Regex("^!addquote\\s+(?<quote>.+)$", RegexOptions.Compiled);
-        public static readonly Regex RememberRegex = new Regex("^!remember\\s+(?<nick>\\S+)\\s+(?<pattern>.+)$", RegexOptions.Compiled);
-        public static readonly Regex QuoteRegex = new Regex("^!(?<rated>any|bad)?(?<showRating>r)?quote(?:\\s+(?<search>.+))?\\s*$", RegexOptions.Compiled);
+        public static readonly Regex AddQuoteRegex = new Regex("^!addquote\\s+(?<quote>\\S.*)$", RegexOptions.Compiled);
+        public static readonly Regex RememberRegex = new Regex("^!remember\\s+(?<nick>\\S+)\\s+(?<pattern>\\S.*)$", RegexOptions.Compiled);
+        public static readonly Regex QuoteRegex = new Regex("^!(?<rated>any|bad)?(?<showRating>r)?quote(?:\\s+(?<search>\\S.*)|\\s*)$", RegexOptions.Compiled);
         public static readonly Regex QuoteUserRegex = new Regex("^!(?<rated>any|bad)?(?<showRating>r)?quoteuser\\s+(?<username>\\S+)\\s*$", RegexOptions.Compiled);
         public static readonly Regex NextQuoteRegex = new Regex("^!next(?<rated>any|bad)?(?<showRating>r)?quote\\s*$", RegexOptions.Compiled);
 

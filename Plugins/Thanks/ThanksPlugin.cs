@@ -15,8 +15,8 @@ namespace Thanks
     public class ThanksPlugin : IPlugin, IReloadableConfiguration
     {
         private static readonly ILog Logger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        public static readonly Regex ThankRegex = new Regex("^!(?:thank|thanks|thx)\\s+(?<force>--force\\s+)?(?<thankee>\\S+)(?:\\s+(?<reason>\\S+(?:\\s+\\S+)*))?\\s*$", RegexOptions.Compiled);
-        public static readonly Regex ThankedRegex = new Regex("^!thanked\\s+(?<raw>--raw\\s+)?(?<thankee>\\S+)\\s*$", RegexOptions.Compiled);
+        public static readonly Regex ThankRegex = new Regex("^!(?:thank|thanks|thx)\\s+(?<force>--force\\s+)?(?<thankee>[^-\\s]\\S*)(?:\\s+(?<reason>\\S+(?:\\s+\\S+)*))?\\s*$", RegexOptions.Compiled);
+        public static readonly Regex ThankedRegex = new Regex("^!thanked\\s+(?<raw>--raw\\s+)?(?<thankee>[^-\\s]\\S*)\\s*$", RegexOptions.Compiled);
 
         protected IConnectionManager ConnectionManager { get; }
         protected ThanksConfig Config { get; set; }
