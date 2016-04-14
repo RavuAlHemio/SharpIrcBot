@@ -10,4 +10,4 @@ install:
   - mono nuget.exe install xunit.runner.console -Prerelease -OutputDirectory testrunner
 script:
   - xbuild /p:Configuration=Release SharpIrcBot.sln
-  - mono ./testrunner/xunit.runner.console.*/tools/xunit.console.exe Tests/SharpIrcBotTests/bin/Release/SharpIrcBotTests.dll -nocolor
+  - mono ./testrunner/xunit.runner.console.*/tools/xunit.console.exe Tests/SharpIrcBotTests/bin/Release/SharpIrcBotTests.dll Tests/RegexTests/bin/Release/RegexTests.dll -nocolor -noappdomain

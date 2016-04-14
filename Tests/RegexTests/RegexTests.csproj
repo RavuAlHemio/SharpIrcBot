@@ -1,0 +1,181 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="..\..\packages\xunit.runner.visualstudio.2.2.0-beta1-build1144\build\net20\xunit.runner.visualstudio.props" Condition="Exists('..\..\packages\xunit.runner.visualstudio.2.2.0-beta1-build1144\build\net20\xunit.runner.visualstudio.props')" />
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{87B9331D-E2F1-4187-8718-98F5392C7CB7}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>RegexTests</RootNamespace>
+    <AssemblyName>RegexTests</AssemblyName>
+    <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <NuGetPackageImportStamp>
+    </NuGetPackageImportStamp>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Runtime" />
+    <Reference Include="System.Threading.Tasks" />
+    <Reference Include="System.Collections.Immutable, Version=1.1.38.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\System.Collections.Immutable.1.1.38-beta-23516\lib\dotnet5.1\System.Collections.Immutable.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="xunit.abstractions, Version=2.0.0.0, Culture=neutral, PublicKeyToken=8d05b1bb7a6fdb6c, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\xunit.abstractions.2.0.0\lib\net35\xunit.abstractions.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="xunit.assert, Version=2.2.0.3239, Culture=neutral, PublicKeyToken=8d05b1bb7a6fdb6c, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\xunit.assert.2.2.0-beta1-build3239\lib\dotnet\xunit.assert.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="xunit.core, Version=2.2.0.3239, Culture=neutral, PublicKeyToken=8d05b1bb7a6fdb6c, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\xunit.extensibility.core.2.2.0-beta1-build3239\lib\dotnet\xunit.core.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="xunit.execution.desktop, Version=2.2.0.3239, Culture=neutral, PublicKeyToken=8d05b1bb7a6fdb6c, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\xunit.extensibility.execution.2.2.0-beta1-build3239\lib\net45\xunit.execution.desktop.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="AllographTests.cs" />
+    <Compile Include="AlsoKnownAsTests.cs" />
+    <Compile Include="DatabaseNickMappingTests.cs" />
+    <Compile Include="DiceTests.cs" />
+    <Compile Include="MessengerTests.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="QuotesTests.cs" />
+    <Compile Include="RegexTestUtils.cs" />
+    <Compile Include="RegexTestUtilTests.cs" />
+    <Compile Include="ReinviteTests.cs" />
+    <Compile Include="ThanksTests.cs" />
+    <Compile Include="WeatherTests.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\SharpIrcBot\SharpIrcBot.csproj">
+      <Project>{ee95358b-9655-41c6-a76c-113a6eb455f2}</Project>
+      <Name>SharpIrcBot</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Plugins\Allograph\Allograph.csproj">
+      <Project>{280c7f7e-eb57-4a88-b2e5-a07d71ecf8cd}</Project>
+      <Name>Allograph</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Plugins\AlsoKnownAs\AlsoKnownAs.csproj">
+      <Project>{97310ae0-eba3-449c-b637-946ac7bd7ac5}</Project>
+      <Name>AlsoKnownAs</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Plugins\Belch\Belch.csproj">
+      <Project>{18557b38-6101-4d85-887f-8b73d67d785d}</Project>
+      <Name>Belch</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Plugins\DatabaseNickMapping\DatabaseNickMapping.csproj">
+      <Project>{30489c43-a5c4-4082-b28b-a0b9ce5facb8}</Project>
+      <Name>DatabaseNickMapping</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Plugins\Dice\Dice.csproj">
+      <Project>{fe45e799-be4f-4701-96c3-88b13f391284}</Project>
+      <Name>Dice</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Plugins\DontJustHighlightMe\DontJustHighlightMe.csproj">
+      <Project>{18d26fbb-92c0-4f00-b7b1-7fe5e10bc7e9}</Project>
+      <Name>DontJustHighlightMe</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Plugins\GroupPressure\GroupPressure.csproj">
+      <Project>{c1721433-d146-4d7d-849f-ae67902db5b1}</Project>
+      <Name>GroupPressure</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Plugins\IdentityNickMapping\IdentityNickMapping.csproj">
+      <Project>{d33bd230-4a2c-4362-8c11-56ff63f61f09}</Project>
+      <Name>IdentityNickMapping</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Plugins\LinkInfo\LinkInfo.csproj">
+      <Project>{55abe756-3370-4b31-9765-2422433d0196}</Project>
+      <Name>LinkInfo</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Plugins\Messenger\Messenger.csproj">
+      <Project>{2e43c7ad-16e8-43c1-9e56-04c46cfab67d}</Project>
+      <Name>Messenger</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Plugins\NewYear\NewYear.csproj">
+      <Project>{d6e6e3f9-9c07-45f6-a4c1-24d61f853e05}</Project>
+      <Name>NewYear</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Plugins\Punt\Punt.csproj">
+      <Project>{919f4d12-a01b-4c18-8bd9-ec4ef10f0d85}</Project>
+      <Name>Punt</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Plugins\Quotes\Quotes.csproj">
+      <Project>{863bbd9e-3083-4102-a77f-825bde894971}</Project>
+      <Name>Quotes</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Plugins\Reinvite\Reinvite.csproj">
+      <Project>{5b83a981-96e3-450d-83dc-1039c99b6ebe}</Project>
+      <Name>Reinvite</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Plugins\Smileys\Smileys.csproj">
+      <Project>{19c05e80-3fb8-454b-985b-c502388074fe}</Project>
+      <Name>Smileys</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Plugins\Sockpuppet\Sockpuppet.csproj">
+      <Project>{e1ea42b0-941f-4fd6-88d0-41c1415c560f}</Project>
+      <Name>Sockpuppet</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Plugins\TextCommands\TextCommands.csproj">
+      <Project>{50975992-4cb9-4877-8b0b-7b84ec88021d}</Project>
+      <Name>TextCommands</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Plugins\Thanks\Thanks.csproj">
+      <Project>{f28ce9bf-5055-4bf7-be48-3f083ac0ca5a}</Project>
+      <Name>Thanks</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Plugins\UnoBot\UnoBot.csproj">
+      <Project>{c16e3221-1f74-4bba-8b76-ea2d662a947e}</Project>
+      <Name>UnoBot</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Plugins\Weather\Weather.csproj">
+      <Project>{de3cf485-0b6a-426c-8bce-5c910cd67594}</Project>
+      <Name>Weather</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Plugins\WhoisLoginNickMapping\WhoisLoginNickMapping.csproj">
+      <Project>{044981cb-c231-428b-901b-bea6745e75db}</Project>
+      <Name>WhoisLoginNickMapping</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\..\packages\xunit.runner.visualstudio.2.2.0-beta1-build1144\build\net20\xunit.runner.visualstudio.props')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\xunit.runner.visualstudio.2.2.0-beta1-build1144\build\net20\xunit.runner.visualstudio.props'))" />
+  </Target>
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>
