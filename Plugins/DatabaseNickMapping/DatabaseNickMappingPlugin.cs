@@ -14,10 +14,10 @@ namespace DatabaseNickMapping
     public class DatabaseNickMappingPlugin : IPlugin, IReloadableConfiguration
     {
         private static readonly ILog Logger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        private static readonly Regex LinkRegex = new Regex("^!linknicks[ ]+([^ ]+)[ ]+([^ ]+)[ ]*$");
-        private static readonly Regex UnlinkRegex = new Regex("^!unlinknick[ ]+([^ ]+)[ ]*$");
-        private static readonly Regex BaseNickRegex = new Regex("^!basenick[ ]+([^ ]+)[ ]*$");
-        private static readonly Regex PseudoRegisterRegex = new Regex("^!pseudo(un)?register[ ]+([^ ]+)[ ]*$");
+        private static readonly Regex LinkRegex = new Regex("^!linknicks[ ]+([^ ]+)[ ]+([^ ]+)[ ]*$", RegexOptions.Compiled);
+        private static readonly Regex UnlinkRegex = new Regex("^!unlinknick[ ]+([^ ]+)[ ]*$", RegexOptions.Compiled);
+        private static readonly Regex BaseNickRegex = new Regex("^!basenick[ ]+([^ ]+)[ ]*$", RegexOptions.Compiled);
+        private static readonly Regex PseudoRegisterRegex = new Regex("^!pseudo(un)?register[ ]+([^ ]+)[ ]*$", RegexOptions.Compiled);
 
         protected IConnectionManager ConnectionManager;
         protected DatabaseNickMappingConfig Config;

@@ -23,7 +23,7 @@ namespace LinkInfo
         public const string GoogleImageSearchUrlPattern = "https://{0}/imghp?hl=en&tab=wi";
         public const string GoogleImageSearchByImageUrlPattern = "https://{0}/searchbyimage?hl=en&image_url={1}";
         public const int DownloadBufferSize = 4 * 1024 * 1024;
-        public static readonly Regex WhiteSpaceRegex = new Regex("\\s+");
+        public static readonly Regex WhiteSpaceRegex = new Regex("\\s+", RegexOptions.Compiled);
 
         protected IConnectionManager ConnectionManager { get; set; }
         protected LinkInfoConfig Config { get; set; }

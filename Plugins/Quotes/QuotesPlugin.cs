@@ -16,11 +16,11 @@ namespace Quotes
     public class QuotesPlugin : IPlugin, IReloadableConfiguration
     {
         private static readonly ILog Logger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        private static readonly Regex AddQuoteRegex = new Regex("^!addquote[ ]+(.+)$");
-        private static readonly Regex RememberRegex = new Regex("^!remember[ ]+([^ ]+)[ ]+(.+)$");
-        private static readonly Regex QuoteRegex = new Regex("^!(any|bad)?(r)?quote(?:[ ]+(.+))?$");
-        private static readonly Regex QuoteUserRegex = new Regex("^!(any|bad)?(r)?quoteuser[ ]+([^ ]+)$");
-        private static readonly Regex NextQuoteRegex = new Regex("^!next(any|bad)?(r)?quote[ ]*$");
+        private static readonly Regex AddQuoteRegex = new Regex("^!addquote[ ]+(.+)$", RegexOptions.Compiled);
+        private static readonly Regex RememberRegex = new Regex("^!remember[ ]+([^ ]+)[ ]+(.+)$", RegexOptions.Compiled);
+        private static readonly Regex QuoteRegex = new Regex("^!(any|bad)?(r)?quote(?:[ ]+(.+))?$", RegexOptions.Compiled);
+        private static readonly Regex QuoteUserRegex = new Regex("^!(any|bad)?(r)?quoteuser[ ]+([^ ]+)$", RegexOptions.Compiled);
+        private static readonly Regex NextQuoteRegex = new Regex("^!next(any|bad)?(r)?quote[ ]*$", RegexOptions.Compiled);
 
         protected IConnectionManager ConnectionManager { get; }
         protected QuotesConfig Config { get; set; }

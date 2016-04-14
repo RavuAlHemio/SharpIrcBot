@@ -19,12 +19,12 @@ namespace Messenger
     public class MessengerPlugin : IPlugin, IReloadableConfiguration
     {
         private static readonly ILog Logger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        private static readonly Regex SendMessageRegex = new Regex("^[ ]*!(?<silence>s?)(?:msg|mail)[ ]+(?<recipient>[^ :]+):?[ ]+(?<message>.+)[ ]*$");
-        private static readonly Regex DeliverMessageRegex = new Regex("^[ ]*!deliver(?:msg|mail)[ ]+(?<count>[1-9][0-9]*)[ ]*$");
-        private static readonly Regex ReplayMessageRegex = new Regex("^[ ]*!replay(?:msg|mail)[ ]+(?<count>[1-9][0-9]*)[ ]*$");
-        private static readonly Regex IgnoreMessageRegex = new Regex("^[ ]*!(?<command>(?:un)?ignore)(?:msg|mail)[ ]+(?<target>[^ ]+)[ ]*$");
-        private static readonly Regex QuiesceRegex = new Regex("^[ ]*!(?:msg|mail)gone[ ]+(?<messageCount>0|[1-9][0-9]*)[ ]+(?<durationHours>[1-9][0-9]*)h[ ]*$");
-        private static readonly Regex UnQuiesceRegex = new Regex("^[ ]*!(?:msg|mail)back[ ]*$");
+        private static readonly Regex SendMessageRegex = new Regex("^[ ]*!(?<silence>s?)(?:msg|mail)[ ]+(?<recipient>[^ :]+):?[ ]+(?<message>.+)[ ]*$", RegexOptions.Compiled);
+        private static readonly Regex DeliverMessageRegex = new Regex("^[ ]*!deliver(?:msg|mail)[ ]+(?<count>[1-9][0-9]*)[ ]*$", RegexOptions.Compiled);
+        private static readonly Regex ReplayMessageRegex = new Regex("^[ ]*!replay(?:msg|mail)[ ]+(?<count>[1-9][0-9]*)[ ]*$", RegexOptions.Compiled);
+        private static readonly Regex IgnoreMessageRegex = new Regex("^[ ]*!(?<command>(?:un)?ignore)(?:msg|mail)[ ]+(?<target>[^ ]+)[ ]*$", RegexOptions.Compiled);
+        private static readonly Regex QuiesceRegex = new Regex("^[ ]*!(?:msg|mail)gone[ ]+(?<messageCount>0|[1-9][0-9]*)[ ]+(?<durationHours>[1-9][0-9]*)h[ ]*$", RegexOptions.Compiled);
+        private static readonly Regex UnQuiesceRegex = new Regex("^[ ]*!(?:msg|mail)back[ ]*$", RegexOptions.Compiled);
 
         protected MessengerConfig Config { get; set; }
         protected IConnectionManager ConnectionManager { get; set; }

@@ -35,7 +35,7 @@ namespace Dice
                 ")" +
             ")*" +
             "[ ]*$",
-            RegexOptions.IgnoreCase
+            RegexOptions.Compiled | RegexOptions.IgnoreCase
         );
         public static readonly Regex RollRegex = new Regex(
             "^" +
@@ -44,7 +44,7 @@ namespace Dice
             "(?<sides>[1-9][0-9]*)" +
             "(?<addValue>[+-][1-9][0-9]*)?" +
             "$",
-            RegexOptions.IgnoreCase
+            RegexOptions.Compiled | RegexOptions.IgnoreCase
         );
 
         protected IConnectionManager ConnectionManager { get; set; }

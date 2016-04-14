@@ -14,12 +14,12 @@ namespace AlsoKnownAs
         public string CloakedAddressRegexString
         {
             get { return CloakedAddressRegex.ToString(); }
-            set { CloakedAddressRegex = new Regex(value); }
+            set { CloakedAddressRegex = new Regex(value, RegexOptions.Compiled); }
         }
 
         public AlsoKnownAsConfig(JObject obj)
         {
-            CloakedAddressRegex = new Regex("^irc-([a-z0-9](?:\\.[a-z0-9])+)\\.IP$");
+            CloakedAddressRegex = new Regex("^irc-([a-z0-9](?:\\.[a-z0-9])+)\\.IP$", RegexOptions.Compiled);
 
             var ser = new JsonSerializer();
             ser.Populate(obj.CreateReader(), this);

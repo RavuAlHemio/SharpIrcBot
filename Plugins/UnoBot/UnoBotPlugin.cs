@@ -27,9 +27,9 @@ namespace UnoBot
         protected const string CardCountsEventName = "card_counts";
         protected const string CardDrawnEventName = "player_drew_card";
 
-        protected static readonly Regex UnoBotFirstMessage = new Regex("^([1-9][0-9]*) (.*)");
+        protected static readonly Regex UnoBotFirstMessage = new Regex("^([1-9][0-9]*) (.*)", RegexOptions.Compiled);
         protected const string BotCommandRegexPattern = "^([?][a-z]+)[ ]+(?i){0}[ ]*$";
-        protected static readonly Regex RuntimeTweakPattern = new Regex("^!unobotset[ ]+([A-Za-z]+)[ ]+(.+)$");
+        protected static readonly Regex RuntimeTweakPattern = new Regex("^!unobotset[ ]+([A-Za-z]+)[ ]+(.+)$", RegexOptions.Compiled);
 
         protected IConnectionManager ConnectionManager { get; }
         protected UnoBotConfig Config { get; set; }
@@ -184,7 +184,7 @@ namespace UnoBot
             {
                 BotCommandRegexNick = botNick;
                 var pattern = string.Format(BotCommandRegexPattern, Regex.Escape(botNick));
-                BotCommandRegex = new Regex(pattern);
+                BotCommandRegex = new Regex(pattern, RegexOptions.Compiled);
             }
             var match = BotCommandRegex.Match(message);
             if (match.Success && string.Equals(match.Groups[1].Value, expectedCommand, StringComparison.InvariantCultureIgnoreCase))

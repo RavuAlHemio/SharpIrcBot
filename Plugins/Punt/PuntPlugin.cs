@@ -99,8 +99,8 @@ namespace Punt
                 .Concat(Config.ChannelsPatterns[channel]);
             foreach (var pattern in relevantPatterns)
             {
-                var nickRegex = FetchOrMakeAndStore(RegexCache, pattern.NickPattern, r => new Regex(r));
-                var bodyRegex = FetchOrMakeAndStore(RegexCache, pattern.BodyPattern, r => new Regex(r));
+                var nickRegex = FetchOrMakeAndStore(RegexCache, pattern.NickPattern, r => new Regex(r, RegexOptions.Compiled));
+                var bodyRegex = FetchOrMakeAndStore(RegexCache, pattern.BodyPattern, r => new Regex(r, RegexOptions.Compiled));
 
                 var normalizedNick = ConnectionManager.RegisteredNameForNick(nick);
 

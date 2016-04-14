@@ -15,7 +15,7 @@ namespace AlsoKnownAs
     public class AlsoKnownAsPlugin : IPlugin, IReloadableConfiguration
     {
         private static readonly ILog Logger = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
-        protected static readonly Regex AlsoKnownAsRegex = new Regex("^!aka\\s+(?<nickname>[^ ]+)\\s*");
+        protected static readonly Regex AlsoKnownAsRegex = new Regex("^!aka\\s+(?<nickname>[^ ]+)\\s*", RegexOptions.Compiled);
 
         protected IConnectionManager ConnectionManager { get; set; }
         protected AlsoKnownAsConfig Config { get; set; }

@@ -7,8 +7,8 @@ namespace LinkInfo
 {
     static class EncodingGuesser
     {
-        public static readonly Regex ContentTypeCharsetRegex = new Regex(";\\s*charset\\s*=\\s*(.*)", RegexOptions.IgnoreCase);
-        public static readonly Regex MetaCharsetRegex = new Regex("<meta\\s+.*?charset\\s*=\\s*([A-Za-z0-9_-]+)", RegexOptions.IgnoreCase | RegexOptions.Singleline);
+        public static readonly Regex ContentTypeCharsetRegex = new Regex(";\\s*charset\\s*=\\s*(.*)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        public static readonly Regex MetaCharsetRegex = new Regex("<meta\\s+.*?charset\\s*=\\s*([A-Za-z0-9_-]+)", RegexOptions.Compiled | RegexOptions.IgnoreCase | RegexOptions.Singleline);
 
         static string TryEncoding(byte[] data, string encName)
         {

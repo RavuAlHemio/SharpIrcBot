@@ -20,7 +20,7 @@ namespace Allograph
 
                 set
                 {
-                    Regex = new Regex(value);
+                    Regex = new Regex(value, RegexOptions.Compiled);
                 }
             }
 
