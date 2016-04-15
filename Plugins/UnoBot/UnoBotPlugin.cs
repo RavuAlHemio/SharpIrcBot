@@ -591,9 +591,9 @@ namespace UnoBot
                 {
                     StrategyLogger.DebugFormat("not risking emergency strategic draw for evil card");
                 }
-                else if (Config.EmergencyStrategicDrawDenominator > 0)
+                else if (Config.EmergencyStrategicDrawPercentage > 0)
                 {
-                    var emergencyStrategicDraw = (Randomizer.Next(Config.EmergencyStrategicDrawDenominator) == 0);
+                    var emergencyStrategicDraw = (Randomizer.Next(100) < Config.EmergencyStrategicDrawPercentage);
                     if (emergencyStrategicDraw)
                     {
                         StrategyLogger.Debug("emergency strategic draw for evil card");

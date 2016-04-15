@@ -20,7 +20,7 @@ namespace UnoBot
         public int StandardReorderPriority { get; set; }
         public int StandardColorChangePriority { get; set; }
         public int StrategicDrawDenominator { get; set; }
-        public int EmergencyStrategicDrawDenominator { get; set; }
+        public int EmergencyStrategicDrawPercentage { get; set; }
         public int ColorInHandPreference { get; set; }
 
         [NotTweakableAtRuntime]
@@ -39,7 +39,7 @@ namespace UnoBot
             StandardReorderPriority = 1;
             StandardColorChangePriority = 1;
             StrategicDrawDenominator = 30;
-            EmergencyStrategicDrawDenominator = 2;
+            EmergencyStrategicDrawPercentage = 70;
             ColorInHandPreference = 3;
             RuntimeTweakable = false;
 
