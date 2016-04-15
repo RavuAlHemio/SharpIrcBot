@@ -621,13 +621,6 @@ namespace UnoBot
                 return StrategyContinuation.ContinueToNextStrategy;
             }
 
-            if (TopCard.Color == ColorRequest.Value)
-            {
-                // glad that's been taken care of
-                ColorRequest = null;
-                return StrategyContinuation.ContinueToNextStrategy;
-            }
-
             // do I have a usable card that matches the target color?
             possibleCards.AddRange(CurrentHand.Where(hc => hc.Color == ColorRequest.Value && hc.Value == TopCard.Value));
             if (possibleCards.Count == 0)
@@ -917,6 +910,7 @@ namespace UnoBot
                     // play it
                     PlayColorCard(card);
                 }
+                ColorRequest = null;
                 DrewLast = false;
                 DrawsSinceLastPlay = 0;
                 return;
@@ -926,6 +920,7 @@ namespace UnoBot
             {
                 StrategyLogger.Debug("passing");
                 PassAfterDrawing();
+                ColorRequest = null;
             }
             else
             {
