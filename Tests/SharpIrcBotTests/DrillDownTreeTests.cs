@@ -41,6 +41,7 @@ namespace SharpIrcBotTests
             var einsZwei = ImmutableList.Create("eins", "zwei");
             var einsElf = ImmutableList.Create("eins", "elf");
             var einsDroelf = ImmutableList.Create("eins", "droelf");
+            var einsEmpty = ImmutableList.Create("eins", "");
 
             var tree = new DrillDownTree<string, int>();
             tree[oneTwoThree] = 4;
@@ -54,6 +55,7 @@ namespace SharpIrcBotTests
             Assert.Equal(12, tree[einsZwei]);
             Assert.Equal(22, tree[einsElf]);
             Assert.Throws<IndexOutOfRangeException>(() => tree[einsDroelf]);
+            Assert.Throws<IndexOutOfRangeException>(() => tree[einsEmpty]);
 
             BestMatchesFullMatch(tree, oneTwoThree, 4);
             BestMatchesFullMatch(tree, oneTwoFour, 5);
@@ -62,6 +64,7 @@ namespace SharpIrcBotTests
             BestMatchesPartial(tree, oneTwoFive, 2, 4, 5);
             BestMatchesPartial(tree, einsDroelf, 1, 12, 22);
             BestMatchesPartial(tree, einsDroelf, 1, 22, 12);
+            BestMatchesPartial(tree, einsEmpty, 1, 12, 22);
         }
     }
 }

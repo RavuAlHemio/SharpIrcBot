@@ -133,8 +133,11 @@ namespace AlsoKnownAs
             var identifier = NickToMostRecentHost[nickToSearch];
             var identifierParts = identifier.Parts;
 
+            // replace the last item in identifierParts with the empty string for a fuzzy match
+            var fuzzyIdentifierParts = identifierParts.SetItem(identifierParts.Count - 1, "");
+
             ImmutableList<HashSet<string>> matches;
-            int matchDepth = HostToNicks.GetBestMatches(identifierParts, out matches);
+            int matchDepth = HostToNicks.GetBestMatches(fuzzyIdentifierParts, out matches);
             if (matchDepth == -1)
             {
                 respond($"I don\u2019t remember any other nickname from {identifier} than {nickToSearch}.");
