@@ -273,13 +273,17 @@ namespace UnoBot
                 ColorRequest = color;
 
                 // can I change the color?
-                if (CurrentHand.Any(c => c.Color == color || c.Color == CardColor.Wild))
+                if (CurrentHand.Any(c => c.Color == CardColor.Wild))
                 {
                     ConnectionManager.SendChannelMessageFormat(args.Channel, "Yeah, I think that's doable, {0}.", args.SenderNickname);
                 }
+                else if (CurrentHand.Any(c => c.Color == color))
+                {
+                    ConnectionManager.SendChannelMessageFormat(args.Channel, "No color changers, but I'll try, {0}.", args.SenderNickname);
+                }
                 else
                 {
-                    ConnectionManager.SendChannelMessageFormat(args.Channel, "{0}, I'll do my best, but don't count on me...", args.SenderNickname);
+                    ConnectionManager.SendChannelMessageFormat(args.Channel, "Ain't got the cards, {0}, but I'll try...", args.SenderNickname);
                 }
 
                 return;
