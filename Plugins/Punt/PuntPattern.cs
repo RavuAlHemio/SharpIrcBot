@@ -1,13 +1,29 @@
-﻿using Newtonsoft.Json;
+﻿using System.Text.RegularExpressions;
+using Newtonsoft.Json;
 
 namespace Punt
 {
     [JsonObject(MemberSerialization.OptOut)]
     public struct PuntPattern
     {
-        public string NickPattern { get; set; }
-        public string BodyPattern { get; set; }
+        [JsonIgnore] public Regex NickPattern { get; set; }
+        [JsonIgnore] public Regex BodyPattern { get; set; }
         public string KickMessage { get; set; }
+
+        [JsonProperty("NickPattern")]
+        public string NickPatternString
+        {
+            get { return NickPattern.ToString(); }
+            set { NickPattern = new Regex(value, RegexOptions.Compiled); }
+        }
+
+        [JsonProperty("BodyPattern")]
+        public string BodyPatternString
+        {
+            get { return NickPattern.ToString(); }
+            set { NickPattern = new Regex(value, RegexOptions.Compiled); }
+        }
+
         public int? ChancePercent { get; set; }
 
         public override bool Equals(object obj)
@@ -17,16 +33,16 @@ namespace Punt
 
         public override int GetHashCode()
         {
-            return 3 * (NickPattern?.GetHashCode() ?? 0)
-                + 5 * (BodyPattern?.GetHashCode() ?? 0)
+            return 3 * (NickPattern?.ToString().GetHashCode() ?? 0)
+                + 5 * (BodyPattern?.ToString().GetHashCode() ?? 0)
                 + 7 * (KickMessage?.GetHashCode() ?? 0)
                 + 11 * ChancePercent.GetHashCode();
         }
 
         public static bool operator ==(PuntPattern x, PuntPattern y)
         {
-            return x.NickPattern == y.NickPattern
-                && x.BodyPattern == y.BodyPattern
+            return x.NickPattern.ToString() == y.NickPattern.ToString()
+                && x.BodyPattern.ToString() == y.BodyPattern.ToString()
                 && x.KickMessage == y.KickMessage
                 && x.ChancePercent == y.ChancePercent;
         }

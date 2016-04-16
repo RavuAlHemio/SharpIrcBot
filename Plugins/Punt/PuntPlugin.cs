@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Text.RegularExpressions;
 using log4net;
 using Newtonsoft.Json.Linq;
 using SharpIrcBot;
@@ -16,14 +14,12 @@ namespace Punt
 
         protected IConnectionManager ConnectionManager { get; }
         protected PuntConfig Config { get; set; }
-        protected Dictionary<string, Regex> RegexCache { get; }
         protected Random Randomizer { get; }
 
         public PuntPlugin(IConnectionManager connMgr, JObject config)
         {
             ConnectionManager = connMgr;
             Config = new PuntConfig(config);
-            RegexCache = new Dictionary<string, Regex>(2 * Config.CommonPatterns.Count);
             Randomizer = new Random();
 
             ConnectionManager.ChannelAction += HandleChannelAction;
@@ -34,7 +30,6 @@ namespace Punt
         public void ReloadConfiguration(JObject newConfig)
         {
             Config = new PuntConfig(newConfig);
-            RegexCache.Clear();
         }
 
         protected void HandleChannelAction(object sender, IChannelMessageEventArgs e, MessageFlags flags)
@@ -73,20 +68,6 @@ namespace Punt
             }
         }
 
-        protected static TValue FetchOrMakeAndStore<TKey, TValue>(IDictionary<TKey, TValue> dict, TKey key, Func<TKey, TValue> valueDerivatorIfNotFound)
-        {
-            try
-            {
-                return dict[key];
-            }
-            catch (KeyNotFoundException)
-            {
-                var ret = valueDerivatorIfNotFound(key);
-                dict[key] = ret;
-                return ret;
-            }
-        }
-
         protected virtual void ActuallyHandleMessage(string channel, string nick, string body)
         {
             if (!Config.ChannelsPatterns.ContainsKey(channel))
@@ -99,12 +80,9 @@ namespace Punt
                 .Concat(Config.ChannelsPatterns[channel]);
             foreach (var pattern in relevantPatterns)
             {
-                var nickRegex = FetchOrMakeAndStore(RegexCache, pattern.NickPattern, r => new Regex(r, RegexOptions.Compiled));
-                var bodyRegex = FetchOrMakeAndStore(RegexCache, pattern.BodyPattern, r => new Regex(r, RegexOptions.Compiled));
-
                 var normalizedNick = ConnectionManager.RegisteredNameForNick(nick);
 
-                if (!nickRegex.IsMatch(nick) && (normalizedNick == null || !nickRegex.IsMatch(normalizedNick)))
+                if (!pattern.NickPattern.IsMatch(nick) && (normalizedNick == null || !pattern.NickPattern.IsMatch(normalizedNick)))
                 {
                     // wrong user
                     continue;
@@ -120,7 +98,7 @@ namespace Punt
                     }
                 }
 
-                if (bodyRegex.IsMatch(body))
+                if (pattern.BodyPattern.IsMatch(body))
                 {
                     // match! kick 'em!
                     ConnectionManager.KickChannelUser(channel, nick, pattern.KickMessage);
