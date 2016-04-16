@@ -35,31 +35,7 @@ namespace Thanks
             Config = new ThanksConfig(newConfig);
         }
 
-        private void HandleChannelMessage(object sender, IChannelMessageEventArgs args, MessageFlags flags)
-        {
-            try
-            {
-                ActuallyHandleChannelMessage(sender, args, flags);
-            }
-            catch (Exception exc)
-            {
-                Logger.Error("error handling message", exc);
-            }
-        }
-
-        private void HandleBaseNickChanged(object sender, BaseNickChangedEventArgs args)
-        {
-            try
-            {
-                ActuallyHandleBaseNickChanged(sender, args);
-            }
-            catch (Exception exc)
-            {
-                Logger.Error("error handling base nick change", exc);
-            }
-        }
-
-        protected void ActuallyHandleChannelMessage(object sender, IChannelMessageEventArgs args, MessageFlags flags)
+        protected void HandleChannelMessage(object sender, IChannelMessageEventArgs args, MessageFlags flags)
         {
             if (flags.HasFlag(MessageFlags.UserBanned))
             {
@@ -287,7 +263,7 @@ namespace Thanks
             }
         }
 
-        protected virtual void ActuallyHandleBaseNickChanged(object sender, BaseNickChangedEventArgs args)
+        protected virtual void HandleBaseNickChanged(object sender, BaseNickChangedEventArgs args)
         {
             var oldNickLower = args.OldBaseNick.ToLowerInvariant();
             var newNickLower = args.NewBaseNick.ToLowerInvariant();

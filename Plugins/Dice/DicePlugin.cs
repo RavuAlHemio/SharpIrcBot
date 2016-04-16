@@ -65,19 +65,7 @@ namespace Dice
             Config = new DiceConfig(newConfig);
         }
 
-        private void HandleChannelMessage(object sender, IChannelMessageEventArgs args, MessageFlags flags)
-        {
-            try
-            {
-                ActuallyHandleChannelMessage(sender, args, flags);
-            }
-            catch (Exception exc)
-            {
-                Logger.Error("error handling message", exc);
-            }
-        }
-
-        protected virtual void ActuallyHandleChannelMessage(object sender, IChannelMessageEventArgs args, MessageFlags flags)
+        protected virtual void HandleChannelMessage(object sender, IChannelMessageEventArgs args, MessageFlags flags)
         {
             if (flags.HasFlag(MessageFlags.UserBanned))
             {

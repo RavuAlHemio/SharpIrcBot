@@ -22,9 +22,9 @@ namespace Punt
             Config = new PuntConfig(config);
             Randomizer = new Random();
 
-            ConnectionManager.ChannelAction += HandleChannelAction;
-            ConnectionManager.ChannelMessage += HandleChannelMessage;
-            ConnectionManager.ChannelNotice += HandleChannelNotice;
+            ConnectionManager.ChannelAction += HandleAnyChannelMessage;
+            ConnectionManager.ChannelMessage += HandleAnyChannelMessage;
+            ConnectionManager.ChannelNotice += HandleAnyChannelMessage;
         }
 
         public void ReloadConfiguration(JObject newConfig)
@@ -32,57 +32,21 @@ namespace Punt
             Config = new PuntConfig(newConfig);
         }
 
-        protected void HandleChannelAction(object sender, IChannelMessageEventArgs e, MessageFlags flags)
+        protected virtual void HandleAnyChannelMessage(object sender, IChannelMessageEventArgs e, MessageFlags flags)
         {
-            try
-            {
-                ActuallyHandleMessage(e.Channel, e.SenderNickname, e.Message);
-            }
-            catch (Exception exc)
-            {
-                Logger.Error("error handling channel action", exc);
-            }
-        }
-
-        protected void HandleChannelMessage(object sender, IChannelMessageEventArgs e, MessageFlags flags)
-        {
-            try
-            {
-                ActuallyHandleMessage(e.Channel, e.SenderNickname, e.Message);
-            }
-            catch (Exception exc)
-            {
-                Logger.Error("error handling channel message", exc);
-            }
-        }
-
-        protected void HandleChannelNotice(object sender, IChannelMessageEventArgs e, MessageFlags flags)
-        {
-            try
-            {
-                ActuallyHandleMessage(e.Channel, e.SenderNickname, e.Message);
-            }
-            catch (Exception exc)
-            {
-                Logger.Error("error handling channel notice", exc);
-            }
-        }
-
-        protected virtual void ActuallyHandleMessage(string channel, string nick, string body)
-        {
-            if (!Config.ChannelsPatterns.ContainsKey(channel))
+            if (!Config.ChannelsPatterns.ContainsKey(e.Channel))
             {
                 // don't police this channel
                 return;
             }
 
             var relevantPatterns = Config.CommonPatterns
-                .Concat(Config.ChannelsPatterns[channel]);
+                .Concat(Config.ChannelsPatterns[e.Channel]);
             foreach (var pattern in relevantPatterns)
             {
-                var normalizedNick = ConnectionManager.RegisteredNameForNick(nick);
+                var normalizedNick = ConnectionManager.RegisteredNameForNick(e.SenderNickname);
 
-                if (!pattern.NickPattern.IsMatch(nick) && (normalizedNick == null || !pattern.NickPattern.IsMatch(normalizedNick)))
+                if (!pattern.NickPattern.IsMatch(e.SenderNickname) && (normalizedNick == null || !pattern.NickPattern.IsMatch(normalizedNick)))
                 {
                     // wrong user
                     continue;
@@ -98,10 +62,10 @@ namespace Punt
                     }
                 }
 
-                if (pattern.BodyPattern.IsMatch(body))
+                if (pattern.BodyPattern.IsMatch(e.SenderNickname))
                 {
                     // match! kick 'em!
-                    ConnectionManager.KickChannelUser(channel, nick, pattern.KickMessage);
+                    ConnectionManager.KickChannelUser(e.Channel, e.SenderNickname, pattern.KickMessage);
                     return;
                 }
             }

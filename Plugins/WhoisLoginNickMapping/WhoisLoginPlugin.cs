@@ -44,85 +44,13 @@ namespace WhoisLoginNickMapping
 
         protected virtual void HandleConnectedToServer(object sender, EventArgs args)
         {
-            try
-            {
-                ActuallyHandleConnectedToServer(sender, args);
-            }
-            catch (Exception exc)
-            {
-                Logger.Error("error handling connected-to-server", exc);
-            }
-        }
-
-        protected virtual void HandleNickMapping(object sender, NickMappingEventArgs args)
-        {
-            try
-            {
-                ActuallyHandleNickMapping(sender, args);
-            }
-            catch (Exception exc)
-            {
-                Logger.Error("error handling nick mapping", exc);
-            }
-        }
-
-        protected virtual void HandleNamesInChannel(object sender, INameListEventArgs args)
-        {
-            try
-            {
-                ActuallyHandleNamesInChannel(sender, args);
-            }
-            catch (Exception exc)
-            {
-                Logger.Error("error handling names", exc);
-            }
-        }
-
-        protected virtual void HandleJoinedChannel(object sender, IUserJoinedChannelEventArgs args)
-        {
-            try
-            {
-                ActuallyHandleJoinedChannel(sender, args);
-            }
-            catch (Exception exc)
-            {
-                Logger.Error("error handling join", exc);
-            }
-        }
-
-        protected virtual void HandleRawMessage(object sender, IRawMessageEventArgs args)
-        {
-            try
-            {
-                ActuallyHandleRawMessage(sender, args);
-            }
-            catch (Exception exc)
-            {
-                Logger.Error("error handling raw message", exc);
-            }
-        }
-
-        protected virtual void HandleNickChange(object sender, INickChangeEventArgs args)
-        {
-            try
-            {
-                ActuallyHandleNickChange(sender, args);
-            }
-            catch (Exception exc)
-            {
-                Logger.Error("error handling nick change", exc);
-            }
-        }
-
-        protected virtual void ActuallyHandleConnectedToServer(object sender, EventArgs args)
-        {
             if (WhoisEveryoneTimer == null)
             {
                 WhoisEveryoneTimer = new Timer(WhoisEveryone, null, TimeSpan.Zero, TimeSpan.FromMinutes(Config.ChannelSyncPeriodMinutes));
             }
         }
 
-        protected virtual void ActuallyHandleNickMapping(object sender, NickMappingEventArgs args)
+        protected virtual void HandleNickMapping(object sender, NickMappingEventArgs args)
         {
             var lowerNick = args.Nickname.ToLowerInvariant();
             lock (NicksToLogins)
@@ -145,22 +73,22 @@ namespace WhoisLoginNickMapping
             Logger.DebugFormat("regname: {0} is not registered (not contained)", lowerNick);
         }
 
-        protected virtual void ActuallyHandleNamesInChannel(object sender, INameListEventArgs args)
+        protected virtual void HandleNamesInChannel(object sender, INameListEventArgs args)
         {
             CheckRegistrationsOn(args.Nicknames);
         }
 
-        protected virtual void ActuallyHandleJoinedChannel(object sender, IUserJoinedChannelEventArgs args)
+        protected virtual void HandleJoinedChannel(object sender, IUserJoinedChannelEventArgs args)
         {
             CheckRegistrationsOn(args.Nickname);
         }
 
-        protected virtual void ActuallyHandleNickChange(object sender, INickChangeEventArgs args)
+        protected virtual void HandleNickChange(object sender, INickChangeEventArgs args)
         {
             CheckRegistrationsOn(args.OldNickname, args.NewNickname);
         }
 
-        protected virtual void ActuallyHandleRawMessage(object sender, IRawMessageEventArgs args)
+        protected virtual void HandleRawMessage(object sender, IRawMessageEventArgs args)
         {
             if (args.ReplyCode == 330)
             {

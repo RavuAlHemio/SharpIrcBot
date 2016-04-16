@@ -21,18 +21,6 @@ namespace IdentityNickMapping
 
         protected virtual void HandleNickMapping(object sender, NickMappingEventArgs e)
         {
-            try
-            {
-                ActuallyHandleNickMapping(sender, e);
-            }
-            catch (Exception exc)
-            {
-                Logger.Error("error handling nick mapping", exc);
-            }
-        }
-
-        protected virtual void ActuallyHandleNickMapping(object sender, NickMappingEventArgs e)
-        {
             e.MapsTo.Add(e.Nickname);
         }
     }

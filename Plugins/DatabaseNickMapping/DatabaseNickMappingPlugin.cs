@@ -38,30 +38,6 @@ namespace DatabaseNickMapping
 
         protected virtual void HandleChannelMessage(object sender, IChannelMessageEventArgs args, MessageFlags flags)
         {
-            try
-            {
-                ActuallyHandleChannelMessage(sender, args, flags);
-            }
-            catch (Exception exc)
-            {
-                Logger.Error("error handling message", exc);
-            }
-        }
-
-        protected virtual void HandleNickMapping(object sender, NickMappingEventArgs args)
-        {
-            try
-            {
-                ActuallyHandleNickMapping(sender, args);
-            }
-            catch (Exception exc)
-            {
-                Logger.Error("error handling message", exc);
-            }
-        }
-
-        protected virtual void ActuallyHandleChannelMessage(object sender, IChannelMessageEventArgs args, MessageFlags flags)
-        {
             if (flags.HasFlag(MessageFlags.UserBanned))
             {
                 return;
@@ -239,7 +215,7 @@ namespace DatabaseNickMapping
             }
         }
 
-        protected virtual void ActuallyHandleNickMapping(object sender, NickMappingEventArgs args)
+        protected virtual void HandleNickMapping(object sender, NickMappingEventArgs args)
         {
             string baseNickname;
             using (var ctx = GetNewContext())

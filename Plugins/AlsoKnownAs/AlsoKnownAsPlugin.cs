@@ -45,68 +45,18 @@ namespace AlsoKnownAs
 
         private void HandleChannelMessage([CanBeNull] object sender, [NotNull] IChannelMessageEventArgs e, MessageFlags flags)
         {
-            try
-            {
-                ActuallyHandleChannelOrQueryMessage(
-                    sender, e, flags,
-                    txt => ConnectionManager.SendChannelMessage(e.Channel, $"{e.SenderNickname}: {txt}")
-                );
-            }
-            catch (Exception exc)
-            {
-                Logger.Error("error handling message", exc);
-            }
+            ActuallyHandleChannelOrQueryMessage(
+                sender, e, flags,
+                txt => ConnectionManager.SendChannelMessage(e.Channel, $"{e.SenderNickname}: {txt}")
+            );
         }
 
         private void HandleQueryMessage([CanBeNull] object sender, [NotNull] IPrivateMessageEventArgs e, MessageFlags flags)
         {
-            try
-            {
-                ActuallyHandleChannelOrQueryMessage(
-                    sender, e, flags,
-                    txt => ConnectionManager.SendQueryMessage(e.SenderNickname, txt)
-                );
-            }
-            catch (Exception exc)
-            {
-                Logger.Error("error handling message", exc);
-            }
-        }
-
-        private void HandleJoinedChannel([CanBeNull] object sender, [NotNull] IUserJoinedChannelEventArgs e)
-        {
-            try
-            {
-                ActuallyHandleJoinedChannel(sender, e);
-            }
-            catch (Exception exc)
-            {
-                Logger.Error("error handling join", exc);
-            }
-        }
-
-        private void HandleNickChange([CanBeNull] object sender, [NotNull] INickChangeEventArgs e)
-        {
-            try
-            {
-                ActuallyHandleNickChange(sender, e);
-            }
-            catch (Exception exc)
-            {
-                Logger.Error("error handling nick change", exc);
-            }
-        }
-
-        private void HandleRawMessage([CanBeNull] object sender, [NotNull] IRawMessageEventArgs e)
-        {
-            try
-            {
-                ActuallyHandleRawMessage(sender, e);
-            }
-            catch (Exception exc)
-            {
-                Logger.Error("error handling raw message", exc);
-            }
+            ActuallyHandleChannelOrQueryMessage(
+                sender, e, flags,
+                txt => ConnectionManager.SendQueryMessage(e.SenderNickname, txt)
+            );
         }
 
         protected virtual void ActuallyHandleChannelOrQueryMessage([CanBeNull] object sender, [NotNull] IUserMessageEventArgs e, MessageFlags flags, [NotNull] Action<string> respond)
@@ -192,17 +142,17 @@ namespace AlsoKnownAs
             NickToMostRecentHost[nick] = identifier;
         }
 
-        protected virtual void ActuallyHandleJoinedChannel(object sender, [NotNull] IUserJoinedChannelEventArgs e)
+        protected virtual void HandleJoinedChannel(object sender, [NotNull] IUserJoinedChannelEventArgs e)
         {
             RegisterNickname(e.Host, e.Nickname);
         }
 
-        protected virtual void ActuallyHandleNickChange(object sender, [NotNull] INickChangeEventArgs e)
+        protected virtual void HandleNickChange(object sender, [NotNull] INickChangeEventArgs e)
         {
             RegisterNickname(e.Host, e.NewNickname);
         }
 
-        protected virtual void ActuallyHandleRawMessage([CanBeNull] object sender, [NotNull] IRawMessageEventArgs e)
+        protected virtual void HandleRawMessage([CanBeNull] object sender, [NotNull] IRawMessageEventArgs e)
         {
             if (e.ReplyCode != 311)
             {

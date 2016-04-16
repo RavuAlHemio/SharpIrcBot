@@ -46,18 +46,6 @@ namespace Weather
             Config = new WeatherConfig(newConfig);
         }
 
-        private void HandleChannelMessage(object sender, IChannelMessageEventArgs args, MessageFlags flags)
-        {
-            try
-            {
-                ActuallyHandleChannelMessage(sender, args, flags);
-            }
-            catch (Exception exc)
-            {
-                Logger.Error("error handling message", exc);
-            }
-        }
-
         protected virtual DateTime CalculateTodayEST()
         {
             return DateTimeOffset.Now.ToOffset(TimeSpan.FromHours(-5.0)).Date;
@@ -209,7 +197,7 @@ namespace Weather
             ConnectionManager.SendChannelMessage(channel, weather.ToString());
         }
 
-        protected virtual void ActuallyHandleChannelMessage(object sender, IChannelMessageEventArgs args, MessageFlags flags)
+        protected virtual void HandleChannelMessage(object sender, IChannelMessageEventArgs args, MessageFlags flags)
         {
             if (flags.HasFlag(MessageFlags.UserBanned))
             {

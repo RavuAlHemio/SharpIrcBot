@@ -44,19 +44,7 @@ namespace LinkInfo
             Config = new LinkInfoConfig(newConfig);
         }
 
-        private void HandleChannelMessage(object sender, IChannelMessageEventArgs args, MessageFlags flags)
-        {
-            try
-            {
-                ActuallyHandleChannelMessage(sender, args, flags);
-            }
-            catch (Exception exc)
-            {
-                Logger.Error("error handling message", exc);
-            }
-        }
-
-        protected void ActuallyHandleChannelMessage(object sender, IChannelMessageEventArgs args, MessageFlags flags)
+        protected void HandleChannelMessage(object sender, IChannelMessageEventArgs args, MessageFlags flags)
         {
             if (flags.HasFlag(MessageFlags.UserBanned))
             {
@@ -107,19 +95,7 @@ namespace LinkInfo
             }
         }
 
-        private void HandleOutgoingChannelMessage(object sender, OutgoingMessageEventArgs args)
-        {
-            try
-            {
-                ActuallyHandleOutgoingChannelMessage(sender, args);
-            }
-            catch (Exception exc)
-            {
-                Logger.Error("error handling outgoing message", exc);
-            }
-        }
-
-        protected void ActuallyHandleOutgoingChannelMessage(object sender, OutgoingMessageEventArgs args)
+        protected void HandleOutgoingChannelMessage(object sender, OutgoingMessageEventArgs args)
         {
             // find all the links
             var links = FindLinks(args.OutgoingMessage);

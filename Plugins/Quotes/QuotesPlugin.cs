@@ -148,55 +148,7 @@ namespace Quotes
             }
         }
 
-        protected void HandleChannelMessage(object sender, IChannelMessageEventArgs e, MessageFlags flags)
-        {
-            try
-            {
-                ActuallyHandleChannelMessage(sender, e, flags);
-            }
-            catch (Exception exc)
-            {
-                Logger.Error("error handling channel message", exc);
-            }
-        }
-
-        protected void HandleChannelAction(object sender, IChannelMessageEventArgs e, MessageFlags flags)
-        {
-            try
-            {
-                ActuallyHandleChannelAction(sender, e, flags);
-            }
-            catch (Exception exc)
-            {
-                Logger.Error("error handling channel action", exc);
-            }
-        }
-
-        protected void HandleQueryMessage(object sender, IPrivateMessageEventArgs e, MessageFlags flags)
-        {
-            try
-            {
-                ActuallyHandleQueryMessage(sender, e, flags);
-            }
-            catch (Exception exc)
-            {
-                Logger.Error("error handling query message", exc);
-            }
-        }
-
-        protected void HandleBaseNickChanged(object sender, BaseNickChangedEventArgs e)
-        {
-            try
-            {
-                ActuallyHandleBaseNickChanged(sender, e);
-            }
-            catch (Exception exc)
-            {
-                Logger.Error("error handling base nick change", exc);
-            }
-        }
-
-        protected virtual void ActuallyHandleChannelMessage(object sender, IChannelMessageEventArgs e, MessageFlags flags)
+        protected virtual void HandleChannelMessage(object sender, IChannelMessageEventArgs e, MessageFlags flags)
         {
             if (flags.HasFlag(MessageFlags.UserBanned))
             {
@@ -322,7 +274,7 @@ namespace Quotes
             CleanOutPotentialQuotes(e.Channel);
         }
 
-        protected virtual void ActuallyHandleChannelAction(object sender, IChannelMessageEventArgs e, MessageFlags flags)
+        protected virtual void HandleChannelAction(object sender, IChannelMessageEventArgs e, MessageFlags flags)
         {
             if (flags.HasFlag(MessageFlags.UserBanned))
             {
@@ -344,7 +296,7 @@ namespace Quotes
             CleanOutPotentialQuotes(e.Channel);
         }
 
-        protected virtual void ActuallyHandleQueryMessage(object sender, IPrivateMessageEventArgs e, MessageFlags flags)
+        protected virtual void HandleQueryMessage(object sender, IPrivateMessageEventArgs e, MessageFlags flags)
         {
             if (flags.HasFlag(MessageFlags.UserBanned))
             {
@@ -502,7 +454,7 @@ namespace Quotes
             return false;
         }
 
-        protected virtual void ActuallyHandleBaseNickChanged(object sender, BaseNickChangedEventArgs e)
+        protected virtual void HandleBaseNickChanged(object sender, BaseNickChangedEventArgs e)
         {
             var oldNickLower = e.OldBaseNick.ToLowerInvariant();
             var newNickLower = e.NewBaseNick.ToLowerInvariant();

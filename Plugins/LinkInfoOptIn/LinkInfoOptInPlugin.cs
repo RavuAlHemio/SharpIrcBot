@@ -29,7 +29,7 @@ namespace LinkInfoOptIn
             Config = new LinkInfoOptInConfig(config);
 
             ConnectionManager.BaseNickChanged += HandleBaseNickChanged;
-            ConnectionManager.ChannelMessage += HandleChannelMessage;
+            ConnectionManager.ChannelMessage += HandleChannelMessageOptIn;
         }
 
         public override void ReloadConfiguration(JObject newConfig)
@@ -100,19 +100,7 @@ namespace LinkInfoOptIn
             }
         }
 
-        private void HandleChannelMessage(object sender, IChannelMessageEventArgs args, MessageFlags flags)
-        {
-            try
-            {
-                ActuallyHandleChannelMessageOptIn(sender, args, flags);
-            }
-            catch (Exception exc)
-            {
-                Logger.Error("error handling message", exc);
-            }
-        }
-
-        protected void ActuallyHandleChannelMessageOptIn(object sender, IChannelMessageEventArgs args, MessageFlags flags)
+        protected void HandleChannelMessageOptIn(object sender, IChannelMessageEventArgs args, MessageFlags flags)
         {
             if (flags.HasFlag(MessageFlags.UserBanned))
             {
@@ -178,19 +166,7 @@ namespace LinkInfoOptIn
             return new LinkInfoOptInContext(conn);
         }
 
-        protected void HandleBaseNickChanged(object sender, BaseNickChangedEventArgs e)
-        {
-            try
-            {
-                ActuallyHandleBaseNickChanged(sender, e);
-            }
-            catch (Exception exc)
-            {
-                Logger.Error("error handling base nick change", exc);
-            }
-        }
-
-        protected virtual void ActuallyHandleBaseNickChanged(object sender, BaseNickChangedEventArgs e)
+        protected virtual void HandleBaseNickChanged(object sender, BaseNickChangedEventArgs e)
         {
             string oldBaseNick = e.OldBaseNick;
             string newBaseNick = e.NewBaseNick;

@@ -672,31 +672,7 @@ namespace Messenger
             return localTime.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
         }
 
-        private void HandleChannelMessage(object sender, IChannelMessageEventArgs args, MessageFlags flags)
-        {
-            try
-            {
-                ActuallyHandleChannelMessage(sender, args, flags);
-            }
-            catch (Exception exc)
-            {
-                Logger.Error("error handling message", exc);
-            }
-        }
-
-        private void HandleBaseNickChanged(object sender, BaseNickChangedEventArgs e)
-        {
-            try
-            {
-                ActuallyHandleBaseNickChanged(sender, e);
-            }
-            catch (Exception exc)
-            {
-                Logger.Error("error handling base nick change", exc);
-            }
-        }
-
-        protected void ActuallyHandleChannelMessage(object sender, IChannelMessageEventArgs args, MessageFlags flags)
+        protected void HandleChannelMessage(object sender, IChannelMessageEventArgs args, MessageFlags flags)
         {
             if (args.SenderNickname == ConnectionManager.MyNickname)
             {
@@ -895,7 +871,7 @@ namespace Messenger
             }
         }
 
-        protected virtual void ActuallyHandleBaseNickChanged(object sender, BaseNickChangedEventArgs e)
+        protected virtual void HandleBaseNickChanged(object sender, BaseNickChangedEventArgs e)
         {
             using (var ctx = GetNewContext())
             {

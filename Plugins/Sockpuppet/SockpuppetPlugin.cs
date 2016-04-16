@@ -27,18 +27,6 @@ namespace Sockpuppet
             Config = new SockpuppetConfig(newConfig);
         }
 
-        private void HandleQueryMessage(object sender, IPrivateMessageEventArgs args, MessageFlags flags)
-        {
-            try
-            {
-                ActuallyHandleQueryMessage(sender, args, flags);
-            }
-            catch (Exception exc)
-            {
-                Logger.Error("error handling message", exc);
-            }
-        }
-
         protected string VerifyIdentity(IUserMessageEventArgs message)
         {
             var username = message.SenderNickname;
@@ -78,7 +66,7 @@ namespace Sockpuppet
             ConnectionManager.SendQueryMessage(nick, "OK");
         }
 
-        protected void ActuallyHandleQueryMessage(object sender, IPrivateMessageEventArgs args, MessageFlags flags)
+        protected void HandleQueryMessage(object sender, IPrivateMessageEventArgs args, MessageFlags flags)
         {
             if (flags.HasFlag(MessageFlags.UserBanned))
             {

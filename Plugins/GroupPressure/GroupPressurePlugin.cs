@@ -37,26 +37,12 @@ namespace GroupPressure
 
         private void HandleChannelMessage(object sender, IChannelMessageEventArgs args, MessageFlags flags)
         {
-            try
-            {
-                ActuallyHandleChannelMessageOrAction(sender, args, flags, action: false);
-            }
-            catch (Exception exc)
-            {
-                Logger.Error("error handling message", exc);
-            }
+            ActuallyHandleChannelMessageOrAction(sender, args, flags, action: false);
         }
 
         private void HandleChannelAction(object sender, IChannelMessageEventArgs args, MessageFlags flags)
         {
-            try
-            {
-                ActuallyHandleChannelMessageOrAction(sender, args, flags, action: true);
-            }
-            catch (Exception exc)
-            {
-                Logger.Error("error handling action", exc);
-            }
+            ActuallyHandleChannelMessageOrAction(sender, args, flags, action: true);
         }
 
         private void ActuallyHandleChannelMessageOrAction(object sender, IChannelMessageEventArgs e, MessageFlags flags, bool action)

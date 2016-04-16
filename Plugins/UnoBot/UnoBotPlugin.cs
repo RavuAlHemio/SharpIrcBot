@@ -146,30 +146,6 @@ namespace UnoBot
             return ret.ToString();
         }
 
-        private void HandleChannelMessage(object sender, IChannelMessageEventArgs args, MessageFlags flags)
-        {
-            try
-            {
-                ActuallyHandleChannelMessage(sender, args, flags);
-            }
-            catch (Exception exc)
-            {
-                CommunicationLogger.Error("error handling message", exc);
-            }
-        }
-
-        private void HandleQueryMessage(object sender, IPrivateMessageEventArgs args, MessageFlags flags)
-        {
-            try
-            {
-                ActuallyHandleQueryMessage(sender, args, flags);
-            }
-            catch (Exception exc)
-            {
-                CommunicationLogger.Error("error handling query message", exc);
-            }
-        }
-
         protected virtual bool IsBotCommand(string message, string expectedCommand)
         {
             // ?join
@@ -195,7 +171,7 @@ namespace UnoBot
             return false;
         }
 
-        protected virtual void ActuallyHandleChannelMessage(object sender, IChannelMessageEventArgs args, MessageFlags flags)
+        protected virtual void HandleChannelMessage(object sender, IChannelMessageEventArgs args, MessageFlags flags)
         {
             if (flags.HasFlag(MessageFlags.UserBanned))
             {
@@ -313,7 +289,7 @@ namespace UnoBot
             }
         }
 
-        protected virtual void ActuallyHandleQueryMessage(object sender, IPrivateMessageEventArgs args, MessageFlags flags)
+        protected virtual void HandleQueryMessage(object sender, IPrivateMessageEventArgs args, MessageFlags flags)
         {
             if (flags.HasFlag(MessageFlags.UserBanned))
             {

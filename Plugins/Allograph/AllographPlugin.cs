@@ -37,31 +37,7 @@ namespace Allograph
             CooldownsPerChannel.Clear();
         }
 
-        private void HandleChannelMessage(object sender, IChannelMessageEventArgs args, MessageFlags flags)
-        {
-            try
-            {
-                ActuallyHandleChannelMessage(sender, args, flags);
-            }
-            catch (Exception exc)
-            {
-                Logger.Error("error handling message", exc);
-            }
-        }
-
-        private void HandleQueryMessage(object sender, IPrivateMessageEventArgs args, MessageFlags flags)
-        {
-            try
-            {
-                ActuallyHandleQueryMessage(sender, args, flags);
-            }
-            catch (Exception exc)
-            {
-                Logger.Error("error handling message", exc);
-            }
-        }
-
-        protected virtual void ActuallyHandleChannelMessage(object sender, IChannelMessageEventArgs args, MessageFlags flags)
+        protected virtual void HandleChannelMessage(object sender, IChannelMessageEventArgs args, MessageFlags flags)
         {
             if (flags.HasFlag(MessageFlags.UserBanned))
             {
@@ -170,7 +146,7 @@ namespace Allograph
             }
         }
 
-        protected virtual void ActuallyHandleQueryMessage(object sender, IPrivateMessageEventArgs args, MessageFlags flags)
+        protected virtual void HandleQueryMessage(object sender, IPrivateMessageEventArgs args, MessageFlags flags)
         {
             var nick = args.SenderNickname;
             var registeredNick = ConnectionManager.RegisteredNameForNick(nick);

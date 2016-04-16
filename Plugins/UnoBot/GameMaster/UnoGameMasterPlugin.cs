@@ -411,54 +411,6 @@ namespace UnoBot.GameMaster
 
         protected virtual void HandleChannelMessage(object sender, IChannelMessageEventArgs e, MessageFlags flags)
         {
-            try
-            {
-                ActuallyHandleChannelMessage(sender, e, flags);
-            }
-            catch (Exception exc)
-            {
-                Logger.Error("exception while handling channel message", exc);
-            }
-        }
-
-        protected virtual void HandleNickChange(object sender, INickChangeEventArgs e)
-        {
-            try
-            {
-                ActuallyHandleNickChange(sender, e);
-            }
-            catch (Exception exc)
-            {
-                Logger.Error("exception while handling nick change", exc);
-            }
-        }
-
-        protected virtual void HandleUserLeftChannel(object sender, IUserLeftChannelEventArgs e)
-        {
-            try
-            {
-                ActuallyHandleUserLeaving(sender, e.User);
-            }
-            catch (Exception exc)
-            {
-                Logger.Error("exception while handling user leaving channel", exc);
-            }
-        }
-
-        protected virtual void HandleUserQuitServer(object sender, IUserQuitServerEventArgs e)
-        {
-            try
-            {
-                ActuallyHandleUserLeaving(sender, e.User);
-            }
-            catch (Exception exc)
-            {
-                Logger.Error("exception while handling user quitting server", exc);
-            }
-        }
-
-        protected virtual void ActuallyHandleChannelMessage(object sender, IChannelMessageEventArgs e, MessageFlags flags)
-        {
             if (flags.HasFlag(MessageFlags.UserBanned))
             {
                 return;
@@ -884,7 +836,7 @@ namespace UnoBot.GameMaster
             StartNewTurn();
         }
 
-        protected virtual void ActuallyHandleNickChange(object sender, INickChangeEventArgs e)
+        protected virtual void HandleNickChange(object sender, INickChangeEventArgs e)
         {
             lock (TurnLock)
             {
@@ -895,6 +847,16 @@ namespace UnoBot.GameMaster
                     player.Nick = e.NewNickname;
                 }
             }
+        }
+
+        protected virtual void HandleUserLeftChannel(object sender, IUserLeftChannelEventArgs e)
+        {
+            ActuallyHandleUserLeaving(sender, e.User);
+        }
+
+        protected virtual void HandleUserQuitServer(object sender, IUserQuitServerEventArgs e)
+        {
+            ActuallyHandleUserLeaving(sender, e.User);
         }
 
         protected virtual void ActuallyHandleUserLeaving(object sender, string nick)

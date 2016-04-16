@@ -1,5 +1,4 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using System.Text.RegularExpressions;
 using log4net;
 using Newtonsoft.Json.Linq;
@@ -30,31 +29,7 @@ namespace Reinvite
             Config = new ReinviteConfig(newConfig);
         }
 
-        protected void HandleQueryMessage(object sender, IPrivateMessageEventArgs e, MessageFlags flags)
-        {
-            try
-            {
-                ActuallyHandleQueryMessage(sender, e, flags);
-            }
-            catch (Exception exc)
-            {
-                Logger.Error("error handling query message", exc);
-            }
-        }
-
-        protected void HandleInvite(object sender, IUserInvitedToChannelEventArgs e)
-        {
-            try
-            {
-                ActuallyHandleInvite(sender, e);
-            }
-            catch (Exception exc)
-            {
-                Logger.Error("error handling invite", exc);
-            }
-        }
-
-        protected virtual void ActuallyHandleQueryMessage(object sender, IPrivateMessageEventArgs e, MessageFlags flags)
+        protected virtual void HandleQueryMessage(object sender, IPrivateMessageEventArgs e, MessageFlags flags)
         {
             if (!Config.RejoinOnPrivateMessage)
             {
@@ -81,7 +56,7 @@ namespace Reinvite
             ConnectionManager.JoinChannel(channel);
         }
 
-        protected void ActuallyHandleInvite(object sender, IUserInvitedToChannelEventArgs e)
+        protected void HandleInvite(object sender, IUserInvitedToChannelEventArgs e)
         {
             if (!Config.RejoinOnInvite)
             {

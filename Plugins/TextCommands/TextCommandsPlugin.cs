@@ -34,34 +34,20 @@ namespace TextCommands
 
         private void HandleChannelMessage(object sender, IChannelMessageEventArgs args, MessageFlags flags)
         {
-            try
-            {
-                ActuallyHandleMessage(
-                    message => ConnectionManager.SendChannelMessage(args.Channel, message),
-                    args,
-                    flags
-                );
-            }
-            catch (Exception exc)
-            {
-                Logger.Error("error handling message", exc);
-            }
+            ActuallyHandleMessage(
+                message => ConnectionManager.SendChannelMessage(args.Channel, message),
+                args,
+                flags
+            );
         }
 
         private void HandlePrivateMessage(object sender, IPrivateMessageEventArgs args, MessageFlags flags)
         {
-            try
-            {
-                ActuallyHandleMessage(
-                    message => ConnectionManager.SendQueryMessage(args.SenderNickname, message),
-                    args,
-                    flags
-                );
-            }
-            catch (Exception exc)
-            {
-                Logger.Error("error handling message", exc);
-            }
+            ActuallyHandleMessage(
+                message => ConnectionManager.SendQueryMessage(args.SenderNickname, message),
+                args,
+                flags
+            );
         }
 
         protected void ActuallyHandleMessage(Action<string> respond, IUserMessageEventArgs args, MessageFlags flags)
