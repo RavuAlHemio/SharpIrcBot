@@ -15,7 +15,7 @@ namespace LinkInfoOptIn
     public class LinkInfoOptInPlugin : LinkInfoPlugin
     {
         private static readonly ILog Logger = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
-        public static readonly Regex AutoLinkInfoRegex = new Regex("^!(?<unsub>no)?autolinkinfo\\s*$");
+        public static readonly Regex AutoLinkInfoRegex = new Regex("^!(?<unsub>no)?autolinkinfo\\s*$", RegexOptions.Compiled);
 
         protected LinkInfoOptInConfig OptInConfig
         {
