@@ -45,28 +45,140 @@ namespace SharpIrcBot
 
         public int MaxMessageLength => 230;
 
-        public event SharpIrcBotEventHandler<IChannelMessageEventArgs> ChannelMessage;
-        public event SharpIrcBotEventHandler<IChannelMessageEventArgs> ChannelAction;
-        public event SharpIrcBotEventHandler<IChannelMessageEventArgs> ChannelNotice;
-        public event SharpIrcBotEventHandler<IPrivateMessageEventArgs> QueryMessage;
-        public event SharpIrcBotEventHandler<IPrivateMessageEventArgs> QueryAction;
-        public event SharpIrcBotEventHandler<IPrivateMessageEventArgs> QueryNotice;
-        public event EventHandler<EventArgs> ConnectedToServer;
-        public event EventHandler<NickMappingEventArgs> NickMapping;
-        public event EventHandler<IRawMessageEventArgs> RawMessage;
-        public event EventHandler<INameListEventArgs> NamesInChannel;
-        public event EventHandler<IUserJoinedChannelEventArgs> JoinedChannel;
-        public event EventHandler<INickChangeEventArgs> NickChange;
-        public event EventHandler<IUserLeftChannelEventArgs> UserLeftChannel;
-        public event EventHandler<IUserQuitServerEventArgs> UserQuitServer;
-        public event EventHandler<OutgoingMessageEventArgs> OutgoingChannelMessage;
-        public event EventHandler<OutgoingMessageEventArgs> OutgoingChannelAction;
-        public event EventHandler<OutgoingMessageEventArgs> OutgoingChannelNotice;
-        public event EventHandler<OutgoingMessageEventArgs> OutgoingQueryMessage;
-        public event EventHandler<OutgoingMessageEventArgs> OutgoingQueryAction;
-        public event EventHandler<OutgoingMessageEventArgs> OutgoingQueryNotice;
-        public event EventHandler<BaseNickChangedEventArgs> BaseNickChanged;
-        public event EventHandler<IUserInvitedToChannelEventArgs> Invited;
+        #region painless event handling boilerplate
+        protected IList<SharpIrcBotEventHandler<IChannelMessageEventArgs>> ChannelMessageSubscribers = new List<SharpIrcBotEventHandler<IChannelMessageEventArgs>>();
+        protected IList<SharpIrcBotEventHandler<IChannelMessageEventArgs>> ChannelActionSubscribers = new List<SharpIrcBotEventHandler<IChannelMessageEventArgs>>();
+        protected IList<SharpIrcBotEventHandler<IChannelMessageEventArgs>> ChannelNoticeSubscribers = new List<SharpIrcBotEventHandler<IChannelMessageEventArgs>>();
+        protected IList<SharpIrcBotEventHandler<IPrivateMessageEventArgs>> QueryMessageSubscribers = new List<SharpIrcBotEventHandler<IPrivateMessageEventArgs>>();
+        protected IList<SharpIrcBotEventHandler<IPrivateMessageEventArgs>> QueryActionSubscribers = new List<SharpIrcBotEventHandler<IPrivateMessageEventArgs>>();
+        protected IList<SharpIrcBotEventHandler<IPrivateMessageEventArgs>> QueryNoticeSubscribers = new List<SharpIrcBotEventHandler<IPrivateMessageEventArgs>>();
+        protected IList<EventHandler<EventArgs>> ConnectedToServerSubscribers = new List<EventHandler<EventArgs>>();
+        protected IList<EventHandler<NickMappingEventArgs>> NickMappingSubscribers = new List<EventHandler<NickMappingEventArgs>>();
+        protected IList<EventHandler<IRawMessageEventArgs>> RawMessageSubscribers = new List<EventHandler<IRawMessageEventArgs>>();
+        protected IList<EventHandler<INameListEventArgs>> NamesInChannelSubscribers = new List<EventHandler<INameListEventArgs>>();
+        protected IList<EventHandler<IUserJoinedChannelEventArgs>> JoinedChannelSubscribers = new List<EventHandler<IUserJoinedChannelEventArgs>>();
+        protected IList<EventHandler<INickChangeEventArgs>> NickChangeSubscribers = new List<EventHandler<INickChangeEventArgs>>();
+        protected IList<EventHandler<IUserLeftChannelEventArgs>> UserLeftChannelSubscribers = new List<EventHandler<IUserLeftChannelEventArgs>>();
+        protected IList<EventHandler<IUserQuitServerEventArgs>> UserQuitServerSubscribers = new List<EventHandler<IUserQuitServerEventArgs>>();
+        protected IList<EventHandler<OutgoingMessageEventArgs>> OutgoingChannelMessageSubscribers = new List<EventHandler<OutgoingMessageEventArgs>>();
+        protected IList<EventHandler<OutgoingMessageEventArgs>> OutgoingChannelActionSubscribers = new List<EventHandler<OutgoingMessageEventArgs>>();
+        protected IList<EventHandler<OutgoingMessageEventArgs>> OutgoingChannelNoticeSubscribers = new List<EventHandler<OutgoingMessageEventArgs>>();
+        protected IList<EventHandler<OutgoingMessageEventArgs>> OutgoingQueryMessageSubscribers = new List<EventHandler<OutgoingMessageEventArgs>>();
+        protected IList<EventHandler<OutgoingMessageEventArgs>> OutgoingQueryActionSubscribers = new List<EventHandler<OutgoingMessageEventArgs>>();
+        protected IList<EventHandler<OutgoingMessageEventArgs>> OutgoingQueryNoticeSubscribers = new List<EventHandler<OutgoingMessageEventArgs>>();
+        protected IList<EventHandler<BaseNickChangedEventArgs>> BaseNickChangedSubscribers = new List<EventHandler<BaseNickChangedEventArgs>>();
+        protected IList<EventHandler<IUserInvitedToChannelEventArgs>> InvitedSubscribers = new List<EventHandler<IUserInvitedToChannelEventArgs>>();
+        public event SharpIrcBotEventHandler<IChannelMessageEventArgs> ChannelMessage
+        {
+            add { lock(ChannelMessageSubscribers) { ChannelMessageSubscribers.Add(value); } }
+            remove { lock (ChannelMessageSubscribers) { ChannelMessageSubscribers.Remove(value); } }
+        }
+        public event SharpIrcBotEventHandler<IChannelMessageEventArgs> ChannelAction
+        {
+            add { lock(ChannelActionSubscribers) { ChannelActionSubscribers.Add(value); } }
+            remove { lock (ChannelActionSubscribers) { ChannelActionSubscribers.Remove(value); } }
+        }
+        public event SharpIrcBotEventHandler<IChannelMessageEventArgs> ChannelNotice
+        {
+            add { lock(ChannelNoticeSubscribers) { ChannelNoticeSubscribers.Add(value); } }
+            remove { lock (ChannelNoticeSubscribers) { ChannelNoticeSubscribers.Remove(value); } }
+        }
+        public event SharpIrcBotEventHandler<IPrivateMessageEventArgs> QueryMessage
+        {
+            add { lock(QueryMessageSubscribers) { QueryMessageSubscribers.Add(value); } }
+            remove { lock (QueryMessageSubscribers) { QueryMessageSubscribers.Remove(value); } }
+        }
+        public event SharpIrcBotEventHandler<IPrivateMessageEventArgs> QueryAction
+        {
+            add { lock(QueryActionSubscribers) { QueryActionSubscribers.Add(value); } }
+            remove { lock (QueryActionSubscribers) { QueryActionSubscribers.Remove(value); } }
+        }
+        public event SharpIrcBotEventHandler<IPrivateMessageEventArgs> QueryNotice
+        {
+            add { lock(QueryNoticeSubscribers) { QueryNoticeSubscribers.Add(value); } }
+            remove { lock (QueryNoticeSubscribers) { QueryNoticeSubscribers.Remove(value); } }
+        }
+        public event EventHandler<EventArgs> ConnectedToServer
+        {
+            add { lock(ConnectedToServerSubscribers) { ConnectedToServerSubscribers.Add(value); } }
+            remove { lock (ConnectedToServerSubscribers) { ConnectedToServerSubscribers.Remove(value); } }
+        }
+        public event EventHandler<NickMappingEventArgs> NickMapping
+        {
+            add { lock(NickMappingSubscribers) { NickMappingSubscribers.Add(value); } }
+            remove { lock (NickMappingSubscribers) { NickMappingSubscribers.Remove(value); } }
+        }
+        public event EventHandler<IRawMessageEventArgs> RawMessage
+        {
+            add { lock(RawMessageSubscribers) { RawMessageSubscribers.Add(value); } }
+            remove { lock (RawMessageSubscribers) { RawMessageSubscribers.Remove(value); } }
+        }
+        public event EventHandler<INameListEventArgs> NamesInChannel
+        {
+            add { lock(NamesInChannelSubscribers) { NamesInChannelSubscribers.Add(value); } }
+            remove { lock (NamesInChannelSubscribers) { NamesInChannelSubscribers.Remove(value); } }
+        }
+        public event EventHandler<IUserJoinedChannelEventArgs> JoinedChannel
+        {
+            add { lock(JoinedChannelSubscribers) { JoinedChannelSubscribers.Add(value); } }
+            remove { lock (JoinedChannelSubscribers) { JoinedChannelSubscribers.Remove(value); } }
+        }
+        public event EventHandler<INickChangeEventArgs> NickChange
+        {
+            add { lock(NickChangeSubscribers) { NickChangeSubscribers.Add(value); } }
+            remove { lock (NickChangeSubscribers) { NickChangeSubscribers.Remove(value); } }
+        }
+        public event EventHandler<IUserLeftChannelEventArgs> UserLeftChannel
+        {
+            add { lock(UserLeftChannelSubscribers) { UserLeftChannelSubscribers.Add(value); } }
+            remove { lock (UserLeftChannelSubscribers) { UserLeftChannelSubscribers.Remove(value); } }
+        }
+        public event EventHandler<IUserQuitServerEventArgs> UserQuitServer
+        {
+            add { lock(UserQuitServerSubscribers) { UserQuitServerSubscribers.Add(value); } }
+            remove { lock (UserQuitServerSubscribers) { UserQuitServerSubscribers.Remove(value); } }
+        }
+        public event EventHandler<OutgoingMessageEventArgs> OutgoingChannelMessage
+        {
+            add { lock(OutgoingChannelMessageSubscribers) { OutgoingChannelMessageSubscribers.Add(value); } }
+            remove { lock (OutgoingChannelMessageSubscribers) { OutgoingChannelMessageSubscribers.Remove(value); } }
+        }
+        public event EventHandler<OutgoingMessageEventArgs> OutgoingChannelAction
+        {
+            add { lock(OutgoingChannelActionSubscribers) { OutgoingChannelActionSubscribers.Add(value); } }
+            remove { lock (OutgoingChannelActionSubscribers) { OutgoingChannelActionSubscribers.Remove(value); } }
+        }
+        public event EventHandler<OutgoingMessageEventArgs> OutgoingChannelNotice
+        {
+            add { lock(OutgoingChannelNoticeSubscribers) { OutgoingChannelNoticeSubscribers.Add(value); } }
+            remove { lock (OutgoingChannelNoticeSubscribers) { OutgoingChannelNoticeSubscribers.Remove(value); } }
+        }
+        public event EventHandler<OutgoingMessageEventArgs> OutgoingQueryMessage
+        {
+            add { lock(OutgoingQueryMessageSubscribers) { OutgoingQueryMessageSubscribers.Add(value); } }
+            remove { lock (OutgoingQueryMessageSubscribers) { OutgoingQueryMessageSubscribers.Remove(value); } }
+        }
+        public event EventHandler<OutgoingMessageEventArgs> OutgoingQueryAction
+        {
+            add { lock(OutgoingQueryActionSubscribers) { OutgoingQueryActionSubscribers.Add(value); } }
+            remove { lock (OutgoingQueryActionSubscribers) { OutgoingQueryActionSubscribers.Remove(value); } }
+        }
+        public event EventHandler<OutgoingMessageEventArgs> OutgoingQueryNotice
+        {
+            add { lock(OutgoingQueryNoticeSubscribers) { OutgoingQueryNoticeSubscribers.Add(value); } }
+            remove { lock (OutgoingQueryNoticeSubscribers) { OutgoingQueryNoticeSubscribers.Remove(value); } }
+        }
+        public event EventHandler<BaseNickChangedEventArgs> BaseNickChanged
+        {
+            add { lock(BaseNickChangedSubscribers) { BaseNickChangedSubscribers.Add(value); } }
+            remove { lock (BaseNickChangedSubscribers) { BaseNickChangedSubscribers.Remove(value); } }
+        }
+        public event EventHandler<IUserInvitedToChannelEventArgs> Invited
+        {
+            add { lock(InvitedSubscribers) { InvitedSubscribers.Add(value); } }
+            remove { lock (InvitedSubscribers) { InvitedSubscribers.Remove(value); } }
+        }
+        #endregion
 
         public ConnectionManager([CanBeNull] string configPath)
             : this(SharpIrcBotUtil.LoadConfig(configPath))
@@ -357,180 +469,168 @@ namespace SharpIrcBot
             return MessageFlags.None;
         }
 
+        protected virtual void HandleSharpIrcBotEvent<T>(IList<SharpIrcBotEventHandler<T>> subscribers, T e, string description)
+            where T : IUserMessageEventArgs
+        {
+            List<SharpIrcBotEventHandler<T>> subscriberList;
+            lock (subscribers)
+            {
+                subscriberList = new List<SharpIrcBotEventHandler<T>>(subscribers);
+            }
+
+            if (subscriberList.Count == 0)
+            {
+                return;
+            }
+
+            var flags = FlagsForNick(e.SenderNickname);
+            foreach (var subscriber in subscriberList)
+            {
+                try
+                {
+                    subscriber(this, e, flags);
+                }
+                catch (Exception exc)
+                {
+                    Logger.ErrorFormat("error when {0} was handling {1}: {2}", subscriber, description, exc);
+                }
+            }
+        }
+
+        protected virtual void HandleEvent<T>(IList<EventHandler<T>> subscribers, T e, string description)
+        {
+            List<EventHandler<T>> subscriberList;
+            lock (subscribers)
+            {
+                subscriberList = new List<EventHandler<T>>(subscribers);
+            }
+
+            if (subscriberList.Count == 0)
+            {
+                return;
+            }
+
+            foreach (var subscriber in subscriberList)
+            {
+                try
+                {
+                    subscriber(this, e);
+                }
+                catch (Exception exc)
+                {
+                    Logger.ErrorFormat("error when {0} was handling {1}: {2}", subscriber, description, exc);
+                }
+            }
+        }
+
         protected virtual void OnChannelMessage(IChannelMessageEventArgs e)
         {
-            if (ChannelMessage != null)
-            {
-                var flags = FlagsForNick(e.SenderNickname);
-                ChannelMessage(this, e, flags);
-            }
+            HandleSharpIrcBotEvent(ChannelMessageSubscribers, e, "channel message");
         }
 
         protected virtual void OnChannelAction(IChannelMessageEventArgs e)
         {
-            if (ChannelAction != null)
-            {
-                var flags = FlagsForNick(e.SenderNickname);
-                ChannelAction(this, e, flags);
-            }
+            HandleSharpIrcBotEvent(ChannelActionSubscribers, e, "channel action");
         }
 
         protected virtual void OnChannelNotice(IChannelMessageEventArgs e)
         {
-            if (ChannelNotice != null)
-            {
-                var flags = FlagsForNick(e.SenderNickname);
-                ChannelNotice(this, e, flags);
-            }
+            HandleSharpIrcBotEvent(ChannelNoticeSubscribers, e, "channel notice");
         }
 
         protected virtual void OnQueryMessage(IPrivateMessageEventArgs e)
         {
-            if (QueryMessage != null)
-            {
-                var flags = FlagsForNick(e.SenderNickname);
-                QueryMessage(this, e, flags);
-            }
+            HandleSharpIrcBotEvent(QueryMessageSubscribers, e, "query message");
         }
 
         protected virtual void OnQueryAction(IPrivateMessageEventArgs e)
         {
-            if (QueryAction != null)
-            {
-                var flags = FlagsForNick(e.SenderNickname);
-                QueryAction(this, e, flags);
-            }
+            HandleSharpIrcBotEvent(QueryActionSubscribers, e, "query action");
         }
 
         protected virtual void OnQueryNotice(IPrivateMessageEventArgs e)
         {
-            if (QueryNotice != null)
-            {
-                var flags = FlagsForNick(e.SenderNickname);
-                QueryNotice(this, e, flags);
-            }
+            HandleSharpIrcBotEvent(QueryNoticeSubscribers, e, "query notice");
         }
 
         protected virtual void OnConnectedToServer(EventArgs e)
         {
-            if (ConnectedToServer != null)
-            {
-                ConnectedToServer(this, e);
-            }
+            HandleEvent(ConnectedToServerSubscribers, e, "new connection to server");
         }
 
         protected virtual void OnNickMapping(NickMappingEventArgs e)
         {
-            if (NickMapping != null)
-            {
-                NickMapping(this, e);
-            }
+            HandleEvent(NickMappingSubscribers, e, "nick mapping");
         }
 
         protected virtual void OnRawMessage(IRawMessageEventArgs e)
         {
-            if (RawMessage != null)
-            {
-                RawMessage(this, e);
-            }
+            HandleEvent(RawMessageSubscribers, e, "raw message");
         }
 
         protected virtual void OnNamesInChannel(INameListEventArgs e)
         {
-            if (NamesInChannel != null)
-            {
-                NamesInChannel(this, e);
-            }
+            HandleEvent(NamesInChannelSubscribers, e, "names in channel");
         }
 
         protected virtual void OnJoinedChannel(IUserJoinedChannelEventArgs e)
         {
-            if (JoinedChannel != null)
-            {
-                JoinedChannel(this, e);
-            }
+            HandleEvent(JoinedChannelSubscribers, e, "user joining channel");
         }
 
         protected virtual void OnNickChange(INickChangeEventArgs e)
         {
-            if (NickChange != null)
-            {
-                NickChange(this, e);
-            }
+            HandleEvent(NickChangeSubscribers, e, "nick change");
         }
 
         protected virtual void OnUserLeftChannel(IUserLeftChannelEventArgs e)
         {
-            if (UserLeftChannel != null)
-            {
-                UserLeftChannel(this, e);
-            }
+            HandleEvent(UserLeftChannelSubscribers, e, "user leaving channel");
         }
 
         protected virtual void OnUserQuitServer(IUserQuitServerEventArgs e)
         {
-            if (UserQuitServer != null)
-            {
-                UserQuitServer(this, e);
-            }
+            HandleEvent(UserQuitServerSubscribers, e, "user quitting server");
         }
 
         protected virtual void OnOutgoingChannelMessage(OutgoingMessageEventArgs e)
         {
-            if (OutgoingChannelMessage != null)
-            {
-                OutgoingChannelMessage(this, e);
-            }
+            HandleEvent(OutgoingChannelMessageSubscribers, e, "outgoing channel message");
         }
 
         protected virtual void OnOutgoingChannelAction(OutgoingMessageEventArgs e)
         {
-            if (OutgoingChannelAction != null)
-            {
-                OutgoingChannelAction(this, e);
-            }
+            HandleEvent(OutgoingChannelActionSubscribers, e, "outgoing channel action");
         }
 
         protected virtual void OnOutgoingChannelNotice(OutgoingMessageEventArgs e)
         {
-            if (OutgoingChannelNotice != null)
-            {
-                OutgoingChannelNotice(this, e);
-            }
+            HandleEvent(OutgoingChannelNoticeSubscribers, e, "outgoing channel notice");
         }
 
         protected virtual void OnOutgoingQueryMessage(OutgoingMessageEventArgs e)
         {
-            if (OutgoingQueryMessage != null)
-            {
-                OutgoingQueryMessage(this, e);
-            }
+            HandleEvent(OutgoingQueryMessageSubscribers, e, "outgoing query message");
         }
 
         protected virtual void OnOutgoingQueryAction(OutgoingMessageEventArgs e)
         {
-            if (OutgoingQueryAction != null)
-            {
-                OutgoingQueryAction(this, e);
-            }
+            HandleEvent(OutgoingQueryActionSubscribers, e, "outgoing query action");
         }
 
         protected virtual void OnOutgoingQueryNotice(OutgoingMessageEventArgs e)
         {
-            if (OutgoingQueryNotice != null)
-            {
-                OutgoingQueryNotice(this, e);
-            }
+            HandleEvent(OutgoingQueryNoticeSubscribers, e, "outgoing query notice");
         }
 
         protected virtual void OnBaseNickChanged(BaseNickChangedEventArgs e)
         {
-            BaseNickChanged?.Invoke(this, e);
+            HandleEvent(BaseNickChangedSubscribers, e, "base nick change");
         }
 
         protected virtual void OnInvited(IUserInvitedToChannelEventArgs e)
         {
-            Invited?.Invoke(this, e);
+            HandleEvent(InvitedSubscribers, e, "invitation");
         }
 
         public string RegisteredNameForNick(string nick)
