@@ -39,7 +39,7 @@ namespace LinkInfo
             ConnectionManager.OutgoingChannelMessage += HandleOutgoingChannelMessage;
         }
 
-        public void ReloadConfiguration(JObject newConfig)
+        public virtual void ReloadConfiguration(JObject newConfig)
         {
             Config = new LinkInfoConfig(newConfig);
         }
@@ -77,7 +77,7 @@ namespace LinkInfo
                     {
                         LastLinkAndInfo = ObtainLinkInfo(LastLinkAndInfo.Link);
                     }
-                    PostLinkInfo(LastLinkAndInfo, args.Channel);
+                    PostLinkInfoToChannel(LastLinkAndInfo, args.Channel);
                 }
                 return;
             }
@@ -91,10 +91,19 @@ namespace LinkInfo
                 LastLinkAndInfo = LinkAndInfo.CreateUnfetched(links[links.Count-1]);
             }
 
+            // do something with the links
+            LinksAction(args, flags, links);
+        }
+
+        protected virtual void LinksAction(IChannelMessageEventArgs args, MessageFlags flags, IList<Uri> links)
+        {
             // respond?
-            if (Config.AutoShowLinkInfo || body.StartsWith("!link "))
+            if (Config.AutoShowLinkInfo || args.Message.StartsWith("!link "))
             {
-                FetchAndPostLinkInfo(links, args.Channel);
+                foreach (var linkAndInfo in links.Select(ObtainLinkInfo))
+                {
+                    PostLinkInfoToChannel(linkAndInfo, args.Channel);
+                }
             }
         }
 
@@ -328,15 +337,12 @@ namespace LinkInfo
             }
         }
 
-        protected void FetchAndPostLinkInfo(IEnumerable<Uri> links, string channel)
+        protected void PostLinkInfoToChannel(LinkAndInfo linkAndInfo, string channel)
         {
-            foreach (var linkAndInfo in links.Select(ObtainLinkInfo))
-            {
-                PostLinkInfo(linkAndInfo, channel);
-            }
+            PostLinkInfo(linkAndInfo, message => ConnectionManager.SendChannelMessage(channel, message));
         }
 
-        protected void PostLinkInfo(LinkAndInfo linkAndInfo, string channel)
+        protected void PostLinkInfo(LinkAndInfo linkAndInfo, Action<string> post)
         {
             string linkString = linkAndInfo.Link.ToString();
             string info = linkAndInfo.Info;
@@ -345,13 +351,7 @@ namespace LinkInfo
                 info = Config.FakeResponses[linkString];
             }
 
-            ConnectionManager.SendChannelMessageFormat(
-                channel,
-                "{0} {2} {1}",
-                linkString,
-                info,
-                linkAndInfo.IsError ? ":!:" : "::"
-            );
+            post($"{linkString} {(linkAndInfo.IsError ? ":!:" : "::")} {info}");
         }
     }
 }
