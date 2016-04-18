@@ -17,6 +17,8 @@ namespace LinkInfoOptIn
         private static readonly ILog Logger = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
         public static readonly Regex AutoLinkInfoRegex = new Regex("^!(?<unsub>no)?autolinkinfo\\s*$", RegexOptions.Compiled);
 
+        public Uri LastBroadcastLink { get; set; }
+
         protected LinkInfoOptInConfig OptInConfig
         {
             get { return (LinkInfoOptInConfig) Config; }
@@ -93,9 +95,13 @@ namespace LinkInfoOptIn
                     PostLinkInfoToChannel(linkAndInfo, args.Channel);
                 }
 
-                foreach (var nick in optedInNicks)
+                if (LastBroadcastLink == null || LastBroadcastLink != linkAndInfo.Link)
                 {
-                    PostLinkInfo(linkAndInfo, message => ConnectionManager.SendQueryNotice(nick, message));
+                    foreach (var nick in optedInNicks)
+                    {
+                        PostLinkInfo(linkAndInfo, message => ConnectionManager.SendQueryNotice(nick, message));
+                    }
+                    LastBroadcastLink = linkAndInfo.Link;
                 }
             }
         }
