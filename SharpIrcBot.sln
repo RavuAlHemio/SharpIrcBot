@@ -49,13 +49,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DontJustHighlightMe", "Plug
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharpIrcBotCLI", "SharpIrcBotCLI\SharpIrcBotCLI.csproj", "{FE1A6133-94D1-4357-8E72-CF1869E2EFDF}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{8F4C34C6-0FB6-42C6-BC5C-1D8701977A29}"
-	ProjectSection(SolutionItems) = preProject
-		.nuget\NuGet.Config = .nuget\NuGet.Config
-		.nuget\NuGet.exe = .nuget\NuGet.exe
-		.nuget\NuGet.targets = .nuget\NuGet.targets
-	EndProjectSection
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Thanks", "Plugins\Thanks\Thanks.csproj", "{F28CE9BF-5055-4BF7-BE48-3F083AC0CA5A}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Allograph", "Plugins\Allograph\Allograph.csproj", "{280C7F7E-EB57-4A88-B2E5-A07D71ECF8CD}"
