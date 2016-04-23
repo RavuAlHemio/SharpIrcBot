@@ -1,0 +1,11 @@
+# normalize line endings of common file types by default
+#   code
+*.cs text
+*.config text
+#   projects
+*.csproj text
+*.sln text
+#   docs
+*.md text
+*.yml text
+*.json text
