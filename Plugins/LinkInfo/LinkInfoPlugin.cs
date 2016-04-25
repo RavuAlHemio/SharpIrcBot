@@ -165,7 +165,6 @@ namespace LinkInfo
             {
                 var contentType = "application/octet-stream";
                 string contentTypeHeader = null;
-                string responseCharacterSet = null;
                 request.Timeout = (int)TimeSpan.FromSeconds(Config.TimeoutSeconds).TotalMilliseconds;
                 if (httpRequest != null)
                 {
@@ -183,8 +182,6 @@ namespace LinkInfo
                         {
                             contentType = contentTypeHeader.Split(';')[0];
                         }
-                        var webResp = resp as HttpWebResponse;
-                        responseCharacterSet = webResp?.CharacterSet;
 
                         // copy
                         var buf = new byte[DownloadBufferSize];
@@ -224,8 +221,7 @@ namespace LinkInfo
                     case "text/html":
                     case "application/xhtml+xml":
                         // HTML? parse it and get the title
-                        var respStr = EncodingGuesser.GuessEncodingAndDecode(respStore.ToArray(), responseCharacterSet,
-                                      contentTypeHeader);
+                        var respStr = EncodingGuesser.GuessEncodingAndDecode(respStore.ToArray(), contentTypeHeader);
 
                         var htmlDoc = new HtmlDocument();
                         htmlDoc.LoadHtml(respStr);

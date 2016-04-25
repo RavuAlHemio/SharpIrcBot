@@ -32,19 +32,9 @@ namespace LinkInfo
             }
         }
 
-        public static string GuessEncodingAndDecode(byte[] data, string responseCharacterSet, string contentTypeHeader)
+        public static string GuessEncodingAndDecode(byte[] data, string contentTypeHeader)
         {
             string ret;
-
-            // try getting directly from response's character set field
-            if (!string.IsNullOrWhiteSpace(responseCharacterSet))
-            {
-                ret = TryEncoding(data, responseCharacterSet);
-                if (ret != null)
-                {
-                    return ret;
-                }
-            }
 
             // try scanning the header
             if (!string.IsNullOrWhiteSpace(contentTypeHeader))
