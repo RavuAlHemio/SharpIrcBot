@@ -278,7 +278,7 @@ namespace LinkInfo
                 client.Headers[HttpRequestHeader.UserAgent] = Config.FakeUserAgent;
                 client.Headers[HttpRequestHeader.Referer] = googleImageSearchUrl;
                 var responseBytes = client.DownloadData(searchUrl);
-                var parseMe = EncodingGuesser.GuessEncodingAndDecode(responseBytes, null, null);
+                var parseMe = EncodingGuesser.GuessEncodingAndDecode(responseBytes, null);
                 
                 var htmlDoc = new HtmlDocument();
                 htmlDoc.LoadHtml(parseMe);
