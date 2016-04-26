@@ -161,7 +161,8 @@ namespace Messenger
             {
                 ConnectionManager.SendChannelMessageFormat(
                     message.Channel,
-                    "{0}: Aye-aye! I\u2019ll deliver your message to its recipients as soon as possible!"
+                    "{0}: Aye-aye! I\u2019ll deliver your message to its recipients as soon as possible!",
+                    message.SenderNickname
                 );
                 return;
             }
