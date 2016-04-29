@@ -20,8 +20,8 @@ namespace Punt
         [JsonProperty("BodyPattern")]
         public string BodyPatternString
         {
-            get { return NickPattern.ToString(); }
-            set { NickPattern = new Regex(value, RegexOptions.Compiled); }
+            get { return BodyPattern.ToString(); }
+            set { BodyPattern = new Regex(value, RegexOptions.Compiled); }
         }
 
         public int? ChancePercent { get; set; }

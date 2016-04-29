@@ -62,7 +62,7 @@ namespace Punt
                     }
                 }
 
-                if (pattern.BodyPattern.IsMatch(e.SenderNickname))
+                if (pattern.BodyPattern.IsMatch(e.Message))
                 {
                     // match! kick 'em!
                     ConnectionManager.KickChannelUser(e.Channel, e.SenderNickname, pattern.KickMessage);
