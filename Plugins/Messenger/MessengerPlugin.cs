@@ -35,6 +35,7 @@ namespace Messenger
             Config = new MessengerConfig(config);
 
             ConnectionManager.ChannelMessage += HandleChannelMessage;
+            ConnectionManager.ChannelAction += HandleChannelAction;
             ConnectionManager.BaseNickChanged += HandleBaseNickChanged;
         }
 
@@ -696,6 +697,18 @@ namespace Messenger
 
             // even banned users get messages; they just can't respond to them
 
+            RegularMessageDelivery(args, senderLower);
+        }
+
+        protected void HandleChannelAction(object sender, IChannelMessageEventArgs args, MessageFlags flags)
+        {
+            var senderUser = ConnectionManager.RegisteredNameForNick(args.SenderNickname) ?? args.SenderNickname;
+            var senderLower = senderUser.ToLowerInvariant();
+            RegularMessageDelivery(args, senderLower);
+        }
+
+        protected virtual void RegularMessageDelivery(IChannelMessageEventArgs args, string senderLower)
+        {
             // only deliver if we are in a delivery channel
             if (Config.DeliveryChannels.Count > 0 && !Config.DeliveryChannels.Contains(args.Channel))
             {
