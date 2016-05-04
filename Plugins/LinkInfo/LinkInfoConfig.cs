@@ -14,6 +14,7 @@ namespace LinkInfo
         public string FakeUserAgent { get; set; }
         public string GoogleDomain { get; set; }
         public Dictionary<string, string> FakeResponses { get; set; }
+        public string TLDListFile { get; set; }
 
         public LinkInfoConfig(JObject obj)
         {
@@ -23,6 +24,7 @@ namespace LinkInfo
             FakeUserAgent = "Mozilla/5.0 (Windows NT 6.3; WOW64; rv:40.0) Gecko/20100101 Firefox/40.0";
             GoogleDomain = "www.google.at";
             FakeResponses = new Dictionary<string, string>();
+            TLDListFile = null;
 
             var ser = new JsonSerializer();
             ser.Populate(obj.CreateReader(), this);

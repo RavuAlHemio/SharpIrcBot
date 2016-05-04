@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -7,6 +8,7 @@ using System.Net.Sockets;
 using System.Text.RegularExpressions;
 using Fizzler.Systems.HtmlAgilityPack;
 using HtmlAgilityPack;
+using JetBrains.Annotations;
 using log4net;
 using Newtonsoft.Json.Linq;
 using SharpIrcBot;
@@ -28,12 +30,25 @@ namespace LinkInfo
         protected IConnectionManager ConnectionManager { get; set; }
         protected LinkInfoConfig Config { get; set; }
 
+        [CanBeNull]
         protected LinkAndInfo LastLinkAndInfo { get; set; }
+        [CanBeNull]
+        protected HashSet<string> TopLevelDomainCache { get; set; }
+        [NotNull]
+        protected static IdnMapping IDNMapping { get; set; }
+
+        static LinkInfoPlugin()
+        {
+            IDNMapping = new IdnMapping();
+        }
 
         public LinkInfoPlugin(IConnectionManager connMgr, JObject config)
         {
             ConnectionManager = connMgr;
             Config = new LinkInfoConfig(config);
+
+            LastLinkAndInfo = null;
+            TopLevelDomainCache = null;
 
             ConnectionManager.ChannelMessage += HandleChannelMessage;
             ConnectionManager.OutgoingChannelMessage += HandleOutgoingChannelMessage;
@@ -111,7 +126,7 @@ namespace LinkInfo
             }
         }
 
-        public static IList<Uri> FindLinks(string message)
+        public IList<Uri> FindLinks(string message)
         {
             var ret = new List<Uri>();
             foreach (var word in message.Split(new [] {' '}, StringSplitOptions.RemoveEmptyEntries))
@@ -124,6 +139,10 @@ namespace LinkInfo
                         continue;
                     }
                     // Uri verifies that http(s) URIs are at least minimal (http://a)
+                    ret.Add(uri);
+                }
+                else if (TryCreateUriHeuristically(word, out uri))
+                {
                     ret.Add(uri);
                 }
             }
@@ -324,6 +343,70 @@ namespace LinkInfo
             }
 
             post($"{linkString} {(linkAndInfo.IsError ? ":!:" : "::")} {info}");
+        }
+
+        protected bool TryCreateUriHeuristically(string word, out Uri uri)
+        {
+            uri = null;
+
+            if (TopLevelDomainCache == null)
+            {
+                if (Config.TLDListFile == null)
+                {
+                    return false;
+                }
+
+                string tldListFilePath = Path.Combine(SharpIrcBotUtil.AppDirectory, Config.TLDListFile);
+                if (!File.Exists(tldListFilePath))
+                {
+                    return false;
+                }
+
+                TopLevelDomainCache = new HashSet<string>();
+                using (var reader = new StreamReader(tldListFilePath, SharpIrcBotUtil.Utf8NoBom))
+                {
+                    string line;
+                    while ((line = reader.ReadLine()?.Trim()) != null)
+                    {
+                        if (line.StartsWith("#"))
+                        {
+                            continue;
+                        }
+                        TopLevelDomainCache.Add(line.ToLowerInvariant());
+                    }
+                }
+            }
+
+            // fail fast for obvious non-URLs
+            if (word.All(c => c != '.' && c != '/'))
+            {
+                return false;
+            }
+
+            // would this word make sense with http:// in front of it?
+            if (!Uri.TryCreate("http://" + word, UriKind.Absolute, out uri))
+            {
+                // nope
+                return false;
+            }
+
+            // does the host have at least one dot?
+            if (uri.Host.All(c => c != '.'))
+            {
+                return false;
+            }
+
+            // check host against list of TLDs
+            var tld = IDNMapping.GetAscii(uri.Host.Split('.').Last()).ToLowerInvariant();
+            if (!TopLevelDomainCache.Contains(tld))
+            {
+                // invalid TLD; probably not a URI
+                uri = null;
+                return false;
+            }
+
+            // it probably is a URI
+            return true;
         }
     }
 }
