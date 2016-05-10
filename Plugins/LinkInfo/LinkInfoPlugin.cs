@@ -154,8 +154,15 @@ namespace LinkInfo
             return WhiteSpaceRegex.Replace(str, " ");
         }
 
-        public LinkAndInfo RealObtainLinkInfo(Uri link)
+        [NotNull]
+        public virtual LinkAndInfo RealObtainLinkInfo([NotNull] Uri link, [CanBeNull] Uri originalLink = null, int redirectCount = 0)
         {
+            // hyperrecursion?
+            if (redirectCount > Config.MaxRedirects)
+            {
+                return new LinkAndInfo(link, "(too many redirections)", FetchErrorLevel.TransientError, originalLink);
+            }
+
             // check URL blacklist
             IPAddress[] addresses;
             try
@@ -165,17 +172,17 @@ namespace LinkInfo
             catch (SocketException se)
             {
                 Logger.WarnFormat("socket exception when resolving {0}: {1}", link.Host, se);
-                return new LinkAndInfo(link, "(cannot resolve)", FetchErrorLevel.TransientError);
+                return new LinkAndInfo(link, "(cannot resolve)", FetchErrorLevel.TransientError, originalLink);
             }
 
             if (addresses.Length == 0)
             {
                 Logger.WarnFormat("no addresses found when resolving {0}", link.Host);
-                return new LinkAndInfo(link, "(cannot resolve)", FetchErrorLevel.TransientError);
+                return new LinkAndInfo(link, "(cannot resolve)", FetchErrorLevel.TransientError, originalLink);
             }
             if (addresses.Any(IPAddressBlacklist.IsIPAddressBlacklisted))
             {
-                return new LinkAndInfo(link, "(I refuse to access this IP address)", FetchErrorLevel.LastingError);
+                return new LinkAndInfo(link, "(I refuse to access this IP address)", FetchErrorLevel.LastingError, originalLink);
             }
 
             var request = WebRequest.Create(link);
@@ -195,6 +202,14 @@ namespace LinkInfo
                 {
                     using (var resp = request.GetResponse())
                     {
+                        // redirect?
+                        string location = resp.Headers[HttpResponseHeader.Location];
+                        if (location != null)
+                        {
+                            // go there instead
+                            return RealObtainLinkInfo(new Uri(location), originalLink ?? link, redirectCount + 1);
+                        }
+
                         // find the content-type
                         contentTypeHeader = resp.Headers[HttpResponseHeader.ContentType];
                         if (contentTypeHeader != null)
@@ -216,7 +231,7 @@ namespace LinkInfo
                             totalBytesRead += bytesRead;
                             if (totalBytesRead > Config.MaxDownloadSizeBytes)
                             {
-                                return new LinkAndInfo(link, "(file too large)", FetchErrorLevel.LastingError);
+                                return new LinkAndInfo(link, "(file too large)", FetchErrorLevel.LastingError, originalLink);
                             }
                             respStore.Write(buf, 0, bytesRead);
                         }
@@ -227,16 +242,16 @@ namespace LinkInfo
                     var httpResponse = we.Response as HttpWebResponse;
                     if (httpResponse != null)
                     {
-                        return new LinkAndInfo(link, $"(HTTP {httpResponse.StatusCode})", FetchErrorLevel.TransientError);
+                        return new LinkAndInfo(link, $"(HTTP {httpResponse.StatusCode})", FetchErrorLevel.TransientError, originalLink);
                     }
                     Logger.Warn("HTTP exception thrown", we);
-                    return new LinkAndInfo(link, "(HTTP error)", FetchErrorLevel.TransientError);
+                    return new LinkAndInfo(link, "(HTTP error)", FetchErrorLevel.TransientError, originalLink);
                 }
 
                 switch (contentType)
                 {
                     case "application/octet-stream":
-                        return new LinkAndInfo(link, "(can't figure out the content type, sorry)", FetchErrorLevel.LastingError);
+                        return new LinkAndInfo(link, "(can't figure out the content type, sorry)", FetchErrorLevel.LastingError, originalLink);
                     case "text/html":
                     case "application/xhtml+xml":
                         // HTML? parse it and get the title
@@ -247,27 +262,27 @@ namespace LinkInfo
                         var titleElement = htmlDoc.DocumentNode.SelectSingleNode(".//title");
                         if (titleElement != null)
                         {
-                            return new LinkAndInfo(link, FoldWhitespace(HtmlEntity.DeEntitize(titleElement.InnerText)), FetchErrorLevel.Success);
+                            return new LinkAndInfo(link, FoldWhitespace(HtmlEntity.DeEntitize(titleElement.InnerText)), FetchErrorLevel.Success, originalLink);
                         }
                         var h1Element = htmlDoc.DocumentNode.SelectSingleNode(".//h1");
                         if (h1Element != null)
                         {
-                            return new LinkAndInfo(link, FoldWhitespace(HtmlEntity.DeEntitize(h1Element.InnerText)), FetchErrorLevel.Success);
+                            return new LinkAndInfo(link, FoldWhitespace(HtmlEntity.DeEntitize(h1Element.InnerText)), FetchErrorLevel.Success, originalLink);
                         }
-                        return new LinkAndInfo(link, "(HTML without a title O_o)", FetchErrorLevel.Success);
+                        return new LinkAndInfo(link, "(HTML without a title O_o)", FetchErrorLevel.Success, originalLink);
                     case "image/png":
-                        return new LinkAndInfo(link, ObtainImageInfo(link, "PNG image"), FetchErrorLevel.Success);
+                        return new LinkAndInfo(link, ObtainImageInfo(link, "PNG image"), FetchErrorLevel.Success, originalLink);
                     case "image/jpeg":
-                        return new LinkAndInfo(link, ObtainImageInfo(link, "JPEG image"), FetchErrorLevel.Success);
+                        return new LinkAndInfo(link, ObtainImageInfo(link, "JPEG image"), FetchErrorLevel.Success, originalLink);
                     case "image/gif":
-                        return new LinkAndInfo(link, ObtainImageInfo(link, "GIF image"), FetchErrorLevel.Success);
+                        return new LinkAndInfo(link, ObtainImageInfo(link, "GIF image"), FetchErrorLevel.Success, originalLink);
                     case "application/json":
-                        return new LinkAndInfo(link, "JSON", FetchErrorLevel.Success);
+                        return new LinkAndInfo(link, "JSON", FetchErrorLevel.Success, originalLink);
                     case "text/xml":
                     case "application/xml":
-                        return new LinkAndInfo(link, "XML", FetchErrorLevel.Success);
+                        return new LinkAndInfo(link, "XML", FetchErrorLevel.Success, originalLink);
                     default:
-                        return new LinkAndInfo(link, $"file of type {contentType}", FetchErrorLevel.Success);
+                        return new LinkAndInfo(link, $"file of type {contentType}", FetchErrorLevel.Success, originalLink);
                 }
             }
         }
@@ -324,7 +339,7 @@ namespace LinkInfo
             catch (Exception ex)
             {
                 Logger.Warn("link info", ex);
-                return new LinkAndInfo(link, "(an error occurred)", FetchErrorLevel.TransientError);
+                return new LinkAndInfo(link, "(an error occurred)", FetchErrorLevel.TransientError, null);
             }
         }
 
@@ -342,7 +357,11 @@ namespace LinkInfo
                 info = Config.FakeResponses[linkString];
             }
 
-            post($"{linkString} {(linkAndInfo.IsError ? ":!:" : "::")} {info}");
+            string redirectedString = (linkAndInfo.OriginalLink != null)
+                ? $" -> {linkAndInfo.OriginalLink}"
+                : "";
+
+            post($"{linkString}{redirectedString} {(linkAndInfo.IsError ? ":!:" : "::")} {info}");
         }
 
         protected bool TryCreateUriHeuristically(string word, out Uri uri)

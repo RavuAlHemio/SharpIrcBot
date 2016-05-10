@@ -15,6 +15,7 @@ namespace LinkInfo
         public string GoogleDomain { get; set; }
         public Dictionary<string, string> FakeResponses { get; set; }
         public string TLDListFile { get; set; }
+        public int MaxRedirects { get; set; }
 
         public LinkInfoConfig(JObject obj)
         {
@@ -25,6 +26,7 @@ namespace LinkInfo
             GoogleDomain = "www.google.at";
             FakeResponses = new Dictionary<string, string>();
             TLDListFile = null;
+            MaxRedirects = 16;
 
             var ser = new JsonSerializer();
             ser.Populate(obj.CreateReader(), this);

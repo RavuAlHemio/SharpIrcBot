@@ -1,10 +1,15 @@
 ﻿using System;
+using JetBrains.Annotations;
 
 namespace LinkInfo
 {
     public class LinkAndInfo
     {
+        [NotNull]
         public Uri Link { get; }
+        [CanBeNull]
+        public Uri OriginalLink { get; }
+        [CanBeNull]
         public string Info { get; }
         public FetchErrorLevel ErrorLevel { get; }
         public bool IsError => ErrorLevel != FetchErrorLevel.Success;
@@ -13,16 +18,17 @@ namespace LinkInfo
 
         public bool HasInfo => Info != null;
 
-        public LinkAndInfo(Uri link, string info, FetchErrorLevel errorLevel)
+        public LinkAndInfo([NotNull] Uri link, [CanBeNull] string info, FetchErrorLevel errorLevel, [CanBeNull] Uri originalLink = null)
         {
             Link = link;
+            OriginalLink = originalLink;
             Info = info;
             ErrorLevel = errorLevel;
         }
 
         public static LinkAndInfo CreateUnfetched(Uri link)
         {
-            return new LinkAndInfo(link, info: null, errorLevel: FetchErrorLevel.Unfetched);
+            return new LinkAndInfo(link, info: null, errorLevel: FetchErrorLevel.Unfetched, originalLink: null);
         }
     }
 }
