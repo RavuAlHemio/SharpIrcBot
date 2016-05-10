@@ -195,6 +195,7 @@ namespace LinkInfo
                 if (httpRequest != null)
                 {
                     // HTTP-specific settings
+                    httpRequest.AllowAutoRedirect = false;
                     httpRequest.UserAgent = Config.FakeUserAgent;
                 }
 
