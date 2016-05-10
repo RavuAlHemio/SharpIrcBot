@@ -207,6 +207,7 @@ namespace LinkInfo
                         if (location != null)
                         {
                             // go there instead
+                            Logger.Debug($"{link} (originally {originalLink ?? link}) redirects to {location}");
                             return RealObtainLinkInfo(new Uri(location), originalLink ?? link, redirectCount + 1);
                         }
 
