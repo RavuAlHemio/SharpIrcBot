@@ -360,10 +360,10 @@ namespace LinkInfo
             }
 
             string redirectedString = (linkAndInfo.OriginalLink != null)
-                ? $" -> {linkAndInfo.OriginalLink}"
+                ? $"{linkAndInfo.OriginalLink} -> "
                 : "";
 
-            post($"{linkString}{redirectedString} {(linkAndInfo.IsError ? ":!:" : "::")} {info}");
+            post($"{redirectedString}{linkString} {(linkAndInfo.IsError ? ":!:" : "::")} {info}");
         }
 
         protected bool TryCreateUriHeuristically(string word, out Uri uri)
