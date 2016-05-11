@@ -352,7 +352,7 @@ namespace LinkInfo
 
         protected void PostLinkInfo(LinkAndInfo linkAndInfo, Action<string> post)
         {
-            string linkString = linkAndInfo.Link.AbsolutePath;
+            string linkString = linkAndInfo.Link.AbsoluteUri;
             string info = linkAndInfo.Info;
             if (linkAndInfo.ErrorLevel == FetchErrorLevel.Success && Config.FakeResponses.ContainsKey(linkString))
             {
@@ -360,7 +360,7 @@ namespace LinkInfo
             }
 
             string redirectedString = (linkAndInfo.OriginalLink != null)
-                ? $"{linkAndInfo.OriginalLink.AbsolutePath} -> "
+                ? $"{linkAndInfo.OriginalLink.AbsoluteUri} -> "
                 : "";
 
             post($"{redirectedString}{linkString} {(linkAndInfo.IsError ? ":!:" : "::")} {info}");
