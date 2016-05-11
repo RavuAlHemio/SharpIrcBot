@@ -208,7 +208,7 @@ namespace LinkInfo
                         if (location != null)
                         {
                             // go there instead
-                            Logger.Debug($"{link} (originally {originalLink ?? link}) redirects to {location}");
+                            Logger.Debug($"{link.AbsoluteUri} (originally {originalLink?.AbsoluteUri ?? link.AbsoluteUri}) redirects to {location}");
                             return RealObtainLinkInfo(new Uri(location), originalLink ?? link, redirectCount + 1);
                         }
 
@@ -309,7 +309,7 @@ namespace LinkInfo
                 var searchUrl = new Uri(string.Format(
                     GoogleImageSearchByImageUrlPattern,
                     Config.GoogleDomain,
-                    SharpIrcBotUtil.UrlEncode(url.ToString(), SharpIrcBotUtil.Utf8NoBom, true)
+                    url.AbsoluteUri
                 ));
                 client.Headers[HttpRequestHeader.UserAgent] = Config.FakeUserAgent;
                 client.Headers[HttpRequestHeader.Referer] = googleImageSearchUrl;
@@ -352,7 +352,7 @@ namespace LinkInfo
 
         protected void PostLinkInfo(LinkAndInfo linkAndInfo, Action<string> post)
         {
-            string linkString = linkAndInfo.Link.ToString();
+            string linkString = linkAndInfo.Link.AbsolutePath;
             string info = linkAndInfo.Info;
             if (linkAndInfo.ErrorLevel == FetchErrorLevel.Success && Config.FakeResponses.ContainsKey(linkString))
             {
@@ -360,7 +360,7 @@ namespace LinkInfo
             }
 
             string redirectedString = (linkAndInfo.OriginalLink != null)
-                ? $"{linkAndInfo.OriginalLink} -> "
+                ? $"{linkAndInfo.OriginalLink.AbsolutePath} -> "
                 : "";
 
             post($"{redirectedString}{linkString} {(linkAndInfo.IsError ? ":!:" : "::")} {info}");
