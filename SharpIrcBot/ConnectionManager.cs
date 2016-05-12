@@ -670,7 +670,7 @@ namespace SharpIrcBot
             };
             var eventArgs = new MessageChunkingEventArgs(chunks);
             OnSplitToChunks(eventArgs);
-            return chunks;
+            return eventArgs.Chunks;
         }
 
         /// <remarks><paramref name="words"/> will be modified.</remarks>
