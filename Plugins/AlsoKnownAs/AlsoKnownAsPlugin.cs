@@ -29,7 +29,7 @@ namespace AlsoKnownAs
             Config = new AlsoKnownAsConfig(config);
 
             HostToNicks = new DrillDownTree<string, HashSet<string>>();
-            NickToMostRecentHost = new Dictionary<string, UserIdentifier>();
+            NickToMostRecentHost = new Dictionary<string, UserIdentifier>(StringComparer.InvariantCultureIgnoreCase);
 
             ConnectionManager.ChannelMessage += HandleChannelMessage;
             ConnectionManager.QueryMessage += HandleQueryMessage;
@@ -136,7 +136,7 @@ namespace AlsoKnownAs
             }
             else
             {
-                HostToNicks[identifierParts] = new HashSet<string> { nick };
+                HostToNicks[identifierParts] = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase) { nick };
             }
 
             NickToMostRecentHost[nick] = identifier;
