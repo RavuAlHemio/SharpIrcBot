@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using JetBrains.Annotations;
+using SharpIrcBot.Chunks;
 using SharpIrcBot.Events;
 using SharpIrcBot.Events.Irc;
 
@@ -30,6 +31,7 @@ namespace SharpIrcBot
         event EventHandler<OutgoingMessageEventArgs> OutgoingQueryNotice;
         event EventHandler<BaseNickChangedEventArgs> BaseNickChanged;
         event EventHandler<IUserInvitedToChannelEventArgs> Invited;
+        event EventHandler<MessageChunkingEventArgs> SplitToChunks;
 
         [NotNull] string MyNickname { get; }
         [NotNull] string MyUsername { get; }
@@ -55,6 +57,7 @@ namespace SharpIrcBot
         void ReportBaseNickChange([NotNull] string oldBaseNick, [NotNull] string newBaseNick);
         [CanBeNull] IReadOnlyList<string> NicknamesInChannel([CanBeNull] string channel);
         ChannelUserLevel GetChannelLevelForUser([NotNull] string channel, [NotNull] string nick);
+        List<IMessageChunk> SplitMessageToChunks(string message);
 
         void ReloadConfiguration();
     }

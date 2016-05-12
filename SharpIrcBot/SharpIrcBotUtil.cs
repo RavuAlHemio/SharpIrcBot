@@ -14,6 +14,7 @@ using log4net.Core;
 using log4net.Layout;
 using log4net.Repository.Hierarchy;
 using Newtonsoft.Json.Linq;
+using SharpIrcBot.Chunks;
 using SharpIrcBot.Config;
 
 namespace SharpIrcBot
@@ -563,6 +564,49 @@ namespace SharpIrcBot
                 return ret;
             }
             return null;
+        }
+
+        /// <summary>
+        /// Collects adjacent text chunks in the given list into one text chunk.
+        /// </summary>
+        /// <param name="chunks">The list of chunks to simplify.</param>
+        /// <returns>The simplified list of chunks.</returns>
+        [NotNull, ItemNotNull]
+        public static List<IMessageChunk> SimplifyAdjacentTextChunks([NotNull, ItemNotNull] IEnumerable<IMessageChunk> chunks)
+        {
+            var textCollector = new StringBuilder();
+            var ret = new List<IMessageChunk>();
+
+            foreach (IMessageChunk chunk in chunks)
+            {
+                var textChunk = chunk as TextMessageChunk;
+                if (textChunk != null)
+                {
+                    textCollector.Append(textChunk.Text);
+                }
+                else
+                {
+                    // not a text message chunk
+
+                    if (textCollector.Length > 0)
+                    {
+                        // add our collected text chunk
+                        ret.Add(new TextMessageChunk(textCollector.ToString()));
+                        textCollector.Clear();
+                    }
+
+                    // add this chunk
+                    ret.Add(chunk);
+                }
+            }
+
+            // last text chunk?
+            if (textCollector.Length > 0)
+            {
+                ret.Add(new TextMessageChunk(textCollector.ToString()));
+            }
+
+            return ret;
         }
     }
 }

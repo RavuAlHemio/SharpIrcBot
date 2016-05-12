@@ -78,6 +78,7 @@
     <Compile Include="Events\Irc\IUserInvitedToChannelEventArgs.cs" />
     <Compile Include="Events\Irc\Specific\UserLeftChannelEventArgs.cs" />
     <Compile Include="Events\Irc\Specific\UserQuitServerEventArgs.cs" />
+    <Compile Include="Events\MessageChunkingEventArgs.cs" />
     <Compile Include="Events\NickMappingEventArgs.cs" />
     <Compile Include="Events\OutgoingMessageEventArgs.cs" />
     <Compile Include="IConnectionManager.cs" />

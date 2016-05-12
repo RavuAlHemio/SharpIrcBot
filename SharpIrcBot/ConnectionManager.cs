@@ -9,6 +9,7 @@ using System.Threading;
 using JetBrains.Annotations;
 using log4net;
 using Meebey.SmartIrc4net;
+using SharpIrcBot.Chunks;
 using SharpIrcBot.Config;
 using SharpIrcBot.Events;
 using SharpIrcBot.Events.Irc;
@@ -68,6 +69,7 @@ namespace SharpIrcBot
         protected IList<EventHandler<OutgoingMessageEventArgs>> OutgoingQueryNoticeSubscribers = new List<EventHandler<OutgoingMessageEventArgs>>();
         protected IList<EventHandler<BaseNickChangedEventArgs>> BaseNickChangedSubscribers = new List<EventHandler<BaseNickChangedEventArgs>>();
         protected IList<EventHandler<IUserInvitedToChannelEventArgs>> InvitedSubscribers = new List<EventHandler<IUserInvitedToChannelEventArgs>>();
+        protected IList<EventHandler<MessageChunkingEventArgs>> SplitToChunksSubscribers = new List<EventHandler<MessageChunkingEventArgs>>();
         public event SharpIrcBotEventHandler<IChannelMessageEventArgs> ChannelMessage
         {
             add { lock(ChannelMessageSubscribers) { ChannelMessageSubscribers.Add(value); } }
@@ -177,6 +179,11 @@ namespace SharpIrcBot
         {
             add { lock(InvitedSubscribers) { InvitedSubscribers.Add(value); } }
             remove { lock (InvitedSubscribers) { InvitedSubscribers.Remove(value); } }
+        }
+        public event EventHandler<MessageChunkingEventArgs> SplitToChunks
+        {
+            add { lock (SplitToChunksSubscribers) { SplitToChunksSubscribers.Add(value); } }
+            remove { lock (SplitToChunksSubscribers) { SplitToChunksSubscribers.Remove(value); } }
         }
         #endregion
 
@@ -633,6 +640,11 @@ namespace SharpIrcBot
             HandleEvent(InvitedSubscribers, e, "invitation");
         }
 
+        protected virtual void OnSplitToChunks(MessageChunkingEventArgs e)
+        {
+            HandleEvent(SplitToChunksSubscribers, e, "splitting message to chunks");
+        }
+
         public string RegisteredNameForNick(string nick)
         {
             // perform nick mapping
@@ -648,6 +660,17 @@ namespace SharpIrcBot
             Logger.InfoFormat("reporting base nick change from {0} to {1}", oldBaseNick, newBaseNick);
             var e = new BaseNickChangedEventArgs(oldBaseNick, newBaseNick);
             OnBaseNickChanged(e);
+        }
+
+        public List<IMessageChunk> SplitMessageToChunks(string message)
+        {
+            var chunks = new List<IMessageChunk>
+            {
+                new TextMessageChunk(message)
+            };
+            var eventArgs = new MessageChunkingEventArgs(chunks);
+            OnSplitToChunks(eventArgs);
+            return chunks;
         }
 
         /// <remarks><paramref name="words"/> will be modified.</remarks>
