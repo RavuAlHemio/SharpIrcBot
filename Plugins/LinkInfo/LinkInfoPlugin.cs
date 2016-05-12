@@ -12,6 +12,7 @@ using JetBrains.Annotations;
 using log4net;
 using Newtonsoft.Json.Linq;
 using SharpIrcBot;
+using SharpIrcBot.Chunks;
 using SharpIrcBot.Events;
 using SharpIrcBot.Events.Irc;
 
@@ -52,6 +53,7 @@ namespace LinkInfo
 
             ConnectionManager.ChannelMessage += HandleChannelMessage;
             ConnectionManager.OutgoingChannelMessage += HandleOutgoingChannelMessage;
+            ConnectionManager.SplitToChunks += HandleSplitToChunks;
         }
 
         public virtual void ReloadConfiguration(JObject newConfig)
@@ -128,25 +130,11 @@ namespace LinkInfo
 
         public IList<Uri> FindLinks(string message)
         {
-            var ret = new List<Uri>();
-            foreach (var word in message.Split(new [] {' '}, StringSplitOptions.RemoveEmptyEntries))
-            {
-                Uri uri;
-                if (Uri.TryCreate(word, UriKind.Absolute, out uri))
-                {
-                    if (uri.Scheme != "http" && uri.Scheme != "https")
-                    {
-                        continue;
-                    }
-                    // Uri verifies that http(s) URIs are at least minimal (http://a)
-                    ret.Add(uri);
-                }
-                else if (TryCreateUriHeuristically(word, out uri))
-                {
-                    ret.Add(uri);
-                }
-            }
-            return ret;                
+            return ConnectionManager
+                .SplitMessageToChunks(message)
+                .OfType<UriMessageChunk>()
+                .Select(umc => umc.Uri)
+                .ToList();
         }
 
         public static string FoldWhitespace(string str)
@@ -428,6 +416,57 @@ namespace LinkInfo
 
             // it probably is a URI
             return true;
+        }
+
+        protected void HandleSplitToChunks(object sender, MessageChunkingEventArgs e)
+        {
+            var newChunks = new List<IMessageChunk>();
+
+            foreach (IMessageChunk chunk in e.Chunks)
+            {
+                if (!(chunk is TextMessageChunk))
+                {
+                    newChunks.Add(chunk);
+                    continue;
+                }
+
+                var textChunk = (TextMessageChunk) chunk;
+
+                var wordChunks = new List<IMessageChunk>();
+                foreach (string word in textChunk.Text.Split(' '))
+                {
+                    Uri uri;
+                    if (Uri.TryCreate(word, UriKind.Absolute, out uri))
+                    {
+                        if (uri.Scheme != "http" && uri.Scheme != "https")
+                        {
+                            continue;
+                        }
+                        // Uri verifies that http(s) URIs are at least minimal (http://a)
+                        wordChunks.Add(new UriMessageChunk(word, uri));
+                    }
+                    else if (TryCreateUriHeuristically(word, out uri))
+                    {
+                        wordChunks.Add(new UriMessageChunk(word, uri));
+                    }
+                    else
+                    {
+                        wordChunks.Add(new TextMessageChunk(word));
+                    }
+                }
+
+                var spaceChunk = new TextMessageChunk(" ");
+                for (int i = 0; i < wordChunks.Count; ++i)
+                {
+                    newChunks.Add(wordChunks[i]);
+                    if (i < wordChunks.Count - 1)
+                    {
+                        newChunks.Add(spaceChunk);
+                    }
+                }
+            }
+
+            e.Chunks = SharpIrcBotUtil.SimplifyAdjacentTextChunks(newChunks);
         }
     }
 }
