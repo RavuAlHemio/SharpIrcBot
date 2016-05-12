@@ -51,6 +51,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ChannelUserLevel.cs" />
+    <Compile Include="Chunks\IMessageChunk.cs" />
+    <Compile Include="Chunks\TextMessageChunk.cs" />
+    <Compile Include="Chunks\UriMessageChunk.cs" />
     <Compile Include="Collections\DrillDownTree.cs" />
     <Compile Include="ConnectionManagerExtensions.cs" />
     <Compile Include="Events\BaseNickChangedEventArgs.cs" />
@@ -108,10 +111,5 @@
       <Name>SmartIrc4net</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Collections" />
-    <Folder Include="Events" />
-    <Folder Include="Events\Irc" />
-    <Folder Include="Events\Irc\Specific" />
-  </ItemGroup>
+  <ItemGroup />
 </Project>
