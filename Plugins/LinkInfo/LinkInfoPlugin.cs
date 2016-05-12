@@ -440,6 +440,7 @@ namespace LinkInfo
                     {
                         if (uri.Scheme != "http" && uri.Scheme != "https")
                         {
+                            wordChunks.Add(new TextMessageChunk(word));
                             continue;
                         }
                         // Uri verifies that http(s) URIs are at least minimal (http://a)
