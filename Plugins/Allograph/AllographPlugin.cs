@@ -6,6 +6,8 @@ using log4net;
 using Newtonsoft.Json.Linq;
 using SharpIrcBot;
 using System.Collections.Generic;
+using System.Text;
+using SharpIrcBot.Chunks;
 using SharpIrcBot.Events.Irc;
 
 namespace Allograph
@@ -50,7 +52,6 @@ namespace Allograph
             }
 
             var originalBody = args.Message;
-            var newBody = originalBody;
             var channel = args.Channel;
 
             if (Config.ChannelBlacklist.Contains(channel))
@@ -63,73 +64,90 @@ namespace Allograph
                 CooldownsPerChannel[channel] = new List<int>(Enumerable.Repeat(0, Config.Replacements.Count));
             }
 
-            bool somethingHit = false;
-            int i = -1;
+            var chunks = ConnectionManager.SplitMessageToChunks(args.Message);
+            var newBody = new StringBuilder();
             var newCooldowns = new List<int>(CooldownsPerChannel[channel]);
-            foreach (var repl in Config.Replacements)
+            foreach (var chunk in chunks)
             {
-                ++i;
-
-                if (repl.OnlyIfPrecedingHit && !somethingHit)
+                var textChunk = chunk as TextMessageChunk;
+                if (textChunk == null)
                 {
-                    // no preceding rule hit; don't apply this one
+                    // don't touch this
+                    newBody.Append(chunk);
                     continue;
                 }
 
-                if (repl.AdditionalProbabilityPercent > 0.0)
+                bool somethingHit = false;
+                int i = -1;
+
+                var newChunk = textChunk.Text;
+                foreach (var repl in Config.Replacements)
                 {
-                    var replProbabilityValue = Random.NextDouble() * 100.0;
-                    if (replProbabilityValue >= repl.AdditionalProbabilityPercent)
+                    ++i;
+
+                    if (repl.OnlyIfPrecedingHit && !somethingHit)
                     {
-                        // next!
+                        // no preceding rule hit; don't apply this one
                         continue;
                     }
-                }
 
-                // substitute the username in the replacement string
-                var replacementStringWithUser = repl.ReplacementString.Replace("{{{username}}}", args.SenderNickname);
-                var nextNewBody = repl.Regex.Replace(newBody, replacementStringWithUser);
-
-                if (Config.CooldownIncreasePerHit >= 0 || repl.CustomCooldownIncreasePerHit >= 0)
-                {
-                    if (!string.Equals(newBody, nextNewBody, StringComparison.InvariantCulture))
+                    if (repl.AdditionalProbabilityPercent > 0.0)
                     {
-                        // this rule changed something!
-                        if (newCooldowns[i] == 0)
+                        var replProbabilityValue = Random.NextDouble()*100.0;
+                        if (replProbabilityValue >= repl.AdditionalProbabilityPercent)
                         {
-                            // warm, apply it!
-                            newBody = nextNewBody;
-                            somethingHit = true;
+                            // next!
+                            continue;
                         }
-
-                        // cool down
-                        newCooldowns[i] += (repl.CustomCooldownIncreasePerHit >= 0)
-                            ? repl.CustomCooldownIncreasePerHit
-                            : Config.CooldownIncreasePerHit;
                     }
-                    else if (newCooldowns[i] > 0)
+
+                    // substitute the username in the replacement string
+                    var replacementStringWithUser = repl.ReplacementString.Replace("{{{username}}}", args.SenderNickname);
+                    var nextNewChunk = repl.Regex.Replace(newChunk, replacementStringWithUser);
+
+                    if (Config.CooldownIncreasePerHit >= 0 || repl.CustomCooldownIncreasePerHit >= 0)
                     {
-                        // this rule didn't change anything; warm up!
-                        --newCooldowns[i];
+                        if (!string.Equals(newChunk, nextNewChunk, StringComparison.InvariantCulture))
+                        {
+                            // this rule changed something!
+                            if (newCooldowns[i] == 0)
+                            {
+                                // warm, apply it!
+                                newChunk = nextNewChunk;
+                                somethingHit = true;
+                            }
+
+                            // cool down
+                            newCooldowns[i] += (repl.CustomCooldownIncreasePerHit >= 0)
+                                ? repl.CustomCooldownIncreasePerHit
+                                : Config.CooldownIncreasePerHit;
+                        }
+                        else if (newCooldowns[i] > 0)
+                        {
+                            // this rule didn't change anything; warm up!
+                            --newCooldowns[i];
+                        }
+                    }
+                    else
+                    {
+                        // no cooldowns
+                        newChunk = nextNewChunk;
                     }
                 }
-                else
+
+                if (Config.CooldownIncreasePerHit >= 0)
                 {
-                    // no cooldowns
-                    newBody = nextNewBody;
+                    // update cooldowns
+                    CooldownsPerChannel[channel].Clear();
+                    CooldownsPerChannel[channel].AddRange(newCooldowns);
+
+                    Logger.DebugFormat("cooldowns are now: {0}", string.Join(", ", newCooldowns.Select(c => c.ToString())));
                 }
+
+                newBody.Append(newChunk);
             }
 
-            if (Config.CooldownIncreasePerHit >= 0)
-            {
-                // update cooldowns
-                CooldownsPerChannel[channel].Clear();
-                CooldownsPerChannel[channel].AddRange(newCooldowns);
-
-                Logger.DebugFormat("cooldowns are now: {0}", string.Join(", ", newCooldowns.Select(c => c.ToString())));
-            }
-
-            if (string.Equals(newBody, originalBody, StringComparison.InvariantCulture))
+            if (string.Equals(newBody.ToString(), originalBody, StringComparison.InvariantCulture))
             {
                 return;
             }
@@ -138,7 +156,7 @@ namespace Allograph
             if (thisProbabilityValue < Config.ProbabilityPercent)
             {
                 Logger.DebugFormat("{0:F2} < {1:F2}; posting {2}", thisProbabilityValue, Config.ProbabilityPercent, newBody);
-                ConnectionManager.SendChannelMessage(args.Channel, newBody);
+                ConnectionManager.SendChannelMessage(args.Channel, newBody.ToString());
             }
             else
             {
