@@ -34,14 +34,7 @@ namespace LinkInfo
         [CanBeNull]
         protected LinkAndInfo LastLinkAndInfo { get; set; }
         [CanBeNull]
-        protected HashSet<string> TopLevelDomainCache { get; set; }
-        [NotNull]
-        protected static IdnMapping IDNMapping { get; set; }
-
-        static LinkInfoPlugin()
-        {
-            IDNMapping = new IdnMapping();
-        }
+        protected HeuristicLinkDetector LinkDetector { get; set; }
 
         public LinkInfoPlugin(IConnectionManager connMgr, JObject config)
         {
@@ -49,7 +42,7 @@ namespace LinkInfo
             Config = new LinkInfoConfig(config);
 
             LastLinkAndInfo = null;
-            TopLevelDomainCache = null;
+            LinkDetector = null;
 
             ConnectionManager.ChannelMessage += HandleChannelMessage;
             ConnectionManager.OutgoingChannelMessage += HandleOutgoingChannelMessage;
@@ -357,8 +350,7 @@ namespace LinkInfo
         protected bool TryCreateUriHeuristically(string word, out Uri uri)
         {
             uri = null;
-
-            if (TopLevelDomainCache == null)
+            if (LinkDetector == null)
             {
                 if (Config.TLDListFile == null)
                 {
@@ -371,7 +363,7 @@ namespace LinkInfo
                     return false;
                 }
 
-                TopLevelDomainCache = new HashSet<string>();
+                var tlds = new HashSet<string>();
                 using (var reader = new StreamReader(tldListFilePath, SharpIrcBotUtil.Utf8NoBom))
                 {
                     string line;
@@ -381,41 +373,14 @@ namespace LinkInfo
                         {
                             continue;
                         }
-                        TopLevelDomainCache.Add(line.ToLowerInvariant());
+                        tlds.Add(line.ToLowerInvariant());
                     }
                 }
+
+                LinkDetector = new HeuristicLinkDetector(tlds);
             }
 
-            // fail fast for obvious non-URLs
-            if (word.All(c => c != '.' && c != '/'))
-            {
-                return false;
-            }
-
-            // would this word make sense with http:// in front of it?
-            if (!Uri.TryCreate("http://" + word, UriKind.Absolute, out uri))
-            {
-                // nope
-                return false;
-            }
-
-            // does the host have at least one dot?
-            if (uri.Host.All(c => c != '.'))
-            {
-                return false;
-            }
-
-            // check host against list of TLDs
-            var tld = IDNMapping.GetAscii(uri.Host.Split('.').Last()).ToLowerInvariant();
-            if (!TopLevelDomainCache.Contains(tld))
-            {
-                // invalid TLD; probably not a URI
-                uri = null;
-                return false;
-            }
-
-            // it probably is a URI
-            return true;
+            return LinkDetector.TryCreateUri(word, out uri);
         }
 
         protected void HandleSplitToChunks(object sender, MessageChunkingEventArgs e)
