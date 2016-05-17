@@ -1,5 +1,4 @@
-﻿using System.Text;
-using DatabaseNickMapping;
+﻿using DatabaseNickMapping;
 using Xunit;
 
 namespace RegexTests
