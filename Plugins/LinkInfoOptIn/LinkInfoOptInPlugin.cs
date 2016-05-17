@@ -103,6 +103,10 @@ namespace LinkInfoOptIn
                     }
                     LastBroadcastLink = linkAndInfo.Link;
                 }
+                else
+                {
+                    Logger.Debug($"not multicasting link info for {LastBroadcastLink.AbsoluteUri}; same as the last");
+                }
             }
         }
 
