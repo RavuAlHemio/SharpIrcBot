@@ -333,6 +333,23 @@ namespace LinkInfo
 
         protected void PostLinkInfo(LinkAndInfo linkAndInfo, Action<string> post)
         {
+            string domainAnnotation = null;
+
+            string[] hostNamePieces = linkAndInfo.Link.Host.ToLowerInvariant().Split('.');
+            for (int i = 0; i < hostNamePieces.Length - 1; ++i)
+            {
+                string domainPiece = string.Join(".", hostNamePieces.Skip(i));
+
+                if (Config.DomainAnnotations.TryGetValue(domainPiece, out domainAnnotation))
+                {
+                    break;
+                }
+            }
+
+            string domainAnnotationString = (domainAnnotation == null)
+                ? ""
+                : (" " + domainAnnotation);
+
             string linkString = linkAndInfo.Link.AbsoluteUri;
             string info = linkAndInfo.Info;
             if (linkAndInfo.ErrorLevel == FetchErrorLevel.Success && Config.FakeResponses.ContainsKey(linkString))
@@ -344,7 +361,7 @@ namespace LinkInfo
                 ? $"{linkAndInfo.OriginalLink.AbsoluteUri} -> "
                 : "";
 
-            post($"{redirectedString}{linkString} {(linkAndInfo.IsError ? ":!:" : "::")} {info}");
+            post($"{redirectedString}{linkString} {(linkAndInfo.IsError ? ":!:" : "::")} {info}{domainAnnotationString}");
         }
 
         protected bool TryCreateUriHeuristically(string word, out Uri uri)

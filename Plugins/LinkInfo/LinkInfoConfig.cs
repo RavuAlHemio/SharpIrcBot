@@ -16,6 +16,7 @@ namespace LinkInfo
         public Dictionary<string, string> FakeResponses { get; set; }
         public string TLDListFile { get; set; }
         public int MaxRedirects { get; set; }
+        public Dictionary<string, string> DomainAnnotations { get; set; }
 
         public LinkInfoConfig(JObject obj)
         {
@@ -27,6 +28,7 @@ namespace LinkInfo
             FakeResponses = new Dictionary<string, string>();
             TLDListFile = null;
             MaxRedirects = 16;
+            DomainAnnotations = new Dictionary<string, string>();
 
             var ser = new JsonSerializer();
             ser.Populate(obj.CreateReader(), this);
