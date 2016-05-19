@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace UnoBot
+﻿namespace UnoBot
 {
     public enum CardColor
     {

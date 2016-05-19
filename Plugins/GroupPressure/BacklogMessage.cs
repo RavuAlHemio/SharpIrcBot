@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace GroupPressure
+﻿namespace GroupPressure
 {
     public class BacklogMessage
     {

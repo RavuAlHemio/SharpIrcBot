@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace UnoBot.GameMaster
+﻿namespace UnoBot.GameMaster
 {
     public class Player
     {
