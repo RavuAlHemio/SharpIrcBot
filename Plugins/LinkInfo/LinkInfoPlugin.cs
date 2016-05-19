@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -199,12 +200,17 @@ namespace LinkInfo
                             contentType = contentTypeHeader.Split(';')[0];
                         }
 
+                        // start timing
+                        var readTimeout = TimeSpan.FromSeconds(Config.TimeoutSeconds);
+                        var timer = new Stopwatch();
+                        timer.Start();
+
                         // copy
                         var buf = new byte[DownloadBufferSize];
                         var responseStream = resp.GetResponseStream();
                         if (responseStream.CanTimeout)
                         {
-                            responseStream.ReadTimeout = (int)TimeSpan.FromSeconds(Config.TimeoutSeconds).TotalMilliseconds;
+                            responseStream.ReadTimeout = (int)readTimeout.TotalMilliseconds;
                         }
                         long totalBytesRead = 0;
                         for (;;)
@@ -215,6 +221,10 @@ namespace LinkInfo
                                 break;
                             }
                             totalBytesRead += bytesRead;
+                            if (timer.Elapsed > readTimeout)
+                            {
+                                return new LinkAndInfo(link, "(reading timed out)", FetchErrorLevel.TransientError, originalLink);
+                            }
                             if (totalBytesRead > Config.MaxDownloadSizeBytes)
                             {
                                 return new LinkAndInfo(link, "(file too large)", FetchErrorLevel.LastingError, originalLink);
