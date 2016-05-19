@@ -203,6 +203,10 @@ namespace LinkInfo
                         // copy
                         var buf = new byte[DownloadBufferSize];
                         var responseStream = resp.GetResponseStream();
+                        if (responseStream.CanTimeout)
+                        {
+                            responseStream.ReadTimeout = (int)TimeSpan.FromSeconds(Config.TimeoutSeconds).TotalMilliseconds;
+                        }
                         long totalBytesRead = 0;
                         for (;;)
                         {
