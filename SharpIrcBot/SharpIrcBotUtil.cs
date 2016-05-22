@@ -608,45 +608,5 @@ namespace SharpIrcBot
 
             return ret;
         }
-
-        public static void DebugInterp(this ILog log, IFormattable formattable, Exception exc = null)
-        {
-            if (log.IsDebugEnabled)
-            {
-                log.Debug(formattable.ToString(null, CultureInfo.InvariantCulture), exc);
-            }
-        }
-
-        public static void ErrorInterp(this ILog log, IFormattable formattable, Exception exc = null)
-        {
-            if (log.IsErrorEnabled)
-            {
-                log.Error(formattable.ToString(null, CultureInfo.InvariantCulture), exc);
-            }
-        }
-
-        public static void FatalInterp(this ILog log, IFormattable formattable, Exception exc = null)
-        {
-            if (log.IsFatalEnabled)
-            {
-                log.Fatal(formattable.ToString(null, CultureInfo.InvariantCulture), exc);
-            }
-        }
-
-        public static void InfoInterp(this ILog log, IFormattable formattable, Exception exc = null)
-        {
-            if (log.IsInfoEnabled)
-            {
-                log.Info(formattable.ToString(null, CultureInfo.InvariantCulture), exc);
-            }
-        }
-
-        public static void WarnInterp(this ILog log, IFormattable formattable, Exception exc = null)
-        {
-            if (log.IsWarnEnabled)
-            {
-                log.Warn(formattable.ToString(null, CultureInfo.InvariantCulture), exc);
-            }
-        }
     }
 }
