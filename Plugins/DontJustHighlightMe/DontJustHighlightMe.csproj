@@ -43,6 +43,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="HighlightOccurrence.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="DontJustHighlightMePlugin.cs" />
     <Compile Include="DJHMConfig.cs" />

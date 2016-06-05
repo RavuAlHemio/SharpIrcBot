@@ -17,6 +17,10 @@ namespace DontJustHighlightMe
 
         public int? TriggerPercentage { get; set; }
 
+        public int DelayMinMessages { get; set; }
+
+        public int DelayMaxMessages { get; set; }
+
         public DJHMConfig(JObject obj)
         {
             Channels = new HashSet<string>();

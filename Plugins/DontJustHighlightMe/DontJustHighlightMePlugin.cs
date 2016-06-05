@@ -16,12 +16,14 @@ namespace DontJustHighlightMe
         protected IConnectionManager ConnectionManager { get; set; }
         protected DJHMConfig Config { get; set; }
         protected Random RNG { get; set; }
+        protected LinkedList<HighlightOccurrence> NicknamesOnDelay { get; set; }
 
         public DontJustHighlightMePlugin(IConnectionManager connMgr, JObject config)
         {
             ConnectionManager = connMgr;
             Config = new DJHMConfig(config);
             RNG = new Random();
+            NicknamesOnDelay = new LinkedList<HighlightOccurrence>();
 
             ConnectionManager.ChannelMessage += HandleChannelMessage;
         }
@@ -39,6 +41,12 @@ namespace DontJustHighlightMe
                 return;
             }
 
+            ProcessPotentialHighlight(args);
+            ProcessPendingRetributions();
+        }
+
+        protected void ProcessPotentialHighlight(IChannelMessageEventArgs args)
+        {
             var trimmedMessage = args.Message.Trim();
             if (trimmedMessage.Contains(" "))
             {
@@ -104,27 +112,46 @@ namespace DontJustHighlightMe
                 }
             }
 
-            if (Config.Kick)
+            // calculate delay
+            int delay = RNG.Next(Config.DelayMinMessages, Config.DelayMaxMessages + 1);
+
+            // add to list
+            NicknamesOnDelay.AddLast(new HighlightOccurrence(args.SenderNickname, highlightee, args.Channel, delay));
+        }
+
+        protected void ProcessPendingRetributions()
+        {
+            var current = NicknamesOnDelay.First;
+
+            while (current != null)
             {
-                // punt the perpetrator out of the channel
-                Logger.DebugFormat(
-                    "punting {0} from {1} for highlighting {2}",
-                    args.SenderNickname,
-                    args.Channel,
-                    highlightee
-                );
-                ConnectionManager.KickChannelUser(args.Channel, args.SenderNickname, Config.KickMessage);
-            }
-            else
-            {
-                // highlight the perpetrator as retribution
-                Logger.DebugFormat(
-                    "re-highlighting {0} in {1} for highlighting {2}",
-                    args.SenderNickname,
-                    args.Channel,
-                    highlightee
-                );
-                ConnectionManager.SendChannelMessage(args.Channel, args.SenderNickname);
+                HighlightOccurrence occ = current.Value;
+
+                if (occ.Countdown == 0)
+                {
+                    // remove it
+                    NicknamesOnDelay.Remove(current);
+
+                    if (Config.Kick)
+                    {
+                        // punt the perpetrator out of the channel
+                        Logger.Debug($"punting {occ.Perpetrator} from {occ.Channel} for highlighting {occ.Victim}");
+                        ConnectionManager.KickChannelUser(occ.Channel, occ.Perpetrator, Config.KickMessage);
+                    }
+                    else
+                    {
+                        // highlight the perpetrator as retribution
+                        Logger.Debug(
+                            $"re-highlighting {occ.Perpetrator} in {occ.Channel} for highlighting {occ.Victim}");
+                        ConnectionManager.SendChannelMessage(occ.Channel, occ.Perpetrator);
+                    }
+                }
+                else
+                {
+                    --occ.Countdown;
+                }
+
+                current = current.Next;
             }
         }
     }
