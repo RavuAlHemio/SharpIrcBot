@@ -1,7 +1,7 @@
 language: csharp
 solution: SharpIrcBot.sln
 mono:
-  - latest
+  - 4.5.0
 before_install:
   - git submodule update --init --recursive
 install:
