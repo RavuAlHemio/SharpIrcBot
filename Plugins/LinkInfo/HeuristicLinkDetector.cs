@@ -29,6 +29,12 @@ namespace LinkInfo
                 return false;
             }
 
+            // fail fast for e-mail addresses (don't misinterpret as authentication data)
+            if (word.Any(c => c == '@'))
+            {
+                return false;
+            }
+
             // would this word make sense with http:// in front of it?
             if (!Uri.TryCreate("http://" + word, UriKind.Absolute, out uri))
             {
