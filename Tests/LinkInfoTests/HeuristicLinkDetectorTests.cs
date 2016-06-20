@@ -25,6 +25,7 @@ namespace LinkInfoTests
             AssertValidUri(detector, "omg.org", "http://omg.org/");
             AssertInvalidUri(detector, "omg.aero");
             AssertValidUri(detector, "upload.wikimedia.org/wikipedia/commons/c/c5/Logo_FC_Bayern_M%C3%BCnchen.svg", "http://upload.wikimedia.org/wikipedia/commons/c/c5/Logo_FC_Bayern_M%C3%BCnchen.svg");
+            AssertInvalidUri(detector, "test@omg.org");
         }
 
         private void AssertValidUri(HeuristicLinkDetector detector, string input, string absoluteUri)
