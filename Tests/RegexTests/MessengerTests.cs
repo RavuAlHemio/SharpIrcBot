@@ -97,6 +97,20 @@ namespace RegexTests
         {
             Assert.False(MessengerPlugin.UnQuiesceRegex.IsMatch(testString));
         }
+        private static void TestPrivateMessageRegexValid(string testString)
+        {
+            var match = MessengerPlugin.PrivateMessageRegex.Match(testString);
+            Assert.True(match.Success);
+            Assert.True(match.Groups["recipient"].Success);
+            Assert.Equal("billygoat", match.Groups["recipient"].Value);
+            Assert.True(match.Groups["message"].Success);
+            Assert.Equal("I am watching you", match.Groups["message"].Value);
+        }
+
+        private static void TestPrivateMessageRegexInvalid(string testString)
+        {
+            Assert.False(MessengerPlugin.PrivateMessageRegex.IsMatch(testString));
+        }
 
         [Fact]
         public void TestSendMessageRegex()
@@ -296,6 +310,40 @@ namespace RegexTests
                 foreach (var testString in RegexTestUtils.SpaceOut("!" + msgMail + "back", "12", "10h"))
                 {
                     TestUnQuiesceRegexInvalid(testString);
+                }
+            }
+        }
+
+        [Fact]
+        public void TestPrivateMessageRegex()
+        {
+            foreach (var cmd in new[] { "pm", "pmsg", "pmail" })
+            {
+                // missing everything: "!(pm|pmsg|pmail)"
+                foreach (var testString in RegexTestUtils.SpaceOut("!" + cmd))
+                {
+                    TestPrivateMessageRegexInvalid(testString);
+                }
+
+                foreach (var colon in new[] { "", ":" })
+                {
+                    // "!(pm|pmsg|pmail) billygoat(:)? I am watching you"
+                    foreach (var testString in RegexTestUtils.SpaceOut("!" + cmd, "billygoat" + colon, "I am watching you"))
+                    {
+                        TestPrivateMessageRegexValid(testString);
+                    }
+
+                    // missing message: "!(pm|pmsg|pmail) billygoat(:)?"
+                    foreach (var testString in RegexTestUtils.SpaceOut("!" + cmd, "billygoat" + colon))
+                    {
+                        TestPrivateMessageRegexInvalid(testString);
+                    }
+
+                    // missing space: "!(pm|pmsg|pmail)billygoat(:)? I am watching you"
+                    foreach (var testString in RegexTestUtils.SpaceOut("!" + cmd + "billygoat" + colon, "I am watching you"))
+                    {
+                        TestSendMessageRegexInvalid(testString);
+                    }
                 }
             }
         }

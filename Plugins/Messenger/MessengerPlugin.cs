@@ -25,6 +25,7 @@ namespace Messenger
         public static readonly Regex IgnoreMessageRegex = new Regex("^!(?<command>(?:un)?ignore)(?:msg|mail)\\s+(?<target>\\S+)\\s*$", RegexOptions.Compiled);
         public static readonly Regex QuiesceRegex = new Regex("^!(?:msg|mail)gone\\s+(?<messageCount>0|[1-9][0-9]*)\\s+(?<durationHours>[1-9][0-9]*)h\\s*$", RegexOptions.Compiled);
         public static readonly Regex UnQuiesceRegex = new Regex("^!(?:msg|mail)back\\s*$", RegexOptions.Compiled);
+        public static readonly Regex PrivateMessageRegex = new Regex("^!p(?:m|msg|mail)\\s+(?<recipient>[^ :]+):?\\s+(?<message>\\S+(?:\\s+\\S+)*)\\s*$", RegexOptions.Compiled);
 
         protected MessengerConfig Config { get; set; }
         protected IConnectionManager ConnectionManager { get; set; }
@@ -36,6 +37,7 @@ namespace Messenger
 
             ConnectionManager.ChannelMessage += HandleChannelMessage;
             ConnectionManager.ChannelAction += HandleChannelAction;
+            ConnectionManager.QueryMessage += HandleQueryMessage;
             ConnectionManager.BaseNickChanged += HandleBaseNickChanged;
         }
 
@@ -662,6 +664,129 @@ namespace Messenger
             );
         }
 
+        protected void PotentialPrivateMessageSend(IPrivateMessageEventArgs message)
+        {
+            var match = SendMessageRegex.Match(message.Message);
+            if (!match.Success)
+            {
+                return;
+            }
+
+            string rawRecipientNickString = match.Groups["recipient"].Value;
+            string[] rawRecipientNicks = rawRecipientNickString.Split(';');
+            if (rawRecipientNicks.Length > 1 && !Config.AllowMulticast)
+            {
+                ConnectionManager.SendQueryMessage(message.SenderNickname, "Sorry, multicasting is not allowed!");
+                return;
+            }
+
+            var rawBody = match.Groups["message"].Value;
+            var body = SharpIrcBotUtil.RemoveControlCharactersAndTrim(rawBody);
+
+            var sender = ConnectionManager.RegisteredNameForNick(message.SenderNickname) ?? message.SenderNickname;
+            var lowerSender = sender.ToLowerInvariant();
+
+            if (body.Length == 0)
+            {
+                ConnectionManager.SendQueryMessage(message.SenderNickname, "You must specify a message to deliver!");
+                return;
+            }
+
+            IEnumerable<RecipientInfo> recipientEnumerable = rawRecipientNicks
+                .Select(SharpIrcBotUtil.RemoveControlCharactersAndTrim)
+                .Select(rn => new RecipientInfo(rn, ConnectionManager.RegisteredNameForNick(rn)));
+            var recipients = new HashSet<RecipientInfo>(recipientEnumerable, new RecipientInfo.LowerRecipientComparer());
+
+            foreach (var recipient in recipients)
+            {
+                if (recipient.LowerRecipient.Length == 0)
+                {
+                    ConnectionManager.SendQueryMessage(message.SenderNickname, "You must specify a name to deliver to!");
+                    return;
+                }
+                if (recipient.LowerRecipient == ConnectionManager.MyNickname.ToLowerInvariant())
+                {
+                    ConnectionManager.SendQueryMessage(message.SenderNickname, "Sorry, I don\u2019t deliver to myself!");
+                    return;
+                }
+
+                // check ignore list
+                bool isIgnored;
+                using (var ctx = GetNewContext())
+                {
+                    string lowerRecipient = recipient.LowerRecipient;
+                    isIgnored = ctx.IgnoreList.Any(il => il.SenderLowercase == lowerSender && il.RecipientLowercase == lowerRecipient);
+                }
+
+                if (isIgnored)
+                {
+                    Logger.DebugFormat(
+                        "{0} ({3}) wants to send private message {1} to {2}, but the recipient is ignoring the sender",
+                        SharpIrcBotUtil.LiteralString(message.SenderNickname),
+                        SharpIrcBotUtil.LiteralString(body),
+                        SharpIrcBotUtil.LiteralString(recipient.Recipient),
+                        SharpIrcBotUtil.LiteralString(sender)
+                    );
+                    ConnectionManager.SendQueryMessageFormat(
+                        message.SenderNickname,
+                        "Can\u2019t send a PM to {0}\u2014they\u2019re ignoring you.",
+                        recipient.Recipient
+                    );
+                    return;
+                }
+            }
+
+            Logger.DebugFormat(
+                "{0} ({3}) sending private message {1} to {2}",
+                SharpIrcBotUtil.LiteralString(message.SenderNickname),
+                SharpIrcBotUtil.LiteralString(body),
+                string.Join(", ", recipients.Select(r => SharpIrcBotUtil.LiteralString(r.Recipient))),
+                SharpIrcBotUtil.LiteralString(sender)
+            );
+            
+            using (var ctx = GetNewContext())
+            {
+                foreach (var recipient in recipients)
+                {
+                    var msg = new PrivateMessage
+                    {
+                        Timestamp = DateTimeOffset.Now,
+                        SenderOriginal = message.SenderNickname,
+                        RecipientLowercase = recipient.LowerRecipient,
+                        Body = body
+                    };
+                    ctx.PrivateMessages.Add(msg);
+                    ctx.SaveChanges();
+                }
+            }
+
+            if (recipients.Count > 1)
+            {
+                ConnectionManager.SendQueryMessage(
+                    message.SenderNickname,
+                    "Aye-aye! I\u2019ll deliver your PM to its recipients as soon as possible!"
+                );
+                return;
+            }
+
+            var singleRecipient = recipients.First();
+            if (singleRecipient.LowerRecipient == lowerSender)
+            {
+                ConnectionManager.SendQueryMessage(
+                    message.SenderNickname,
+                    "Talking to ourselves? Well, no skin off my back. I\u2019ll deliver your PM to you right away. ;)"
+                );
+            }
+            else
+            {
+                ConnectionManager.SendQueryMessageFormat(
+                    message.SenderNickname,
+                    "Aye-aye! I\u2019ll deliver your PM to {0} next time I see \u2019em!",
+                    singleRecipient.Recipient
+                );
+            }
+        }
+
         private MessengerContext GetNewContext()
         {
             var conn = SharpIrcBotUtil.GetDatabaseConnection(Config);
@@ -698,6 +823,7 @@ namespace Messenger
             // even banned users get messages; they just can't respond to them
 
             RegularMessageDelivery(args, senderLower);
+            RegularPrivateMessageDelivery(args, senderLower);
         }
 
         protected void HandleChannelAction(object sender, IChannelMessageEventArgs args, MessageFlags flags)
@@ -705,6 +831,20 @@ namespace Messenger
             var senderUser = ConnectionManager.RegisteredNameForNick(args.SenderNickname) ?? args.SenderNickname;
             var senderLower = senderUser.ToLowerInvariant();
             RegularMessageDelivery(args, senderLower);
+            RegularPrivateMessageDelivery(args, senderLower);
+        }
+
+        protected void HandleQueryMessage(object sender, IPrivateMessageEventArgs args, MessageFlags flags)
+        {
+            if (args.SenderNickname == ConnectionManager.MyNickname)
+            {
+                return;
+            }
+
+            if (!flags.HasFlag(MessageFlags.UserBanned))
+            {
+                PotentialPrivateMessageSend(args);
+            }
         }
 
         protected virtual void RegularMessageDelivery(IChannelMessageEventArgs args, string senderLower)
@@ -859,6 +999,74 @@ namespace Messenger
 
                 // remove the messages from the delivery queue
                 ctx.Messages.RemoveRange(messages);
+
+                // commit
+                ctx.SaveChanges();
+            }
+        }
+
+        protected virtual void RegularPrivateMessageDelivery(IChannelMessageEventArgs args, string senderLower)
+        {
+            using (var ctx = GetNewContext())
+            {
+                // check if the sender should get any PMs
+                List<PrivateMessage> privateMessages = ctx.PrivateMessages
+                    .Where(m => m.RecipientLowercase == senderLower)
+                    .OrderBy(m => m.ID)
+                    .ToList()
+                ;
+                
+                if (privateMessages.Count == 0)
+                {
+                    // meh
+                    return;
+                }
+                else if (privateMessages.Count == 1)
+                {
+                    // one message
+                    Logger.DebugFormat(
+                        "delivering {0}'s private message {1} to {2}",
+                        SharpIrcBotUtil.LiteralString(privateMessages[0].SenderOriginal),
+                        SharpIrcBotUtil.LiteralString(privateMessages[0].Body),
+                        SharpIrcBotUtil.LiteralString(args.SenderNickname)
+                    );
+                    ConnectionManager.SendQueryMessageFormat(
+                        args.SenderNickname,
+                        "PM! {0} <{1}> {2}",
+                        FormatUtcTimestampFromDatabase(privateMessages[0].Timestamp),
+                        privateMessages[0].SenderOriginal,
+                        privateMessages[0].Body
+                    );
+                }
+                else
+                {
+                    // multiple messages
+                    ConnectionManager.SendQueryMessageFormat(
+                        args.SenderNickname,
+                        "{0} PMs!",
+                        privateMessages.Count
+                    );
+                    foreach (var msg in privateMessages)
+                    {
+                        Logger.DebugFormat(
+                            "delivering {0}'s private message {1} to {2} as part of a chunk",
+                            SharpIrcBotUtil.LiteralString(msg.SenderOriginal),
+                            SharpIrcBotUtil.LiteralString(msg.Body),
+                            SharpIrcBotUtil.LiteralString(args.SenderNickname)
+                        );
+                        ConnectionManager.SendQueryMessageFormat(
+                            args.SenderNickname,
+                            "{0} <{1}> {2}",
+                            FormatUtcTimestampFromDatabase(msg.Timestamp),
+                            msg.SenderOriginal,
+                            msg.Body
+                        );
+                    }
+                    ConnectionManager.SendQueryMessage(args.SenderNickname, "Cheers!");
+                }
+
+                // remove the messages from the delivery queue
+                ctx.PrivateMessages.RemoveRange(privateMessages);
 
                 // commit
                 ctx.SaveChanges();
