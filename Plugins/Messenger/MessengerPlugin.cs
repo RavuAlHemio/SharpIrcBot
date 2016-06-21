@@ -666,7 +666,7 @@ namespace Messenger
 
         protected void PotentialPrivateMessageSend(IPrivateMessageEventArgs message)
         {
-            var match = SendMessageRegex.Match(message.Message);
+            var match = PrivateMessageRegex.Match(message.Message);
             if (!match.Success)
             {
                 return;
