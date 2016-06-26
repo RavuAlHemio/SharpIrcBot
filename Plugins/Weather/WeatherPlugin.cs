@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -8,6 +9,7 @@ using log4net;
 using Newtonsoft.Json.Linq;
 using SharpIrcBot;
 using SharpIrcBot.Events.Irc;
+using Weather.Wunderground;
 
 namespace Weather
 {
@@ -113,7 +115,16 @@ namespace Weather
             }
 
             // obtain weather info
-            var response = Client.GetWeatherForLocation(Config.WunderApiKey, location);
+            WundergroundResponse response;
+            try
+            {
+                response = Client.GetWeatherForLocation(Config.WunderApiKey, location);
+            }
+            catch (WebException we) when (we.Status == WebExceptionStatus.Timeout)
+            {
+                ConnectionManager.SendChannelMessage(channel, $"{nick}: Wunderground request timed out!");
+                return;
+            }
 
             // register cooldown-relevant stuff
             PreviousRequests.Add(DateTimeOffset.Now);
