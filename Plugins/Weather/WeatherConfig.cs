@@ -17,11 +17,14 @@ namespace Weather
 
         public List<string> CoolDownResponses { get; set; }
 
+        public double TimeoutSeconds { get; set; }
+
         public WeatherConfig(JObject obj)
         {
             MaxRequestsPerMinute = 10;
             MaxRequestsPerESTDay = 500;
             CoolDownResponses = new List<string>();
+            TimeoutSeconds = 5.0;
 
             var ser = new JsonSerializer();
             ser.Populate(obj.CreateReader(), this);

@@ -1,17 +1,23 @@
 ﻿using System;
-using System.Net;
 using Newtonsoft.Json;
+using SharpIrcBot;
 using Weather.Wunderground;
 
 namespace Weather
 {
     public class WundergroundClient
     {
-        private WebClient _client;
+        private CookieWebClient _client;
+
+        public TimeSpan Timeout
+        {
+            get { return _client.Timeout; }
+            set { _client.Timeout = value; }
+        }
 
         public WundergroundClient()
         {
-            _client = new WebClient();
+            _client = new CookieWebClient();
         }
 
         public WundergroundResponse GetWeatherForLocation(string apiKey, string location)

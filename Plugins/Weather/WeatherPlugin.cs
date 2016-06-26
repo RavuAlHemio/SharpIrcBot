@@ -31,7 +31,10 @@ namespace Weather
         {
             ConnectionManager = connMgr;
             Config = new WeatherConfig(config);
-            Client = new WundergroundClient();
+            Client = new WundergroundClient
+            {
+                Timeout = TimeSpan.FromSeconds(Config.TimeoutSeconds)
+            };
 
             PreviousRequests = new SortedSet<DateTimeOffset>();
             LastRequestDayEST = null;
@@ -44,6 +47,7 @@ namespace Weather
         public void ReloadConfiguration(JObject newConfig)
         {
             Config = new WeatherConfig(newConfig);
+            Client.Timeout = TimeSpan.FromSeconds(Config.TimeoutSeconds);
         }
 
         protected virtual DateTime CalculateTodayEST()
