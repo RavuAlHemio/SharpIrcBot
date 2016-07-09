@@ -120,9 +120,17 @@ namespace Weather
             {
                 response = Client.GetWeatherForLocation(Config.WunderApiKey, location);
             }
-            catch (WebException we) when (we.Status == WebExceptionStatus.Timeout)
+            catch (WebException we)
             {
-                ConnectionManager.SendChannelMessage(channel, $"{nick}: Wunderground request timed out!");
+                if (we.Status == WebExceptionStatus.Timeout)
+                {
+                    ConnectionManager.SendChannelMessage(channel, $"{nick}: Wunderground request timed out!");
+                }
+                else
+                {
+                    Logger.Warn("error fetching Wunderground result", we);
+                    ConnectionManager.SendChannelMessage(channel, $"{nick}: Error obtaining Wunderground response!");
+                }
                 return;
             }
 
