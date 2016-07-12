@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -30,6 +31,7 @@ namespace LinkInfo
 
         protected IConnectionManager ConnectionManager { get; set; }
         protected LinkInfoConfig Config { get; set; }
+        protected IdnMapping IDNMapping { get; set; }
 
         [CanBeNull]
         protected LinkAndInfo LastLinkAndInfo { get; set; }
@@ -40,6 +42,7 @@ namespace LinkInfo
         {
             ConnectionManager = connMgr;
             Config = new LinkInfoConfig(config);
+            IDNMapping = new IdnMapping();
 
             LastLinkAndInfo = null;
             LinkDetector = null;
@@ -148,7 +151,8 @@ namespace LinkInfo
             IPAddress[] addresses;
             try
             {
-                addresses = Dns.GetHostAddresses(link.Host);
+                var punycodeHost = IDNMapping.GetAscii(link.Host);
+                addresses = Dns.GetHostAddresses(punycodeHost);
             }
             catch (SocketException se)
             {
