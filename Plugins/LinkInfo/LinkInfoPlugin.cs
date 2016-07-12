@@ -147,22 +147,24 @@ namespace LinkInfo
                 return new LinkAndInfo(link, "(too many redirections)", FetchErrorLevel.TransientError, originalLink);
             }
 
+            var linkBuilder = new UriBuilder(link);
+
             // check URL blacklist
             IPAddress[] addresses;
             try
             {
-                var punycodeHost = IDNMapping.GetAscii(link.Host);
-                addresses = Dns.GetHostAddresses(punycodeHost);
+                linkBuilder.Host = IDNMapping.GetAscii(link.Host);
+                addresses = Dns.GetHostAddresses(linkBuilder.Host);
             }
             catch (SocketException se)
             {
-                Logger.WarnFormat("socket exception when resolving {0}: {1}", link.Host, se);
+                Logger.WarnFormat("socket exception when resolving {0}: {1}", linkBuilder.Host, se);
                 return new LinkAndInfo(link, "(cannot resolve)", FetchErrorLevel.TransientError, originalLink);
             }
 
             if (addresses.Length == 0)
             {
-                Logger.WarnFormat("no addresses found when resolving {0}", link.Host);
+                Logger.WarnFormat("no addresses found when resolving {0}", linkBuilder.Host);
                 return new LinkAndInfo(link, "(cannot resolve)", FetchErrorLevel.TransientError, originalLink);
             }
             if (addresses.Any(IPAddressBlacklist.IsIPAddressBlacklisted))
@@ -170,7 +172,7 @@ namespace LinkInfo
                 return new LinkAndInfo(link, "(I refuse to access this IP address)", FetchErrorLevel.LastingError, originalLink);
             }
 
-            var request = WebRequest.Create(link);
+            var request = WebRequest.Create(linkBuilder.Uri);
             var httpRequest = request as HttpWebRequest;
             using (var respStore = new MemoryStream())
             {
