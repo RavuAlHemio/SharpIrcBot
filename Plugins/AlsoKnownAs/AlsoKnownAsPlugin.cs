@@ -94,9 +94,7 @@ namespace AlsoKnownAs
                 return;
             }
 
-            var otherNicks = matches
-                .SelectMany(x => x)
-                .OrderBy(id => id);
+            var otherNicks = new SortedSet<string>(matches.SelectMany(x => x));
 
             if (matchDepth == identifierParts.Count)
             {
