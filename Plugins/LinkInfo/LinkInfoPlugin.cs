@@ -377,10 +377,10 @@ namespace LinkInfo
             }
 
             string redirectedString = (linkAndInfo.OriginalLink != null)
-                ? $"{linkAndInfo.OriginalLink.AbsoluteUri} -> "
+                ? $"{ShortenLink(linkAndInfo.OriginalLink.AbsoluteUri)} -> "
                 : "";
 
-            post($"{redirectedString}{linkString} {(linkAndInfo.IsError ? ":!:" : "::")} {info}{domainAnnotationString}");
+            post($"{redirectedString}{ShortenLink(linkString)} {(linkAndInfo.IsError ? ":!:" : "::")} {info}{domainAnnotationString}");
         }
 
         protected bool TryCreateUriHeuristically(string word, out Uri uri)
@@ -469,6 +469,68 @@ namespace LinkInfo
             }
 
             e.Chunks = SharpIrcBotUtil.SimplifyAdjacentTextChunks(newChunks);
+        }
+
+        protected static string ShortenLink(string linkString, int maxLength = 256)
+        {
+            if (linkString.Length <= maxLength)
+            {
+                // good, good
+                return linkString;
+            }
+
+            // try to remove some path elements first
+            string[] bits = linkString.Split(new [] {'/'}, StringSplitOptions.None);
+
+            if (bits.Length > 7)
+            {
+                // 0     12                   3    4  5    6        7         8  9
+                // http://www.omg.example.com/path/to/some/resource/somewhere/or/other
+                // keep first two and last two path segments intact
+
+                var shortenedBits = new List<string>();
+                shortenedBits.AddRange(bits.Take(5));
+                shortenedBits.Add("[...]");
+                shortenedBits.AddRange(bits.Skip(bits.Length - 2));
+
+                string skipBitsPath = string.Join("/", shortenedBits);
+                if (skipBitsPath.Length <= maxLength)
+                {
+                    return skipBitsPath;
+                }
+            }
+
+            // nope; we need to shorten a long path element
+            List<int> indicesByLengthDesc = bits
+                .Select((bit, i) => Tuple.Create(bit, i))
+                .OrderByDescending(bi => bi.Item1.Length)
+                .Select(bi => bi.Item2)
+                .ToList();
+            foreach (int longIndex in indicesByLengthDesc)
+            {
+                // either 16 characters or a third of the original string, whichever is shorter
+                int preEllipsisLength = Math.Min(16, bits[longIndex].Length / 3);
+
+                string shortenedString = string.Format(
+                    "{0}[...]{1}",
+                    bits[longIndex].Substring(0, preEllipsisLength),
+                    bits[longIndex].Substring(bits[longIndex].Length - preEllipsisLength)
+                );
+                bits[longIndex] = shortenedString;
+
+                // calculate final length
+                string shortenedBitsPath = string.Join("/", bits);
+                if (shortenedBitsPath.Length <= maxLength)
+                {
+                    return shortenedBitsPath;
+                }
+
+                // shorten more
+            }
+
+            // still not short enough; just forcefully shorten the link
+            string joinedUp = string.Join("/", bits);
+            return joinedUp.Substring(0, maxLength - 5) + "[...]";
         }
     }
 }
