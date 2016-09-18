@@ -196,7 +196,7 @@ namespace LinkInfo
                         {
                             // go there instead
                             Logger.Debug($"{link.AbsoluteUri} (originally {originalLink?.AbsoluteUri ?? link.AbsoluteUri}) redirects to {location}");
-                            return RealObtainLinkInfo(new Uri(location), originalLink ?? link, redirectCount + 1);
+                            return RealObtainLinkInfo(new Uri(link, location), originalLink ?? link, redirectCount + 1);
                         }
 
                         // find the content-type
