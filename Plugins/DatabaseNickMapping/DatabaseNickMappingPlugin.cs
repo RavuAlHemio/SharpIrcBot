@@ -101,7 +101,14 @@ namespace DatabaseNickMapping
                         var aliasNickBase = FindBaseNickFor(aliasNickInput, ctx);
                         if (aliasNickBase != null)
                         {
-                            ConnectionManager.SendChannelMessage(channel, $"{requestor}: The nickname {aliasNickInput} is already linked to {aliasNickBase}.");
+                            if (aliasNickBase == baseNick)
+                            {
+                                ConnectionManager.SendChannelMessage(channel, $"{requestor}: The nicknames {baseNickInput} and {aliasNickInput} are already linked; the base nick is {baseNick}.");
+                            }
+                            else
+                            {
+                                ConnectionManager.SendChannelMessage(channel, $"{requestor}: The nickname {baseNickInput} is already linked to {baseNick} and {aliasNickInput} is already linked to {aliasNickBase}.");
+                            }
                             return;
                         }
                     }
