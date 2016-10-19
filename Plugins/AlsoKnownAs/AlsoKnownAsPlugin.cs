@@ -83,22 +83,41 @@ namespace AlsoKnownAs
             var identifier = NickToMostRecentHost[nickToSearch];
             var identifierParts = identifier.Parts;
 
-            // replace the last item in identifierParts with the empty string for a fuzzy match
-            var fuzzyIdentifierParts = identifierParts.SetItem(identifierParts.Count - 1, "");
 
             ImmutableList<HashSet<string>> matches;
-            int matchDepth = HostToNicks.GetBestMatches(fuzzyIdentifierParts, out matches);
+            int matchDepth = HostToNicks.GetBestMatches(identifierParts, out matches);
             if (matchDepth == -1)
             {
                 respond($"I don\u2019t remember any other nickname from {identifier} than {nickToSearch}.");
                 return;
             }
 
+            ImmutableList<HashSet<string>> fuzzyMatches = null;
+            int fuzzyMatchDepth = -1;
+            if (matchDepth == identifierParts.Count)
+            {
+                // do a fuzzy match too
+                // replace the last item in identifierParts with the empty string
+                var fuzzyIdentifierParts = identifierParts.SetItem(identifierParts.Count - 1, "");
+                fuzzyMatchDepth = HostToNicks.GetBestMatches(fuzzyIdentifierParts, out fuzzyMatches);
+            }
+
             var otherNicks = new SortedSet<string>(matches.SelectMany(x => x));
+            var fuzzyOtherNicks = (fuzzyMatches == null)
+                ? null
+                : new SortedSet<string>(fuzzyMatches.SelectMany(x => x));
+            fuzzyOtherNicks?.ExceptWith(otherNicks);
 
             if (matchDepth == identifierParts.Count)
             {
-                respond($"{identifier}: {string.Join(", ", otherNicks)}");
+                if (fuzzyOtherNicks != null && fuzzyOtherNicks.Count > 0)
+                {
+                    respond($"{identifier}: {string.Join(", ", otherNicks)}; fuzzy match ({fuzzyMatchDepth}/{identifierParts.Count}) also: {string.Join(", ", fuzzyOtherNicks)}");
+                }
+                else
+                {
+                    respond($"{identifier}: {string.Join(", ", otherNicks)}");
+                }
             }
             else
             {
