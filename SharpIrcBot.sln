@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
-VisualStudioVersion = 14.0.25123.0
+VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharpIrcBot", "SharpIrcBot\SharpIrcBot.csproj", "{EE95358B-9655-41C6-A76C-113A6EB455F2}"
 EndProject
@@ -72,6 +72,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LinkInfoOptIn", "Plugins\LinkInfoOptIn\LinkInfoOptIn.csproj", "{C2AB1359-2E42-4770-8253-D148E761B345}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LinkInfoTests", "Tests\LinkInfoTests\LinkInfoTests.csproj", "{D60884F2-C576-48FD-A631-8CA3B8E66BB9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WhoDoYouThinkIs", "Plugins\WhoDoYouThinkIs\WhoDoYouThinkIs.csproj", "{FE4B5784-CA48-48E3-A9B8-07CEF0092B0D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -195,6 +197,10 @@ Global
 		{D60884F2-C576-48FD-A631-8CA3B8E66BB9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D60884F2-C576-48FD-A631-8CA3B8E66BB9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D60884F2-C576-48FD-A631-8CA3B8E66BB9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FE4B5784-CA48-48E3-A9B8-07CEF0092B0D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FE4B5784-CA48-48E3-A9B8-07CEF0092B0D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FE4B5784-CA48-48E3-A9B8-07CEF0092B0D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FE4B5784-CA48-48E3-A9B8-07CEF0092B0D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -227,6 +233,7 @@ Global
 		{87B9331D-E2F1-4187-8718-98F5392C7CB7} = {21DD8582-2528-4711-80CC-2F16A1367313}
 		{C2AB1359-2E42-4770-8253-D148E761B345} = {38B2DE66-B368-4274-A9EE-ACC23B38A636}
 		{D60884F2-C576-48FD-A631-8CA3B8E66BB9} = {21DD8582-2528-4711-80CC-2F16A1367313}
+		{FE4B5784-CA48-48E3-A9B8-07CEF0092B0D} = {38B2DE66-B368-4274-A9EE-ACC23B38A636}
 	EndGlobalSection
 	GlobalSection(MonoDevelopProperties) = preSolution
 		Policies = $0

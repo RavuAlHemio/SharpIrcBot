@@ -71,6 +71,7 @@
     <Compile Include="RegexTestUtilTests.cs" />
     <Compile Include="ReinviteTests.cs" />
     <Compile Include="ThanksTests.cs" />
+    <Compile Include="WhoDoYouThinkIsTests.cs" />
     <Compile Include="WeatherTests.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -78,6 +79,10 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\Plugins\WhoDoYouThinkIs\WhoDoYouThinkIs.csproj">
+      <Project>{fe4b5784-ca48-48e3-a9b8-07cef0092b0d}</Project>
+      <Name>WhoDoYouThinkIs</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\SharpIrcBot\SharpIrcBot.csproj">
       <Project>{ee95358b-9655-41c6-a76c-113a6eb455f2}</Project>
       <Name>SharpIrcBot</Name>
