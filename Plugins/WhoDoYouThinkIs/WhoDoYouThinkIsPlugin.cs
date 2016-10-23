@@ -7,7 +7,7 @@ using SharpIrcBot.Events.Irc;
 
 namespace WhoDoYouThinkIs
 {
-    public class WhoDoYouThinkIsPlugin
+    public class WhoDoYouThinkIsPlugin : IPlugin
     {
         private static readonly ILog Logger = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
