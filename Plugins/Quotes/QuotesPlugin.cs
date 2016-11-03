@@ -558,8 +558,8 @@ namespace Quotes
 
         private QuotesContext GetNewContext()
         {
-            var conn = SharpIrcBotUtil.GetDatabaseConnection(Config);
-            return new QuotesContext(conn);
+            var opts = SharpIrcBotUtil.GetContextOptions<QuotesContext>(Config);
+            return new QuotesContext(opts);
         }
     }
 }

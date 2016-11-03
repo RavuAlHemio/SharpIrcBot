@@ -788,8 +788,8 @@ namespace Messenger
 
         private MessengerContext GetNewContext()
         {
-            var conn = SharpIrcBotUtil.GetDatabaseConnection(Config);
-            return new MessengerContext(conn);
+            var opts = SharpIrcBotUtil.GetContextOptions<MessengerContext>(Config);
+            return new MessengerContext(opts);
         }
 
         protected string FormatUtcTimestampFromDatabase(DateTimeOffset timestamp)

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data.Common;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -382,12 +381,14 @@ namespace SharpIrcBot
             return dateTime.ToLocalTime();
         }
 
-        [NotNull]
-        public static DbConnection GetDatabaseConnection([NotNull] IDatabaseModuleConfig config)
+        public static DbContextOptions<T> GetContextOptions<T>(IDatabaseModuleConfig config)
+            where T : DbContext
         {
-            var conn = DbProviderFactories.GetFactory(config.DatabaseProvider).CreateConnection();
-            conn.ConnectionString = config.DatabaseConnectionString;
-            return conn;
+            var builder = new DbContextOptionsBuilder<T>();
+
+            // FIXME: Postgres-only for the time being
+            builder.UseNpgsql(config.DatabaseConnectionString);
+            return builder.Options;
         }
 
         public static void SetupFileLogging([CanBeNull] LogLevel? level = null)

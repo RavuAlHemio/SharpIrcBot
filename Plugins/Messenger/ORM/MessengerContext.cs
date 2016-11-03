@@ -1,5 +1,4 @@
-﻿using System.Data.Common;
-using System.Data.Entity;
+﻿using Microsoft.EntityFrameworkCore;
 
 namespace Messenger.ORM
 {
@@ -12,11 +11,6 @@ namespace Messenger.ORM
         public DbSet<Quiescence> Quiescences { get; set; }
         public DbSet<PrivateMessage> PrivateMessages { get; set; }
 
-        static MessengerContext()
-        {
-            Database.SetInitializer<MessengerContext>(null);
-        }
-
         /*
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
         {
@@ -27,7 +21,8 @@ namespace Messenger.ORM
         }
         */
 
-        public MessengerContext(DbConnection connectionToOwn) : base(connectionToOwn, true)
+        public MessengerContext(DbContextOptions<MessengerContext> options)
+            : base(options)
         {
         }
     }

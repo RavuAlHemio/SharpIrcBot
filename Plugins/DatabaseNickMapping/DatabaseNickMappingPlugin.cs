@@ -256,8 +256,8 @@ namespace DatabaseNickMapping
 
         private NickMappingContext GetNewContext()
         {
-            var conn = SharpIrcBotUtil.GetDatabaseConnection(Config);
-            return new NickMappingContext(conn);
+            var opts = SharpIrcBotUtil.GetContextOptions<NickMappingContext>(Config);
+            return new NickMappingContext(opts);
         }
     }
 }

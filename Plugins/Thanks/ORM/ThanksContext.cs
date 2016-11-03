@@ -1,5 +1,4 @@
-﻿using System.Data.Common;
-using System.Data.Entity;
+﻿using Microsoft.EntityFrameworkCore;
 
 namespace Thanks.ORM
 {
@@ -7,12 +6,8 @@ namespace Thanks.ORM
     {
         public DbSet<ThanksEntry> ThanksEntries { get; set; }
 
-        static ThanksContext()
-        {
-            Database.SetInitializer<ThanksContext>(null);
-        }
-
-        public ThanksContext(DbConnection connectionToOwn) : base(connectionToOwn, true)
+        public ThanksContext(DbContextOptions<ThanksContext> options)
+            : base(options)
         {
         }
     }

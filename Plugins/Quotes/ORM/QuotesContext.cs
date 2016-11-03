@@ -1,5 +1,4 @@
-﻿using System.Data.Common;
-using System.Data.Entity;
+﻿using Microsoft.EntityFrameworkCore;
 
 namespace Quotes.ORM
 {
@@ -8,12 +7,8 @@ namespace Quotes.ORM
         public DbSet<Quote> Quotes { get; set; }
         public DbSet<QuoteVote> QuoteVotes { get; set; }
 
-        static QuotesContext()
-        {
-            Database.SetInitializer<QuotesContext>(null);
-        }
-
-        public QuotesContext(DbConnection connectionToOwn) : base(connectionToOwn, true)
+        public QuotesContext(DbContextOptions<QuotesContext> options)
+            : base(options)
         {
         }
     }

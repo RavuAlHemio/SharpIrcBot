@@ -313,8 +313,8 @@ namespace Thanks
 
         protected ThanksContext GetNewContext()
         {
-            var conn = SharpIrcBotUtil.GetDatabaseConnection(Config);
-            return new ThanksContext(conn);
+            var opts = SharpIrcBotUtil.GetContextOptions<ThanksContext>(Config);
+            return new ThanksContext(opts);
         }
     }
 }
