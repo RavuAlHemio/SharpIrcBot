@@ -28,13 +28,13 @@ namespace SharpIrcBot
         {
             foreach (var plugin in Config.Plugins)
             {
-                var ass = Assembly.Load(plugin.Assembly);
+                var ass = Assembly.Load(new AssemblyName(plugin.Assembly));
                 var type = ass.GetType(plugin.Class);
-                if (!typeof(IPlugin).IsAssignableFrom(type))
+                if (!typeof(IPlugin).GetTypeInfo().IsAssignableFrom(type))
                 {
                     throw new ArgumentException("class is not a plugin");
                 }
-                var ctor = type.GetConstructor(new [] {typeof(IConnectionManager), typeof(JObject)});
+                var ctor = type.GetTypeInfo().GetConstructor(new [] {typeof(IConnectionManager), typeof(JObject)});
                 var pluginObject = (IPlugin)ctor.Invoke(new object[] {connManager, plugin.Config});
                 Plugins.Add(pluginObject);
             }

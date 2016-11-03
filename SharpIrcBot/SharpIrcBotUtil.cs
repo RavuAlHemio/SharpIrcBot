@@ -37,10 +37,7 @@ namespace SharpIrcBot
         }
 
         [NotNull]
-        public static string AppDirectory
-        {
-            get { return Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath); }
-        }
+        public static string AppDirectory => AppContext.BaseDirectory;
 
         /// <summary>
         /// Converts a string into Unicode code points, handling surrogate pairs gracefully.
