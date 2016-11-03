@@ -75,14 +75,14 @@ namespace Dice
                 return;
             }
 
-            if (args.Message.StartsWith("!yn ", StringComparison.InvariantCultureIgnoreCase) && Config.YesNoAnswers.Count > 0)
+            if (args.Message.StartsWith("!yn ", StringComparison.OrdinalIgnoreCase) && Config.YesNoAnswers.Count > 0)
             {
                 var yesNoAnswer = Config.YesNoAnswers[RNG.Next(Config.YesNoAnswers.Count)];
                 ConnectionManager.SendChannelMessageFormat(args.Channel, "{0}: {1}", args.SenderNickname, yesNoAnswer);
                 return;
             }
 
-            if (args.Message.StartsWith("!decide ", StringComparison.InvariantCultureIgnoreCase) && Config.DecisionSplitters.Count > 0)
+            if (args.Message.StartsWith("!decide ", StringComparison.OrdinalIgnoreCase) && Config.DecisionSplitters.Count > 0)
             {
                 var decisionString = args.Message.Substring(("!decide ").Length).Trim();
 

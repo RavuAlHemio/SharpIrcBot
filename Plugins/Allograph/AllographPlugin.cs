@@ -107,7 +107,7 @@ namespace Allograph
 
                     if (Config.CooldownIncreasePerHit >= 0 || repl.CustomCooldownIncreasePerHit >= 0)
                     {
-                        if (!string.Equals(newChunk, nextNewChunk, StringComparison.InvariantCulture))
+                        if (!string.Equals(newChunk, nextNewChunk, StringComparison.Ordinal))
                         {
                             // this rule changed something!
                             if (newCooldowns[i] == 0)
@@ -147,7 +147,7 @@ namespace Allograph
                 newBody.Append(newChunk);
             }
 
-            if (string.Equals(newBody.ToString(), originalBody, StringComparison.InvariantCulture))
+            if (string.Equals(newBody.ToString(), originalBody, StringComparison.Ordinal))
             {
                 return;
             }
