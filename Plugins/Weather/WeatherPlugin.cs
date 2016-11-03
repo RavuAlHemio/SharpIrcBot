@@ -2,8 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 using SharpIrcBot;
@@ -119,17 +121,15 @@ namespace Weather
             {
                 response = Client.GetWeatherForLocation(Config.WunderApiKey, location);
             }
-            catch (WebException we)
+            catch (TaskCanceledException)
             {
-                if (we.Status == WebExceptionStatus.Timeout)
-                {
-                    ConnectionManager.SendChannelMessage(channel, $"{nick}: Wunderground request timed out!");
-                }
-                else
-                {
-                    ConnectionManager.SendChannelMessage(channel, $"{nick}: Error obtaining Wunderground response!");
-                }
+                ConnectionManager.SendChannelMessage(channel, $"{nick}: Wunderground request timed out!");
+                return;
+            }
+            catch (HttpRequestException we)
+            {
                 Logger.LogWarning("error fetching Wunderground result", we);
+                ConnectionManager.SendChannelMessage(channel, $"{nick}: Error obtaining Wunderground response!");
                 return;
             }
 
