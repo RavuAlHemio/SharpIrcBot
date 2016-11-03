@@ -4,7 +4,6 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Text.RegularExpressions;
 using JetBrains.Annotations;
-using log4net;
 using Newtonsoft.Json.Linq;
 using SharpIrcBot;
 using SharpIrcBot.Collections;
@@ -14,7 +13,6 @@ namespace AlsoKnownAs
 {
     public class AlsoKnownAsPlugin : IPlugin, IReloadableConfiguration
     {
-        private static readonly ILog Logger = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
         public static readonly Regex AlsoKnownAsRegex = new Regex("^!aka\\s+(?<nickname>\\S+)\\s*", RegexOptions.Compiled);
 
         protected IConnectionManager ConnectionManager { get; set; }

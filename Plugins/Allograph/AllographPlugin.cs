@@ -2,11 +2,11 @@
 using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
-using log4net;
 using Newtonsoft.Json.Linq;
 using SharpIrcBot;
 using System.Collections.Generic;
 using System.Text;
+using Microsoft.Extensions.Logging;
 using SharpIrcBot.Chunks;
 using SharpIrcBot.Events.Irc;
 
@@ -14,7 +14,7 @@ namespace Allograph
 {
     public class AllographPlugin : IPlugin, IReloadableConfiguration
     {
-        private static readonly ILog Logger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        private static readonly ILogger Logger = SharpIrcBotUtil.LoggerFactory.CreateLogger<AllographPlugin>();
         public static readonly Regex StatsRegex = new Regex("^!allostats\\s+(?<channel>[#&]\\S+)(?:\\s+(?<testmsg>\\S+(?:\\s+\\S+)*))?\\s*$", RegexOptions.Compiled);
 
         protected AllographConfig Config;
@@ -141,7 +141,7 @@ namespace Allograph
                     CooldownsPerChannel[channel].Clear();
                     CooldownsPerChannel[channel].AddRange(newCooldowns);
 
-                    Logger.DebugFormat("cooldowns are now: {0}", string.Join(", ", newCooldowns.Select(c => c.ToString())));
+                    Logger.LogDebug("cooldowns are now: {0}", string.Join(", ", newCooldowns.Select(c => c.ToString())));
                 }
 
                 newBody.Append(newChunk);
@@ -155,12 +155,12 @@ namespace Allograph
             var thisProbabilityValue = Random.NextDouble() * 100.0;
             if (thisProbabilityValue < Config.ProbabilityPercent)
             {
-                Logger.DebugFormat("{0:F2} < {1:F2}; posting {2}", thisProbabilityValue, Config.ProbabilityPercent, newBody);
+                Logger.LogDebug("{0:F2} < {1:F2}; posting {2}", thisProbabilityValue, Config.ProbabilityPercent, newBody);
                 ConnectionManager.SendChannelMessage(args.Channel, newBody.ToString());
             }
             else
             {
-                Logger.DebugFormat("{0:F2} >= {1:F2}; not posting {2}", thisProbabilityValue, Config.ProbabilityPercent, newBody);
+                Logger.LogDebug("{0:F2} >= {1:F2}; not posting {2}", thisProbabilityValue, Config.ProbabilityPercent, newBody);
             }
         }
 

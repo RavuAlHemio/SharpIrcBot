@@ -7,13 +7,13 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using JetBrains.Annotations;
-using log4net;
-using log4net.Appender;
-using log4net.Config;
-using log4net.Core;
-using log4net.Layout;
-using log4net.Repository.Hierarchy;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Console;
 using Newtonsoft.Json.Linq;
+using Serilog;
+using Serilog.Events;
+using Serilog.Extensions.Logging;
 using SharpIrcBot.Chunks;
 using SharpIrcBot.Config;
 
@@ -21,7 +21,7 @@ namespace SharpIrcBot
 {
     public static class SharpIrcBotUtil
     {
-        public const string DefaultLogFormat = "%date{yyyy-MM-dd HH:mm:ss} [%15.15thread] %-5level %30.30logger - %message%newline";
+        public static readonly ILoggerFactory LoggerFactory = new LoggerFactory();
         [NotNull]
         public static readonly Encoding Utf8NoBom = new UTF8Encoding(false, true);
         [NotNull]
@@ -390,69 +390,37 @@ namespace SharpIrcBot
             return conn;
         }
 
-        public static void SetupFileLogging([CanBeNull] Level level = null)
+        public static void SetupFileLogging([CanBeNull] LogLevel? level = null)
         {
-            var logConfFile = new FileInfo(Path.Combine(AppDirectory, "LogConf.xml"));
-            if (logConfFile.Exists)
+            var serilogLevelMapping = new Dictionary<LogLevel, LogEventLevel>
             {
-                // use the XML configurator instead
-                XmlConfigurator.Configure(logConfFile);
-                return;
+                [LogLevel.Critical] = LogEventLevel.Fatal,
+                [LogLevel.Error] = LogEventLevel.Error,
+                [LogLevel.Warning] = LogEventLevel.Warning,
+                [LogLevel.Information] = LogEventLevel.Information,
+                [LogLevel.Debug] = LogEventLevel.Debug,
+                [LogLevel.Trace] = LogEventLevel.Verbose
+            };
+
+            var serilogLoggerConfig = new LoggerConfiguration();
+            if (level.HasValue)
+            {
+                serilogLoggerConfig = serilogLoggerConfig
+                    .MinimumLevel.Is(serilogLevelMapping[level.Value]);
             }
+            serilogLoggerConfig = serilogLoggerConfig
+                .WriteTo.RollingFile(Path.Combine(AppDirectory, "SharpIrcBot-{Date}.log"));
 
-            var hierarchy = (Hierarchy) LogManager.GetRepository();
-            var rootLogger = hierarchy.Root;
-            rootLogger.Level = level ?? Level.Debug;
-
-            var patternLayout = new PatternLayout
-            {
-                ConversionPattern = DefaultLogFormat
-            };
-            patternLayout.ActivateOptions();
-
-            var logAppender = new FileAppender
-            {
-                AppendToFile = true,
-                Encoding = Utf8NoBom,
-                File = Path.Combine(AppDirectory, "SharpIrcBot.log"),
-                Layout = patternLayout
-            };
-            logAppender.ActivateOptions();
-
-            rootLogger.AddAppender(logAppender);
-
-            hierarchy.Configured = true;
+            LoggerFactory.AddProvider(new SerilogLoggerProvider(serilogLoggerConfig.CreateLogger()));
         }
 
-        public static void SetupConsoleLogging([CanBeNull] Level level = null)
+        public static void SetupConsoleLogging([CanBeNull] LogLevel? level = null)
         {
-            var logConfFile = new FileInfo(Path.Combine(AppDirectory, "LogConf.xml"));
-            if (logConfFile.Exists)
-            {
-                // use the XML configurator instead
-                XmlConfigurator.Configure(logConfFile);
-                return;
-            }
-
-            var hierarchy = (Hierarchy)LogManager.GetRepository();
-            var rootLogger = hierarchy.Root;
-            rootLogger.Level = level ?? Level.Debug;
-
-            var patternLayout = new PatternLayout
-            {
-                ConversionPattern = DefaultLogFormat
-            };
-            patternLayout.ActivateOptions();
-
-            var logAppender = new ManagedColoredConsoleAppender
-            {
-                Layout = patternLayout
-            };
-            logAppender.ActivateOptions();
-
-            rootLogger.AddAppender(logAppender);
-
-            hierarchy.Configured = true;
+            var consoleProvider = new ConsoleLoggerProvider(
+                (text, logLevel) => !level.HasValue || logLevel >= level.Value,
+                true
+            );
+            LoggerFactory.AddProvider(consoleProvider);
         }
 
         /// <summary>

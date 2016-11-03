@@ -10,7 +10,7 @@ using System.Text.RegularExpressions;
 using Fizzler.Systems.HtmlAgilityPack;
 using HtmlAgilityPack;
 using JetBrains.Annotations;
-using log4net;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 using SharpIrcBot;
 using SharpIrcBot.Chunks;
@@ -21,7 +21,7 @@ namespace LinkInfo
 {
     public class LinkInfoPlugin : IPlugin, IReloadableConfiguration
     {
-        private static readonly ILog Logger = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+        private static readonly ILogger Logger = SharpIrcBotUtil.LoggerFactory.CreateLogger<LinkInfoPlugin>();
 
         public const string GoogleHomepageUrlPattern = "https://{0}/";
         public const string GoogleImageSearchUrlPattern = "https://{0}/imghp?hl=en&tab=wi";
@@ -158,13 +158,13 @@ namespace LinkInfo
             }
             catch (SocketException se)
             {
-                Logger.WarnFormat("socket exception when resolving {0}: {1}", linkBuilder.Host, se);
+                Logger.LogWarning("socket exception when resolving {0}: {1}", linkBuilder.Host, se);
                 return new LinkAndInfo(link, "(cannot resolve)", FetchErrorLevel.TransientError, originalLink);
             }
 
             if (addresses.Length == 0)
             {
-                Logger.WarnFormat("no addresses found when resolving {0}", linkBuilder.Host);
+                Logger.LogWarning("no addresses found when resolving {0}", linkBuilder.Host);
                 return new LinkAndInfo(link, "(cannot resolve)", FetchErrorLevel.TransientError, originalLink);
             }
             if (addresses.Any(IPAddressBlacklist.IsIPAddressBlacklisted))
@@ -195,7 +195,7 @@ namespace LinkInfo
                         if (location != null)
                         {
                             // go there instead
-                            Logger.Debug($"{link.AbsoluteUri} (originally {originalLink?.AbsoluteUri ?? link.AbsoluteUri}) redirects to {location}");
+                            Logger.LogDebug($"{link.AbsoluteUri} (originally {originalLink?.AbsoluteUri ?? link.AbsoluteUri}) redirects to {location}");
                             return RealObtainLinkInfo(new Uri(link, location), originalLink ?? link, redirectCount + 1);
                         }
 
@@ -246,7 +246,7 @@ namespace LinkInfo
                     {
                         return new LinkAndInfo(link, $"(HTTP {httpResponse.StatusCode})", FetchErrorLevel.TransientError, originalLink);
                     }
-                    Logger.Warn("HTTP exception thrown", we);
+                    Logger.LogWarning("HTTP exception thrown: {0}", we);
                     return new LinkAndInfo(link, "(HTTP error)", FetchErrorLevel.TransientError, originalLink);
                 }
 
@@ -327,7 +327,7 @@ namespace LinkInfo
             }
             catch (Exception ex)
             {
-                Logger.Warn("image info", ex);
+                Logger.LogWarning("image info: {0}", ex);
                 return text;
             }
         }
@@ -340,7 +340,7 @@ namespace LinkInfo
             }
             catch (Exception ex)
             {
-                Logger.Warn("link info", ex);
+                Logger.LogWarning("link info: {0}", ex);
                 return new LinkAndInfo(link, "(an error occurred)", FetchErrorLevel.TransientError, null);
             }
         }

@@ -2,9 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Reflection;
 using System.Text.RegularExpressions;
-using log4net;
 using Newtonsoft.Json.Linq;
 using Quotes.ORM;
 using SharpIrcBot;
@@ -15,7 +13,6 @@ namespace Quotes
 {
     public class QuotesPlugin : IPlugin, IReloadableConfiguration
     {
-        private static readonly ILog Logger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         public static readonly Regex AddQuoteRegex = new Regex("^!addquote\\s+(?<quote>\\S.*)$", RegexOptions.Compiled);
         public static readonly Regex RememberRegex = new Regex("^!remember\\s+(?<nick>\\S+)\\s+(?<pattern>\\S.*)$", RegexOptions.Compiled);
         public static readonly Regex QuoteRegex = new Regex("^!(?<rated>any|bad)?(?<showRating>r)?quote(?:\\s+(?<search>\\S.*)|\\s*)$", RegexOptions.Compiled);

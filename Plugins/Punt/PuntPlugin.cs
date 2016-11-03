@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Linq;
-using System.Reflection;
-using log4net;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 using SharpIrcBot;
 using SharpIrcBot.Events.Irc;
@@ -10,7 +9,7 @@ namespace Punt
 {
     public class PuntPlugin : IPlugin, IReloadableConfiguration
     {
-        private static readonly ILog Logger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        private static readonly ILogger Logger = SharpIrcBotUtil.LoggerFactory.CreateLogger<PuntPlugin>();
 
         protected IConnectionManager ConnectionManager { get; }
         protected PuntConfig Config { get; set; }

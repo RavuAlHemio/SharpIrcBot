@@ -2,10 +2,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
-using log4net;
+using Microsoft.Extensions.Logging;
 using SharpIrcBot;
 using SharpIrcBot.Events.Irc;
 using UnoBot.RuntimeTweaking;
@@ -14,8 +13,8 @@ namespace UnoBot
 {
     public class UnoBotPlugin : IPlugin, IReloadableConfiguration
     {
-        private static readonly ILog CommunicationLogger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType.FullName + ".Communication");
-        private static readonly ILog StrategyLogger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType.FullName + ".Strategy");
+        private static readonly ILogger CommunicationLogger = SharpIrcBotUtil.LoggerFactory.CreateLogger(typeof(UnoBotPlugin).FullName + ".Communication");
+        private static readonly ILogger StrategyLogger = SharpIrcBotUtil.LoggerFactory.CreateLogger(typeof(UnoBotPlugin).FullName + ".Strategy");
 
         protected delegate StrategyContinuation StrategyFunction(List<Card> possibleCards);
         protected delegate void FilterFunction(List<Card> possibleCards);
@@ -210,25 +209,25 @@ namespace UnoBot
                 if (!CurrentPlayers.Contains(args.SenderNickname))
                 {
                     // player is not taking part
-                    StrategyLogger.DebugFormat("denying {0}'s color request because they are a spectator", args.SenderNickname);
+                    StrategyLogger.LogDebug("denying {0}'s color request because they are a spectator", args.SenderNickname);
                     denyColor = true;
                 }
                 if (CurrentCardCounts.Values.All(v => v > Config.PlayToWinThreshold))
                 {
                     // everybody has more than two cards
-                    StrategyLogger.DebugFormat("denying {0}'s color request because everybody has more than {1} cards", args.SenderNickname, Config.PlayToWinThreshold);
+                    StrategyLogger.LogDebug("denying {0}'s color request because everybody has more than {1} cards", args.SenderNickname, Config.PlayToWinThreshold);
                     denyColor = true;
                 }
                 if (CurrentCardCounts.ContainsKey(args.SenderNickname) && CurrentCardCounts[args.SenderNickname] <= Config.PlayToWinThreshold)
                 {
                     // the person who is asking has two cards or less
-                    StrategyLogger.DebugFormat("denying {0}'s color request because they have {1} cards or fewer ({2})", args.SenderNickname, Config.PlayToWinThreshold, CurrentCardCounts[args.SenderNickname]);
+                    StrategyLogger.LogDebug("denying {0}'s color request because they have {1} cards or fewer ({2})", args.SenderNickname, Config.PlayToWinThreshold, CurrentCardCounts[args.SenderNickname]);
                     denyColor = true;
                 }
                 if (CurrentHand.Count <= Config.PlayToWinThreshold)
                 {
                     // I have two cards or less
-                    StrategyLogger.DebugFormat("denying {0}'s color request because I have {1} cards or fewer ({2})", args.SenderNickname, Config.PlayToWinThreshold, CurrentHand.Count);
+                    StrategyLogger.LogDebug("denying {0}'s color request because I have {1} cards or fewer ({2})", args.SenderNickname, Config.PlayToWinThreshold, CurrentHand.Count);
                     denyColor = true;
                 }
 
@@ -341,7 +340,7 @@ namespace UnoBot
         {
             var eventName = (string) evt["event"];
 
-            CommunicationLogger.DebugFormat("received event {0}", eventName);
+            CommunicationLogger.LogDebug("received event {0}", eventName);
 
             bool playNow = false;
             switch (eventName)
@@ -401,7 +400,7 @@ namespace UnoBot
                         .ToList();
                     if (LastHandCount > 0 && Config.ManyCardsCurseThreshold > 0 && CurrentHand.Count - LastHandCount >= Config.ManyCardsCurseThreshold)
                     {
-                        StrategyLogger.Debug("cursing because of overfilled hand");
+                        StrategyLogger.LogDebug("cursing because of overfilled hand");
                         Curse();
                     }
                     LastHandCount = CurrentHand.Count;
@@ -443,7 +442,7 @@ namespace UnoBot
             {
                 // we have a pending color request; honor it
                 var color = ColorRequest.Value;
-                StrategyLogger.DebugFormat("honoring color request {0}", color);
+                StrategyLogger.LogDebug("honoring color request {0}", color);
                 ColorRequest = null;
                 return color;
             }
@@ -532,7 +531,7 @@ namespace UnoBot
                 return StrategyContinuation.ContinueToNextStrategy;
             }
 
-            StrategyLogger.DebugFormat("next player {0} has {1} cards", NextPlayer, CurrentCardCounts[NextPlayer]);
+            StrategyLogger.LogDebug("next player {0} has {1} cards", NextPlayer, CurrentCardCounts[NextPlayer]);
 
             if (CurrentCardCounts[NextPlayer] > Config.PlayToWinThreshold)
             {
@@ -541,7 +540,7 @@ namespace UnoBot
             }
 
             // the player after me has too few cards; try finding an evil card first
-            StrategyLogger.Debug("trying to find an evil card");
+            StrategyLogger.LogDebug("trying to find an evil card");
 
             // offensive cards first: D2, WD4
             possibleCards.AddRange(CurrentHand.Where(hc => hc.Color == TopCard.Color && hc.Value == CardValue.DrawTwo));
@@ -560,7 +559,7 @@ namespace UnoBot
 
             if (possibleCards.Count > 0)
             {
-                StrategyLogger.DebugFormat("we have at least one evil card for the next player ({0})", string.Join(", ", possibleCards));
+                StrategyLogger.LogDebug("we have at least one evil card for the next player ({0})", string.Join(", ", possibleCards));
 
                 // don't add the next pick
                 return StrategyContinuation.SkipAllOtherStrategiesUnlessFilteredEmpty;
@@ -569,20 +568,20 @@ namespace UnoBot
             {
                 if (CurrentHand.Count <= Config.PlayToWinThreshold)
                 {
-                    StrategyLogger.DebugFormat("not risking emergency strategic draw for evil card");
+                    StrategyLogger.LogDebug("not risking emergency strategic draw for evil card");
                 }
                 else if (Config.EmergencyStrategicDrawPercentage > 0)
                 {
                     var emergencyStrategicDraw = (Randomizer.Next(100) < Config.EmergencyStrategicDrawPercentage);
                     if (emergencyStrategicDraw)
                     {
-                        StrategyLogger.Debug("emergency strategic draw for evil card");
+                        StrategyLogger.LogDebug("emergency strategic draw for evil card");
                         DrawACard();
                         return StrategyContinuation.DontPlayCard;
                     }
                     else
                     {
-                        StrategyLogger.Debug("skipping emergency strategic draw for evil card");
+                        StrategyLogger.LogDebug("skipping emergency strategic draw for evil card");
                     }
                 }
             }
@@ -686,7 +685,7 @@ namespace UnoBot
             // PreviousPlayer is null if it would equal NextPlayer otherwise
             if (PreviousPlayer != null && CurrentCardCounts.ContainsKey(PreviousPlayer) && CurrentCardCounts[PreviousPlayer] <= Config.PlayToWinThreshold)
             {
-                StrategyLogger.DebugFormat("previous player ({0}) has {1} cards or less ({2}); filtering out reverses", PreviousPlayer, Config.PlayToWinThreshold, CurrentCardCounts[PreviousPlayer]);
+                StrategyLogger.LogDebug("previous player ({0}) has {1} cards or less ({2}); filtering out reverses", PreviousPlayer, Config.PlayToWinThreshold, CurrentCardCounts[PreviousPlayer]);
                 possibleCards.RemoveAll(c => c.Value == CardValue.Reverse);
             }
         }
@@ -721,15 +720,15 @@ namespace UnoBot
                     int nextCount = CurrentCardCounts[NextPlayer];
                     if (nextCount < nextButOneCount)
                     {
-                        StrategyLogger.Debug($"both next ({NextPlayer}) and next-but-one ({NextButOnePlayer}) player have <= {Config.PlayToWinThreshold} cards, but next has fewer ({nextCount}) than next-but-one ({nextButOneCount}); not filtering out cards that would skip next and make it next-but-one's turn");
+                        StrategyLogger.LogDebug($"both next ({NextPlayer}) and next-but-one ({NextButOnePlayer}) player have <= {Config.PlayToWinThreshold} cards, but next has fewer ({nextCount}) than next-but-one ({nextButOneCount}); not filtering out cards that would skip next and make it next-but-one's turn");
                         return;
                     }
 
-                    StrategyLogger.Debug($"both next ({NextPlayer}) and next-but-one ({NextButOnePlayer}) have <= {Config.PlayToWinThreshold} cards, but next has more ({nextCount}) than next-but-one ({nextButOneCount}); filtering out cards that would skip next and make it next-but-one's turn");
+                    StrategyLogger.LogDebug($"both next ({NextPlayer}) and next-but-one ({NextButOnePlayer}) have <= {Config.PlayToWinThreshold} cards, but next has more ({nextCount}) than next-but-one ({nextButOneCount}); filtering out cards that would skip next and make it next-but-one's turn");
                 }
                 else
                 {
-                    StrategyLogger.Debug($"next-but-one player ({NextButOnePlayer}) has <= {Config.PlayToWinThreshold} cards and next ({NextPlayer}) is not a danger; filtering out cards that would skip next and make it next-but-one's turn");
+                    StrategyLogger.LogDebug($"next-but-one player ({NextButOnePlayer}) has <= {Config.PlayToWinThreshold} cards and next ({NextPlayer}) is not a danger; filtering out cards that would skip next and make it next-but-one's turn");
                 }
 
                 possibleCards.RemoveAll(c => c.Value == CardValue.DrawTwo || c.Value == CardValue.WildDrawFour || c.Value == CardValue.Skip);
@@ -759,7 +758,7 @@ namespace UnoBot
                 var strategicDraw = (Randomizer.Next(Config.StrategicDrawDenominator) == 0);
                 if (strategicDraw)
                 {
-                    StrategyLogger.Debug("strategic draw");
+                    StrategyLogger.LogDebug("strategic draw");
                     return null;
                 }
             }
@@ -819,10 +818,7 @@ namespace UnoBot
             var strategies = AssembleStrategies();
             var filters = AssembleFilters();
 
-            if (StrategyLogger.IsDebugEnabled)
-            {
-                StrategyLogger.DebugFormat("current hand: [{0}]", string.Join(", ", CurrentHand.Select(c => c.Color + " " + c.Value)));
-            }
+            StrategyLogger.LogDebug("current hand: [{0}]", string.Join(", ", CurrentHand.Select(c => c.Color + " " + c.Value)));
 
             if (Config.DrawAllTheTime && !DrewLast)
             {
@@ -874,13 +870,13 @@ namespace UnoBot
                 // final pick chose a card
                 var card = maybeCard.Value;
 
-                StrategyLogger.DebugFormat("playing card: {0} {1}", card.Color, card.Value);
+                StrategyLogger.LogDebug("playing card: {0} {1}", card.Color, card.Value);
 
                 if (card.Color == CardColor.Wild)
                 {
                     // pick a color
                     var chosenColor = PickAColor();
-                    StrategyLogger.DebugFormat("chosen color: {0}", chosenColor);
+                    StrategyLogger.LogDebug("chosen color: {0}", chosenColor);
 
                     // play the card
                     PlayWildCard(card.Value, chosenColor);
@@ -898,7 +894,7 @@ namespace UnoBot
 
             if (DrewLast)
             {
-                StrategyLogger.Debug("passing");
+                StrategyLogger.LogDebug("passing");
                 PassAfterDrawing();
                 ColorRequest = null;
             }
@@ -906,10 +902,10 @@ namespace UnoBot
             {
                 if (Config.ManyDrawsCurseThreshold >= 0 && DrawsSinceLastPlay > Config.ManyDrawsCurseThreshold)
                 {
-                    StrategyLogger.Debug("cursing because of too many draws");
+                    StrategyLogger.LogDebug("cursing because of too many draws");
                     Curse();
                 }
-                StrategyLogger.Debug("drawing");
+                StrategyLogger.LogDebug("drawing");
                 DrawACard();
             }
         }

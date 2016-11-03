@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
-using log4net;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 using SharpIrcBot;
 using SharpIrcBot.Events.Irc;
@@ -11,7 +10,7 @@ namespace DontJustHighlightMe
 {
     public class DontJustHighlightMePlugin : IPlugin, IReloadableConfiguration
     {
-        private static readonly ILog Logger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        private static readonly ILogger Logger = SharpIrcBotUtil.LoggerFactory.CreateLogger<DontJustHighlightMePlugin>();
 
         protected IConnectionManager ConnectionManager { get; set; }
         protected DJHMConfig Config { get; set; }
@@ -66,7 +65,7 @@ namespace DontJustHighlightMe
             if (lowercaseChannelUsernames.Contains(trimmedLowerMessage))
             {
                 // found one!
-                Logger.DebugFormat("{0} is a highlight", trimmedLowerMessage);
+                Logger.LogDebug("{0} is a highlight", trimmedLowerMessage);
                 highlightee = trimmedLowerMessage;
             }
 
@@ -83,7 +82,7 @@ namespace DontJustHighlightMe
                     if (lowercaseChannelUsernames.Contains(lowerBaseNick))
                     {
                         // yes
-                        Logger.DebugFormat("{0} highlights {1}", trimmedLowerMessage, lowerBaseNick);
+                        Logger.LogDebug("{0} highlights {1}", trimmedLowerMessage, lowerBaseNick);
                         highlightee = lowerBaseNick;
                     }
                 }
@@ -107,7 +106,7 @@ namespace DontJustHighlightMe
                 int currentValue = RNG.Next(0, 100);
                 if (currentValue >= Config.TriggerPercentage)
                 {
-                    Logger.Debug("RNG decided against triggering");
+                    Logger.LogDebug("RNG decided against triggering");
                     return;
                 }
             }
@@ -135,13 +134,13 @@ namespace DontJustHighlightMe
                     if (Config.Kick)
                     {
                         // punt the perpetrator out of the channel
-                        Logger.Debug($"punting {occ.Perpetrator} from {occ.Channel} for highlighting {occ.Victim}");
+                        Logger.LogDebug($"punting {occ.Perpetrator} from {occ.Channel} for highlighting {occ.Victim}");
                         ConnectionManager.KickChannelUser(occ.Channel, occ.Perpetrator, Config.KickMessage);
                     }
                     else
                     {
                         // highlight the perpetrator as retribution
-                        Logger.Debug(
+                        Logger.LogDebug(
                             $"re-highlighting {occ.Perpetrator} in {occ.Channel} for highlighting {occ.Victim}");
                         ConnectionManager.SendChannelMessage(occ.Channel, occ.Perpetrator);
                     }

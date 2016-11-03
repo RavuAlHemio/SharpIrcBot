@@ -3,12 +3,11 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
-using System.Reflection;
 using System.Text;
 using System.Threading;
 using JetBrains.Annotations;
-using log4net;
 using Meebey.SmartIrc4net;
+using Microsoft.Extensions.Logging;
 using SharpIrcBot.Chunks;
 using SharpIrcBot.Config;
 using SharpIrcBot.Events;
@@ -19,7 +18,7 @@ namespace SharpIrcBot
 {
     public class ConnectionManager : IConnectionManager
     {
-        private static readonly ILog Logger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        private static readonly ILogger Logger = SharpIrcBotUtil.LoggerFactory.CreateLogger<ConnectionManager>();
 
         private bool ConfigFilePathKnown { get; set; }
         public string ConfigPath { get; }
@@ -269,14 +268,14 @@ namespace SharpIrcBot
         {
             if (!ConfigFilePathKnown)
             {
-                Logger.Warn("cannot reload configuration: configuration file path unknown");
+                Logger.LogWarning("cannot reload configuration: configuration file path unknown");
             }
 
             Config = SharpIrcBotUtil.LoadConfig(ConfigPath);
 
             if (PluginManager == null)
             {
-                Logger.Warn("cannot reload plugin configuration: plugin manager is null");
+                Logger.LogWarning("cannot reload plugin configuration: plugin manager is null");
                 return;
             }
             PluginManager.ReloadConfigurations(Config.Plugins);
@@ -298,7 +297,7 @@ namespace SharpIrcBot
                 }
                 catch (Exception exc)
                 {
-                    Logger.Error("exception while running IRC", exc);
+                    Logger.LogError("exception while running IRC: {0}", exc);
                     DisconnectOrWhatever();
 
                     var failPoint = DateTime.UtcNow;
@@ -366,7 +365,7 @@ namespace SharpIrcBot
             }
             catch (Exception exc)
             {
-                Logger.Warn("exception while handling CTCP request", exc);
+                Logger.LogWarning("exception while handling CTCP request: {0}", exc);
             }
         }
 
@@ -499,7 +498,7 @@ namespace SharpIrcBot
                 }
                 catch (Exception exc)
                 {
-                    Logger.ErrorFormat("error when {0} was handling {1}: {2}", subscriber, description, exc);
+                    Logger.LogError("error when {0} was handling {1}: {2}", subscriber, description, exc);
                 }
             }
         }
@@ -525,7 +524,7 @@ namespace SharpIrcBot
                 }
                 catch (Exception exc)
                 {
-                    Logger.ErrorFormat("error when {0} was handling {1}: {2}", subscriber, description, exc);
+                    Logger.LogError("error when {0} was handling {1}: {2}", subscriber, description, exc);
                 }
             }
         }
@@ -657,7 +656,7 @@ namespace SharpIrcBot
         public void ReportBaseNickChange(string oldBaseNick, string newBaseNick)
         {
             // trigger update among plugins
-            Logger.InfoFormat("reporting base nick change from {0} to {1}", oldBaseNick, newBaseNick);
+            Logger.LogInformation("reporting base nick change from {0} to {1}", oldBaseNick, newBaseNick);
             var e = new BaseNickChangedEventArgs(oldBaseNick, newBaseNick);
             OnBaseNickChanged(e);
         }

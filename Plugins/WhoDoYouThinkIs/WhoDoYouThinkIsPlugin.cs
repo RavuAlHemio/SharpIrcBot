@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Text.RegularExpressions;
-using log4net;
 using Newtonsoft.Json.Linq;
 using SharpIrcBot;
 using SharpIrcBot.Events.Irc;
@@ -9,8 +8,6 @@ namespace WhoDoYouThinkIs
 {
     public class WhoDoYouThinkIsPlugin : IPlugin
     {
-        private static readonly ILog Logger = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
-
         public static readonly Regex WhoDoYouThinkIsRegex = new Regex("^!wdyti\\s+(?<nick>[^ ]+)\\s*$", RegexOptions.Compiled);
 
         protected IConnectionManager ConnectionManager { get; }

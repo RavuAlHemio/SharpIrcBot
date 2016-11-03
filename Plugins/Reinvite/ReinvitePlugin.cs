@@ -1,6 +1,5 @@
 ﻿using System.Linq;
 using System.Text.RegularExpressions;
-using log4net;
 using Newtonsoft.Json.Linq;
 using SharpIrcBot;
 using SharpIrcBot.Events.Irc;
@@ -9,7 +8,6 @@ namespace Reinvite
 {
     public class ReinvitePlugin : IPlugin, IReloadableConfiguration
     {
-        private static readonly ILog Logger = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
         public static readonly Regex InviteRegex = new Regex("^!invite\\s+(?<channel>[#&]\\S{1,256})\\s*$", RegexOptions.Compiled);
 
         protected IConnectionManager ConnectionManager { get; }

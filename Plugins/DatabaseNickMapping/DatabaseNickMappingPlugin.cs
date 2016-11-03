@@ -1,8 +1,7 @@
 ﻿using System.Linq;
-using System.Reflection;
 using System.Text.RegularExpressions;
 using DatabaseNickMapping.ORM;
-using log4net;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 using SharpIrcBot;
 using SharpIrcBot.Events;
@@ -12,7 +11,7 @@ namespace DatabaseNickMapping
 {
     public class DatabaseNickMappingPlugin : IPlugin, IReloadableConfiguration
     {
-        private static readonly ILog Logger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        private static readonly ILogger Logger = SharpIrcBotUtil.LoggerFactory.CreateLogger<DatabaseNickMappingPlugin>();
         public static readonly Regex LinkRegex = new Regex("^!linknicks\\s+(?<baseNick>\\S+)\\s+(?<aliasNick>\\S+)\\s*$", RegexOptions.Compiled);
         public static readonly Regex UnlinkRegex = new Regex("^!unlinknick\\s+(?<nick>\\S+)\\s*$", RegexOptions.Compiled);
         public static readonly Regex BaseNickRegex = new Regex("^!basenick\\s+(?<nick>\\S+)\\s*$", RegexOptions.Compiled);
@@ -64,7 +63,7 @@ namespace DatabaseNickMapping
                 var baseNickInput = linkMatch.Groups["baseNick"].Value;
                 var aliasNickInput = linkMatch.Groups["aliasNick"].Value;
 
-                Logger.Info($"{requestor} in {channel} creating {baseNickInput} alias {aliasNickInput}");
+                Logger.LogInformation($"{requestor} in {channel} creating {baseNickInput} alias {aliasNickInput}");
 
                 using (var ctx = GetNewContext())
                 {
@@ -77,7 +76,7 @@ namespace DatabaseNickMapping
                         var aliasAsBaseNick = FindBaseNickFor(aliasNickInput, ctx);
                         if (aliasAsBaseNick == null)
                         {
-                            Logger.Debug($"performing new registration of nickname {baseNickInput}");
+                            Logger.LogDebug($"performing new registration of nickname {baseNickInput}");
 
                             // perform new registration
                             var baseNickEntry = new BaseNickname
@@ -90,7 +89,7 @@ namespace DatabaseNickMapping
                         }
                         else
                         {
-                            Logger.Debug($"instead of adding {baseNickInput} alias {aliasNickInput}, adding {aliasAsBaseNick} alias {baseNickInput}");
+                            Logger.LogDebug($"instead of adding {baseNickInput} alias {aliasNickInput}, adding {aliasAsBaseNick} alias {baseNickInput}");
                             baseNick = aliasAsBaseNick;
                             aliasNick = baseNickInput;
                         }
@@ -113,7 +112,7 @@ namespace DatabaseNickMapping
                         }
                     }
 
-                    Logger.Debug($"adding {baseNick} alias {aliasNick}");
+                    Logger.LogDebug($"adding {baseNick} alias {aliasNick}");
                     var mappingEntry = new NickMapping
                     {
                         BaseNickname = baseNick,
@@ -240,18 +239,18 @@ namespace DatabaseNickMapping
             var meAsTarget = ctx.NickMappings.FirstOrDefault(nm => nm.MappedNicknameLowercase == lowerNickname);
             if (meAsTarget != null)
             {
-                Logger.Debug($"{nick} has a base nickname ({meAsTarget.BaseNickname})");
+                Logger.LogDebug($"{nick} has a base nickname ({meAsTarget.BaseNickname})");
                 return meAsTarget.BaseNickname;
             }
 
             var meAsBase = ctx.BaseNicknames.FirstOrDefault(bn => bn.Nickname.ToLower() == lowerNickname);
             if (meAsBase != null)
             {
-                Logger.Debug($"{nick} is the base nickname ({meAsBase.Nickname})");
+                Logger.LogDebug($"{nick} is the base nickname ({meAsBase.Nickname})");
                 return meAsBase.Nickname;
             }
 
-            Logger.Debug($"{nick} not found in the database");
+            Logger.LogDebug($"{nick} not found in the database");
             return null;
         }
 

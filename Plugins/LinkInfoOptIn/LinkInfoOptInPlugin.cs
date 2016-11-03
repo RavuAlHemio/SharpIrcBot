@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
-using log4net;
 using LinkInfo;
 using LinkInfoOptIn.ORM;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 using SharpIrcBot;
 using SharpIrcBot.Events;
@@ -14,7 +14,7 @@ namespace LinkInfoOptIn
 {
     public class LinkInfoOptInPlugin : LinkInfoPlugin
     {
-        private static readonly ILog Logger = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+        private static readonly ILogger Logger = SharpIrcBotUtil.LoggerFactory.CreateLogger<LinkInfoOptInPlugin>();
         public static readonly Regex AutoLinkInfoRegex = new Regex("^!(?<unsub>no)?autolinkinfo\\s*$", RegexOptions.Compiled);
 
         public Uri LastBroadcastLink { get; set; }
@@ -105,7 +105,7 @@ namespace LinkInfoOptIn
                 }
                 else
                 {
-                    Logger.Debug($"not multicasting link info for {LastBroadcastLink.AbsoluteUri}; same as the last");
+                    Logger.LogDebug($"not multicasting link info for {LastBroadcastLink.AbsoluteUri}; same as the last");
                 }
             }
         }
@@ -144,7 +144,7 @@ namespace LinkInfoOptIn
                     }
                     else
                     {
-                        Logger.InfoFormat("{0} ({1}) is unsubscribing from auto link info", args.SenderNickname, senderUsername);
+                        Logger.LogInformation("{0} ({1}) is unsubscribing from auto link info", args.SenderNickname, senderUsername);
 
                         ctx.OptedInUsers.Remove(currentSub);
                         ctx.SaveChanges();
@@ -156,7 +156,7 @@ namespace LinkInfoOptIn
                     // add subscription
                     if (currentSub == null)
                     {
-                        Logger.InfoFormat("{0} ({1}) is subscribing to auto link info", args.SenderNickname, senderUsername);
+                        Logger.LogInformation("{0} ({1}) is subscribing to auto link info", args.SenderNickname, senderUsername);
 
                         ctx.OptedInUsers.Add(new OptedInUser {UserName = senderUsername});
                         ctx.SaveChanges();

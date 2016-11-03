@@ -2,15 +2,14 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Reflection;
 using System.Threading;
-using log4net;
+using Microsoft.Extensions.Logging;
 
 namespace SharpIrcBot
 {
     public class TimerTrigger : ITimerTrigger
     {
-        private static readonly ILog Logger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        private static readonly ILogger Logger = SharpIrcBotUtil.LoggerFactory.CreateLogger<TimerTrigger>();
 
         private readonly SortedDictionary<DateTimeOffset, List<Action>> _whenWhat;
         private Thread _performThread;
@@ -114,7 +113,7 @@ namespace SharpIrcBot
                     howLong = TimeSpan.FromMilliseconds(int.MaxValue);
                 }
 
-                Logger.DebugFormat("sleeping until {0} ({1})", when, howLong);
+                Logger.LogDebug("sleeping until {0} ({1})", when, howLong);
                 _interruptor.Reset();
                 int waited = WaitHandle.WaitAny(new WaitHandle[] {cancelToken.WaitHandle, _interruptor}, howLong);
                 switch (waited)
@@ -130,7 +129,7 @@ namespace SharpIrcBot
                 }
             }
 
-            Logger.Debug("sleep done");
+            Logger.LogDebug("sleep done");
             return false;
         }
 
@@ -207,7 +206,7 @@ namespace SharpIrcBot
                     }
                     catch (Exception ex)
                     {
-                        Logger.WarnFormat("invoking {0} at {1} failed: {2}", func, first.Key, ex);
+                        Logger.LogWarning("invoking {0} at {1} failed: {2}", func, first.Key, ex);
                     }
                 }
             }

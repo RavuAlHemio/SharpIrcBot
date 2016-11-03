@@ -1,14 +1,13 @@
 ﻿using System;
-using System.Reflection;
+using Microsoft.Extensions.Logging;
 using SharpIrcBot;
-using log4net;
 using Newtonsoft.Json.Linq;
 
 namespace NewYear
 {
     public class NewYearPlugin : IPlugin, IReloadableConfiguration
     {
-        private static readonly ILog Logger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        private static readonly ILogger Logger = SharpIrcBotUtil.LoggerFactory.CreateLogger<NewYearPlugin>();
 
         protected IConnectionManager ConnectionManager { get; }
         protected NewYearConfig Config { get; set; }

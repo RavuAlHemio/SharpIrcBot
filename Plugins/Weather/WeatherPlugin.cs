@@ -2,10 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
-using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
-using log4net;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 using SharpIrcBot;
 using SharpIrcBot.Events.Irc;
@@ -15,7 +14,7 @@ namespace Weather
 {
     public class WeatherPlugin : IPlugin, IReloadableConfiguration
     {
-        private static readonly ILog Logger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        private static readonly ILogger Logger = SharpIrcBotUtil.LoggerFactory.CreateLogger<WeatherPlugin>();
 
         public static readonly Regex WeatherRegex = new Regex("^!(?<lucky>l)?weather(?:\\s+(?<location>\\S+(?:\\s+\\S+)*))?\\s*$", RegexOptions.Compiled);
 
@@ -128,9 +127,9 @@ namespace Weather
                 }
                 else
                 {
-                    Logger.Warn("error fetching Wunderground result", we);
                     ConnectionManager.SendChannelMessage(channel, $"{nick}: Error obtaining Wunderground response!");
                 }
+                Logger.LogWarning("error fetching Wunderground result", we);
                 return;
             }
 
@@ -163,7 +162,7 @@ namespace Weather
                 else
                 {
                     ConnectionManager.SendChannelMessage(channel, $"{nick}: Something went wrong!");
-                    Logger.Error($"Wunderground error of type {response.Metadata.Error.Type} with description: {response.Metadata.Error.Description}");
+                    Logger.LogError($"Wunderground error of type {response.Metadata.Error.Type} with description: {response.Metadata.Error.Description}");
                 }
                 return;
             }
