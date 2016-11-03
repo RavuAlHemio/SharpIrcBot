@@ -21,6 +21,7 @@ namespace SharpIrcBot
     public static class SharpIrcBotUtil
     {
         public static readonly ILoggerFactory LoggerFactory = new LoggerFactory();
+
         [NotNull]
         public static readonly Encoding Utf8NoBom = new UTF8Encoding(false, true);
         [NotNull]
@@ -87,7 +88,7 @@ namespace SharpIrcBot
             var ret = new StringBuilder();
             foreach (var cp in StringToCodePointStrings(text))
             {
-                var cat = char.GetUnicodeCategory(cp, 0);
+                var cat = CharUnicodeInfo.GetUnicodeCategory(cp, 0);
                 if (cat == UnicodeCategory.Control || cat == UnicodeCategory.Format)
                 {
                     continue;
