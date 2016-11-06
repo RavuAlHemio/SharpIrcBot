@@ -172,8 +172,8 @@ namespace LinkInfoOptIn
 
         private LinkInfoOptInContext GetNewContext()
         {
-            var conn = SharpIrcBotUtil.GetDatabaseConnection(OptInConfig);
-            return new LinkInfoOptInContext(conn);
+            var opts = SharpIrcBotUtil.GetContextOptions<LinkInfoOptInContext>(OptInConfig);
+            return new LinkInfoOptInContext(opts);
         }
 
         protected virtual void HandleBaseNickChanged(object sender, BaseNickChangedEventArgs e)

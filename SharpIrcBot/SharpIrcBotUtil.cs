@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Text;
+using System.Threading.Tasks;
 using JetBrains.Annotations;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -574,6 +574,20 @@ namespace SharpIrcBot
             }
 
             return ret;
+        }
+
+        public static T SyncWait<T>(this Task<T> task)
+        {
+            task.Wait();
+            if (task.IsFaulted)
+            {
+                throw task.Exception;
+            }
+            if (task.IsCanceled)
+            {
+                throw new OperationCanceledException();
+            }
+            return task.Result;
         }
     }
 }

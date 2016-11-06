@@ -5,9 +5,11 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Net.Sockets;
 using System.Text.RegularExpressions;
-using Fizzler.Systems.HtmlAgilityPack;
+using System.Threading.Tasks;
 using HtmlAgilityPack;
 using JetBrains.Annotations;
 using Microsoft.Extensions.Logging;
@@ -32,6 +34,7 @@ namespace LinkInfo
         protected IConnectionManager ConnectionManager { get; set; }
         protected LinkInfoConfig Config { get; set; }
         protected IdnMapping IDNMapping { get; set; }
+        protected HttpClient HttpClient { get; set; }
 
         [CanBeNull]
         protected LinkAndInfo LastLinkAndInfo { get; set; }
@@ -43,6 +46,10 @@ namespace LinkInfo
             ConnectionManager = connMgr;
             Config = new LinkInfoConfig(config);
             IDNMapping = new IdnMapping();
+            HttpClient = new HttpClient(new HttpClientHandler
+            {
+                AllowAutoRedirect = false
+            });
 
             LastLinkAndInfo = null;
             LinkDetector = null;
@@ -154,7 +161,7 @@ namespace LinkInfo
             try
             {
                 linkBuilder.Host = IDNMapping.GetAscii(link.Host);
-                addresses = Dns.GetHostAddresses(linkBuilder.Host);
+                addresses = Dns.GetHostAddressesAsync(linkBuilder.Host).SyncWait();
             }
             catch (SocketException se)
             {
@@ -172,26 +179,26 @@ namespace LinkInfo
                 return new LinkAndInfo(link, "(I refuse to access this IP address)", FetchErrorLevel.LastingError, originalLink);
             }
 
-            var request = WebRequest.Create(linkBuilder.Uri);
-            var httpRequest = request as HttpWebRequest;
+            using (var request = new HttpRequestMessage(HttpMethod.Get, linkBuilder.Uri))
             using (var respStore = new MemoryStream())
             {
                 var contentType = "application/octet-stream";
                 string contentTypeHeader = null;
-                request.Timeout = (int)TimeSpan.FromSeconds(Config.TimeoutSeconds).TotalMilliseconds;
-                if (httpRequest != null)
-                {
-                    // HTTP-specific settings
-                    httpRequest.AllowAutoRedirect = false;
-                    httpRequest.UserAgent = Config.FakeUserAgent;
-                }
 
-                try
+                HttpClient.Timeout = TimeSpan.FromSeconds(Config.TimeoutSeconds);
+                request.Headers.UserAgent.Add(new ProductInfoHeaderValue(Config.FakeUserAgent));
+
+                using (var resp = HttpClient.SendAsync(request).SyncWait())
                 {
-                    using (var resp = request.GetResponse())
+                    try
                     {
+                        if (!resp.IsSuccessStatusCode)
+                        {
+                            throw new HttpRequestException("unsuccessful");
+                        }
+
                         // redirect?
-                        string location = resp.Headers[HttpResponseHeader.Location];
+                        Uri location = resp.Headers.Location;
                         if (location != null)
                         {
                             // go there instead
@@ -200,11 +207,7 @@ namespace LinkInfo
                         }
 
                         // find the content-type
-                        contentTypeHeader = resp.Headers[HttpResponseHeader.ContentType];
-                        if (contentTypeHeader != null)
-                        {
-                            contentType = contentTypeHeader.Split(';')[0];
-                        }
+                        contentType = resp.Content.Headers.ContentType.MediaType;
 
                         // start timing
                         var readTimeout = TimeSpan.FromSeconds(Config.TimeoutSeconds);
@@ -213,7 +216,7 @@ namespace LinkInfo
 
                         // copy
                         var buf = new byte[DownloadBufferSize];
-                        var responseStream = resp.GetResponseStream();
+                        Stream responseStream = resp.Content.ReadAsStreamAsync().SyncWait();
                         if (responseStream.CanTimeout)
                         {
                             responseStream.ReadTimeout = (int)readTimeout.TotalMilliseconds;
@@ -238,16 +241,15 @@ namespace LinkInfo
                             respStore.Write(buf, 0, bytesRead);
                         }
                     }
-                }
-                catch (WebException we)
-                {
-                    var httpResponse = we.Response as HttpWebResponse;
-                    if (httpResponse != null)
+                    catch (HttpRequestException we)
                     {
-                        return new LinkAndInfo(link, $"(HTTP {httpResponse.StatusCode})", FetchErrorLevel.TransientError, originalLink);
+                        if (resp != null)
+                        {
+                            return new LinkAndInfo(link, $"(HTTP {resp.StatusCode})", FetchErrorLevel.TransientError, originalLink);
+                        }
+                        Logger.LogWarning("HTTP exception thrown: {0}", we);
+                        return new LinkAndInfo(link, "(HTTP error)", FetchErrorLevel.TransientError, originalLink);
                     }
-                    Logger.LogWarning("HTTP exception thrown: {0}", we);
-                    return new LinkAndInfo(link, "(HTTP error)", FetchErrorLevel.TransientError, originalLink);
                 }
 
                 switch (contentType)
@@ -293,17 +295,24 @@ namespace LinkInfo
         {
             try
             {
-                var client = new CookieWebClient
+                var client = new HttpClient
                 {
                     Timeout = TimeSpan.FromSeconds(Config.ImageInfoTimeoutSeconds)
                 };
 
-                var googleImageSearchUrl = string.Format(GoogleImageSearchUrlPattern, Config.GoogleDomain);
+                var googleImageSearchUrl = new Uri(string.Format(GoogleImageSearchUrlPattern, Config.GoogleDomain));
 
                 // alibi-visit the image search page to get the cookies
-                client.Headers[HttpRequestHeader.UserAgent] = Config.FakeUserAgent;
-                client.Headers[HttpRequestHeader.Referer] = string.Format(GoogleHomepageUrlPattern, Config.GoogleDomain);
-                client.DownloadData(googleImageSearchUrl);
+                using (var request = new HttpRequestMessage(HttpMethod.Get, googleImageSearchUrl))
+                {
+                    request.Headers.UserAgent.Add(new ProductInfoHeaderValue(Config.FakeUserAgent));
+                    request.Headers.Referrer = new Uri(string.Format(GoogleHomepageUrlPattern, Config.GoogleDomain));
+
+                    using (var response = client.SendAsync(request).SyncWait())
+                    {
+                        response.Content.ReadAsByteArrayAsync().SyncWait();
+                    }
+                }
 
                 // fetch the actual info
                 var searchUrl = new Uri(string.Format(
@@ -311,14 +320,27 @@ namespace LinkInfo
                     Config.GoogleDomain,
                     url.AbsoluteUri
                 ));
-                client.Headers[HttpRequestHeader.UserAgent] = Config.FakeUserAgent;
-                client.Headers[HttpRequestHeader.Referer] = googleImageSearchUrl;
-                var responseBytes = client.DownloadData(searchUrl);
+                byte[] responseBytes;
+                using (var request = new HttpRequestMessage(HttpMethod.Get, searchUrl))
+                {
+                    request.Headers.UserAgent.Add(new ProductInfoHeaderValue(Config.FakeUserAgent));
+                    request.Headers.Referrer = googleImageSearchUrl;
+
+                    using (var response = client.SendAsync(request).SyncWait())
+                    {
+                        responseBytes = response.Content.ReadAsByteArrayAsync().SyncWait();
+                    }
+                }
                 var parseMe = EncodingGuesser.GuessEncodingAndDecode(responseBytes, null);
-                
+
+                Predicate<string[]> hasHintClasses =
+                    classes => classes.Contains("_hUb") && classes.Contains("_gUb");
                 var htmlDoc = new HtmlDocument();
                 htmlDoc.LoadHtml(parseMe);
-                var foundHints = htmlDoc.DocumentNode.QuerySelectorAll("._hUb ._gUb");
+                IEnumerable<HtmlNode> foundHints = htmlDoc.DocumentNode
+                    .SelectNodes(".//elem()")
+                    .OfType<HtmlNode>()
+                    .Where(n => hasHintClasses(n.GetAttributeValue("class", "").Split(' ')));
                 foreach (var hint in foundHints)
                 {
                     return string.Format("{0} ({1})", text, HtmlEntity.DeEntitize(hint.InnerText));
@@ -400,7 +422,8 @@ namespace LinkInfo
                 }
 
                 var tlds = new HashSet<string>();
-                using (var reader = new StreamReader(tldListFilePath, SharpIrcBotUtil.Utf8NoBom))
+                using (var readStream = File.Open(tldListFilePath, FileMode.Open, FileAccess.Read, FileShare.Read))
+                using (var reader = new StreamReader(readStream, SharpIrcBotUtil.Utf8NoBom))
                 {
                     string line;
                     while ((line = reader.ReadLine()?.Trim()) != null)

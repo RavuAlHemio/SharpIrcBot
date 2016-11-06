@@ -1,5 +1,4 @@
-﻿using System.Data.Common;
-using System.Data.Entity;
+﻿using Microsoft.EntityFrameworkCore;
 
 namespace LinkInfoOptIn.ORM
 {
@@ -7,12 +6,8 @@ namespace LinkInfoOptIn.ORM
     {
         public DbSet<OptedInUser> OptedInUsers { get; set; }
 
-        static LinkInfoOptInContext()
-        {
-            Database.SetInitializer<LinkInfoOptInContext>(null);
-        }
-
-        public LinkInfoOptInContext(DbConnection connectionToOwn) : base(connectionToOwn, true)
+        public LinkInfoOptInContext(DbContextOptions<LinkInfoOptInContext> options)
+            : base(options)
         {
         }
     }

@@ -31,9 +31,9 @@ namespace Weather
             string escapedApiKey = Uri.EscapeUriString(apiKey);
             string escapedLocation = Uri.EscapeUriString(location);
 
-            Task<string> jsonTask = _client.GetStringAsync($"http://api.wunderground.com/api/{escapedApiKey}/geolookup/conditions/forecast/q/{escapedLocation}.json");
-            jsonTask.Wait();
-            string json = jsonTask.Result;
+            string json = _client
+                .GetStringAsync($"http://api.wunderground.com/api/{escapedApiKey}/geolookup/conditions/forecast/q/{escapedLocation}.json")
+                .SyncWait();
 
             var response = new WundergroundResponse();
             JsonConvert.PopulateObject(json, response);
