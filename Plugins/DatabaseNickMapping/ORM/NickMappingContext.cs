@@ -12,7 +12,7 @@ namespace DatabaseNickMapping.ORM
         {
         }
 
-        protected override void OnModelCreated(ModelBuilder builder)
+        protected override void OnModelCreating(ModelBuilder builder)
         {
             builder.Entity<BaseNickname>(entBuilder =>
             {
