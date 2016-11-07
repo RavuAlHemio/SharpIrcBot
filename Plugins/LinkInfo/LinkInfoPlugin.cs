@@ -34,7 +34,6 @@ namespace LinkInfo
         protected IConnectionManager ConnectionManager { get; set; }
         protected LinkInfoConfig Config { get; set; }
         protected IdnMapping IDNMapping { get; set; }
-        protected HttpClient HttpClient { get; set; }
 
         [CanBeNull]
         protected LinkAndInfo LastLinkAndInfo { get; set; }
@@ -46,10 +45,6 @@ namespace LinkInfo
             ConnectionManager = connMgr;
             Config = new LinkInfoConfig(config);
             IDNMapping = new IdnMapping();
-            HttpClient = new HttpClient(new HttpClientHandler
-            {
-                AllowAutoRedirect = false
-            });
 
             LastLinkAndInfo = null;
             LinkDetector = null;
@@ -179,16 +174,23 @@ namespace LinkInfo
                 return new LinkAndInfo(link, "(I refuse to access this IP address)", FetchErrorLevel.LastingError, originalLink);
             }
 
+            var httpClientHandler = new HttpClientHandler
+            {
+                AllowAutoRedirect = false
+            };
+
+            using (httpClientHandler)
+            using (var httpClient = new HttpClient(handler))
             using (var request = new HttpRequestMessage(HttpMethod.Get, linkBuilder.Uri))
             using (var respStore = new MemoryStream())
             {
                 var contentType = "application/octet-stream";
                 string contentTypeHeader = null;
 
-                HttpClient.Timeout = TimeSpan.FromSeconds(Config.TimeoutSeconds);
+                httpClient.Timeout = TimeSpan.FromSeconds(Config.TimeoutSeconds);
                 request.Headers.UserAgent.TryParseAdd(Config.FakeUserAgent);
 
-                using (var resp = HttpClient.SendAsync(request).SyncWait())
+                using (var resp = httpClient.SendAsync(request).SyncWait())
                 {
                     try
                     {
