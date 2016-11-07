@@ -10,5 +10,18 @@ namespace LinkInfoOptIn.ORM
             : base(options)
         {
         }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            builder.Entity<OptedInUser>(entBuilder =>
+            {
+                entBuilder.ToTable("opted_in_users", schema: "link_info_opt_in");
+                entBuilder.HasKey(e => e.UserName);
+
+                entBuilder.Property(e => e.UserName)
+                    .IsRequired()
+                    .HasColumnName("user_name");
+            });
+        }
     }
 }
