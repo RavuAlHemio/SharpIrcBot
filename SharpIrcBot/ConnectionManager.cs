@@ -844,7 +844,6 @@ namespace SharpIrcBot
             var channelObject = Client.GetChannel(channel);
             return channelObject
                 ?.Users
-                .OfType<DictionaryEntry>()
                 .Select(de => (string) de.Key)
                 .ToImmutableList();
         }
