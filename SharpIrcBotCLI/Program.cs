@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using SharpIrcBot;
 
 namespace SharpIrcBotCLI
@@ -16,14 +17,21 @@ namespace SharpIrcBotCLI
             pluginMgr.LoadPlugins(connMgr);
             connMgr.Start();
 
-            Console.Error.WriteLine("Press Enter or Esc to quit.");
-
-            for (;;)
+            if (Console.IsInputRedirected)
             {
-                var key = Console.ReadKey(intercept: true);
-                if (key.Key == ConsoleKey.Escape || key.Key == ConsoleKey.Enter)
+                Thread.Sleep(Timeout.Infinite);
+            }
+            else
+            {
+                Console.Error.WriteLine("Press Enter or Esc to quit.");
+
+                for (;;)
                 {
-                    break;
+                    var key = Console.ReadKey(intercept: true);
+                    if (key.Key == ConsoleKey.Escape || key.Key == ConsoleKey.Enter)
+                    {
+                        break;
+                    }
                 }
             }
 
