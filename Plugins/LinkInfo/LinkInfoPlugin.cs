@@ -186,7 +186,7 @@ namespace LinkInfo
                 string contentTypeHeader = null;
 
                 HttpClient.Timeout = TimeSpan.FromSeconds(Config.TimeoutSeconds);
-                request.Headers.UserAgent.Add(new ProductInfoHeaderValue(Config.FakeUserAgent));
+                request.Headers.UserAgent.TryParseAdd(Config.FakeUserAgent);
 
                 using (var resp = HttpClient.SendAsync(request).SyncWait())
                 {
@@ -305,7 +305,7 @@ namespace LinkInfo
                 // alibi-visit the image search page to get the cookies
                 using (var request = new HttpRequestMessage(HttpMethod.Get, googleImageSearchUrl))
                 {
-                    request.Headers.UserAgent.Add(new ProductInfoHeaderValue(Config.FakeUserAgent));
+                    request.Headers.UserAgent.TryParseAdd(Config.FakeUserAgent);
                     request.Headers.Referrer = new Uri(string.Format(GoogleHomepageUrlPattern, Config.GoogleDomain));
 
                     using (var response = client.SendAsync(request).SyncWait())
@@ -323,7 +323,7 @@ namespace LinkInfo
                 byte[] responseBytes;
                 using (var request = new HttpRequestMessage(HttpMethod.Get, searchUrl))
                 {
-                    request.Headers.UserAgent.Add(new ProductInfoHeaderValue(Config.FakeUserAgent));
+                    request.Headers.UserAgent.TryParseAdd(Config.FakeUserAgent);
                     request.Headers.Referrer = googleImageSearchUrl;
 
                     using (var response = client.SendAsync(request).SyncWait())
