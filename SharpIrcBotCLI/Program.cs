@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text;
 using System.Threading;
 using SharpIrcBot;
 
@@ -8,6 +9,8 @@ namespace SharpIrcBotCLI
     {
         public static void Main(string[] args)
         {
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+
             SharpIrcBotUtil.SetupConsoleLogging();
 
             var connMgr = new ConnectionManager(args.Length > 0 ? args[0] : null);

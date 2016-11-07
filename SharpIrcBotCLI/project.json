@@ -6,6 +6,7 @@
     "emitEntryPoint": true
   },
   "dependencies": {
+    "System.Text.Encoding.CodePages": "4.0.1",
     "SharpIrcBot": {
       "target": "project"
     }
