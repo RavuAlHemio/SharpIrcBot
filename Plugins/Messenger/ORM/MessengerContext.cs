@@ -53,7 +53,7 @@ namespace Messenger.ORM
         }
 
         protected void BuildMessageEntity<T>(ModelBuilder builder, string tableName)
-            where T : IMessage
+            where T : class, IMessage
         {
             builder.Entity<T>(entBuilder =>
             {
