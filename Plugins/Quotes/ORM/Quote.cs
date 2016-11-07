@@ -1,4 +1,7 @@
-﻿namespace Quotes.ORM
+﻿using System;
+using System.Collections.Generic;
+
+namespace Quotes.ORM
 {
     public class Quote
     {

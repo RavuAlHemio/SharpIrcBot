@@ -1,4 +1,6 @@
-﻿namespace Messenger.ORM
+﻿using System;
+
+namespace Messenger.ORM
 {
     public class MessageOnRetainer : IMessage
     {
