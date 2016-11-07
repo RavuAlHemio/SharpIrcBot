@@ -11,7 +11,7 @@ namespace Thanks.ORM
         {
         }
 
-        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        protected override void OnModelCreating(ModelBuilder builder)
         {
             builder.Entity<ThanksEntry>(entBuilder =>
             {

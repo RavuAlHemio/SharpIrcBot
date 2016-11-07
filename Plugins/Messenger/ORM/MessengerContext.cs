@@ -16,12 +16,12 @@ namespace Messenger.ORM
         {
         }
 
-        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        protected override void OnModelCreating(ModelBuilder builder)
         {
-            BuildMessageEntity<Message>(modelBuilder, "messages");
-            BuildMessageEntity<MessageOnRetainer>(modelBuilder, "messages_on_retainer");
-            BuildMessageEntity<PrivateMessage>(modelBuilder, "private_messages");
-            BuildMessageEntity<ReplayableMessage>(modelBuilder, "replayable_messages");
+            BuildMessageEntity<Message>(builder, "messages");
+            BuildMessageEntity<MessageOnRetainer>(builder, "messages_on_retainer");
+            BuildMessageEntity<PrivateMessage>(builder, "private_messages");
+            BuildMessageEntity<ReplayableMessage>(builder, "replayable_messages");
 
             builder.Entity<IgnoreEntry>(entBuilder =>
             {
@@ -52,7 +52,7 @@ namespace Messenger.ORM
             });
         }
 
-        protected void BuildMessageEntity<T>(ModelBuilder modelBuilder, string tableName)
+        protected void BuildMessageEntity<T>(ModelBuilder builder, string tableName)
             where T : IMessage
         {
             builder.Entity<T>(entBuilder =>

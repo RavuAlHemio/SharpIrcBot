@@ -30,9 +30,9 @@ namespace DatabaseNickMapping.ORM
                 entBuilder.ToTable("nick_mappings", schema: "nick_mapping");
                 entBuilder.HasKey(nm => new { nm.BaseNickname, nm.MappedNicknameLowercase });
 
-                entBuilder.Property(nm => nm.Nickname)
+                entBuilder.Property(nm => nm.BaseNickname)
                     .IsRequired()
-                    .HasColumnName("nickname");
+                    .HasColumnName("base_nickname");
 
                 entBuilder.Property(nm => nm.MappedNicknameLowercase)
                     .IsRequired()
