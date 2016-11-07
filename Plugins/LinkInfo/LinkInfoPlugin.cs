@@ -180,7 +180,7 @@ namespace LinkInfo
             };
 
             using (httpClientHandler)
-            using (var httpClient = new HttpClient(handler))
+            using (var httpClient = new HttpClient(httpClientHandler))
             using (var request = new HttpRequestMessage(HttpMethod.Get, linkBuilder.Uri))
             using (var respStore = new MemoryStream())
             {
