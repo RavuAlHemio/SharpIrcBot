@@ -1,6 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Text;
 using System.Threading;
+using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using SharpIrcBot;
 
 namespace SharpIrcBotCLI
@@ -11,7 +15,17 @@ namespace SharpIrcBotCLI
         {
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 
-            SharpIrcBotUtil.SetupConsoleLogging();
+            var logFilter = new Dictionary<string, LogLevel>();
+            string logFilterFileName = Path.Combine(SharpIrcBotUtil.AppDirectory, "LogFilter.json");
+            if (File.Exists(logFilterFileName))
+            {
+                using (var stream = File.Open(logFilterFileName, FileMode.Open, FileAccess.Read, FileShare.Read))
+                using (var reader = new StreamReader(stream, SharpIrcBotUtil.Utf8NoBom))
+                {
+                    JsonSerializer.Create().Populate(reader, logFilter);
+                }
+            }
+            SharpIrcBotUtil.SetupConsoleLogging(logFilter: logFilter);
 
             var connMgr = new ConnectionManager(args.Length > 0 ? args[0] : null);
             var pluginMgr = new PluginManager(connMgr.Config);

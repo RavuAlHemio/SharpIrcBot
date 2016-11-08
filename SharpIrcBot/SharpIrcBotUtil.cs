@@ -389,6 +389,14 @@ namespace SharpIrcBot
             return builder.Options;
         }
 
+        public static void SetUpLogFilter()
+        {
+            LoggerFactory = LoggerFactory.WithFilter(new FilterLoggerSettings
+            {
+                Switches = logFilter
+            });
+        }
+
         public static void SetupFileLogging([CanBeNull] LogLevel? level = null)
         {
             var serilogLevelMapping = new Dictionary<LogLevel, LogEventLevel>
@@ -413,13 +421,35 @@ namespace SharpIrcBot
             LoggerFactory.AddProvider(new SerilogLoggerProvider(serilogLoggerConfig.CreateLogger()));
         }
 
-        public static void SetupConsoleLogging([CanBeNull] LogLevel? level = null)
+        public static void SetupConsoleLogging([CanBeNull] LogLevel? minimumLevel = null, [CanBeNull] Dictionary<string, LogLevel> logFilter = null)
         {
             var consoleProvider = new ConsoleLoggerProvider(
-                (text, logLevel) => !level.HasValue || logLevel >= level.Value,
+                (text, logLevel) => LogFilter(text, logLevel, minimumLevel, logFilter),
                 true
             );
             LoggerFactory.AddProvider(consoleProvider);
+        }
+
+        static bool LogFilter(string logger, LogLevel level, [CanBeNull] LogLevel? minimumLevel = null, [CanBeNull] Dictionary<string, LogLevel> logFilter = null)
+        {
+            if (minimumLevel.HasValue && level < minimumLevel.Value)
+            {
+                return false;
+            }
+
+            if (logFilter != null)
+            {
+                LogLevel minimumLoggerLevel;
+                if (logFilter.TryGetValue(logger, out minimumLoggerLevel))
+                {
+                    if (level < minimumLoggerLevel)
+                    {
+                        return false;
+                    }
+                }
+            }
+
+            return true;
         }
 
         /// <summary>
