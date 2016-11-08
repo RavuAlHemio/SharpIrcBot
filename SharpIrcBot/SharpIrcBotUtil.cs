@@ -389,14 +389,6 @@ namespace SharpIrcBot
             return builder.Options;
         }
 
-        public static void SetUpLogFilter()
-        {
-            LoggerFactory = LoggerFactory.WithFilter(new FilterLoggerSettings
-            {
-                Switches = logFilter
-            });
-        }
-
         public static void SetupFileLogging([CanBeNull] LogLevel? level = null)
         {
             var serilogLevelMapping = new Dictionary<LogLevel, LogEventLevel>
