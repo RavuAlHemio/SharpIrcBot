@@ -66,14 +66,14 @@ namespace SharpIrcBot
                     continue;
                 }
 
-                Logger.LogInformation("updating configuration of plugin of type {0}", pluginType.FullName);
+                Logger.LogInformation("updating configuration of plugin of type {PluginName}", pluginType.FullName);
                 try
                 {
                     updatablePlugin.ReloadConfiguration(newConfig.Config);
                 }
                 catch (Exception exc)
                 {
-                    Logger.LogError("failed to update configuration of plugin of type {0}: {1}", pluginType.FullName, exc);
+                    Logger.LogError("failed to update configuration of plugin of type {PluginName}: {Exception}", pluginType.FullName, exc);
                 }
             }
         }

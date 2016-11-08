@@ -58,7 +58,7 @@ namespace Time
             {
                 var geoSearchUri = new Uri($"http://api.geonames.org/searchJSON?maxRows=1&q={WebUtility.UrlEncode(location)}&username={WebUtility.UrlEncode(Config.GeoNamesUsername)}");
                 string geoSearchResponse = client.GetStringAsync(geoSearchUri).SyncWait();
-                Logger.LogDebug($"geo search response: {geoSearchResponse}");
+                Logger.LogDebug("geo search response: {Response}", geoSearchResult);
 
                 using (var sr = new StringReader(geoSearchResponse))
                 {
@@ -80,7 +80,7 @@ namespace Time
             {
                 var timeZoneSearchUri = new Uri($"http://api.geonames.org/timezoneJSON?lat={loc.Latitude}&lng={loc.Longitude}&username={WebUtility.UrlEncode(Config.GeoNamesUsername)}");
                 string timeZoneSearchResponse = client.GetStringAsync(timeZoneSearchUri).SyncWait();
-                Logger.LogDebug($"timezone search response: {timeZoneSearchResponse}");
+                Logger.LogDebug("timezone search response: {Response}", timeZoneSearchResponse);
 
                 using (var sr = new StringReader(timeZoneSearchResponse))
                 {

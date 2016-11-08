@@ -151,7 +151,7 @@ namespace TextCommands
                     break;
             }
 
-            Logger.LogDebug("{0} triggered {1} in {2}", message.SenderNickname, command, channelMessage?.Channel ?? "private message");
+            Logger.LogDebug("{Sender} triggered {Command} in {Location}", message.SenderNickname, command, channelMessage?.Channel ?? "private message");
             var response = targetBody.Replace("{{NICKNAME}}", targetNick);
             foreach (var line in response.Split('\n').Where(l => l.Length > 0))
             {

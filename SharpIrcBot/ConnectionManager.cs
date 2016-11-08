@@ -297,7 +297,7 @@ namespace SharpIrcBot
                 }
                 catch (Exception exc)
                 {
-                    Logger.LogError("exception while running IRC: {0}", exc);
+                    Logger.LogError("exception while running IRC: {Exception}", exc);
                     DisconnectOrWhatever();
 
                     var failPoint = DateTime.UtcNow;
@@ -365,7 +365,7 @@ namespace SharpIrcBot
             }
             catch (Exception exc)
             {
-                Logger.LogWarning("exception while handling CTCP request: {0}", exc);
+                Logger.LogWarning("exception while handling CTCP request: {Exception}", exc);
             }
         }
 
@@ -498,7 +498,7 @@ namespace SharpIrcBot
                 }
                 catch (Exception exc)
                 {
-                    Logger.LogError("error when {0} was handling {1}: {2}", subscriber, description, exc);
+                    Logger.LogError("error when {Subscriber} was handling {EventType}: {Exception}", subscriber, description, exc);
                 }
             }
         }
@@ -524,7 +524,7 @@ namespace SharpIrcBot
                 }
                 catch (Exception exc)
                 {
-                    Logger.LogError("error when {0} was handling {1}: {2}", subscriber, description, exc);
+                    Logger.LogError("error when {Subscriber} was handling {EventType}: {Exception}", subscriber, description, exc);
                 }
             }
         }
@@ -656,7 +656,7 @@ namespace SharpIrcBot
         public void ReportBaseNickChange(string oldBaseNick, string newBaseNick)
         {
             // trigger update among plugins
-            Logger.LogInformation("reporting base nick change from {0} to {1}", oldBaseNick, newBaseNick);
+            Logger.LogInformation("reporting base nick change from {OldBaseNickname} to {NewBaseNickname}", oldBaseNick, newBaseNick);
             var e = new BaseNickChangedEventArgs(oldBaseNick, newBaseNick);
             OnBaseNickChanged(e);
         }

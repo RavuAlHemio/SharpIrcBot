@@ -160,13 +160,13 @@ namespace LinkInfo
             }
             catch (SocketException se)
             {
-                Logger.LogWarning("socket exception when resolving {0}: {1}", linkBuilder.Host, se);
+                Logger.LogWarning("socket exception when resolving {Host}: {Exception}", linkBuilder.Host, se);
                 return new LinkAndInfo(link, "(cannot resolve)", FetchErrorLevel.TransientError, originalLink);
             }
 
             if (addresses.Length == 0)
             {
-                Logger.LogWarning("no addresses found when resolving {0}", linkBuilder.Host);
+                Logger.LogWarning("no addresses found when resolving {Host}", linkBuilder.Host);
                 return new LinkAndInfo(link, "(cannot resolve)", FetchErrorLevel.TransientError, originalLink);
             }
             if (addresses.Any(IPAddressBlacklist.IsIPAddressBlacklisted))
@@ -204,7 +204,10 @@ namespace LinkInfo
                         if (location != null)
                         {
                             // go there instead
-                            Logger.LogDebug($"{link.AbsoluteUri} (originally {originalLink?.AbsoluteUri ?? link.AbsoluteUri}) redirects to {location}");
+                            Logger.LogDebug(
+                                "{AbsoluteURI} (originally {OriginalAbsoluteURI}) redirects to {Location}",
+                                link.AbsoluteUri, originalLink?.AbsoluteUri ?? link.AbsoluteUri, location
+                            );
                             return RealObtainLinkInfo(new Uri(link, location), originalLink ?? link, redirectCount + 1);
                         }
 
@@ -249,7 +252,7 @@ namespace LinkInfo
                         {
                             return new LinkAndInfo(link, $"(HTTP {resp.StatusCode})", FetchErrorLevel.TransientError, originalLink);
                         }
-                        Logger.LogWarning("HTTP exception thrown: {0}", we);
+                        Logger.LogWarning("HTTP exception thrown: {Exception}", we);
                         return new LinkAndInfo(link, "(HTTP error)", FetchErrorLevel.TransientError, originalLink);
                     }
                 }
@@ -351,7 +354,7 @@ namespace LinkInfo
             }
             catch (Exception ex)
             {
-                Logger.LogWarning("image info: {0}", ex);
+                Logger.LogWarning("image info: {Exception}", ex);
                 return text;
             }
         }
@@ -364,7 +367,7 @@ namespace LinkInfo
             }
             catch (Exception ex)
             {
-                Logger.LogWarning("link info: {0}", ex);
+                Logger.LogWarning("link info: {Exception}", ex);
                 return new LinkAndInfo(link, "(an error occurred)", FetchErrorLevel.TransientError, null);
             }
         }

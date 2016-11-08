@@ -50,7 +50,7 @@ namespace UnoBot
             {
                 // we have a pending color request; honor it
                 var color = ColorRequest.Value;
-                StrategyLogger.LogDebug("honoring color request {0}", color);
+                StrategyLogger.LogDebug("honoring color request {Color}", color);
                 ColorRequest = null;
                 return color;
             }

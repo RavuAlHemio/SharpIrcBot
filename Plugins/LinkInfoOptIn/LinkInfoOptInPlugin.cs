@@ -105,7 +105,10 @@ namespace LinkInfoOptIn
                 }
                 else
                 {
-                    Logger.LogDebug($"not multicasting link info for {LastBroadcastLink.AbsoluteUri}; same as the last");
+                    Logger.LogDebug(
+                        "not multicasting link info for {AbsoluteURI}; same as the last",
+                        LastBroadcastLink.AbsoluteUri
+                    );
                 }
             }
         }
@@ -144,7 +147,10 @@ namespace LinkInfoOptIn
                     }
                     else
                     {
-                        Logger.LogInformation("{0} ({1}) is unsubscribing from auto link info", args.SenderNickname, senderUsername);
+                        Logger.LogInformation(
+                            "{Nickname} ({Username}) is unsubscribing from auto link info",
+                            args.SenderNickname, senderUsername
+                        );
 
                         ctx.OptedInUsers.Remove(currentSub);
                         ctx.SaveChanges();
@@ -156,7 +162,10 @@ namespace LinkInfoOptIn
                     // add subscription
                     if (currentSub == null)
                     {
-                        Logger.LogInformation("{0} ({1}) is subscribing to auto link info", args.SenderNickname, senderUsername);
+                        Logger.LogInformation(
+                            "{Nickname} ({Username}) is subscribing to auto link info",
+                            args.SenderNickname, senderUsername
+                        );
 
                         ctx.OptedInUsers.Add(new OptedInUser {UserName = senderUsername});
                         ctx.SaveChanges();

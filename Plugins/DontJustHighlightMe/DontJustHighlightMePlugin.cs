@@ -65,7 +65,7 @@ namespace DontJustHighlightMe
             if (lowercaseChannelUsernames.Contains(trimmedLowerMessage))
             {
                 // found one!
-                Logger.LogDebug("{0} is a highlight", trimmedLowerMessage);
+                Logger.LogDebug("{Message} is a highlight", trimmedLowerMessage);
                 highlightee = trimmedLowerMessage;
             }
 
@@ -82,7 +82,7 @@ namespace DontJustHighlightMe
                     if (lowercaseChannelUsernames.Contains(lowerBaseNick))
                     {
                         // yes
-                        Logger.LogDebug("{0} highlights {1}", trimmedLowerMessage, lowerBaseNick);
+                        Logger.LogDebug("{Message} highlights {Nickname}", trimmedLowerMessage, lowerBaseNick);
                         highlightee = lowerBaseNick;
                     }
                 }
@@ -134,14 +134,19 @@ namespace DontJustHighlightMe
                     if (Config.Kick)
                     {
                         // punt the perpetrator out of the channel
-                        Logger.LogDebug($"punting {occ.Perpetrator} from {occ.Channel} for highlighting {occ.Victim}");
+                        Logger.LogDebug(
+                            "punting {Perpetrator} from {Channel} for highlighting {Victim}",
+                            occ.Perpetrator, occ.Channel, occ.Victim
+                        );
                         ConnectionManager.KickChannelUser(occ.Channel, occ.Perpetrator, Config.KickMessage);
                     }
                     else
                     {
                         // highlight the perpetrator as retribution
                         Logger.LogDebug(
-                            $"re-highlighting {occ.Perpetrator} in {occ.Channel} for highlighting {occ.Victim}");
+                            "re-highlighting {Perpetrator} in {Channel} for highlighting {Victim}",
+                            occ.Perpetrator, occ.Channel, occ.Victim
+                        );
                         ConnectionManager.SendChannelMessage(occ.Channel, occ.Perpetrator);
                     }
                 }

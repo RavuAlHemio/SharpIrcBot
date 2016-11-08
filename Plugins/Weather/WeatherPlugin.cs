@@ -128,7 +128,7 @@ namespace Weather
             }
             catch (HttpRequestException we)
             {
-                Logger.LogWarning("error fetching Wunderground result", we);
+                Logger.LogWarning("error fetching Wunderground result: {Exception}", we);
                 ConnectionManager.SendChannelMessage(channel, $"{nick}: Error obtaining Wunderground response!");
                 return;
             }
@@ -162,7 +162,10 @@ namespace Weather
                 else
                 {
                     ConnectionManager.SendChannelMessage(channel, $"{nick}: Something went wrong!");
-                    Logger.LogError($"Wunderground error of type {response.Metadata.Error.Type} with description: {response.Metadata.Error.Description}");
+                    Logger.LogError(
+                        "Wunderground error of type {ErrorType} with description: {ErrorDescription}",
+                        response.Metadata.Error.Type, response.Metadata.Error.Description
+                    );
                 }
                 return;
             }

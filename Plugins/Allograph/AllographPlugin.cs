@@ -141,7 +141,7 @@ namespace Allograph
                     CooldownsPerChannel[channel].Clear();
                     CooldownsPerChannel[channel].AddRange(newCooldowns);
 
-                    Logger.LogDebug("cooldowns are now: {0}", string.Join(", ", newCooldowns.Select(c => c.ToString())));
+                    Logger.LogDebug("cooldowns are now: {Cooldowns}", string.Join(", ", newCooldowns.Select(c => c.ToString())));
                 }
 
                 newBody.Append(newChunk);
@@ -155,12 +155,12 @@ namespace Allograph
             var thisProbabilityValue = Random.NextDouble() * 100.0;
             if (thisProbabilityValue < Config.ProbabilityPercent)
             {
-                Logger.LogDebug("{0:F2} < {1:F2}; posting {2}", thisProbabilityValue, Config.ProbabilityPercent, newBody);
+                Logger.LogDebug("{RandomProbability} < {ConfigProbability}; posting {Body}", thisProbabilityValue, Config.ProbabilityPercent, newBody);
                 ConnectionManager.SendChannelMessage(args.Channel, newBody.ToString());
             }
             else
             {
-                Logger.LogDebug("{0:F2} >= {1:F2}; not posting {2}", thisProbabilityValue, Config.ProbabilityPercent, newBody);
+                Logger.LogDebug("{RandomProbability} >= {ConfigProbability}; not posting {Body}", thisProbabilityValue, Config.ProbabilityPercent, newBody);
             }
         }
 

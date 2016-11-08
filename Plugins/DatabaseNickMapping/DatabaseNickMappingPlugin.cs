@@ -63,7 +63,10 @@ namespace DatabaseNickMapping
                 var baseNickInput = linkMatch.Groups["baseNick"].Value;
                 var aliasNickInput = linkMatch.Groups["aliasNick"].Value;
 
-                Logger.LogInformation($"{requestor} in {channel} creating {baseNickInput} alias {aliasNickInput}");
+                Logger.LogInformation(
+                    "{Requestor} in {Channel} creating {BaseNickInput} alias {AliasNickInput}",
+                    requestor, channel, baseNickInput, aliasNickInput
+                );
 
                 using (var ctx = GetNewContext())
                 {
@@ -76,7 +79,7 @@ namespace DatabaseNickMapping
                         var aliasAsBaseNick = FindBaseNickFor(aliasNickInput, ctx);
                         if (aliasAsBaseNick == null)
                         {
-                            Logger.LogDebug($"performing new registration of nickname {baseNickInput}");
+                            Logger.LogDebug("performing new registration of nickname {BaseNickInput}", baseNick);
 
                             // perform new registration
                             var baseNickEntry = new BaseNickname
@@ -89,7 +92,10 @@ namespace DatabaseNickMapping
                         }
                         else
                         {
-                            Logger.LogDebug($"instead of adding {baseNickInput} alias {aliasNickInput}, adding {aliasAsBaseNick} alias {baseNickInput}");
+                            Logger.LogDebug(
+                                "instead of adding {BaseNickInput} alias {AliasNickInput}, adding {AliasAsBaseNick} alias {BaseNickInput}",
+                                baseNickInput, aliasNickInput, aliasAsBaseNick, baseNickInput
+                            );
                             baseNick = aliasAsBaseNick;
                             aliasNick = baseNickInput;
                         }
@@ -112,7 +118,7 @@ namespace DatabaseNickMapping
                         }
                     }
 
-                    Logger.LogDebug($"adding {baseNick} alias {aliasNick}");
+                    Logger.LogDebug("adding {BaseNick} alias {AliasNick}", baseNick, aliasNick);
                     var mappingEntry = new NickMapping
                     {
                         BaseNickname = baseNick,
@@ -239,18 +245,24 @@ namespace DatabaseNickMapping
             var meAsTarget = ctx.NickMappings.FirstOrDefault(nm => nm.MappedNicknameLowercase == lowerNickname);
             if (meAsTarget != null)
             {
-                Logger.LogDebug($"{nick} has a base nickname ({meAsTarget.BaseNickname})");
+                Logger.LogDebug(
+                    "{Nickname} has a base nickname ({BaseNickname})",
+                    nick, meAsTarget.BaseNickname
+                );
                 return meAsTarget.BaseNickname;
             }
 
             var meAsBase = ctx.BaseNicknames.FirstOrDefault(bn => bn.Nickname.ToLower() == lowerNickname);
             if (meAsBase != null)
             {
-                Logger.LogDebug($"{nick} is the base nickname ({meAsBase.Nickname})");
+                Logger.LogDebug(
+                    "{Nickname} is the base nickname ({BaseNickname})",
+                    nick, meAsBase.Nickname
+                );
                 return meAsBase.Nickname;
             }
 
-            Logger.LogDebug($"{nick} not found in the database");
+            Logger.LogDebug("{Nickname} not found in the database", nick);
             return null;
         }
 

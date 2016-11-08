@@ -547,7 +547,7 @@ namespace UnoBot.GameMaster
                             {
                                 // start another round, inviting all bots!
                                 ConnectionManager.SendChannelMessageFormat(Config.UnoChannel, "I'm in bot test mode; {0} game{1} left!", BotTestCount, (BotTestCount == 1) ? "" : "s");
-                                Logger.LogInformation("{0} bot test game/s left", BotTestCount);
+                                Logger.LogInformation("{Count} bot test game/s left", BotTestCount);
                                 PrepareGame();
                                 ConnectionManager.SendChannelMessage(Config.UnoChannel, "?join");
                                 BotTestJoinRequested = DateTime.UtcNow;
@@ -569,7 +569,7 @@ namespace UnoBot.GameMaster
                     {
                         case GameState.Preparation:
                         case GameState.InProgress:
-                            Logger.LogDebug("{0} is trying to start a game although one is already in progress", e.SenderNickname);
+                            Logger.LogDebug("{Nickname} is trying to start a game although one is already in progress", e.SenderNickname);
                             return;
                         case GameState.NoGame:
                             // continue below
@@ -633,7 +633,7 @@ namespace UnoBot.GameMaster
                     switch (CurrentGameState)
                     {
                         case GameState.NoGame:
-                            Logger.LogDebug("{0} is trying to join no game", e.SenderNickname);
+                            Logger.LogDebug("{Nickname} is trying to join no game", e.SenderNickname);
                             return;
                         default:
                             Logger.LogError("invalid game state when trying to add player to game");
@@ -678,7 +678,7 @@ namespace UnoBot.GameMaster
                     switch (CurrentGameState)
                     {
                         case GameState.NoGame:
-                            Logger.LogDebug("{0} is trying to deal no game", e.SenderNickname);
+                            Logger.LogDebug("{Nickname} is trying to deal no game", e.SenderNickname);
                             return;
                         default:
                             Logger.LogError("invalid game state when trying to add player to game");

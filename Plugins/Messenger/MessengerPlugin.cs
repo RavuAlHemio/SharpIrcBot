@@ -102,11 +102,11 @@ namespace Messenger
                 if (isIgnored)
                 {
                     Logger.LogDebug(
-                        "{0} ({3}) wants to send message {1} to {2}, but the recipient is ignoring the sender",
+                        "{SenderNickname} ({SenderUsername}) wants to send message {Message} to {Recipient}, but the recipient is ignoring the sender",
                         SharpIrcBotUtil.LiteralString(message.SenderNickname),
+                        SharpIrcBotUtil.LiteralString(sender),
                         SharpIrcBotUtil.LiteralString(body),
-                        SharpIrcBotUtil.LiteralString(recipient.Recipient),
-                        SharpIrcBotUtil.LiteralString(sender)
+                        SharpIrcBotUtil.LiteralString(recipient.Recipient)
                     );
                     ConnectionManager.SendChannelMessageFormat(
                         message.Channel,
@@ -119,11 +119,11 @@ namespace Messenger
             }
 
             Logger.LogDebug(
-                "{0} ({3}) sending message {1} to {2}",
+                "{SenderNickname} ({SenderUsername}) sending message {Message} to {Recipients}",
                 SharpIrcBotUtil.LiteralString(message.SenderNickname),
+                SharpIrcBotUtil.LiteralString(sender),
                 SharpIrcBotUtil.LiteralString(body),
-                string.Join(", ", recipients.Select(r => SharpIrcBotUtil.LiteralString(r.Recipient))),
-                SharpIrcBotUtil.LiteralString(sender)
+                string.Join(", ", recipients.Select(r => SharpIrcBotUtil.LiteralString(r.Recipient)))
             );
 
             DateTimeOffset? quiescenceEnd = null;
@@ -271,7 +271,7 @@ namespace Messenger
                 foreach (var msg in messages)
                 {
                     Logger.LogDebug(
-                        "delivering {0}'s retained message {1} to {2} as part of a chunk",
+                        "delivering {Sender}'s retained message {Message} to {Recipient} as part of a chunk",
                         SharpIrcBotUtil.LiteralString(msg.SenderOriginal),
                         SharpIrcBotUtil.LiteralString(msg.Body),
                         SharpIrcBotUtil.LiteralString(message.SenderNickname)
@@ -379,7 +379,7 @@ namespace Messenger
             }
             if (messages.Count == 1)
             {
-                Logger.LogDebug("replaying a message for {0}", SharpIrcBotUtil.LiteralString(message.SenderNickname));
+                Logger.LogDebug("replaying a message for {Recipient}", SharpIrcBotUtil.LiteralString(message.SenderNickname));
                 ConnectionManager.SendChannelMessageFormat(
                     message.Channel,
                     "Replaying message for {0}! {1} <{2}> {3}",
@@ -398,7 +398,7 @@ namespace Messenger
                 messages.Count
             );
             Logger.LogDebug(
-                "replaying {0} messages for {1}",
+                "replaying {Count} messages for {Recipient}",
                 messages.Count,
                 SharpIrcBotUtil.LiteralString(message.SenderNickname)
             );
@@ -465,10 +465,10 @@ namespace Messenger
                     ctx.SaveChanges();
                 }
                 Logger.LogDebug(
-                    "{0} ({2}) is now ignoring {1}",
+                    "{BlockingRecipientNickname} ({BlockingRecipientUsername}) is now ignoring {BlockedSender}",
                     SharpIrcBotUtil.LiteralString(message.SenderNickname),
-                    SharpIrcBotUtil.LiteralString(blockSender),
-                    SharpIrcBotUtil.LiteralString(blockRecipient)
+                    SharpIrcBotUtil.LiteralString(blockRecipient),
+                    SharpIrcBotUtil.LiteralString(blockSender)
                 );
 
                 ConnectionManager.SendChannelMessageFormat(
@@ -499,10 +499,10 @@ namespace Messenger
                     ctx.SaveChanges();
                 }
                 Logger.LogDebug(
-                    "{0} ({2}) is not ignoring {1} anymore",
+                    "{BlockingRecipientNickname} ({BlockingRecipientUsername}) is not ignoring {BlockedSender} anymore",
                     SharpIrcBotUtil.LiteralString(message.SenderNickname),
-                    SharpIrcBotUtil.LiteralString(blockSender),
-                    SharpIrcBotUtil.LiteralString(blockRecipient)
+                    SharpIrcBotUtil.LiteralString(blockRecipient),
+                    SharpIrcBotUtil.LiteralString(blockSender)
                 );
 
                 ConnectionManager.SendChannelMessageFormat(
@@ -720,11 +720,11 @@ namespace Messenger
                 if (isIgnored)
                 {
                     Logger.LogDebug(
-                        "{0} ({3}) wants to send private message {1} to {2}, but the recipient is ignoring the sender",
+                        "{SenderNickname} ({SenderUsername}) wants to send private message {Message} to {Recipient}, but the recipient is ignoring the sender",
                         SharpIrcBotUtil.LiteralString(message.SenderNickname),
+                        SharpIrcBotUtil.LiteralString(sender),
                         SharpIrcBotUtil.LiteralString(body),
-                        SharpIrcBotUtil.LiteralString(recipient.Recipient),
-                        SharpIrcBotUtil.LiteralString(sender)
+                        SharpIrcBotUtil.LiteralString(recipient.Recipient)
                     );
                     ConnectionManager.SendQueryMessageFormat(
                         message.SenderNickname,
@@ -736,11 +736,11 @@ namespace Messenger
             }
 
             Logger.LogDebug(
-                "{0} ({3}) sending private message {1} to {2}",
+                "{SenderNickname} ({SenderUsername}) sending private message {Message} to {Recipients}",
                 SharpIrcBotUtil.LiteralString(message.SenderNickname),
+                SharpIrcBotUtil.LiteralString(sender),
                 SharpIrcBotUtil.LiteralString(body),
-                string.Join(", ", recipients.Select(r => SharpIrcBotUtil.LiteralString(r.Recipient))),
-                SharpIrcBotUtil.LiteralString(sender)
+                string.Join(", ", recipients.Select(r => SharpIrcBotUtil.LiteralString(r.Recipient)))
             );
             
             using (var ctx = GetNewContext())
@@ -898,7 +898,7 @@ namespace Messenger
                 {
                     // one message
                     Logger.LogDebug(
-                        "delivering {0}'s message {1} to {2}",
+                        "delivering {Sender}'s message {Message} to {Recipient}",
                         SharpIrcBotUtil.LiteralString(messages[0].SenderOriginal),
                         SharpIrcBotUtil.LiteralString(messages[0].Body),
                         SharpIrcBotUtil.LiteralString(args.SenderNickname)
@@ -917,7 +917,7 @@ namespace Messenger
                 {
                     // use messages instead of messagesToDisplay to put all of them on retainer
                     Logger.LogDebug(
-                        "{0} got {1} messages; putting on retainer",
+                        "{Recipient} got {Count} messages; putting on retainer",
                         SharpIrcBotUtil.LiteralString(args.SenderNickname),
                         messages.Count
                     );
@@ -950,7 +950,7 @@ namespace Messenger
                     foreach (var msg in messages)
                     {
                         Logger.LogDebug(
-                            "delivering {0}'s message {1} to {2} as part of a chunk",
+                            "delivering {Sender}'s message {Message} to {Recipient} as part of a chunk",
                             SharpIrcBotUtil.LiteralString(msg.SenderOriginal),
                             SharpIrcBotUtil.LiteralString(msg.Body),
                             SharpIrcBotUtil.LiteralString(args.SenderNickname)
@@ -1024,7 +1024,7 @@ namespace Messenger
                 {
                     // one message
                     Logger.LogDebug(
-                        "delivering {0}'s private message {1} to {2}",
+                        "delivering {Sender}'s private message {Message} to {Recipient}",
                         SharpIrcBotUtil.LiteralString(privateMessages[0].SenderOriginal),
                         SharpIrcBotUtil.LiteralString(privateMessages[0].Body),
                         SharpIrcBotUtil.LiteralString(args.SenderNickname)
@@ -1048,7 +1048,7 @@ namespace Messenger
                     foreach (var msg in privateMessages)
                     {
                         Logger.LogDebug(
-                            "delivering {0}'s private message {1} to {2} as part of a chunk",
+                            "delivering {Sender}'s private message {Message} to {Recipient} as part of a chunk",
                             SharpIrcBotUtil.LiteralString(msg.SenderOriginal),
                             SharpIrcBotUtil.LiteralString(msg.Body),
                             SharpIrcBotUtil.LiteralString(args.SenderNickname)

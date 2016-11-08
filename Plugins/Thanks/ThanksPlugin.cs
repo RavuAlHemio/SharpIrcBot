@@ -106,7 +106,7 @@ namespace Thanks
                     return;
                 }
 
-                Logger.LogDebug("{0} thanks {1}", thanker, thankee);
+                Logger.LogDebug("{Thanker} thanks {Thankee}", thanker, thankee);
 
                 long thankedCount;
                 using (var ctx = GetNewContext())
