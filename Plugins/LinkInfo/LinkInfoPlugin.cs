@@ -343,7 +343,7 @@ namespace LinkInfo
                 var htmlDoc = new HtmlDocument();
                 htmlDoc.LoadHtml(parseMe);
                 IEnumerable<HtmlNode> foundHints = htmlDoc.DocumentNode
-                    .SelectNodes(".//elem()")
+                    .SelectNodes(".//*")
                     .OfType<HtmlNode>()
                     .Where(n => hasHintClasses(n.GetAttributeValue("class", "").Split(' ')));
                 foreach (var hint in foundHints)
