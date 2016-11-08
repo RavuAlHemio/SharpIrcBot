@@ -194,11 +194,6 @@ namespace LinkInfo
                 {
                     try
                     {
-                        if (!resp.IsSuccessStatusCode)
-                        {
-                            throw new HttpRequestException("unsuccessful");
-                        }
-
                         // redirect?
                         Uri location = resp.Headers.Location;
                         if (location != null)
@@ -209,6 +204,12 @@ namespace LinkInfo
                                 link.AbsoluteUri, originalLink?.AbsoluteUri ?? link.AbsoluteUri, location
                             );
                             return RealObtainLinkInfo(new Uri(link, location), originalLink ?? link, redirectCount + 1);
+                        }
+
+                        // success?
+                        if (!resp.IsSuccessStatusCode)
+                        {
+                            throw new HttpRequestException("unsuccessful");
                         }
 
                         // find the content-type
