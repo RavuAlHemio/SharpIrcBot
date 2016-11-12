@@ -16,10 +16,10 @@ namespace Time.GeoNames
         public string CountryName { get; set; }
 
         [JsonProperty("dstOffset")]
-        public int DSTOffset { get; set; }
+        public decimal DSTOffset { get; set; }
 
         [JsonProperty("gmtOffset")]
-        public int GMTOffset { get; set; }
+        public decimal GMTOffset { get; set; }
 
         [JsonProperty("lat")]
         public decimal Latitude { get; set; }
@@ -28,7 +28,7 @@ namespace Time.GeoNames
         public decimal Longitude { get; set; }
 
         [JsonProperty("rawOffset")]
-        public int RawOffset { get; set; }
+        public decimal RawOffset { get; set; }
 
         [JsonProperty("sunrise")]
         public string SunriseString
