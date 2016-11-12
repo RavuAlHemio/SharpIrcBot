@@ -5,7 +5,14 @@ namespace SharpIrcBot
     public interface IDatabaseModuleConfig
     {
         [NotNull]
-        string DatabaseProvider { get; }
+        string DatabaseProviderAssembly { get; }
+
+        [NotNull]
+        string DatabaseConfiguratorClass { get; }
+
+        [NotNull]
+        string DatabaseConfiguratorMethod { get; }
+
         [NotNull]
         string DatabaseConnectionString { get; }
     }

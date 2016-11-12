@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
-using log4net;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 using SharpIrcBot;
 
@@ -9,7 +8,7 @@ namespace UnoBot
 {
     public class ByMalusUnoBotPlugin : UnoBotPlugin
     {
-        private static readonly ILog StrategyLogger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType.FullName + ".Strategy");
+        private static readonly ILogger StrategyLogger = SharpIrcBotUtil.LoggerFactory.CreateLogger(typeof(ByMalusUnoBotPlugin).FullName + ".Strategy");
 
         public ByMalusUnoBotPlugin(IConnectionManager connMgr, JObject config)
             : base(connMgr, config)
@@ -51,7 +50,7 @@ namespace UnoBot
             {
                 // we have a pending color request; honor it
                 var color = ColorRequest.Value;
-                StrategyLogger.DebugFormat("honoring color request {0}", color);
+                StrategyLogger.LogDebug("honoring color request {Color}", color);
                 ColorRequest = null;
                 return color;
             }

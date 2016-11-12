@@ -1,4 +1,4 @@
-﻿using log4net;
+﻿using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 using SharpIrcBot;
 using SharpIrcBot.Events;
@@ -7,7 +7,7 @@ namespace IdentityNickMapping
 {
     public class IdentityPlugin : IPlugin
     {
-        private static readonly ILog Logger = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+        private static readonly ILogger Logger = SharpIrcBotUtil.LoggerFactory.CreateLogger<IdentityPlugin>();
 
         protected IConnectionManager ConnectionManager;
 

@@ -1,0 +1,37 @@
+﻿{
+  "name": "SharpIrcBot",
+  "version": "1.0.0-*",
+  "buildOptions": {
+    "debugType": "portable"
+  },
+  "dependencies": {
+    "JetBrains.Annotations": "10.2.1",
+    "Microsoft.EntityFrameworkCore": "1.0.1",
+    "Npgsql.EntityFrameworkCore.PostgreSQL": "1.0.2",
+    "Microsoft.Extensions.Logging": "1.0.0",
+    "Microsoft.Extensions.Logging.Abstractions": "1.0.0",
+    "Microsoft.Extensions.Logging.Console": "1.0.0",
+    "Microsoft.Extensions.Logging.Filter": "1.0.0",
+    "NETStandard.Library": "1.6.0",
+    "Newtonsoft.Json": "9.0.1",
+    "Serilog.Extensions.Logging": "1.2.0",
+    "Serilog.Sinks.RollingFile": "3.2.0",
+    "System.Collections.Immutable": "1.2.0",
+    "System.Diagnostics.TraceSource": "4.0.0",
+    "System.Net.Http": "4.1.0",
+    "SmartIrc4net": {
+      "target": "project"
+    }
+  },
+  "frameworks": {
+    "netstandard1.6": {
+      "buildOptions": {
+        "define": [
+          "NETCORE"
+        ]
+      }
+    },
+    "net461": {
+    }
+  }
+}

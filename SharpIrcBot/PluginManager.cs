@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using JetBrains.Annotations;
-using log4net;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 using SharpIrcBot.Config;
 
@@ -11,7 +11,7 @@ namespace SharpIrcBot
 {
     public class PluginManager
     {
-        private static readonly ILog Logger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        private static readonly ILogger Logger = SharpIrcBotUtil.LoggerFactory.CreateLogger<PluginManager>();
 
         [NotNull]
         protected BotConfig Config;
@@ -28,13 +28,13 @@ namespace SharpIrcBot
         {
             foreach (var plugin in Config.Plugins)
             {
-                var ass = Assembly.Load(plugin.Assembly);
+                var ass = Assembly.Load(new AssemblyName(plugin.Assembly));
                 var type = ass.GetType(plugin.Class);
-                if (!typeof(IPlugin).IsAssignableFrom(type))
+                if (!typeof(IPlugin).GetTypeInfo().IsAssignableFrom(type))
                 {
                     throw new ArgumentException("class is not a plugin");
                 }
-                var ctor = type.GetConstructor(new [] {typeof(IConnectionManager), typeof(JObject)});
+                var ctor = type.GetTypeInfo().GetConstructor(new [] {typeof(IConnectionManager), typeof(JObject)});
                 var pluginObject = (IPlugin)ctor.Invoke(new object[] {connManager, plugin.Config});
                 Plugins.Add(pluginObject);
             }
@@ -66,14 +66,14 @@ namespace SharpIrcBot
                     continue;
                 }
 
-                Logger.InfoFormat("updating configuration of plugin of type {0}", pluginType.FullName);
+                Logger.LogInformation("updating configuration of plugin of type {PluginName}", pluginType.FullName);
                 try
                 {
                     updatablePlugin.ReloadConfiguration(newConfig.Config);
                 }
                 catch (Exception exc)
                 {
-                    Logger.ErrorFormat("failed to update configuration of plugin of type {0}: {1}", pluginType.FullName, exc);
+                    Logger.LogError("failed to update configuration of plugin of type {PluginName}: {Exception}", pluginType.FullName, exc);
                 }
             }
         }

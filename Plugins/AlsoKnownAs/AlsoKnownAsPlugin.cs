@@ -4,7 +4,6 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Text.RegularExpressions;
 using JetBrains.Annotations;
-using log4net;
 using Newtonsoft.Json.Linq;
 using SharpIrcBot;
 using SharpIrcBot.Collections;
@@ -14,7 +13,6 @@ namespace AlsoKnownAs
 {
     public class AlsoKnownAsPlugin : IPlugin, IReloadableConfiguration
     {
-        private static readonly ILog Logger = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
         public static readonly Regex AlsoKnownAsRegex = new Regex("^!aka\\s+(?<nickname>\\S+)\\s*", RegexOptions.Compiled);
 
         protected IConnectionManager ConnectionManager { get; set; }
@@ -29,7 +27,7 @@ namespace AlsoKnownAs
             Config = new AlsoKnownAsConfig(config);
 
             HostToNicks = new DrillDownTree<string, HashSet<string>>();
-            NickToMostRecentHost = new Dictionary<string, UserIdentifier>(StringComparer.InvariantCultureIgnoreCase);
+            NickToMostRecentHost = new Dictionary<string, UserIdentifier>(StringComparer.OrdinalIgnoreCase);
 
             ConnectionManager.ChannelMessage += HandleChannelMessage;
             ConnectionManager.QueryMessage += HandleQueryMessage;
@@ -153,7 +151,7 @@ namespace AlsoKnownAs
             }
             else
             {
-                HostToNicks[identifierParts] = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase) { nick };
+                HostToNicks[identifierParts] = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { nick };
             }
 
             NickToMostRecentHost[nick] = identifier;

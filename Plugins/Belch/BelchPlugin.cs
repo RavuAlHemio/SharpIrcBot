@@ -1,18 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Reflection;
 using System.Text;
-using log4net;
 using Newtonsoft.Json.Linq;
 using SharpIrcBot;
 using SharpIrcBot.Events.Irc;
 
 namespace Belch
 {
-    public class BelchPlugin : SharpIrcBot.IPlugin
+    public class BelchPlugin : IPlugin
     {
-        private static readonly ILog Logger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         private static readonly int[] SkittlesCodes = {1, 2, 3, 4, 5, 6, 7, 10, 12, 13};
 
         protected IConnectionManager ConnectionManager;

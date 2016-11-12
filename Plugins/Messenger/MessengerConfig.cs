@@ -8,8 +8,11 @@ namespace Messenger
     [JsonObject(MemberSerialization.OptOut)]
     public class MessengerConfig : IDatabaseModuleConfig
     {
-        public string DatabaseProvider { get; set; }
+        public string DatabaseProviderAssembly { get; set; }
+        public string DatabaseConfiguratorClass { get; set; }
+        public string DatabaseConfiguratorMethod { get; set; }
         public string DatabaseConnectionString { get; set; }
+
         public int TooManyMessages { get; set; }
         public int MaxMessagesToReplay { get; set; }
         public bool AllowMulticast { get; set; }

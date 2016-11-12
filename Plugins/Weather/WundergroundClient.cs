@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Net;
+using System.Net.Http;
+using System.Threading.Tasks;
 using Newtonsoft.Json;
 using SharpIrcBot;
 using Weather.Wunderground;
@@ -7,7 +10,8 @@ namespace Weather
 {
     public class WundergroundClient
     {
-        private CookieWebClient _client;
+        private HttpClientHandler _clientHandler;
+        private HttpClient _client;
 
         public TimeSpan Timeout
         {
@@ -17,14 +21,19 @@ namespace Weather
 
         public WundergroundClient()
         {
-            _client = new CookieWebClient();
+            _clientHandler = new HttpClientHandler();
+            _clientHandler.CookieContainer = new CookieContainer();
+            _client = new HttpClient(_clientHandler);
         }
 
         public WundergroundResponse GetWeatherForLocation(string apiKey, string location)
         {
-            var escapedApiKey = Uri.EscapeUriString(apiKey);
-            var escapedLocation = Uri.EscapeUriString(location);
-            var json = _client.DownloadString($"http://api.wunderground.com/api/{escapedApiKey}/geolookup/conditions/forecast/q/{escapedLocation}.json");
+            string escapedApiKey = Uri.EscapeUriString(apiKey);
+            string escapedLocation = Uri.EscapeUriString(location);
+
+            string json = _client
+                .GetStringAsync($"http://api.wunderground.com/api/{escapedApiKey}/geolookup/conditions/forecast/q/{escapedLocation}.json")
+                .SyncWait();
 
             var response = new WundergroundResponse();
             JsonConvert.PopulateObject(json, response);

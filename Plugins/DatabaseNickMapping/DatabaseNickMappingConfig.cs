@@ -7,7 +7,9 @@ namespace DatabaseNickMapping
     [JsonObject(MemberSerialization.OptOut)]
     public class DatabaseNickMappingConfig : IDatabaseModuleConfig
     {
-        public string DatabaseProvider { get; set; }
+        public string DatabaseProviderAssembly { get; set; }
+        public string DatabaseConfiguratorClass { get; set; }
+        public string DatabaseConfiguratorMethod { get; set; }
         public string DatabaseConnectionString { get; set; }
 
         public DatabaseNickMappingConfig(JObject obj)

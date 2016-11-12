@@ -3,9 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
-using System.Reflection;
 using System.Text.RegularExpressions;
-using log4net;
 using Newtonsoft.Json.Linq;
 using SharpIrcBot;
 using SharpIrcBot.Events.Irc;
@@ -14,8 +12,6 @@ namespace Dice
 {
     public class DicePlugin : IPlugin, IReloadableConfiguration
     {
-        private static readonly ILog Logger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         public static readonly Regex DiceThrowRegex = new Regex(
             "^" +
             "!roll\\s+" +
@@ -79,14 +75,14 @@ namespace Dice
                 return;
             }
 
-            if (args.Message.StartsWith("!yn ", StringComparison.InvariantCultureIgnoreCase) && Config.YesNoAnswers.Count > 0)
+            if (args.Message.StartsWith("!yn ", StringComparison.OrdinalIgnoreCase) && Config.YesNoAnswers.Count > 0)
             {
                 var yesNoAnswer = Config.YesNoAnswers[RNG.Next(Config.YesNoAnswers.Count)];
                 ConnectionManager.SendChannelMessageFormat(args.Channel, "{0}: {1}", args.SenderNickname, yesNoAnswer);
                 return;
             }
 
-            if (args.Message.StartsWith("!decide ", StringComparison.InvariantCultureIgnoreCase) && Config.DecisionSplitters.Count > 0)
+            if (args.Message.StartsWith("!decide ", StringComparison.OrdinalIgnoreCase) && Config.DecisionSplitters.Count > 0)
             {
                 var decisionString = args.Message.Substring(("!decide ").Length).Trim();
 

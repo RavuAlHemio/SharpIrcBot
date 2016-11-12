@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using log4net;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 using SharpIrcBot;
 using SharpIrcBot.Events.Irc;
@@ -13,7 +13,7 @@ namespace GroupPressure
     /// </summary>
     public class GroupPressurePlugin : IPlugin, IReloadableConfiguration
     {
-        private static readonly ILog Logger = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+        private static readonly ILogger Logger = SharpIrcBotUtil.LoggerFactory.CreateLogger<GroupPressurePlugin>();
 
         protected Queue<BacklogMessage> Backlog;
         protected PressureConfig Config;
@@ -107,8 +107,8 @@ namespace GroupPressure
                     continue;
                 }
 
-                Logger.DebugFormat(
-                    "bowing to the group pressure of ({0}) sending {1}",
+                Logger.LogDebug(
+                    "bowing to the group pressure of ({Senders}) sending {Message}",
                     string.Join(", ", senders.Select(s => SharpIrcBotUtil.LiteralString(s))),
                     SharpIrcBotUtil.LiteralString(msg)
                 );

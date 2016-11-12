@@ -1,0 +1,32 @@
+﻿{
+  "name": "SharpIrcBotCLI",
+  "version": "1.0.0-*",
+  "buildOptions": {
+    "debugType": "portable",
+    "emitEntryPoint": true
+  },
+  "dependencies": {
+    "System.Text.Encoding.CodePages": "4.0.1",
+    "SharpIrcBot": {
+      "target": "project"
+    }
+  },
+  "frameworks": {
+    "netcoreapp1.0": {
+      "dependencies": {
+        "Microsoft.NETCore.App": "1.0.1"
+      },
+      "buildOptions": {
+        "define": [
+          "NETCORE"
+        ]
+      }
+    },
+    "net461": {}
+  },
+  "runtimes": {
+    "win7-x64": {},
+    "ubuntu.16.04-x64": {},
+    "linux": {}
+  }
+}

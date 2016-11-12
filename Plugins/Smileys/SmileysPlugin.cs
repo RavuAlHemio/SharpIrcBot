@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Text;
-using log4net;
 using Newtonsoft.Json.Linq;
 using SharpIrcBot;
 using SharpIrcBot.Events.Irc;
@@ -9,8 +8,6 @@ namespace Smileys
 {
     public class SmileysPlugin : IPlugin, IReloadableConfiguration
     {
-        private static readonly ILog Logger = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
-
         protected IConnectionManager ConnectionManager { get; }
         protected SmileysConfig Config { get; set; }
 
@@ -35,16 +32,9 @@ namespace Smileys
                 return;
             }
 
-            try
+            if (e.Message == "!smileys" || e.Message == "!smilies")
             {
-                if (e.Message == "!smileys" || e.Message == "!smilies")
-                {
-                    SendSmileysTo(e.SenderNickname);
-                }
-            }
-            catch (Exception exc)
-            {
-                Logger.Error("error while handling channel or query message", exc);
+                SendSmileysTo(e.SenderNickname);
             }
         }
 

@@ -2,10 +2,11 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
-using System.Reflection;
+using System.Net.Http;
 using System.Text;
 using System.Text.RegularExpressions;
-using log4net;
+using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 using SharpIrcBot;
 using SharpIrcBot.Events.Irc;
@@ -15,7 +16,7 @@ namespace Weather
 {
     public class WeatherPlugin : IPlugin, IReloadableConfiguration
     {
-        private static readonly ILog Logger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        private static readonly ILogger Logger = SharpIrcBotUtil.LoggerFactory.CreateLogger<WeatherPlugin>();
 
         public static readonly Regex WeatherRegex = new Regex("^!(?<lucky>l)?weather(?:\\s+(?<location>\\S+(?:\\s+\\S+)*))?\\s*$", RegexOptions.Compiled);
 
@@ -120,17 +121,15 @@ namespace Weather
             {
                 response = Client.GetWeatherForLocation(Config.WunderApiKey, location);
             }
-            catch (WebException we)
+            catch (AggregateException ae) when (ae.InnerException.GetType() == typeof(TaskCanceledException))
             {
-                if (we.Status == WebExceptionStatus.Timeout)
-                {
-                    ConnectionManager.SendChannelMessage(channel, $"{nick}: Wunderground request timed out!");
-                }
-                else
-                {
-                    Logger.Warn("error fetching Wunderground result", we);
-                    ConnectionManager.SendChannelMessage(channel, $"{nick}: Error obtaining Wunderground response!");
-                }
+                ConnectionManager.SendChannelMessage(channel, $"{nick}: Wunderground request timed out!");
+                return;
+            }
+            catch (HttpRequestException we)
+            {
+                Logger.LogWarning("error fetching Wunderground result: {Exception}", we);
+                ConnectionManager.SendChannelMessage(channel, $"{nick}: Error obtaining Wunderground response!");
                 return;
             }
 
@@ -163,7 +162,10 @@ namespace Weather
                 else
                 {
                     ConnectionManager.SendChannelMessage(channel, $"{nick}: Something went wrong!");
-                    Logger.Error($"Wunderground error of type {response.Metadata.Error.Type} with description: {response.Metadata.Error.Description}");
+                    Logger.LogError(
+                        "Wunderground error of type {ErrorType} with description: {ErrorDescription}",
+                        response.Metadata.Error.Type, response.Metadata.Error.Description
+                    );
                 }
                 return;
             }
@@ -174,11 +176,41 @@ namespace Weather
             {
                 weather.Append($"{response.CurrentWeather.DisplayLocation.FullName}: ");
             }
+
+            var pieces = new List<string>();
+
             if (!string.IsNullOrWhiteSpace(response.CurrentWeather?.WeatherDescription))
             {
-                weather.Append($"{response.CurrentWeather.WeatherDescription}, ");
+                pieces.Add(response.CurrentWeather.WeatherDescription);
             }
-            weather.Append($"{response.CurrentWeather.Temperature}°C (feels like {response.CurrentWeather.FeelsLikeTemperature}°C), {response.CurrentWeather.Humidity} humidity");
+
+            if ((response.CurrentWeather?.Temperature).HasValue)
+            {
+                if ((response.CurrentWeather?.FeelsLikeTemperature).HasValue)
+                {
+                    pieces.Add($"{response.CurrentWeather.Temperature}°C (feels like {response.CurrentWeather.FeelsLikeTemperature}°C)");
+                }
+                else
+                {
+                    pieces.Add($"{response.CurrentWeather.Temperature}°C");
+                }
+            }
+            else if ((response.CurrentWeather?.FeelsLikeTemperature).HasValue)
+            {
+                pieces.Add($"feels like {response.CurrentWeather.FeelsLikeTemperature}°C");
+            }
+
+            if (!string.IsNullOrWhiteSpace(response.CurrentWeather?.Humidity))
+            {
+                pieces.Add($"{response.CurrentWeather.Humidity} humidity");
+            }
+
+            if (pieces.Count == 0)
+            {
+                pieces.Add("current weather unknown");
+            }
+
+            weather.Append(string.Join(", ", pieces));
 
             if (response.Forecast?.Simple?.Days != null && response.Forecast.Simple.Days.Count > 0)
             {

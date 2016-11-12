@@ -7,8 +7,11 @@ namespace Quotes
     [JsonObject(MemberSerialization.OptOut)]
     public class QuotesConfig : IDatabaseModuleConfig
     {
-        public string DatabaseProvider { get; set; }
+        public string DatabaseProviderAssembly { get; set; }
+        public string DatabaseConfiguratorClass { get; set; }
+        public string DatabaseConfiguratorMethod { get; set; }
         public string DatabaseConnectionString { get; set; }
+
         public int RememberForQuotes { get; set; }
         public int VoteThreshold { get; set; }
 

@@ -1,0 +1,26 @@
+﻿{
+  "name": "LinkInfo",
+  "version": "1.0.0-*",
+  "buildOptions": {
+    "debugType": "portable"
+  },
+  "dependencies": {
+    "HtmlAgilityPack": {
+      "target": "project"
+    },
+    "SharpIrcBot": {
+      "target": "project"
+    }
+  },
+  "frameworks": {
+    "netstandard1.6": {
+      "buildOptions": {
+        "define": [
+          "NETCORE"
+        ]
+      }
+    },
+    "net461": {
+    }
+  }
+}

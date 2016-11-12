@@ -1,5 +1,4 @@
-﻿using System.Data.Common;
-using System.Data.Entity;
+﻿using Microsoft.EntityFrameworkCore;
 
 namespace LinkInfoOptIn.ORM
 {
@@ -7,13 +6,22 @@ namespace LinkInfoOptIn.ORM
     {
         public DbSet<OptedInUser> OptedInUsers { get; set; }
 
-        static LinkInfoOptInContext()
+        public LinkInfoOptInContext(DbContextOptions<LinkInfoOptInContext> options)
+            : base(options)
         {
-            Database.SetInitializer<LinkInfoOptInContext>(null);
         }
 
-        public LinkInfoOptInContext(DbConnection connectionToOwn) : base(connectionToOwn, true)
+        protected override void OnModelCreating(ModelBuilder builder)
         {
+            builder.Entity<OptedInUser>(entBuilder =>
+            {
+                entBuilder.ToTable("opted_in_users", schema: "link_info_opt_in");
+                entBuilder.HasKey(e => e.UserName);
+
+                entBuilder.Property(e => e.UserName)
+                    .IsRequired()
+                    .HasColumnName("user_name");
+            });
         }
     }
 }

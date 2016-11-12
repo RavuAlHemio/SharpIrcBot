@@ -1,19 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data.Common;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Threading.Tasks;
 using JetBrains.Annotations;
-using log4net;
-using log4net.Appender;
-using log4net.Config;
-using log4net.Core;
-using log4net.Layout;
-using log4net.Repository.Hierarchy;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Console;
 using Newtonsoft.Json.Linq;
+using Serilog;
+using Serilog.Events;
+using Serilog.Extensions.Logging;
 using SharpIrcBot.Chunks;
 using SharpIrcBot.Config;
 
@@ -21,7 +21,8 @@ namespace SharpIrcBot
 {
     public static class SharpIrcBotUtil
     {
-        public const string DefaultLogFormat = "%date{yyyy-MM-dd HH:mm:ss} [%15.15thread] %-5level %30.30logger - %message%newline";
+        public static readonly ILoggerFactory LoggerFactory = new LoggerFactory();
+
         [NotNull]
         public static readonly Encoding Utf8NoBom = new UTF8Encoding(false, true);
         [NotNull]
@@ -38,10 +39,7 @@ namespace SharpIrcBot
         }
 
         [NotNull]
-        public static string AppDirectory
-        {
-            get { return Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath); }
-        }
+        public static string AppDirectory => AppContext.BaseDirectory;
 
         /// <summary>
         /// Converts a string into Unicode code points, handling surrogate pairs gracefully.
@@ -91,7 +89,7 @@ namespace SharpIrcBot
             var ret = new StringBuilder();
             foreach (var cp in StringToCodePointStrings(text))
             {
-                var cat = char.GetUnicodeCategory(cp, 0);
+                var cat = CharUnicodeInfo.GetUnicodeCategory(cp, 0);
                 if (cat == UnicodeCategory.Control || cat == UnicodeCategory.Format)
                 {
                     continue;
@@ -382,77 +380,125 @@ namespace SharpIrcBot
             return dateTime.ToLocalTime();
         }
 
-        [NotNull]
-        public static DbConnection GetDatabaseConnection([NotNull] IDatabaseModuleConfig config)
+        public static DbContextOptions<T> GetContextOptions<T>(IDatabaseModuleConfig config)
+            where T : DbContext
         {
-            var conn = DbProviderFactories.GetFactory(config.DatabaseProvider).CreateConnection();
-            conn.ConnectionString = config.DatabaseConnectionString;
-            return conn;
-        }
+            var builder = new DbContextOptionsBuilder<T>();
 
-        public static void SetupFileLogging([CanBeNull] Level level = null)
-        {
-            var logConfFile = new FileInfo(Path.Combine(AppDirectory, "LogConf.xml"));
-            if (logConfFile.Exists)
+            // SomeMethod(DbContextOptionsBuilder builder, string connectionString [, optionally more parameters with default values])
+            Assembly ass = Assembly.Load(new AssemblyName(config.DatabaseProviderAssembly));
+            Type configuratorType = ass.GetType(config.DatabaseConfiguratorClass);
+
+            MethodInfo configuratorMethod = null;
+            ParameterInfo[] configuratorParameters = null;
+            foreach (MethodInfo candidateMethod in configuratorType.GetMethods())
             {
-                // use the XML configurator instead
-                XmlConfigurator.Configure(logConfFile);
-                return;
+                if (candidateMethod.Name != config.DatabaseConfiguratorMethod)
+                {
+                    continue;
+                }
+
+                if (!candidateMethod.IsPublic || !candidateMethod.IsStatic)
+                {
+                    continue;
+                }
+
+                configuratorParameters = candidateMethod.GetParameters();
+                if (configuratorParameters.Length < 2)
+                {
+                    continue;
+                }
+
+                if (!configuratorParameters[0].ParameterType.IsAssignableFrom(builder.GetType()))
+                {
+                    continue;
+                }
+
+                if (configuratorParameters[1].ParameterType != typeof(string))
+                {
+                    continue;
+                }
+
+                if (!configuratorParameters.Skip(2).All(param => param.HasDefaultValue))
+                {
+                    continue;
+                }
+
+                configuratorMethod = candidateMethod;
+                break;
             }
 
-            var hierarchy = (Hierarchy) LogManager.GetRepository();
-            var rootLogger = hierarchy.Root;
-            rootLogger.Level = level ?? Level.Debug;
-
-            var patternLayout = new PatternLayout
+            if (configuratorMethod == null)
             {
-                ConversionPattern = DefaultLogFormat
-            };
-            patternLayout.ActivateOptions();
-
-            var logAppender = new FileAppender
-            {
-                AppendToFile = true,
-                Encoding = Utf8NoBom,
-                File = Path.Combine(AppDirectory, "SharpIrcBot.log"),
-                Layout = patternLayout
-            };
-            logAppender.ActivateOptions();
-
-            rootLogger.AddAppender(logAppender);
-
-            hierarchy.Configured = true;
-        }
-
-        public static void SetupConsoleLogging([CanBeNull] Level level = null)
-        {
-            var logConfFile = new FileInfo(Path.Combine(AppDirectory, "LogConf.xml"));
-            if (logConfFile.Exists)
-            {
-                // use the XML configurator instead
-                XmlConfigurator.Configure(logConfFile);
-                return;
+                throw new KeyNotFoundException($"no viable configurator method named {config.DatabaseConfiguratorMethod} found in {ass.FullName}");
             }
 
-            var hierarchy = (Hierarchy)LogManager.GetRepository();
-            var rootLogger = hierarchy.Root;
-            rootLogger.Level = level ?? Level.Debug;
-
-            var patternLayout = new PatternLayout
+            var parameters = new object[configuratorParameters.Length];
+            parameters[0] = builder;
+            parameters[1] = config.DatabaseConnectionString;
+            for (int i = 2; i < parameters.Length; ++i)
             {
-                ConversionPattern = DefaultLogFormat
-            };
-            patternLayout.ActivateOptions();
+                parameters[i] = configuratorParameters[i].DefaultValue;
+            }
 
-            var logAppender = new ManagedColoredConsoleAppender
+            configuratorMethod.Invoke(null, parameters);
+
+            return builder.Options;
+        }
+
+        public static void SetupFileLogging([CanBeNull] LogLevel? level = null)
+        {
+            var serilogLevelMapping = new Dictionary<LogLevel, LogEventLevel>
             {
-                Layout = patternLayout
+                [LogLevel.Critical] = LogEventLevel.Fatal,
+                [LogLevel.Error] = LogEventLevel.Error,
+                [LogLevel.Warning] = LogEventLevel.Warning,
+                [LogLevel.Information] = LogEventLevel.Information,
+                [LogLevel.Debug] = LogEventLevel.Debug,
+                [LogLevel.Trace] = LogEventLevel.Verbose
             };
-            logAppender.ActivateOptions();
 
-            rootLogger.AddAppender(logAppender);
+            var serilogLoggerConfig = new LoggerConfiguration();
+            if (level.HasValue)
+            {
+                serilogLoggerConfig = serilogLoggerConfig
+                    .MinimumLevel.Is(serilogLevelMapping[level.Value]);
+            }
+            serilogLoggerConfig = serilogLoggerConfig
+                .WriteTo.RollingFile(Path.Combine(AppDirectory, "SharpIrcBot-{Date}.log"));
 
-            hierarchy.Configured = true;
+            LoggerFactory.AddProvider(new SerilogLoggerProvider(serilogLoggerConfig.CreateLogger()));
+        }
+
+        public static void SetupConsoleLogging([CanBeNull] LogLevel? minimumLevel = null, [CanBeNull] Dictionary<string, LogLevel> logFilter = null)
+        {
+            var consoleProvider = new ConsoleLoggerProvider(
+                (text, logLevel) => LogFilter(text, logLevel, minimumLevel, logFilter),
+                true
+            );
+            LoggerFactory.AddProvider(consoleProvider);
+        }
+
+        static bool LogFilter(string logger, LogLevel level, [CanBeNull] LogLevel? minimumLevel = null, [CanBeNull] Dictionary<string, LogLevel> logFilter = null)
+        {
+            if (minimumLevel.HasValue && level < minimumLevel.Value)
+            {
+                return false;
+            }
+
+            if (logFilter != null)
+            {
+                LogLevel minimumLoggerLevel;
+                if (logFilter.TryGetValue(logger, out minimumLoggerLevel))
+                {
+                    if (level < minimumLoggerLevel)
+                    {
+                        return false;
+                    }
+                }
+            }
+
+            return true;
         }
 
         /// <summary>
@@ -607,6 +653,20 @@ namespace SharpIrcBot
             }
 
             return ret;
+        }
+
+        public static T SyncWait<T>(this Task<T> task)
+        {
+            task.Wait();
+            if (task.IsFaulted)
+            {
+                throw task.Exception;
+            }
+            if (task.IsCanceled)
+            {
+                throw new OperationCanceledException();
+            }
+            return task.Result;
         }
     }
 }

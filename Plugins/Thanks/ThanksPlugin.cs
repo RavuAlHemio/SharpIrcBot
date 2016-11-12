@@ -1,9 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using System.Text.RegularExpressions;
-using log4net;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 using SharpIrcBot;
 using SharpIrcBot.Events;
@@ -14,7 +13,7 @@ namespace Thanks
 {
     public class ThanksPlugin : IPlugin, IReloadableConfiguration
     {
-        private static readonly ILog Logger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        private static readonly ILogger Logger = SharpIrcBotUtil.LoggerFactory.CreateLogger<ThanksPlugin>();
         public static readonly Regex ThankRegex = new Regex("^!(?:thank|thanks|thx)\\s+(?<force>--force\\s+)?(?<thankee>[^-\\s]\\S*)(?:\\s+(?<reason>\\S+(?:\\s+\\S+)*))?\\s*$", RegexOptions.Compiled);
         public static readonly Regex ThankedRegex = new Regex("^!thanked\\s+(?<raw>--raw\\s+)?(?<thankee>[^-\\s]\\S*)\\s*$", RegexOptions.Compiled);
 
@@ -107,7 +106,7 @@ namespace Thanks
                     return;
                 }
 
-                Logger.DebugFormat("{0} thanks {1}", thanker, thankee);
+                Logger.LogDebug("{Thanker} thanks {Thankee}", thanker, thankee);
 
                 long thankedCount;
                 using (var ctx = GetNewContext())
@@ -314,8 +313,8 @@ namespace Thanks
 
         protected ThanksContext GetNewContext()
         {
-            var conn = SharpIrcBotUtil.GetDatabaseConnection(Config);
-            return new ThanksContext(conn);
+            var opts = SharpIrcBotUtil.GetContextOptions<ThanksContext>(Config);
+            return new ThanksContext(opts);
         }
     }
 }

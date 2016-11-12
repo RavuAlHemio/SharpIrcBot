@@ -1,5 +1,4 @@
-﻿using System.Reflection;
-using log4net;
+﻿using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 using SharpIrcBot;
 using SharpIrcBot.Events.Irc;
@@ -8,7 +7,7 @@ namespace Sockpuppet
 {
     public class SockpuppetPlugin : IPlugin, IReloadableConfiguration
     {
-        private static readonly ILog Logger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        private static readonly ILogger Logger = SharpIrcBotUtil.LoggerFactory.CreateLogger<SockpuppetPlugin>();
 
         protected IConnectionManager ConnectionManager { get; }
         protected SockpuppetConfig Config { get; set; }
@@ -34,14 +33,14 @@ namespace Sockpuppet
                 username = ConnectionManager.RegisteredNameForNick(username);
                 if (username == null)
                 {
-                    Logger.InfoFormat("{0} is not logged in; ignoring", message.SenderNickname);
+                    Logger.LogInformation("{Nickname} is not logged in; ignoring", message.SenderNickname);
                     return null;
                 }
             }
 
             if (!Config.Puppeteers.Contains(username))
             {
-                Logger.InfoFormat("{0} is not a puppeteer; ignoring", username);
+                Logger.LogInformation("{Username} is not a puppeteer; ignoring", username);
                 return null;
             }
 
@@ -55,11 +54,11 @@ namespace Sockpuppet
             var unescapedCommand = SharpIrcBotUtil.UnescapeString(command);
             if (unescapedCommand == null)
             {
-                Logger.InfoFormat("{0} bollocksed up their escapes; ignoring", username);
+                Logger.LogInformation("{Username} bollocksed up their escapes; ignoring", username);
                 return;
             }
 
-            Logger.InfoFormat("{0} (nick: {1}) issued the following command: {2}", username, nick, command);
+            Logger.LogInformation("{Username} (nick: {Nickname}) issued the following command: {Command}", username, nick, command);
 
             ConnectionManager.SendRawCommand(unescapedCommand);
             ConnectionManager.SendQueryMessage(nick, "OK");

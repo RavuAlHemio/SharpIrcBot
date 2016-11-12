@@ -1,9 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using System.Threading;
-using log4net;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 using SharpIrcBot;
 using SharpIrcBot.Events;
@@ -13,7 +12,7 @@ namespace WhoisLoginNickMapping
 {
     public class WhoisLoginPlugin : IPlugin, IReloadableConfiguration
     {
-        private static readonly ILog Logger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        private static readonly ILogger Logger = SharpIrcBotUtil.LoggerFactory.CreateLogger<WhoisLoginPlugin>();
 
         protected IConnectionManager ConnectionManager { get; }
         protected WhoisLoginConfig Config { get; set; }
@@ -59,18 +58,18 @@ namespace WhoisLoginNickMapping
                 {
                     if (NicksToLogins[lowerNick] == null)
                     {
-                        Logger.DebugFormat("regname: {0} is not registered (null)", lowerNick);
+                        Logger.LogDebug("regname: {Nickname} is not registered (null)", lowerNick);
                     }
                     else
                     {
-                        Logger.DebugFormat("regname: {0} is registered as {1}", lowerNick, NicksToLogins[lowerNick]);
+                        Logger.LogDebug("regname: {Nickname} is registered as {Username}", lowerNick, NicksToLogins[lowerNick]);
                         args.MapsTo.Add(NicksToLogins[lowerNick]);
                     }
                     return;
                 }
             }
 
-            Logger.DebugFormat("regname: {0} is not registered (not contained)", lowerNick);
+            Logger.LogDebug("regname: {Nickname} is not registered (not contained)", lowerNick);
         }
 
         protected virtual void HandleNamesInChannel(object sender, INameListEventArgs args)
@@ -97,7 +96,7 @@ namespace WhoisLoginNickMapping
                 {
                     NicksToLogins[args.RawMessageParts[3].ToLowerInvariant()] = args.RawMessageParts[4];
                 }
-                Logger.DebugFormat("registered that {0} is logged in as {1}", args.RawMessageParts[3], args.RawMessageParts[4]);
+                Logger.LogDebug("registered that {Nickname} is logged in as {Username}", args.RawMessageParts[3], args.RawMessageParts[4]);
             }
             else if (args.ReplyCode == 311)
             {
@@ -107,7 +106,7 @@ namespace WhoisLoginNickMapping
                 {
                     NicksToLogins[args.RawMessageParts[3].ToLowerInvariant()] = null;
                 }
-                Logger.DebugFormat("registered that {0} exists (and might not be logged in)", args.RawMessageParts[3]);
+                Logger.LogDebug("registered that {Nickname} exists (and might not be logged in)", args.RawMessageParts[3]);
             }
             else if (args.ReplyCode == 401)
             {
@@ -117,7 +116,7 @@ namespace WhoisLoginNickMapping
                 {
                     NicksToLogins[args.RawMessageParts[3].ToLowerInvariant()] = null;
                 }
-                Logger.DebugFormat("registered that {0} is gone and thereby not logged in", args.RawMessageParts[3]);
+                Logger.LogDebug("registered that {Nickname} is gone and thereby not logged in", args.RawMessageParts[3]);
             }
         }
 
@@ -137,10 +136,7 @@ namespace WhoisLoginNickMapping
 
         protected virtual void CheckRegistrationsOn(IReadOnlyList<string> nicknames)
         {
-            if (Logger.IsDebugEnabled)
-            {
-                Logger.DebugFormat("performing reg check on: {0}", string.Join(" ", nicknames));
-            }
+            Logger.LogDebug("performing reg check on: {Nicknames}", string.Join(" ", nicknames));
 
             // send WHOIS for every user to get their registered name
             // do this in packages to reduce traffic

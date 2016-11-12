@@ -1,0 +1,23 @@
+﻿{
+  "name": "Weather",
+  "version": "1.0.0-*",
+  "buildOptions": {
+    "debugType": "portable"
+  },
+  "dependencies": {
+    "SharpIrcBot": {
+      "target": "project"
+    }
+  },
+  "frameworks": {
+    "netstandard1.6": {
+      "buildOptions": {
+        "define": [
+          "NETCORE"
+        ]
+      }
+    },
+    "net461": {
+    }
+  }
+}

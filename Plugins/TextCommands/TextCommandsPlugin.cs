@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
-using log4net;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 using SharpIrcBot;
 using SharpIrcBot.Events.Irc;
@@ -11,7 +10,7 @@ namespace TextCommands
 {
     public class TextCommandsPlugin : IPlugin, IReloadableConfiguration
     {
-        private static readonly ILog Logger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        private static readonly ILogger Logger = SharpIrcBotUtil.LoggerFactory.CreateLogger<TextCommandsPlugin>();
 
         protected IConnectionManager ConnectionManager { get; }
         protected TextCommandsConfig Config { get; set; }
@@ -152,7 +151,7 @@ namespace TextCommands
                     break;
             }
 
-            Logger.DebugFormat("{0} triggered {1} in {2}", message.SenderNickname, command, channelMessage?.Channel ?? "private message");
+            Logger.LogDebug("{Sender} triggered {Command} in {Location}", message.SenderNickname, command, channelMessage?.Channel ?? "private message");
             var response = targetBody.Replace("{{NICKNAME}}", targetNick);
             foreach (var line in response.Split('\n').Where(l => l.Length > 0))
             {
