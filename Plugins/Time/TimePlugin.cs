@@ -75,7 +75,7 @@ namespace Time
             {
                 var geoSearchUri = new Uri($"http://api.geonames.org/searchJSON?maxRows=1&q={WebUtility.UrlEncode(location)}&username={WebUtility.UrlEncode(Config.GeoNamesUsername)}");
                 string geoSearchResponse = client.GetStringAsync(geoSearchUri).SyncWait();
-                Logger.LogDebug("geo search response: {Response}", geoSearchResult);
+                Logger.LogDebug("geo search response: {Response}", geoSearchResponse);
 
                 using (var sr = new StringReader(geoSearchResponse))
                 {
