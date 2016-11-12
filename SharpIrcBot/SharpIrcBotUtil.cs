@@ -398,7 +398,7 @@ namespace SharpIrcBot
                     continue;
                 }
 
-                if (!configuratorMethod.IsPublic || !configuratorMethod.IsStatic)
+                if (!candidateMethod.IsPublic || !candidateMethod.IsStatic)
                 {
                     continue;
                 }
