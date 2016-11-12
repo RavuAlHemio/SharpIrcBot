@@ -7,6 +7,8 @@ using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using NodaTime;
+using NodaTime.TimeZones;
 using SharpIrcBot;
 using SharpIrcBot.Events.Irc;
 using Time.GeoNames;
@@ -22,17 +24,32 @@ namespace Time
         protected IConnectionManager ConnectionManager { get; }
         protected TimeConfig Config { get; set; }
 
+        protected IDateTimeZoneProvider TimeZoneProvider { get; set; }
+
         public TimePlugin(IConnectionManager connMgr, JObject config)
         {
             ConnectionManager = connMgr;
             Config = new TimeConfig(config);
 
+            LoadTimeZoneData();
+
             ConnectionManager.ChannelMessage += HandleChannelMessage;
         }
 
-        public void ReloadConfiguration(JObject newConfig)
+        public virtual void ReloadConfiguration(JObject newConfig)
         {
             Config = new TimeConfig(newConfig);
+
+            LoadTimeZoneData();
+        }
+
+        protected virtual void LoadTimeZoneData()
+        {
+            using (Stream stream = File.Open(Path.Combine(SharpIrcBotUtil.AppDirectory, Config.TimeZoneDatabaseFile), FileMode.Open, FileAccess.Read, FileShare.Read))
+            {
+                TzdbDateTimeZoneSource timeZoneSource = TzdbDateTimeZoneSource.FromStream(stream);
+                TimeZoneProvider = new DateTimeZoneCache(timeZoneSource);
+            }
         }
 
         protected virtual void HandleChannelMessage(object sender, IChannelMessageEventArgs args, MessageFlags flags)
@@ -94,7 +111,7 @@ namespace Time
                 args.Channel,
                 match.Groups["lucky"].Success
                     ? $"{args.SenderNickname}: The time there is {time:yyyy-MM-dd HH:mm:ss}."
-                    : $"{args.SenderNickname}: The time in {location} is {time:yyyy-MM-dd HH:mm:ss}."
+                    : $"{args.SenderNickname}: The time in {geoSearchResult.GeoNames[0].Name} is {time:yyyy-MM-dd HH:mm:ss}."
             );
         }
     }
