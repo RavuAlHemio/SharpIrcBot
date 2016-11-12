@@ -11,10 +11,13 @@ namespace Time
 
         public string DefaultLocation { get; set; }
 
+        public string TimeZoneDatabaseFile { get; set; }
+
         public double TimeoutSeconds { get; set; }
 
         public TimeConfig(JObject obj)
         {
+            TimeZoneDatabaseFile = "tzdb.nzd";
             TimeoutSeconds = 5.0;
 
             var ser = new JsonSerializer();

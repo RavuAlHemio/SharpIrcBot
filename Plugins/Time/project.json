@@ -5,6 +5,7 @@
     "debugType": "portable"
   },
   "dependencies": {
+    "NodaTime": "2.0.0-alpha20160729",
     "SharpIrcBot": {
       "target": "project"
     }

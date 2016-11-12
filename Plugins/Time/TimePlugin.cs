@@ -105,7 +105,15 @@ namespace Time
                 }
             }
 
-            DateTime time = geoTimeZoneResult.Time.AddSeconds(DateTime.Now.Second);
+            // find actual date/time using our zone data
+            DateTimeZone zone = TimeZoneProvider.GetZoneOrNull(geoTimeZoneResult.TimezoneID);
+            if (zone == null)
+            {
+                ConnectionManager.SendChannelMessage(args.Channel, $"{args.SenderNickname}: I don't know the timezone {geoTimeZoneResult.TimezoneID}.");
+                return;
+            }
+
+            ZonedDateTime time = SystemClock.Instance.GetCurrentInstant().InZone(zone);
 
             ConnectionManager.SendChannelMessage(
                 args.Channel,
