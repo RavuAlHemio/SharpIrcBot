@@ -176,11 +176,41 @@ namespace Weather
             {
                 weather.Append($"{response.CurrentWeather.DisplayLocation.FullName}: ");
             }
+
+            var pieces = new List<string>();
+
             if (!string.IsNullOrWhiteSpace(response.CurrentWeather?.WeatherDescription))
             {
-                weather.Append($"{response.CurrentWeather.WeatherDescription}, ");
+                pieces.Add(response.CurrentWeather.WeatherDescription);
             }
-            weather.Append($"{response.CurrentWeather.Temperature}°C (feels like {response.CurrentWeather.FeelsLikeTemperature}°C), {response.CurrentWeather.Humidity} humidity");
+
+            if ((response.CurrentWeather?.Temperature).HasValue)
+            {
+                if ((response.CurrentWeather?.FeelsLikeTemperature).HasValue)
+                {
+                    pieces.Add($"{response.CurrentWeather.Temperature}°C (feels like {response.CurrentWeather.FeelsLikeTemperature}°C)");
+                }
+                else
+                {
+                    pieces.Add($"{response.CurrentWeather.Temperature}°C");
+                }
+            }
+            else if ((response.CurrentWeather?.FeelsLikeTemperature).HasValue)
+            {
+                pieces.Add($"feels like {response.CurrentWeather.FeelsLikeTemperature}°C");
+            }
+
+            if (!string.IsNullOrWhiteSpace(response.CurrentWeather?.Humidity))
+            {
+                pieces.Add($"{response.CurrentWeather.Humidity} humidity");
+            }
+
+            if (pieces.Count == 0)
+            {
+                pieces.Add("current weather unknown");
+            }
+
+            weather.Append(string.Join(", ", pieces));
 
             if (response.Forecast?.Simple?.Days != null && response.Forecast.Simple.Days.Count > 0)
             {
