@@ -121,7 +121,7 @@ namespace Weather
             {
                 response = Client.GetWeatherForLocation(Config.WunderApiKey, location);
             }
-            catch (TaskCanceledException)
+            catch (AggregateException ae) when (ae.InnerException.GetType() == typeof(TaskCanceledException))
             {
                 ConnectionManager.SendChannelMessage(channel, $"{nick}: Wunderground request timed out!");
                 return;
