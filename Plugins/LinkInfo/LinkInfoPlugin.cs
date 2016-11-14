@@ -366,6 +366,11 @@ namespace LinkInfo
                 }
                 return text;
             }
+            catch (AggregateException ex) when (ex.InnerException is TaskCanceledException)
+            {
+                // timed out
+                return text;
+            }
             catch (Exception ex)
             {
                 Logger.LogWarning("image info: {Exception}", ex);
