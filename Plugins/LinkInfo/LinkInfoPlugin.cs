@@ -347,8 +347,6 @@ namespace LinkInfo
                     }
                 }
 
-                Predicate<string[]> hasHintClasses =
-                    classes => classes.Contains("_hUb") && classes.Contains("_gUb");
                 var htmlDoc = new HtmlDocument();
                 htmlDoc.LoadHtml(parseMe);
                 IEnumerable<HtmlNode> foundHubs = htmlDoc.DocumentNode
@@ -358,7 +356,7 @@ namespace LinkInfo
                 foreach (HtmlNode foundHub in foundHubs)
                 {
                     IEnumerable<HtmlNode> foundGubs = foundHub
-                        .SelectNodes(".//")
+                        .SelectNodes(".//*")
                         .OfType<HtmlNode>()
                         .Where(n => n.GetAttributeValue("class", "").Split(' ').Contains("_gUb"));
                     foreach (HtmlNode hint in foundGubs)
