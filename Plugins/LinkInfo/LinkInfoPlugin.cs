@@ -339,6 +339,11 @@ namespace LinkInfo
                 }
                 var parseMe = EncodingGuesser.GuessEncodingAndDecode(responseBytes, null);
 
+                using (var dumpy = File.Open(Path.Combine(SharpIrcBotUtil.AppDirectory, "googleimages.html"), FileMode.Create, FileAccess.Write))
+                {
+                    dumpy.Write(responseBytes, 0, responseBytes.Length);
+                }
+
                 Predicate<string[]> hasHintClasses =
                     classes => classes.Contains("_hUb") && classes.Contains("_gUb");
                 var htmlDoc = new HtmlDocument();
