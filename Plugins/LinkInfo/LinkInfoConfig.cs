@@ -17,6 +17,7 @@ namespace LinkInfo
         public string TLDListFile { get; set; }
         public int MaxRedirects { get; set; }
         public Dictionary<string, string> DomainAnnotations { get; set; }
+        public string DumpImageResultsFileName { get; set; }
 
         public LinkInfoConfig(JObject obj)
         {
@@ -29,6 +30,7 @@ namespace LinkInfo
             TLDListFile = null;
             MaxRedirects = 16;
             DomainAnnotations = new Dictionary<string, string>();
+            DumpImageResultsFileName = null;
 
             var ser = new JsonSerializer();
             ser.Populate(obj.CreateReader(), this);

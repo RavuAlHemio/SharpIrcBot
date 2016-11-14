@@ -339,9 +339,12 @@ namespace LinkInfo
                 }
                 var parseMe = EncodingGuesser.GuessEncodingAndDecode(responseBytes, null);
 
-                using (var dumpy = File.Open(Path.Combine(SharpIrcBotUtil.AppDirectory, "googleimages.html"), FileMode.Create, FileAccess.Write))
+                if (Config.DumpImageResultsFileName != null)
                 {
-                    dumpy.Write(responseBytes, 0, responseBytes.Length);
+                    using (var dumpy = File.Open(Path.Combine(SharpIrcBotUtil.AppDirectory, Config.DumpImageResultsFileName), FileMode.Create, FileAccess.Write))
+                    {
+                        dumpy.Write(responseBytes, 0, responseBytes.Length);
+                    }
                 }
 
                 Predicate<string[]> hasHintClasses =
