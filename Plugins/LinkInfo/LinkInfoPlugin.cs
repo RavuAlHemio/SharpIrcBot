@@ -348,13 +348,20 @@ namespace LinkInfo
                     classes => classes.Contains("_hUb") && classes.Contains("_gUb");
                 var htmlDoc = new HtmlDocument();
                 htmlDoc.LoadHtml(parseMe);
-                IEnumerable<HtmlNode> foundHints = htmlDoc.DocumentNode
+                IEnumerable<HtmlNode> foundHubs = htmlDoc.DocumentNode
                     .SelectNodes(".//*")
                     .OfType<HtmlNode>()
-                    .Where(n => hasHintClasses(n.GetAttributeValue("class", "").Split(' ')));
-                foreach (var hint in foundHints)
+                    .Where(n => n.GetAttributeValue("class", "").Split(' ').Contains("_hUb"));
+                foreach (HtmlNode foundHub in foundHubs)
                 {
-                    return string.Format("{0} ({1})", text, HtmlEntity.DeEntitize(hint.InnerText));
+                    IEnumerable<HtmlNode> foundGubs = foundHub
+                        .SelectNodes(".//")
+                        .OfType<HtmlNode>()
+                        .Where(n => n.GetAttributeValue("class", "").Split(' ').Contains("_gUb"));
+                    foreach (HtmlNode hint in foundGubs)
+                    {
+                        return string.Format("{0} ({1})", text, HtmlEntity.DeEntitize(hint.InnerText));
+                    }
                 }
                 return text;
             }
