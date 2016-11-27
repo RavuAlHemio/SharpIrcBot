@@ -5,7 +5,7 @@
     "debugType": "portable"
   },
   "dependencies": {
-    "Microsoft.EntityFrameworkCore": "1.0.1",
+    "Microsoft.EntityFrameworkCore": "1.1.0",
     "SharpIrcBot": {
       "target": "project"
     }
