@@ -128,8 +128,10 @@ namespace DasIstNenFehler.ORM
                 entBuilder.HasIndex(w => w.WordString)
                     .ForNpgsqlHasName("uq__words__word")
                     .IsUnique();
+                /*
                 entBuilder.HasIndex(w => w.WordString.ToLowerInvariant())
                     .ForNpgsqlHasName("idx__words__word_lower");
+                */
 
                 entBuilder.Property(n => n.ID)
                     .IsRequired()
