@@ -121,7 +121,7 @@ namespace DasIstNenFehler
                                 correctUsage = true;
 
                                 string baseWord = ctx.Words.FirstOrDefault(w => w.ID == correctNoun.BaseWordID).WordString;
-                                NotifyUsers($"{e.SenderNickname} in {e.Channel}: \"nen {lastHyphenatedChunk}\" trimmed to \"{word.WordString}\" matches adjective {baseWord}");
+                                NotifyUsers($"{e.SenderNickname} in {e.Channel}: \"nen {lastHyphenatedChunk}\" trimmed to \"{word.WordString}\" matches noun {baseWord}");
                             }
                         }
 
@@ -152,11 +152,16 @@ namespace DasIstNenFehler
                             // we're done
                             return;
                         }
+                        else if (nouns.Count + adjs.Count > 0)
+                        {
+                            NotifyUsers($"{e.SenderNickname} in {e.Channel}: \"nen {lastHyphenatedChunk}\" found but unmatched");
+                            return;
+                        }
                     }
 
                     // possibly TODO: try matching the next word instead
                     // for the time being, assume it's wrong
-                    NotifyUsers($"{e.SenderNickname} in {e.Channel}: \"nen {lastHyphenatedChunk}\" unmatched"); 
+                    NotifyUsers($"{e.SenderNickname} in {e.Channel}: \"nen {lastHyphenatedChunk}\" utterly unmatched");
                     break;
                 }
             }
