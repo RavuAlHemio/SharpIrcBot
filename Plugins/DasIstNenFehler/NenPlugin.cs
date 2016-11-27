@@ -112,7 +112,7 @@ namespace DasIstNenFehler
                             // is any of those nouns masculine singular accusative?
                             Noun correctNoun = nouns
                                 .Where(n => n.Case == GrammaticalCase.Accusative)
-                                .Where(n => n.Number == GrammaticalNumber.Plural)
+                                .Where(n => n.Number == GrammaticalNumber.Singular)
                                 .Where(n => n.Gender == GrammaticalGender.Masculine)
                                 .FirstOrDefault()
                             ;
@@ -134,7 +134,7 @@ namespace DasIstNenFehler
                             // is any of those adjectives masculine singular accusative?
                             Adjective correctAdjective = adjs
                                 .Where(n => n.Case == GrammaticalCase.Accusative)
-                                .Where(n => n.Number == GrammaticalNumber.Plural)
+                                .Where(n => n.Number == GrammaticalNumber.Singular)
                                 .Where(n => n.Gender == GrammaticalGender.Masculine)
                                 .FirstOrDefault()
                             ;
