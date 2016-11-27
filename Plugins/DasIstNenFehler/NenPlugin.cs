@@ -43,7 +43,10 @@ namespace DasIstNenFehler
                 return;
             }
 
-            string[] pieces = WordBoundaryRegex.Split(body);
+            string[] pieces = WordBoundaryRegex
+                .Split(body)
+                .Where(s => s.Any(c => GermanAlphabet.Contains(c)))
+                .ToArray();
             int nenIndex = -1;
             for (int i = 0; i < pieces.Length; ++i)
             {
