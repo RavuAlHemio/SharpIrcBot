@@ -45,6 +45,15 @@ namespace LinkInfo
             // does the host have at least one dot?
             if (uri.Host.All(c => c != '.'))
             {
+                uri = null;
+                return false;
+            }
+
+            // if there is only one dot, ensure it is not at the end
+            string[] hostChunks = uri.Host.Split('.');
+            if (hostChunks.Length == 2 && hostChunks[1].Length == 0)
+            {
+                uri = null;
                 return false;
             }
 
