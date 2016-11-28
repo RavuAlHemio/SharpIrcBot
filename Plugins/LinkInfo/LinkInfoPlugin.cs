@@ -57,6 +57,9 @@ namespace LinkInfo
         public virtual void ReloadConfiguration(JObject newConfig)
         {
             Config = new LinkInfoConfig(newConfig);
+
+            // recreate heuristic link detector at next use
+            LinkDetector = null;
         }
 
         protected void HandleChannelMessage(object sender, IChannelMessageEventArgs args, MessageFlags flags)
