@@ -49,16 +49,16 @@ namespace LinkInfo
                 return false;
             }
 
-            // if there is only one dot, ensure it is not at the end
+            // ensure there is no empty component
             string[] hostChunks = uri.Host.Split('.');
-            if (hostChunks.Length == 2 && hostChunks[1].Length == 0)
+            if (hostChunks.Any(c => c.Length == 0))
             {
                 uri = null;
                 return false;
             }
 
             // check host against list of TLDs
-            var tld = IDNMapping.GetAscii(uri.Host.Split('.').Last()).ToLowerInvariant();
+            var tld = IDNMapping.GetAscii(hostChunks.Last()).ToLowerInvariant();
             if (!TopLevelDomains.Contains(tld))
             {
                 // invalid TLD; probably not a URI
