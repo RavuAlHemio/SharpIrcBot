@@ -62,11 +62,11 @@ namespace Quotes
             switch (requestedRating)
             {
                 case QuoteRating.Low:
-                    return quotesWithVotes.Where(q => (q.Votes.Sum(v => (int?)v.Points) ?? 0) < Config.VoteThreshold);
+                    return quotesWithVotes.Where(q => (q.Votes.Any() ? q.Votes.Sum(v => v.Points) : 0) < Config.VoteThreshold);
                 case QuoteRating.Any:
                     return quotesWithVotes;
                 case QuoteRating.High:
-                    return quotesWithVotes.Where(q => (q.Votes.Sum(v => (int?)v.Points) ?? 0) >= Config.VoteThreshold);
+                    return quotesWithVotes.Where(q => (q.Votes.Any() ? q.Votes.Sum(v => v.Points) : 0) >= Config.VoteThreshold);
                 default:
                     throw new ArgumentOutOfRangeException(nameof(requestedRating));
             }
