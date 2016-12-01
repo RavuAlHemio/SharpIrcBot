@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text.RegularExpressions;
+using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json.Linq;
 using Quotes.ORM;
 using SharpIrcBot;
@@ -56,16 +57,16 @@ namespace Quotes
             ShuffledGoodQuotes = null;
         }
 
-        protected virtual IQueryable<Quote> GetFilteredQuotes(IQueryable<Quote> quotes, IQueryable<QuoteVote> votes, QuoteRating requestedRating)
+        protected virtual IQueryable<Quote> GetFilteredQuotes(IQueryable<Quote> quotesWithVotes, QuoteRating requestedRating)
         {
             switch (requestedRating)
             {
                 case QuoteRating.Low:
-                    return quotes.Where(q => (votes.Where(v => v.QuoteID == q.ID).Sum(v => (int?)v.Points) ?? 0) < Config.VoteThreshold);
+                    return quotesWithVotes.Where(q => (q.Votes.Sum(v => (int?)v.Points) ?? 0) < Config.VoteThreshold);
                 case QuoteRating.Any:
-                    return quotes;
+                    return quotesWithVotes;
                 case QuoteRating.High:
-                    return quotes.Where(q => (votes.Where(v => v.QuoteID == q.ID).Sum(v => (int?)v.Points) ?? 0) >= Config.VoteThreshold);
+                    return quotesWithVotes.Where(q => (q.Votes.Sum(v => (int?)v.Points) ?? 0) >= Config.VoteThreshold);
                 default:
                     throw new ArgumentOutOfRangeException(nameof(requestedRating));
             }
@@ -78,19 +79,18 @@ namespace Quotes
         /// <param name="requestor">The nickname of the person who requested this quote.</param>
         /// <param name="location">The channel (for channel messages) or nickname (for private messages) in which the
         /// request has been placed.</param>
-        /// <param name="votes">The Queryable of votes.</param>
         /// <param name="addMyRating">If <c>true</c>, shows how the requestor voted on this quote.</param>
         /// <param name="postReply">Action to invoke to post a reply.</param>
-        protected virtual void PostQuote(Quote quote, string requestor, string location, IQueryable<QuoteVote> votes, bool addMyRating, Action<string> postReply)
+        protected virtual void PostQuote(Quote quoteWithVotes, string requestor, string location, bool addMyRating, Action<string> postReply)
         {
-            int voteCount = votes.Where(v => v.QuoteID == quote.ID).Sum(v => (int?)v.Points) ?? 0;
+            int voteCount = quoteWithVotes.Votes.Sum(v => (int?)v.Points) ?? 0;
 
-            LastQuoteIDs[location] = quote.ID;
+            LastQuoteIDs[location] = quoteWithVotes.ID;
             if (addMyRating)
             {
                 var requestorRegistered = ConnectionManager.RegisteredNameForNick(requestor) ?? requestor;
                 var requestorLower = requestorRegistered.ToLowerInvariant();
-                var requestorVote = votes.FirstOrDefault(v => v.QuoteID == quote.ID && v.VoterLowercase == requestorLower);
+                var requestorVote = quoteWithVotes.Votes.FirstOrDefault(v => v.VoterLowercase == requestorLower);
 
                 string requestorVoteString = " ";
                 if (requestorVote != null)
@@ -105,11 +105,11 @@ namespace Quotes
                     }
                 }
 
-                postReply(FormatQuote(quote, voteCount, requestorVoteString));
+                postReply(FormatQuote(quoteWithVotes, voteCount, requestorVoteString));
             }
             else
             {
-                postReply(FormatQuote(quote, voteCount, ""));
+                postReply(FormatQuote(quoteWithVotes, voteCount, ""));
             }
         }
 
@@ -124,9 +124,9 @@ namespace Quotes
         /// <param name="requestedRating">Whether to display all quotes, quotes rated equal to or above a certain threshold, or quotes rated below this threshold.</param>
         /// <param name="addMyRating">If <c>true</c>, shows how the requestor voted on this quote.</param>
         /// <param name="postReply">Action to invoke to post a reply.</param>
-        protected virtual void PostRandomQuote(string requestor, string location, IQueryable<Quote> quotes, IQueryable<QuoteVote> votes, QuoteRating requestedRating, bool addMyRating, Action<string> postReply)
+        protected virtual void PostRandomQuote(string requestor, string location, IQueryable<Quote> quotesWithVotes, QuoteRating requestedRating, bool addMyRating, Action<string> postReply)
         {
-            var filteredQuotes = GetFilteredQuotes(quotes, votes, requestedRating);
+            var filteredQuotes = GetFilteredQuotes(quotesWithVotes, requestedRating);
 
             int quoteCount = filteredQuotes.Count();
             if (quoteCount > 0)
@@ -137,7 +137,7 @@ namespace Quotes
                     .Skip(index)
                     .FirstOrDefault();
 
-                PostQuote(quote, requestor, location, votes, addMyRating, postReply);
+                PostQuote(quote, requestor, location, addMyRating, postReply);
             }
             else
             {
@@ -346,11 +346,12 @@ namespace Quotes
 
                 using (var ctx = GetNewContext())
                 {
-                    var quotes = (lowercaseSubject != null)
+                    IQueryable<Quote> quotes = (lowercaseSubject != null)
                         ? ctx.Quotes.Where(q => q.Body.ToLower().Contains(lowercaseSubject))
                         : ctx.Quotes;
+                    IQueryable<Quote> quotesWithVotes = quotes.Include(q => q.Votes);
 
-                    PostRandomQuote(sender, location, quotes, ctx.QuoteVotes, rating, addMyRating, postReply);
+                    PostRandomQuote(sender, location, quotesWithVotes, rating, addMyRating, postReply);
                 }
 
                 return true;
@@ -366,9 +367,11 @@ namespace Quotes
 
                 using (var ctx = GetNewContext())
                 {
-                    var quotes = ctx.Quotes.Where(q => q.Author.ToLower() == lowercaseNick);
+                    IQueryable<Quote> quotesWithVotes = ctx.Quotes
+                        .Include(q => q.Votes)
+                        .Where(q => q.Author.ToLower() == lowercaseNick);
 
-                    PostRandomQuote(sender, location, quotes, ctx.QuoteVotes, rating, addMyRating, postReply);
+                    PostRandomQuote(sender, location, quotesWithVotes, rating, addMyRating, postReply);
                 }
 
                 return true;
@@ -388,7 +391,7 @@ namespace Quotes
                         case QuoteRating.Any:
                             if (ShuffledAnyQuotes == null)
                             {
-                                ShuffledAnyQuotes = GetFilteredQuotes(ctx.Quotes, ctx.QuoteVotes, QuoteRating.Any)
+                                ShuffledAnyQuotes = GetFilteredQuotes(ctx.Quotes.Include(q => q.Votes), QuoteRating.Any)
                                     .ToShuffledList();
                                 ShuffledAnyQuotesIndex = 0;
                             }
@@ -398,7 +401,7 @@ namespace Quotes
                         case QuoteRating.High:
                             if (ShuffledGoodQuotes == null)
                             {
-                                ShuffledGoodQuotes = GetFilteredQuotes(ctx.Quotes, ctx.QuoteVotes, QuoteRating.High)
+                                ShuffledGoodQuotes = GetFilteredQuotes(ctx.Quotes.Include(q => q.Votes), QuoteRating.High)
                                     .ToShuffledList();
                                 ShuffledGoodQuotesIndex = 0;
                             }
@@ -408,7 +411,7 @@ namespace Quotes
                         case QuoteRating.Low:
                             if (ShuffledBadQuotes == null)
                             {
-                                ShuffledBadQuotes = GetFilteredQuotes(ctx.Quotes, ctx.QuoteVotes, QuoteRating.Low)
+                                ShuffledBadQuotes = GetFilteredQuotes(ctx.Quotes.Include(q => q.Votes), QuoteRating.Low)
                                     .ToShuffledList();
                                 ShuffledBadQuotesIndex = 0;
                             }
@@ -420,7 +423,7 @@ namespace Quotes
                             break;
                     }
                     
-                    PostQuote(quote, sender, location, ctx.QuoteVotes, addMyRating, postReply);
+                    PostQuote(quote, sender, location, addMyRating, postReply);
                 }
 
                 return true;
