@@ -12,7 +12,7 @@ namespace DasIstNenFehler
     public class NenPlugin : IPlugin, IReloadableConfiguration
     {
         public static readonly Regex NenRegex = new Regex("(?i)\\bnen\\b", RegexOptions.Compiled);
-        public static readonly Regex WordBoundaryRegex = new Regex("\\b", RegexOptions.Compiled);
+        public static readonly Regex WordBoundaryRegex = new Regex("[\\W-[-]]", RegexOptions.Compiled);
 
         public static readonly ImmutableHashSet<char> GermanAlphabet = ImmutableHashSet.CreateRange("ßqwertzuiopüasdfghjklöäyxcvbnmQWERTZUIOPÜASDFGHJKLÖÄYXCVBNM");
 
