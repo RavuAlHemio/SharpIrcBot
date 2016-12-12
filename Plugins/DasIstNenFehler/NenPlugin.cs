@@ -237,7 +237,7 @@ namespace DasIstNenFehler
                         // correct usage
                         return;
                     }
-                    else if (nouns.Count + adjectives.Count > 0)
+                    else if (nouns != null || adjectives != null)
                     {
                         NotifyUsers($"NenPlugin: {e.SenderNickname} in {e.Channel}: \"nen {lastHyphenatedChunk}\" might be incorrect");
                         return;
