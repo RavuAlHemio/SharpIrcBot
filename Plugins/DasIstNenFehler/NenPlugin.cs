@@ -68,6 +68,7 @@ namespace DasIstNenFehler
             {
                 // "nen" is only valid for masculine singular accusative words
                 bool correctUsage = false;
+                bool potentiallyIncorrectUsage = false;
 
                 // take the last part after a hyphen
                 string lastHyphenatedChunk = pieces[i].Split('-').Last();
@@ -121,7 +122,19 @@ namespace DasIstNenFehler
                                 correctUsage = true;
 
                                 string baseWord = ctx.Words.FirstOrDefault(w => w.ID == correctNoun.BaseWordID).WordString;
-                                NotifyUsers($"{e.SenderNickname} in {e.Channel}: \"nen {lastHyphenatedChunk}\" trimmed to \"{word.WordString}\" matches noun {baseWord}");
+                                NotifyUsers($"NenPlugin: {e.SenderNickname} in {e.Channel}: \"nen {lastHyphenatedChunk}\" trimmed to \"{word.WordString}\" matches noun {baseWord}");
+                            }
+
+                            // is any of them masculine singular nominative?
+                            Noun potentiallyIncorrectNoun = nouns
+                                .Where(n => n.Case == GrammaticalCase.Nominative)
+                                .Where(n => n.Number == GrammaticalNumber.Singular)
+                                .Where(n => n.Gender == GrammaticalGender.Masculine)
+                                .FirstOrDefault()
+                            ;
+                            if (potentiallyIncorrectNoun != null)
+                            {
+                                potentiallyIncorrectUsage = true;
                             }
                         }
 
@@ -143,25 +156,42 @@ namespace DasIstNenFehler
                                 correctUsage = true;
 
                                 string baseWord = ctx.Words.FirstOrDefault(w => w.ID == correctAdjective.BaseWordID).WordString;
-                                NotifyUsers($"{e.SenderNickname} in {e.Channel}: \"nen {lastHyphenatedChunk}\" trimmed to \"{word.WordString}\" matches adjective {baseWord}");
+                                NotifyUsers($"NenPlugin: {e.SenderNickname} in {e.Channel}: \"nen {lastHyphenatedChunk}\" trimmed to \"{word.WordString}\" matches adjective {baseWord}");
+                            }
+
+                            // is any of them masculine singular nominative?
+                            Adjective potentiallyIncorrectAdjective = adjs
+                                .Where(n => n.Case == GrammaticalCase.Nominative)
+                                .Where(n => n.Number == GrammaticalNumber.Singular)
+                                .Where(n => n.Gender == GrammaticalGender.Masculine)
+                                .FirstOrDefault()
+                            ;
+                            if (potentiallyIncorrectAdjective != null)
+                            {
+                                potentiallyIncorrectUsage = true;
                             }
                         }
 
-                        if (correctUsage)
+                        if (potentiallyIncorrectUsage)
                         {
-                            // we're done
+                            if (!correctUsage)
+                            {
+                                NotifyUsers($"NenPlugin: {e.SenderNickname} in {e.Channel}: \"nen {lastHyphenatedChunk}\" is incorrect");
+                            }
+
+                            // correct usage
                             return;
                         }
                         else if (nouns.Count + adjs.Count > 0)
                         {
-                            NotifyUsers($"{e.SenderNickname} in {e.Channel}: \"nen {lastHyphenatedChunk}\" found but unmatched");
+                            NotifyUsers($"NenPlugin: {e.SenderNickname} in {e.Channel}: \"nen {lastHyphenatedChunk}\" might be incorrect");
                             return;
                         }
                     }
 
                     // possibly TODO: try matching the next word instead
                     // for the time being, assume it's wrong
-                    NotifyUsers($"{e.SenderNickname} in {e.Channel}: \"nen {lastHyphenatedChunk}\" utterly unmatched");
+                    NotifyUsers($"NenPlugin: {e.SenderNickname} in {e.Channel}: \"nen {lastHyphenatedChunk}\" is unknown");
                     break;
                 }
             }
