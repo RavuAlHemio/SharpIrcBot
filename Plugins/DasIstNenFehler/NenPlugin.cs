@@ -141,7 +141,6 @@ namespace DasIstNenFehler
 
                 // find the word
                 string searchWord = lastHyphenatedChunk;
-                Word word;
                 while (searchWord.Length > 0)
                 {
                     ImmutableList<Noun> nouns;
