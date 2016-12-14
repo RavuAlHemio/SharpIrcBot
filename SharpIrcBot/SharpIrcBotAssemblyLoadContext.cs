@@ -51,7 +51,7 @@ namespace SharpIrcBot
                 throw;
             }
 
-            LoadedAssemblies[name.Name] = ret;
+            //LoadedAssemblies[name.Name] = ret;
             return ret;
         }
     }
