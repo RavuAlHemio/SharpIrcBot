@@ -1,7 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+#if NETCORE
+using System.IO;
+#endif
 using System.Linq;
 using System.Reflection;
+#if NETCORE
+using System.Runtime.Loader;
+#endif
 using JetBrains.Annotations;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
@@ -28,7 +34,12 @@ namespace SharpIrcBot
         {
             foreach (var plugin in Config.Plugins)
             {
-                var ass = Assembly.Load(new AssemblyName(plugin.Assembly));
+                Assembly ass;
+#if NETCORE
+                ass = AssemblyLoadContext.Default.LoadFromAssemblyPath(Path.Combine(SharpIrcBotUtil.AppDirectory, plugin.Assembly));
+#else
+                ass = Assembly.Load(new AssemblyName(plugin.Assembly));
+#endif
                 var type = ass.GetType(plugin.Class);
                 if (!typeof(IPlugin).GetTypeInfo().IsAssignableFrom(type))
                 {
