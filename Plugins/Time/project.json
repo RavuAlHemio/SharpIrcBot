@@ -8,7 +8,8 @@
     "NodaTime": "2.0.0-alpha20160729",
     "SharpIrcBot": {
       "target": "project"
-    }
+    },
+    "System.Xml.ReaderWriter": "4.3.0"
   },
   "frameworks": {
     "netstandard1.6": {
