@@ -7,6 +7,7 @@ namespace SharpIrcBot.Config
     [JsonObject(MemberSerialization.OptOut)]
     public class PluginConfig
     {
+        public bool Enabled { get; set; }
         [NotNull]
         public string Assembly { get; set; }
         [NotNull]
@@ -16,6 +17,7 @@ namespace SharpIrcBot.Config
 
         public PluginConfig()
         {
+            Enabled = true;
             Config = new JObject();
         }
     }

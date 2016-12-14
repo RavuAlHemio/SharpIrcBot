@@ -26,7 +26,7 @@ namespace SharpIrcBot
 
         public void LoadPlugins([NotNull] IConnectionManager connManager)
         {
-            foreach (var plugin in Config.Plugins)
+            foreach (var plugin in Config.Plugins.Where(p => p.Enabled))
             {
                 Assembly ass;
 #if NETCORE
