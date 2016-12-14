@@ -1,17 +1,12 @@
-using System.Linq;
 using Microsoft.EntityFrameworkCore;
 
 namespace DasIstNenFehler.ORM
 {
     public class GermanWordsContext : DbContext
     {
-        protected DbSet<Adjective> RealAdjectives { get; set; }
-        protected DbSet<Noun> RealNouns { get; set; }
-        protected DbSet<Word> RealWords { get; set; }
-
-        public IQueryable<Adjective> Adjectives => RealAdjectives.AsNoTracking();
-        public IQueryable<Noun> Nouns => RealNouns.AsNoTracking();
-        public IQueryable<Word> Words => RealWords.AsNoTracking();
+        public DbSet<Adjective> Adjectives { get; set; }
+        public DbSet<Noun> Nouns { get; set; }
+        public DbSet<Word> Words { get; set; }
 
         public GermanWordsContext(DbContextOptions<GermanWordsContext> options)
             : base(options)
