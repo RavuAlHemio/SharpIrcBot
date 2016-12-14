@@ -4,9 +4,6 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-#if NETCORE
-using System.Runtime.Loader;
-#endif
 using System.Text;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
@@ -391,7 +388,7 @@ namespace SharpIrcBot
             // SomeMethod(DbContextOptionsBuilder builder, string connectionString [, optionally more parameters with default values])
             Assembly ass;
 #if NETCORE
-            ass = AssemblyLoadContext.Default.LoadFromAssemblyPath(Path.Combine(AppDirectory, config.DatabaseProviderAssembly));
+            ass = SharpIrcBotAssemblyLoadContext.Instance.LoadFromAssemblyName(new AssemblyName(config.DatabaseProviderAssembly));
 #else
             ass = Assembly.Load(new AssemblyName(config.DatabaseProviderAssembly));
 #endif
