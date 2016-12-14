@@ -1,13 +1,17 @@
 #if NETCORE
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Runtime.Loader;
+using Microsoft.Extensions.Logging;
 
 namespace SharpIrcBot
 {
     public class SharpIrcBotAssemblyLoadContext : AssemblyLoadContext
     {
+        private static readonly ILogger Logger = SharpIrcBotUtil.LoggerFactory.CreateLogger<SharpIrcBotAssemblyLoadContext>();
+
         private static SharpIrcBotAssemblyLoadContext _instance = null;
 
         protected Dictionary<string, Assembly> LoadedAssemblies { get; }
@@ -37,7 +41,16 @@ namespace SharpIrcBot
                 return ret;
             }
 
-            ret = base.LoadFromAssemblyPath(Path.Combine(SharpIrcBotUtil.AppDirectory, name.Name + ".dll"));
+            try
+            {
+                ret = base.LoadFromAssemblyPath(Path.Combine(SharpIrcBotUtil.AppDirectory, name.Name + ".dll"));
+            }
+            catch (Exception exc)
+            {
+                Logger.LogError("error loading assembly {AssemblyName}: {Exception}", name.Name, exc);
+                throw;
+            }
+
             LoadedAssemblies[name.Name] = ret;
             return ret;
         }
