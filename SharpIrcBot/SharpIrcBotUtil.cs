@@ -386,12 +386,7 @@ namespace SharpIrcBot
             var builder = new DbContextOptionsBuilder<T>();
 
             // SomeMethod(DbContextOptionsBuilder builder, string connectionString [, optionally more parameters with default values])
-            Assembly ass;
-#if NETCORE
-            ass = SharpIrcBotAssemblyLoadContext.Instance.LoadFromAssemblyName(new AssemblyName(config.DatabaseProviderAssembly));
-#else
-            ass = Assembly.Load(new AssemblyName(config.DatabaseProviderAssembly));
-#endif
+            Assembly ass = Assembly.Load(new AssemblyName(config.DatabaseProviderAssembly));
             Type configuratorType = ass.GetType(config.DatabaseConfiguratorClass);
 
             MethodInfo configuratorMethod = null;

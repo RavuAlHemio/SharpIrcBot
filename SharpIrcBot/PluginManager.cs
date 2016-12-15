@@ -26,18 +26,13 @@ namespace SharpIrcBot
 
         public void LoadPlugins([NotNull] IConnectionManager connManager)
         {
-            foreach (var plugin in Config.Plugins.Where(p => p.Enabled))
+            foreach (var plugin in Config.Plugins)
             {
-                Assembly ass;
-#if NETCORE
-                ass = SharpIrcBotAssemblyLoadContext.Instance.LoadFromAssemblyName(new AssemblyName(plugin.Assembly));
-#else
-                ass = Assembly.Load(new AssemblyName(plugin.Assembly));
-#endif
+                var ass = Assembly.Load(new AssemblyName(plugin.Assembly));
                 var type = ass.GetType(plugin.Class);
                 if (!typeof(IPlugin).GetTypeInfo().IsAssignableFrom(type))
                 {
-                    throw new ArgumentException($"class {plugin.Class} from assembly {plugin.Assembly} is not a plugin (does not implement {typeof(IPlugin).FullName})");
+                    throw new ArgumentException("class is not a plugin");
                 }
                 var ctor = type.GetTypeInfo().GetConstructor(new [] {typeof(IConnectionManager), typeof(JObject)});
                 var pluginObject = (IPlugin)ctor.Invoke(new object[] {connManager, plugin.Config});

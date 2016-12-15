@@ -8,7 +8,6 @@
     "SharpIrcBot": {
       "target": "project"
     },
-    "Microsoft.EntityFrameworkCore": "1.1.0",
     "Npgsql.EntityFrameworkCore.PostgreSQL": "1.1.0"
   },
   "frameworks": {
