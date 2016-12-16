@@ -3,4 +3,4 @@ WORKDIR /
 COPY contrib/docker/launch.sh .
 WORKDIR /app
 COPY out .
-ENTRYPOINT ["dotnet", "SharpIrcBotCLI.dll"]
+ENTRYPOINT ["/launch.sh"]
