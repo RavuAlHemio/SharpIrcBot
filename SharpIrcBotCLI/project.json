@@ -9,6 +9,81 @@
     "SharpIrcBot": {
       "target": "project"
     },
+    "Allograph": {
+      "target": "project"
+    },
+    "AlsoKnownAs": {
+      "target": "project"
+    },
+    "Belch": {
+      "target": "project"
+    },
+    "DasIstNenFehler": {
+      "target": "project"
+    },
+    "DatabaseNickMapping": {
+      "target": "project"
+    },
+    "Dice": {
+      "target": "project"
+    },
+    "DontJustHighlightMe": {
+      "target": "project"
+    },
+    "GroupPressure": {
+      "target": "project"
+    },
+    "IdentityNickMapping": {
+      "target": "project"
+    },
+    "LinkInfo": {
+      "target": "project"
+    },
+    "LinkInfoOptIn": {
+      "target": "project"
+    },
+    "Messenger": {
+      "target": "project"
+    },
+    "NewYear": {
+      "target": "project"
+    },
+    "Punt": {
+      "target": "project"
+    },
+    "Quotes": {
+      "target": "project"
+    },
+    "Reinvite": {
+      "target": "project"
+    },
+    "Smileys": {
+      "target": "project"
+    },
+    "Sockpuppet": {
+      "target": "project"
+    },
+    "TextCommands": {
+      "target": "project"
+    },
+    "Thanks": {
+      "target": "project"
+    },
+    "Time": {
+      "target": "project"
+    },
+    "UnoBot": {
+      "target": "project"
+    },
+    "Weather": {
+      "target": "project"
+    },
+    "WhoDoYouThinkIs": {
+      "target": "project"
+    },
+    "WhoisLoginNickMapping": {
+      "target": "project"
+    },
     "System.Text.Encoding.CodePages": "4.3.0"
   },
   "frameworks": {
