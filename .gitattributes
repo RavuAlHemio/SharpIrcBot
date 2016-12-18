@@ -9,3 +9,5 @@
 *.md text
 *.yml text
 *.json text
+#   must-be-Unix scripts
+*.sh text eol=lf
