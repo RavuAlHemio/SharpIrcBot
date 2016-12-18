@@ -237,6 +237,11 @@ namespace DasIstNenFehler
                         // correct usage
                         return;
                     }
+                    else if (correctUsage)
+                    {
+                        // correct usage (and no incorrect usage)
+                        return;
+                    }
                     else if (nouns != null || adjectives != null)
                     {
                         NotifyUsers($"NenPlugin: {e.SenderNickname} in {e.Channel}: \"nen {lastHyphenatedChunk}\" might be incorrect");
