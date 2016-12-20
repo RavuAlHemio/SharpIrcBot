@@ -274,12 +274,12 @@ namespace LinkInfo
                         var titleElement = htmlDoc.DocumentNode.SelectSingleNode(".//title");
                         if (titleElement != null)
                         {
-                            return new LinkAndInfo(link, FoldWhitespace(HtmlEntity.DeEntitize(titleElement.InnerText)), FetchErrorLevel.Success, originalLink);
+                            return new LinkAndInfo(link, FoldWhitespace(HtmlEntity.DeEntitize(titleElement.InnerText)).Trim(), FetchErrorLevel.Success, originalLink);
                         }
                         var h1Element = htmlDoc.DocumentNode.SelectSingleNode(".//h1");
                         if (h1Element != null)
                         {
-                            return new LinkAndInfo(link, FoldWhitespace(HtmlEntity.DeEntitize(h1Element.InnerText)), FetchErrorLevel.Success, originalLink);
+                            return new LinkAndInfo(link, FoldWhitespace(HtmlEntity.DeEntitize(h1Element.InnerText)).Trim(), FetchErrorLevel.Success, originalLink);
                         }
                         return new LinkAndInfo(link, "(HTML without a title O_o)", FetchErrorLevel.Success, originalLink);
                     case "image/png":
