@@ -19,12 +19,15 @@ namespace Weather
 
         public double TimeoutSeconds { get; set; }
 
+        public Dictionary<string, string> LocationAliases { get; set; }
+
         public WeatherConfig(JObject obj)
         {
             MaxRequestsPerMinute = 10;
             MaxRequestsPerESTDay = 500;
             CoolDownResponses = new List<string>();
             TimeoutSeconds = 5.0;
+            LocationAliases = new Dictionary<string, string>();
 
             var ser = new JsonSerializer();
             ser.Populate(obj.CreateReader(), this);
