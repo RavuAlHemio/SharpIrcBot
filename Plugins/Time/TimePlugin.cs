@@ -69,6 +69,12 @@ namespace Time
                 ? match.Groups["location"].Value
                 : Config.DefaultLocation;
 
+            string aliasedLocation;
+            if (Config.LocationAliases.TryGetValue(location, out aliasedLocation))
+            {
+                location = aliasedLocation;
+            }
+
             // obtain location
             var geoSearchResult = new GeoSearchResult();
             using (var client = new HttpClient())
