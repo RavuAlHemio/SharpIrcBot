@@ -85,7 +85,7 @@ namespace Time
 
             if (!geoSearchResult.GeoNames.Any())
             {
-                ConnectionManager.SendChannelMessage(args.Channel, $"{args.SenderNickname}: GeoNames cannot found that location!");
+                ConnectionManager.SendChannelMessage(args.Channel, $"{args.SenderNickname}: GeoNames cannot find that location!");
                 return;
             }
 
