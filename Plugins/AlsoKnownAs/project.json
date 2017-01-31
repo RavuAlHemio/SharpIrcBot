@@ -7,6 +7,10 @@
   "dependencies": {
     "SharpIrcBot": {
       "target": "project"
+    },
+    "JetBrains.Annotations": {
+      "version": "10.2.1",
+      "type": "build"
     }
   },
   "frameworks": {
