@@ -69,6 +69,12 @@ namespace Time
                 ? match.Groups["location"].Value
                 : Config.DefaultLocation;
 
+            string aliasedLocation;
+            if (Config.LocationAliases.TryGetValue(location, out aliasedLocation))
+            {
+                location = aliasedLocation;
+            }
+
             // obtain location
             var geoSearchResult = new GeoSearchResult();
             using (var client = new HttpClient())
@@ -85,7 +91,7 @@ namespace Time
 
             if (!geoSearchResult.GeoNames.Any())
             {
-                ConnectionManager.SendChannelMessage(args.Channel, $"{args.SenderNickname}: GeoNames cannot found that location!");
+                ConnectionManager.SendChannelMessage(args.Channel, $"{args.SenderNickname}: GeoNames cannot find that location!");
                 return;
             }
 

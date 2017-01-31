@@ -15,10 +15,13 @@ namespace Time
 
         public double TimeoutSeconds { get; set; }
 
+        public Dictionary<string, string> LocationAliases { get; set; }
+
         public TimeConfig(JObject obj)
         {
             TimeZoneDatabaseFile = "tzdb.nzd";
             TimeoutSeconds = 5.0;
+            LocationAliases = new Dictionary<string, string>();
 
             var ser = new JsonSerializer();
             ser.Populate(obj.CreateReader(), this);

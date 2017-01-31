@@ -192,7 +192,7 @@ namespace LinkInfo
                 httpClient.Timeout = TimeSpan.FromSeconds(Config.TimeoutSeconds);
                 request.Headers.UserAgent.TryParseAdd(Config.FakeUserAgent);
 
-                using (var resp = httpClient.SendAsync(request).SyncWait())
+                using (var resp = httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead).SyncWait())
                 {
                     try
                     {
@@ -316,7 +316,7 @@ namespace LinkInfo
                     request.Headers.UserAgent.TryParseAdd(Config.FakeUserAgent);
                     request.Headers.Referrer = new Uri(string.Format(GoogleHomepageUrlPattern, Config.GoogleDomain));
 
-                    using (var response = client.SendAsync(request).SyncWait())
+                    using (var response = client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead).SyncWait())
                     {
                         response.Content.ReadAsByteArrayAsync().SyncWait();
                     }
@@ -334,7 +334,7 @@ namespace LinkInfo
                     request.Headers.UserAgent.TryParseAdd(Config.FakeUserAgent);
                     request.Headers.Referrer = googleImageSearchUrl;
 
-                    using (var response = client.SendAsync(request).SyncWait())
+                    using (var response = client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead).SyncWait())
                     {
                         responseBytes = response.Content.ReadAsByteArrayAsync().SyncWait();
                     }

@@ -97,7 +97,7 @@ namespace Weather
             return true;
         }
 
-        protected virtual void GetWeatherForLocation(string location, string channel, string nick, bool lucky)
+        protected virtual void GetWeatherForLocation(string location, string channel, string nick, bool lucky, bool lookupAlias = true)
         {
             if (!CheckIsCoolEnough())
             {
@@ -113,6 +113,15 @@ namespace Weather
 
                 ConnectionManager.SendChannelMessage(channel, $"{nick}: {coolDownResponse}");
                 return;
+            }
+
+            if (lookupAlias)
+            {
+                string aliasedLocation;
+                if (Config.LocationAliases.TryGetValue(location, out aliasedLocation))
+                {
+                    location = aliasedLocation;
+                }
             }
 
             // obtain weather info
