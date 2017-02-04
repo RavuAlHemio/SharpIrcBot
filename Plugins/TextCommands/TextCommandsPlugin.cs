@@ -15,12 +15,14 @@ namespace TextCommands
         protected IConnectionManager ConnectionManager { get; }
         protected TextCommandsConfig Config { get; set; }
         protected Random RNG { get; }
+        protected int LastRNGValue { get; set; }
 
         public TextCommandsPlugin(IConnectionManager connMgr, JObject config)
         {
             ConnectionManager = connMgr;
             Config = new TextCommandsConfig(config);
             RNG = new Random();
+            LastRNGValue = -1;
 
             ConnectionManager.ChannelMessage += HandleChannelMessage;
             ConnectionManager.QueryMessage += HandlePrivateMessage;
@@ -63,9 +65,10 @@ namespace TextCommands
 
             var lowerBody = args.Message.ToLowerInvariant();
 
-            if (Config.CommandsResponses.ContainsKey(lowerBody))
+            List<string> commandResponses;
+            if (Config.CommandsResponses.TryGetValue(lowerBody, out commandResponses))
             {
-                Output(respond, args, lowerBody, Config.CommandsResponses[lowerBody], args.SenderNickname);
+                Output(respond, args, lowerBody, commandResponses, args.SenderNickname);
                 return;
             }
 
@@ -147,7 +150,7 @@ namespace TextCommands
                     targetBody = targetBodyCandidates[0];
                     break;
                 default:
-                    targetBody = targetBodyCandidates[RNG.Next(targetBodyCandidates.Count)];
+                    targetBody = targetBodyCandidates[NextRNGValueNoRepeat(targetBodyCandidates.Count)];
                     break;
             }
 
@@ -157,6 +160,23 @@ namespace TextCommands
             {
                 respond(line);
             }
+        }
+
+        protected virtual int NextRNGValueNoRepeat(int maxValueExclusive)
+        {
+            if (maxValueExclusive < 2)
+            {
+                return 0;
+            }
+
+            int ret;
+            do
+            {
+                ret = RNG.Next(maxValueExclusive);
+            } while (ret == LastRNGValue);
+
+            LastRNGValue = ret;
+            return ret;
         }
     }
 }
