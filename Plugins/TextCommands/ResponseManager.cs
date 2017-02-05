@@ -31,12 +31,24 @@ namespace TextCommands
                 case 1:
                     return Responses[0];
                 default:
-                    string response = Responses[CurrentIndexes[NextIndexIndex]];
+                    int pickedIndex = CurrentIndexes[NextIndexIndex];
+                    string response = Responses[pickedIndex];
                     ++NextIndexIndex;
                     if (NextIndexIndex >= CurrentIndexes.Count)
                     {
                         NextIndexIndex = 0;
                         CurrentIndexes.Shuffle(rng);
+
+                        // make sure the final index of last round isn't the same as the first index of this round
+                        // this prevents an item appearing twice in succession (when a shuffle happens in between)
+                        if (CurrentIndexes[0] == pickedIndex)
+                        {
+                            // swap once more
+                            int otherIndex = rng.Next(1, CurrentIndexes.Count);
+                            int temp = CurrentIndexes[0];
+                            CurrentIndexes[0] = CurrentIndexes[otherIndex];
+                            CurrentIndexes[otherIndex] = temp;
+                        }
                     }
                     return response;
             }
