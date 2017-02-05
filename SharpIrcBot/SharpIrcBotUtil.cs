@@ -546,6 +546,26 @@ namespace SharpIrcBot
             return ret.ToString();
         }
 
+        public static void Shuffle<T>(this IList<T> list, [CanBeNull] Random rng = null)
+        {
+            if (rng == null)
+            {
+                rng = new Random();
+            }
+
+            // Fisher-Yates shuffle (Knuth shuffle)
+            for (int i = 0; i < list.Count - 1; ++i)
+            {
+                // i <= j < count
+                int j = rng.Next(i, list.Count);
+
+                // swap
+                T temp = list[i];
+                list[i] = list[j];
+                list[j] = temp;
+            }
+        }
+
         /// <summary>
         /// Returns a list containing the elements of the enumerable in shuffled order.
         /// </summary>
@@ -562,19 +582,7 @@ namespace SharpIrcBot
             }
 
             var list = itemsToShuffle.ToList();
-
-            // Fisher-Yates shuffle (Knuth shuffle)
-            for (int i = 0; i < list.Count - 1; ++i)
-            {
-                // i <= j < count
-                int j = rng.Next(i, list.Count);
-
-                // swap
-                T temp = list[i];
-                list[i] = list[j];
-                list[j] = temp;
-            }
-
+            list.Shuffle(rng);
             return list;
         }
 
