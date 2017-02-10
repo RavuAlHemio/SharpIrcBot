@@ -62,7 +62,7 @@ namespace IKnewThat
 
                 ConnectionManager.SendChannelMessage(
                     args.Channel,
-                    $"I confirm that on {timestampLocal:yyyy-MM-dd} at {timestampLocal:HH:mm:ss}, {args.SenderNickname} knew the following: {args.Message}"
+                    $"I confirm that on {timestampLocal:yyyy-MM-dd} at {timestampLocal:HH:mm:ss}, {args.SenderNickname} knew the following: {matchingEntry.Message}"
                 );
 
                 ctx.Entries.Remove(matchingEntry);
