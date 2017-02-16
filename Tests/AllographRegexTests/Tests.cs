@@ -61,10 +61,16 @@ namespace AllographRegexTests
         {
             TestReplacement("prqprqrprqf", "a(.)c", "p${$case$1$r}q", "abcarcrakcf");
             TestReplacement("pMqpmqrpmqf", "(?i)a(.)c", "p${$case$1$m}q", "aBcArCrAkCf");
+
             TestReplacement("what is dis", "(?i)(th)(is)", "${$case$1$d}$2", "what is this");
             TestReplacement("WHAT IS DIS", "(?i)(th)(is)", "${$case$1$d}$2", "WHAT IS THIS");
             TestReplacement("What Is Dis", "(?i)(th)(is)", "${$case$1$d}$2", "What Is This");
             TestReplacement("wHAT iS dIS", "(?i)(th)(is)", "${$case$1$d}$2", "wHAT iS tHIS");
+
+            TestReplacement("what is dis", "(?i)(?<th>th)(?<is>is)", "${$case$th$d}${is}", "what is this");
+            TestReplacement("WHAT IS DIS", "(?i)(?<th>th)(?<is>is)", "${$case$th$d}${is}", "WHAT IS THIS");
+            TestReplacement("What Is Dis", "(?i)(?<th>th)(?<is>is)", "${$case$th$d}${is}", "What Is This");
+            TestReplacement("wHAT iS dIS", "(?i)(?<th>th)(?<is>is)", "${$case$th$d}${is}", "wHAT iS tHIS");
         }
 
         [Fact]
