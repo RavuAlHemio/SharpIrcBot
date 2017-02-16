@@ -71,6 +71,13 @@ namespace AllographRegexTests
             TestReplacement("WHAT IS DIS", "(?i)(?<th>th)(?<is>is)", "${$case$th$d}${is}", "WHAT IS THIS");
             TestReplacement("What Is Dis", "(?i)(?<th>th)(?<is>is)", "${$case$th$d}${is}", "What Is This");
             TestReplacement("wHAT iS dIS", "(?i)(?<th>th)(?<is>is)", "${$case$th$d}${is}", "wHAT iS tHIS");
+
+            TestReplacement("kiwifruit", "(?i)(?<kiw>kiw)(?<i>i)", "${kiw}${$case$i$ifruit}", "kiwi");
+            TestReplacement("KIWIFRUIT", "(?i)(?<kiw>kiw)(?<i>i)", "${kiw}${$case$i$ifruit}", "KIWI");
+            TestReplacement("KiWifruit", "(?i)(?<kiw>kiw)(?<i>i)", "${kiw}${$case$i$ifruit}", "KiWi");
+            TestReplacement("kIwIFRUIT", "(?i)(?<kiw>kiw)(?<i>i)", "${kiw}${$case$i$ifruit}", "kIwI");
+            TestReplacement("KIWifruit", "(?i)(?<kiw>kiw)(?<i>i)", "${kiw}${$case$i$ifruit}", "KIWi");
+            TestReplacement("kiwIFRUIT", "(?i)(?<kiw>kiw)(?<i>i)", "${kiw}${$case$i$ifruit}", "kiwI");
         }
 
         [Fact]
