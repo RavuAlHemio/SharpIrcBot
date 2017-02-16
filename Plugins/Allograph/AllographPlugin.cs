@@ -1,12 +1,12 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
+using System.Text;
 using System.Text.RegularExpressions;
+using Allograph.RegularExpressions;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 using SharpIrcBot;
-using System.Collections.Generic;
-using System.Text;
-using Microsoft.Extensions.Logging;
 using SharpIrcBot.Chunks;
 using SharpIrcBot.Events.Irc;
 
@@ -17,17 +17,21 @@ namespace Allograph
         private static readonly ILogger Logger = SharpIrcBotUtil.LoggerFactory.CreateLogger<AllographPlugin>();
         public static readonly Regex StatsRegex = new Regex("^!allostats\\s+(?<channel>[#&]\\S+)(?:\\s+(?<testmsg>\\S+(?:\\s+\\S+)*))?\\s*$", RegexOptions.Compiled);
 
-        protected AllographConfig Config;
-        protected readonly Random Random;
-        protected readonly IConnectionManager ConnectionManager;
-        protected readonly Dictionary<string, List<int>> CooldownsPerChannel;
-        
+        protected AllographConfig Config { get; set; }
+        protected Random Random { get; }
+        protected IConnectionManager ConnectionManager { get; }
+        protected List<ReplacerRegex> ReplacerRegexes { get; }
+        protected Dictionary<string, List<int>> CooldownsPerChannel { get; }
+
         public AllographPlugin(IConnectionManager connMgr, JObject config)
         {
             ConnectionManager = connMgr;
             Config = new AllographConfig(config);
             Random = new Random();
             CooldownsPerChannel = new Dictionary<string, List<int>>();
+            ReplacerRegexes = new List<ReplacerRegex>();
+
+            RecompileReplacerRegexes();
 
             ConnectionManager.ChannelMessage += HandleChannelMessage;
             ConnectionManager.QueryMessage += HandleQueryMessage;
@@ -37,6 +41,16 @@ namespace Allograph
         {
             Config = new AllographConfig(newConfig);
             CooldownsPerChannel.Clear();
+            RecompileReplacerRegexes();
+        }
+
+        protected virtual void RecompileReplacerRegexes()
+        {
+            ReplacerRegexes.Clear();
+            foreach (AllographConfig.Replacement replacement in Config.Replacements)
+            {
+                ReplacerRegexes.Add(new ReplacerRegex(replacement.Regex, replacement.ReplacementString));
+            }
         }
 
         protected virtual void HandleChannelMessage(object sender, IChannelMessageEventArgs args, MessageFlags flags)
@@ -63,6 +77,11 @@ namespace Allograph
             {
                 CooldownsPerChannel[channel] = new List<int>(Enumerable.Repeat(0, Config.Replacements.Count));
             }
+
+            var lookups = new Dictionary<string, string>
+            {
+                ["username"] = args.SenderNickname
+            };
 
             var chunks = ConnectionManager.SplitMessageToChunks(args.Message);
             var newBody = new StringBuilder();
@@ -102,8 +121,7 @@ namespace Allograph
                     }
 
                     // substitute the username in the replacement string
-                    var replacementStringWithUser = repl.ReplacementString.Replace("{{{username}}}", args.SenderNickname);
-                    var nextNewChunk = repl.Regex.Replace(newChunk, replacementStringWithUser);
+                    var nextNewChunk = ReplacerRegexes[i].Replace(newChunk, lookups);
 
                     if (Config.CooldownIncreasePerHit >= 0 || repl.CustomCooldownIncreasePerHit >= 0)
                     {
