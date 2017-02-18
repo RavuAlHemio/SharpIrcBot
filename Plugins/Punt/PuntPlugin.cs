@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
@@ -39,13 +40,12 @@ namespace Punt
                 return;
             }
 
-            var relevantPatterns = Config.CommonPatterns
+            IEnumerable<PuntPattern> relevantPatterns = Config.CommonPatterns
                 .Concat(Config.ChannelsPatterns[e.Channel]);
+            string normalizedNick = ConnectionManager.RegisteredNameForNick(e.SenderNickname) ?? e.SenderNickname;
             foreach (var pattern in relevantPatterns)
             {
-                var normalizedNick = ConnectionManager.RegisteredNameForNick(e.SenderNickname);
-
-                if (!pattern.NickPattern.IsMatch(e.SenderNickname) && (normalizedNick == null || !pattern.NickPattern.IsMatch(normalizedNick)))
+                if (!pattern.NickPattern.IsMatch(normalizedNick))
                 {
                     // wrong user
                     continue;
