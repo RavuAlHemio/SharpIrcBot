@@ -7,13 +7,13 @@ namespace Punt
     [JsonObject(MemberSerialization.OptOut)]
     public class PuntConfig
     {
-        public HashSet<PuntPattern> CommonPatterns { get; set; }
-        public Dictionary<string, HashSet<PuntPattern>> ChannelsPatterns { get; set; }
+        public List<PuntPattern> CommonPatterns { get; set; }
+        public Dictionary<string, List<PuntPattern>> ChannelsPatterns { get; set; }
 
         public PuntConfig(JObject obj)
         {
-            CommonPatterns = new HashSet<PuntPattern>();
-            ChannelsPatterns = new Dictionary<string, HashSet<PuntPattern>>();
+            CommonPatterns = new List<PuntPattern>();
+            ChannelsPatterns = new Dictionary<string, List<PuntPattern>>();
 
             var ser = new JsonSerializer();
             ser.Populate(obj.CreateReader(), this);

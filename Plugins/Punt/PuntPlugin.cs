@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 using SharpIrcBot;
@@ -15,21 +16,50 @@ namespace Punt
         protected IConnectionManager ConnectionManager { get; }
         protected PuntConfig Config { get; set; }
         protected Random Randomizer { get; }
+        protected Dictionary<string, Regex> RegexCache { get; }
 
         public PuntPlugin(IConnectionManager connMgr, JObject config)
         {
             ConnectionManager = connMgr;
             Config = new PuntConfig(config);
             Randomizer = new Random();
+            RegexCache = new Dictionary<string, Regex>();
 
             ConnectionManager.ChannelAction += HandleAnyChannelMessage;
             ConnectionManager.ChannelMessage += HandleAnyChannelMessage;
             ConnectionManager.ChannelNotice += HandleAnyChannelMessage;
+
+            RebuildRegexCache();
         }
 
         public void ReloadConfiguration(JObject newConfig)
         {
             Config = new PuntConfig(newConfig);
+
+            RebuildRegexCache();
+        }
+
+        protected virtual void RebuildRegexCache()
+        {
+            RegexCache.Clear();
+
+            IEnumerable<PuntPattern> allChannelPatterns = Config.ChannelsPatterns.Values
+                .Where(channelPattern => channelPattern != null)
+                .SelectMany(channelPattern => channelPattern);
+            IEnumerable<PuntPattern> allPatterns = Config.CommonPatterns.Concat(allChannelPatterns);
+
+            foreach (PuntPattern pattern in allPatterns)
+            {
+                IEnumerable<string> allRegexes = pattern.NickPatterns
+                    .Concat(pattern.NickExceptPatterns)
+                    .Concat(pattern.BodyPatterns)
+                    .Concat(pattern.BodyExceptPatterns);
+
+                foreach (string regex in allRegexes)
+                {
+                    RegexCache[regex] = new Regex(regex, RegexOptions.Compiled);
+                }
+            }
         }
 
         protected virtual void HandleAnyChannelMessage(object sender, IChannelMessageEventArgs e, MessageFlags flags)
@@ -40,14 +70,26 @@ namespace Punt
                 return;
             }
 
-            IEnumerable<PuntPattern> relevantPatterns = Config.CommonPatterns
-                .Concat(Config.ChannelsPatterns[e.Channel]);
+            IEnumerable<PuntPattern> relevantPatterns = Config.CommonPatterns;
+
+            IEnumerable<PuntPattern> channelPatterns = Config.ChannelsPatterns[e.Channel];
+            if (channelPatterns != null)
+            {
+                relevantPatterns = relevantPatterns.Concat(channelPatterns);
+            }
+
             string normalizedNick = ConnectionManager.RegisteredNameForNick(e.SenderNickname) ?? e.SenderNickname;
             foreach (var pattern in relevantPatterns)
             {
-                if (!pattern.NickPattern.IsMatch(normalizedNick))
+                if (!AnyMatch(normalizedNick, pattern.NickPatterns))
                 {
                     // wrong user
+                    continue;
+                }
+
+                if (AnyMatch(normalizedNick, pattern.NickExceptPatterns))
+                {
+                    // whitelisted user
                     continue;
                 }
 
@@ -61,13 +103,35 @@ namespace Punt
                     }
                 }
 
-                if (pattern.BodyPattern.IsMatch(e.Message))
+                if (!AnyMatch(e.Message, pattern.BodyPatterns))
                 {
-                    // match! kick 'em!
-                    ConnectionManager.KickChannelUser(e.Channel, e.SenderNickname, pattern.KickMessage);
-                    return;
+                    // no body match
+                    continue;
+                }
+
+                if (AnyMatch(e.Message, pattern.BodyExceptPatterns))
+                {
+                    // body exception
+                    continue;
+                }
+
+                // match! kick 'em!
+                ConnectionManager.KickChannelUser(e.Channel, e.SenderNickname, pattern.KickMessage);
+                return;
+            }
+        }
+
+        protected bool AnyMatch(string text, List<string> regexes)
+        {
+            foreach (string regex in regexes)
+            {
+                Regex regexObject = RegexCache[regex];
+                if (regexObject.IsMatch(text))
+                {
+                    return true;
                 }
             }
+            return false;
         }
     }
 }
