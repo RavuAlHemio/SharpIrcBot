@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
@@ -17,12 +18,14 @@ namespace TextCommands
         protected Random RNG { get; }
         protected Dictionary<string, ResponseManager> CommandsResponses { get; set; }
         protected Dictionary<string, ResponseManager> NicknamableCommandsResponses { get; set; }
+        protected Dictionary<string, LinkedList<string>> ChannelsToLastMessageAuthors { get; set; }
 
         public TextCommandsPlugin(IConnectionManager connMgr, JObject config)
         {
             ConnectionManager = connMgr;
             Config = new TextCommandsConfig(config);
             RNG = new Random();
+            ChannelsToLastMessageAuthors = new Dictionary<string, LinkedList<string>>();
 
             ConnectionManager.ChannelMessage += HandleChannelMessage;
             ConnectionManager.QueryMessage += HandlePrivateMessage;
@@ -55,6 +58,19 @@ namespace TextCommands
 
         private void HandleChannelMessage(object sender, IChannelMessageEventArgs args, MessageFlags flags)
         {
+            // remember this message's author
+            LinkedList<string> lastMessageAuthors;
+            if (!ChannelsToLastMessageAuthors.TryGetValue(args.Channel, out lastMessageAuthors))
+            {
+                lastMessageAuthors = new LinkedList<string>();
+                ChannelsToLastMessageAuthors[args.Channel] = lastMessageAuthors;
+            }
+            lastMessageAuthors.AddFirst(args.SenderNickname);
+            while (lastMessageAuthors.Count > Config.NickPickRememberCount)
+            {
+                lastMessageAuthors.RemoveLast();
+            }
+
             ActuallyHandleMessage(
                 message => ConnectionManager.SendChannelMessage(args.Channel, message),
                 args,
@@ -120,6 +136,58 @@ namespace TextCommands
 
                 // trigger for someone else?
                 var targetedNick = lowerBody.Substring(nickCommandResponse.Key.Length).Trim();
+
+                if (targetedNick == "-r" || targetedNick == "--random")
+                {
+                    // random pick, biased towards active users
+                    if (channelNicks.Count == 0)
+                    {
+                        // emergency trick: target the sender
+                        Output(respond, args, nickCommandResponse.Key, nickCommandResponse.Value, args.SenderNickname);
+                        return;
+                    }
+
+                    Debug.Assert(channelMessage != null);
+
+                    // each message in the last n messages leads to an entry in the pick list
+                    // this increases the chances of being picked
+                    var pickList = new List<string>();
+                    LinkedList<string> lastMessageAuthors;
+                    if (ChannelsToLastMessageAuthors.TryGetValue(channelMessage.Channel, out lastMessageAuthors))
+                    {
+                        foreach (string author in lastMessageAuthors)
+                        {
+                            if (channelNicks.Contains(author))
+                            {
+                                pickList.Add(author);
+                            }
+                        }
+                    }
+                    pickList.AddRange(channelNicks);
+
+                    int index = RNG.Next(channelNicks.Count);
+                    string target = pickList[index];
+                    Output(respond, args, nickCommandResponse.Key, nickCommandResponse.Value, target);
+                    return;
+                }
+                else if (targetedNick == "-R" || targetedNick == "--really-random")
+                {
+                    // random pick of any user in the channel
+                    if (channelNicks.Count == 0)
+                    {
+                        // emergency trick: target the sender
+                        Output(respond, args, nickCommandResponse.Key, nickCommandResponse.Value, args.SenderNickname);
+                        return;
+                    }
+
+                    Debug.Assert(channelMessage != null);
+
+                    int index = RNG.Next(channelNicks.Count);
+                    string target = channelNicks.ElementAt(index);
+                    Output(respond, args, nickCommandResponse.Key, nickCommandResponse.Value, target);
+                    return;
+                }
+
                 foreach (string channelNick in channelNicks)
                 {
                     if (channelNick.ToLowerInvariant() == targetedNick)
