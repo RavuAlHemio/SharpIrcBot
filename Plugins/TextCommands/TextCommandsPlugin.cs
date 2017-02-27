@@ -135,9 +135,10 @@ namespace TextCommands
                 }
 
                 // trigger for someone else?
-                var targetedNick = lowerBody.Substring(nickCommandResponse.Key.Length).Trim();
+                string targetedNickCased = args.Message.Substring(nickCommandResponse.Key.Length).Trim();
+                string targetedNick = lowerBody.Substring(nickCommandResponse.Key.Length).Trim();
 
-                if (targetedNick == "-r" || targetedNick == "--random")
+                if (targetedNickCased == "-r" || targetedNickCased == "--random")
                 {
                     // random pick, biased towards active users
                     if (channelNicks.Count == 0)
@@ -170,7 +171,7 @@ namespace TextCommands
                     Output(respond, args, nickCommandResponse.Key, nickCommandResponse.Value, target);
                     return;
                 }
-                else if (targetedNick == "-R" || targetedNick == "--really-random")
+                else if (targetedNickCased == "-R" || targetedNickCased == "--really-random")
                 {
                     // random pick of any user in the channel
                     if (channelNicks.Count == 0)
