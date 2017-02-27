@@ -50,7 +50,12 @@ namespace Weather
         public void ReloadConfiguration(JObject newConfig)
         {
             Config = new WeatherConfig(newConfig);
-            Client.Timeout = TimeSpan.FromSeconds(Config.TimeoutSeconds);
+
+            // a new client must be created if a request has already been performed
+            Client = new WundergroundClient
+            {
+                Timeout = TimeSpan.FromSeconds(Config.TimeoutSeconds)
+            };
         }
 
         protected virtual DateTime CalculateTodayEST()
