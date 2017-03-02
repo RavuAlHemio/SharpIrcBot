@@ -105,7 +105,7 @@ namespace LinkInfo
                 catch (AggregateException ex) when (ex.InnerException is TaskCanceledException)
                 {
                     // timed out
-                    return link.ToResult(FetchErrorLevel.TransientError, "TISS course (detail fetching timed out)");
+                    return new LinkAndInfo(theLink, "TISS course (detail fetching timed out)", FetchErrorLevel.TransientError);
                 }
 
                 XElement courseElement = doc
@@ -124,12 +124,14 @@ namespace LinkInfo
 
                 string formattedCourseNumber = realCourseNumber.Substring(0, 3) + "." + realCourseNumber.Substring(3);
 
-                return link.ToResult(FetchErrorLevel.Success, $"TISS course: {formattedCourseNumber} {courseType} {title}");
+                return new LinkAndInfo(
+                    theLink, $"TISS course: {formattedCourseNumber} {courseType} {title}", FetchErrorLevel.Success
+                );
             }
             catch (Exception ex)
             {
                 Logger.LogWarning("image info: {Exception}", ex);
-                return link.ToResult(FetchErrorLevel.TransientError, "TISS course (exception thrown)");
+                return new LinkAndInfo(theLink, "TISS course (exception thrown)", FetchErrorLevel.TransientError);
             }
         }
     }
