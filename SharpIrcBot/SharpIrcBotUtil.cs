@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -675,6 +676,13 @@ namespace SharpIrcBot
                 throw new OperationCanceledException();
             }
             return task.Result;
+        }
+
+        public static ImmutableDictionary<TKey, TValue>.Builder Adding<TKey, TValue>(
+                this ImmutableDictionary<TKey, TValue>.Builder dict, TKey key, TValue value)
+        {
+            dict.Add(key, value);
+            return dict;
         }
     }
 }

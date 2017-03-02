@@ -7,14 +7,13 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Sockets;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
-using HtmlAgilityPack;
+using System.Reflection;
 using JetBrains.Annotations;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 using SharpIrcBot;
 using SharpIrcBot.Chunks;
+using SharpIrcBot.Config;
 using SharpIrcBot.Events;
 using SharpIrcBot.Events.Irc;
 
@@ -24,15 +23,12 @@ namespace LinkInfo
     {
         private static readonly ILogger Logger = SharpIrcBotUtil.LoggerFactory.CreateLogger<LinkInfoPlugin>();
 
-        public const string GoogleHomepageUrlPattern = "https://{0}/";
-        public const string GoogleImageSearchUrlPattern = "https://{0}/imghp?hl=en&tab=wi";
-        public const string GoogleImageSearchByImageUrlPattern = "https://{0}/searchbyimage?hl=en&image_url={1}";
         public const int DownloadBufferSize = 4 * 1024 * 1024;
-        public static readonly Regex WhiteSpaceRegex = new Regex("\\s+", RegexOptions.Compiled);
 
         protected IConnectionManager ConnectionManager { get; set; }
         protected LinkInfoConfig Config { get; set; }
         protected IdnMapping IDNMapping { get; set; }
+        protected List<ILinkResolverPlugin> Plugins { get; set; }
 
         [CanBeNull]
         protected LinkAndInfo LastLinkAndInfo { get; set; }
@@ -44,6 +40,7 @@ namespace LinkInfo
             ConnectionManager = connMgr;
             Config = new LinkInfoConfig(config);
             IDNMapping = new IdnMapping();
+            Plugins = new List<ILinkResolverPlugin>();
 
             LastLinkAndInfo = null;
             LinkDetector = null;
@@ -51,6 +48,8 @@ namespace LinkInfo
             ConnectionManager.ChannelMessage += HandleChannelMessage;
             ConnectionManager.OutgoingChannelMessage += HandleOutgoingChannelMessage;
             ConnectionManager.SplitToChunks += HandleSplitToChunks;
+
+            RepopulatePluginList();
         }
 
         public virtual void ReloadConfiguration(JObject newConfig)
@@ -59,6 +58,26 @@ namespace LinkInfo
 
             // recreate heuristic link detector at next use
             LinkDetector = null;
+
+            RepopulatePluginList();
+        }
+
+        protected virtual void RepopulatePluginList()
+        {
+            Plugins.Clear();
+
+            foreach (PluginConfig config in Config.LinkResolverPlugins)
+            {
+                Assembly ass = Assembly.Load(new AssemblyName(config.Assembly));
+                Type type = ass.GetType(config.Class);
+                if (!typeof(ILinkResolverPlugin).GetTypeInfo().IsAssignableFrom(type))
+                {
+                    throw new ArgumentException("class is not a link resolver plugin");
+                }
+                ConstructorInfo ctor = type.GetTypeInfo().GetConstructor(new [] {typeof(JObject), typeof(LinkInfoConfig)});
+                var pluginObject = (ILinkResolverPlugin)ctor.Invoke(new object[] {config.Config, this.Config});
+                Plugins.Add(pluginObject);
+            }
         }
 
         protected void HandleChannelMessage(object sender, IChannelMessageEventArgs args, MessageFlags flags)
@@ -137,11 +156,6 @@ namespace LinkInfo
                 .ToList();
         }
 
-        public static string FoldWhitespace(string str)
-        {
-            return WhiteSpaceRegex.Replace(str, " ");
-        }
-
         [NotNull]
         public virtual LinkAndInfo RealObtainLinkInfo([NotNull] Uri link, [CanBeNull] Uri originalLink = null, int redirectCount = 0)
         {
@@ -187,7 +201,6 @@ namespace LinkInfo
             using (var respStore = new MemoryStream())
             {
                 var contentType = "application/octet-stream";
-                string contentTypeHeader = null;
 
                 httpClient.Timeout = TimeSpan.FromSeconds(Config.TimeoutSeconds);
                 request.Headers.UserAgent.TryParseAdd(Config.FakeUserAgent);
@@ -260,34 +273,30 @@ namespace LinkInfo
                     }
                 }
 
+                var linkToResolve = new LinkToResolve(link, originalLink, respStore.ToArray(), contentType);
+                foreach (ILinkResolverPlugin plugin in Plugins)
+                {
+                    LinkAndInfo ret = plugin.ResolveLink(linkToResolve);
+                    if (ret != null)
+                    {
+                        return ret;
+                    }
+                }
+
+                // fallback
                 switch (contentType)
                 {
                     case "application/octet-stream":
                         return new LinkAndInfo(link, "(can't figure out the content type, sorry)", FetchErrorLevel.LastingError, originalLink);
                     case "text/html":
                     case "application/xhtml+xml":
-                        // HTML? parse it and get the title
-                        var respStr = EncodingGuesser.GuessEncodingAndDecode(respStore.ToArray(), contentTypeHeader);
-
-                        var htmlDoc = new HtmlDocument();
-                        htmlDoc.LoadHtml(respStr);
-                        var titleElement = htmlDoc.DocumentNode.SelectSingleNode(".//title");
-                        if (titleElement != null)
-                        {
-                            return new LinkAndInfo(link, FoldWhitespace(HtmlEntity.DeEntitize(titleElement.InnerText)).Trim(), FetchErrorLevel.Success, originalLink);
-                        }
-                        var h1Element = htmlDoc.DocumentNode.SelectSingleNode(".//h1");
-                        if (h1Element != null)
-                        {
-                            return new LinkAndInfo(link, FoldWhitespace(HtmlEntity.DeEntitize(h1Element.InnerText)).Trim(), FetchErrorLevel.Success, originalLink);
-                        }
-                        return new LinkAndInfo(link, "(HTML without a title O_o)", FetchErrorLevel.Success, originalLink);
+                        return new LinkAndInfo(link, "HTML", FetchErrorLevel.Success, originalLink);
                     case "image/png":
-                        return new LinkAndInfo(link, ObtainImageInfo(link, "PNG image"), FetchErrorLevel.Success, originalLink);
+                        return new LinkAndInfo(link, "PNG image", FetchErrorLevel.Success, originalLink);
                     case "image/jpeg":
-                        return new LinkAndInfo(link, ObtainImageInfo(link, "JPEG image"), FetchErrorLevel.Success, originalLink);
+                        return new LinkAndInfo(link, "JPEG image", FetchErrorLevel.Success, originalLink);
                     case "image/gif":
-                        return new LinkAndInfo(link, ObtainImageInfo(link, "GIF image"), FetchErrorLevel.Success, originalLink);
+                        return new LinkAndInfo(link, "GIF image", FetchErrorLevel.Success, originalLink);
                     case "application/json":
                         return new LinkAndInfo(link, "JSON", FetchErrorLevel.Success, originalLink);
                     case "text/xml":
@@ -296,87 +305,6 @@ namespace LinkInfo
                     default:
                         return new LinkAndInfo(link, $"file of type {contentType}", FetchErrorLevel.Success, originalLink);
                 }
-            }
-        }
-
-        public string ObtainImageInfo(Uri url, string text)
-        {
-            try
-            {
-                var client = new HttpClient
-                {
-                    Timeout = TimeSpan.FromSeconds(Config.ImageInfoTimeoutSeconds)
-                };
-
-                var googleImageSearchUrl = new Uri(string.Format(GoogleImageSearchUrlPattern, Config.GoogleDomain));
-
-                // alibi-visit the image search page to get the cookies
-                using (var request = new HttpRequestMessage(HttpMethod.Get, googleImageSearchUrl))
-                {
-                    request.Headers.UserAgent.TryParseAdd(Config.FakeUserAgent);
-                    request.Headers.Referrer = new Uri(string.Format(GoogleHomepageUrlPattern, Config.GoogleDomain));
-
-                    using (var response = client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead).SyncWait())
-                    {
-                        response.Content.ReadAsByteArrayAsync().SyncWait();
-                    }
-                }
-
-                // fetch the actual info
-                var searchUrl = new Uri(string.Format(
-                    GoogleImageSearchByImageUrlPattern,
-                    Config.GoogleDomain,
-                    url.AbsoluteUri
-                ));
-                byte[] responseBytes;
-                using (var request = new HttpRequestMessage(HttpMethod.Get, searchUrl))
-                {
-                    request.Headers.UserAgent.TryParseAdd(Config.FakeUserAgent);
-                    request.Headers.Referrer = googleImageSearchUrl;
-
-                    using (var response = client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead).SyncWait())
-                    {
-                        responseBytes = response.Content.ReadAsByteArrayAsync().SyncWait();
-                    }
-                }
-                var parseMe = EncodingGuesser.GuessEncodingAndDecode(responseBytes, null);
-
-                if (Config.DumpImageResultsFileName != null)
-                {
-                    using (var dumpy = File.Open(Path.Combine(SharpIrcBotUtil.AppDirectory, Config.DumpImageResultsFileName), FileMode.Create, FileAccess.Write))
-                    {
-                        dumpy.Write(responseBytes, 0, responseBytes.Length);
-                    }
-                }
-
-                var htmlDoc = new HtmlDocument();
-                htmlDoc.LoadHtml(parseMe);
-                IEnumerable<HtmlNode> foundHubs = htmlDoc.DocumentNode
-                    .SelectNodes(".//*")
-                    .OfType<HtmlNode>()
-                    .Where(n => n.GetAttributeValue("class", "").Split(' ').Contains("_hUb"));
-                foreach (HtmlNode foundHub in foundHubs)
-                {
-                    IEnumerable<HtmlNode> foundGubs = foundHub
-                        .SelectNodes(".//*")
-                        .OfType<HtmlNode>()
-                        .Where(n => n.GetAttributeValue("class", "").Split(' ').Contains("_gUb"));
-                    foreach (HtmlNode hint in foundGubs)
-                    {
-                        return string.Format("{0} ({1})", text, HtmlEntity.DeEntitize(hint.InnerText));
-                    }
-                }
-                return text;
-            }
-            catch (AggregateException ex) when (ex.InnerException is TaskCanceledException)
-            {
-                // timed out
-                return text;
-            }
-            catch (Exception ex)
-            {
-                Logger.LogWarning("image info: {Exception}", ex);
-                return text;
             }
         }
 
