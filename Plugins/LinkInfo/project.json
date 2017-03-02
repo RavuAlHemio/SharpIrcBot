@@ -14,7 +14,8 @@
     "JetBrains.Annotations": {
       "version": "10.2.1",
       "type": "build"
-    }
+    },
+    "Microsoft.AspNetCore.WebUtilities": "1.1.0"
   },
   "frameworks": {
     "netstandard1.6": {
@@ -22,9 +23,15 @@
         "define": [
           "NETCORE"
         ]
+      },
+      "dependencies": {
+        "System.Xml.XDocument": "4.3.0"
       }
     },
     "net461": {
+      "frameworkAssemblies": {
+        "System.Xml.Linq": ""
+      }
     }
   }
 }
