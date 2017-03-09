@@ -20,6 +20,11 @@ namespace LinkInfo
 
         public LinkAndInfo ResolveLink(LinkToResolve link)
         {
+            if (link.ContentType != "text/html" && link.ContentType != "application/xhtml+xml")
+            {
+                return null;
+            }
+
             // HTML? parse it and get the title
             var respStr = EncodingGuesser.GuessEncodingAndDecode(link.ResponseBytes, link.ContentType);
 
