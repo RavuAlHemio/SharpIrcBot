@@ -120,8 +120,8 @@ namespace Allograph
                         }
                     }
 
-                    // substitute the username in the replacement string
-                    var nextNewChunk = ReplacerRegexes[i].Replace(newChunk, lookups);
+                    // perform the replacement
+                    string nextNewChunk = ReplacerRegexes[i].Replace(newChunk, lookups);
 
                     if (Config.CooldownIncreasePerHit >= 0 || repl.CustomCooldownIncreasePerHit >= 0)
                     {
@@ -139,6 +139,16 @@ namespace Allograph
                             newCooldowns[i] += (repl.CustomCooldownIncreasePerHit >= 0)
                                 ? repl.CustomCooldownIncreasePerHit
                                 : Config.CooldownIncreasePerHit;
+
+                            if (repl.ReplaceFullMessage)
+                            {
+                                // the replacement shall become the whole new body
+                                newBody.Clear();
+                                newBody.Append(newChunk);
+
+                                // stop looping here
+                                break;
+                            }
                         }
                         else if (newCooldowns[i] > 0)
                         {
@@ -150,6 +160,16 @@ namespace Allograph
                     {
                         // no cooldowns
                         newChunk = nextNewChunk;
+
+                        if (repl.ReplaceFullMessage && !string.Equals(newChunk, nextNewChunk, StringComparison.Ordinal))
+                        {
+                            // the replacement shall become the whole new body
+                            newBody.Clear();
+                            newBody.Append(newChunk);
+
+                            // stop looping here
+                            break;
+                        }
                     }
                 }
 

@@ -36,6 +36,11 @@ namespace Allograph
             /// </summary>
             public bool OnlyIfPrecedingHit { get; set; }
 
+            /// <summary>
+            /// If <c>true</c>, replaces the whole message with the replacement string.
+            /// </summary>
+            public bool ReplaceFullMessage { get; set; }
+
             public double AdditionalProbabilityPercent { get; set; }
 
             public int CustomCooldownIncreasePerHit { get; set; }
