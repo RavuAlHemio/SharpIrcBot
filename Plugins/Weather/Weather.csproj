@@ -1,0 +1,37 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>netstandard1.6;net461</TargetFrameworks>
+    <DebugType>portable</DebugType>
+    <AssemblyName>Weather</AssemblyName>
+    <PackageId>Weather</PackageId>
+    <GenerateAssemblyTitleAttribute>false</GenerateAssemblyTitleAttribute>
+    <GenerateAssemblyDescriptionAttribute>false</GenerateAssemblyDescriptionAttribute>
+    <GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
+    <GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
+    <GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
+    <GenerateAssemblyCopyrightAttribute>false</GenerateAssemblyCopyrightAttribute>
+    <GenerateAssemblyVersionAttribute>false</GenerateAssemblyVersionAttribute>
+    <GenerateAssemblyFileVersionAttribute>false</GenerateAssemblyFileVersionAttribute>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\SharpIrcBot\SharpIrcBot.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="JetBrains.Annotations" Version="10.2.1">
+      <PrivateAssets>All</PrivateAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <PropertyGroup Condition=" '$(TargetFramework)' == 'netstandard1.6' ">
+    <DefineConstants>$(DefineConstants);NETCORE</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup Condition=" '$(TargetFramework)' == 'net461' ">
+    <Reference Include="System" />
+    <Reference Include="Microsoft.CSharp" />
+  </ItemGroup>
+
+</Project>

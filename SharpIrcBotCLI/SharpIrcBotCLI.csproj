@@ -1,0 +1,68 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>netcoreapp1.0;netcoreapp1.1;net461</TargetFrameworks>
+    <DebugType>portable</DebugType>
+    <AssemblyName>SharpIrcBotCLI</AssemblyName>
+    <OutputType>Exe</OutputType>
+    <PackageId>SharpIrcBotCLI</PackageId>
+    <RuntimeIdentifiers>win7-x64;debian.8-x64;ubuntu.16.04-x64;ubuntu.16.10-x64;linux</RuntimeIdentifiers>
+    <RuntimeFrameworkVersion Condition=" '$(TargetFramework)' == 'netcoreapp1.0' ">1.1.1</RuntimeFrameworkVersion>
+    <RuntimeFrameworkVersion Condition=" '$(TargetFramework)' == 'netcoreapp1.1' ">1.1.1</RuntimeFrameworkVersion>
+    <GenerateAssemblyTitleAttribute>false</GenerateAssemblyTitleAttribute>
+    <GenerateAssemblyDescriptionAttribute>false</GenerateAssemblyDescriptionAttribute>
+    <GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
+    <GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
+    <GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
+    <GenerateAssemblyCopyrightAttribute>false</GenerateAssemblyCopyrightAttribute>
+    <GenerateAssemblyVersionAttribute>false</GenerateAssemblyVersionAttribute>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="App.config" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\SharpIrcBot\SharpIrcBot.csproj" />
+    <ProjectReference Include="..\Plugins\Allograph\Allograph.csproj" />
+    <ProjectReference Include="..\Plugins\AlsoKnownAs\AlsoKnownAs.csproj" />
+    <ProjectReference Include="..\Plugins\Belch\Belch.csproj" />
+    <ProjectReference Include="..\Plugins\DasIstNenFehler\DasIstNenFehler.csproj" />
+    <ProjectReference Include="..\Plugins\DatabaseNickMapping\DatabaseNickMapping.csproj" />
+    <ProjectReference Include="..\Plugins\Dice\Dice.csproj" />
+    <ProjectReference Include="..\Plugins\DontJustHighlightMe\DontJustHighlightMe.csproj" />
+    <ProjectReference Include="..\Plugins\GroupPressure\GroupPressure.csproj" />
+    <ProjectReference Include="..\Plugins\IdentityNickMapping\IdentityNickMapping.csproj" />
+    <ProjectReference Include="..\Plugins\IKnewThat\IKnewThat.csproj" />
+    <ProjectReference Include="..\Plugins\LinkInfo\LinkInfo.csproj" />
+    <ProjectReference Include="..\Plugins\LinkInfoOptIn\LinkInfoOptIn.csproj" />
+    <ProjectReference Include="..\Plugins\Messenger\Messenger.csproj" />
+    <ProjectReference Include="..\Plugins\NewYear\NewYear.csproj" />
+    <ProjectReference Include="..\Plugins\Punt\Punt.csproj" />
+    <ProjectReference Include="..\Plugins\Quotes\Quotes.csproj" />
+    <ProjectReference Include="..\Plugins\Reinvite\Reinvite.csproj" />
+    <ProjectReference Include="..\Plugins\Smileys\Smileys.csproj" />
+    <ProjectReference Include="..\Plugins\Sockpuppet\Sockpuppet.csproj" />
+    <ProjectReference Include="..\Plugins\TextCommands\TextCommands.csproj" />
+    <ProjectReference Include="..\Plugins\Thanks\Thanks.csproj" />
+    <ProjectReference Include="..\Plugins\Time\Time.csproj" />
+    <ProjectReference Include="..\Plugins\UnoBot\UnoBot.csproj" />
+    <ProjectReference Include="..\Plugins\Weather\Weather.csproj" />
+    <ProjectReference Include="..\Plugins\WhoDoYouThinkIs\WhoDoYouThinkIs.csproj" />
+    <ProjectReference Include="..\Plugins\WhoisLoginNickMapping\WhoisLoginNickMapping.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Text.Encoding.CodePages" Version="4.3.0" />
+  </ItemGroup>
+
+  <PropertyGroup Condition=" '$(TargetFramework)' == 'netcoreapp1.0' ">
+    <DefineConstants>$(DefineConstants);NETCORE</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup Condition=" '$(TargetFramework)' == 'net461' ">
+    <Reference Include="System" />
+    <Reference Include="Microsoft.CSharp" />
+  </ItemGroup>
+
+</Project>
