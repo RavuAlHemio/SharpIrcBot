@@ -97,6 +97,7 @@ namespace Allograph
                 }
 
                 bool somethingHit = false;
+                bool fullReplacement = false;
                 int i = -1;
 
                 var newChunk = textChunk.Text;
@@ -147,6 +148,7 @@ namespace Allograph
                                 newBody.Append(newChunk);
 
                                 // stop looping here
+                                fullReplacement = true;
                                 break;
                             }
                         }
@@ -168,6 +170,7 @@ namespace Allograph
                             newBody.Append(newChunk);
 
                             // stop looping here
+                            fullReplacement = true;
                             break;
                         }
                     }
@@ -180,6 +183,12 @@ namespace Allograph
                     CooldownsPerChannel[channel].AddRange(newCooldowns);
 
                     Logger.LogDebug("cooldowns are now: {Cooldowns}", string.Join(", ", newCooldowns.Select(c => c.ToString())));
+                }
+
+                if (fullReplacement)
+                {
+                    // the body has been fully replaced
+                    break;
                 }
 
                 newBody.Append(newChunk);
