@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp1.1</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.0.0" />
+    <PackageReference Include="xunit" Version="2.2.0" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.2.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Plugins\Allograph\Allograph.csproj" />
+    <ProjectReference Include="..\..\Plugins\AlsoKnownAs\AlsoKnownAs.csproj" />
+    <ProjectReference Include="..\..\Plugins\DatabaseNickMapping\DatabaseNickMapping.csproj" />
+    <ProjectReference Include="..\..\Plugins\Dice\Dice.csproj" />
+    <ProjectReference Include="..\..\Plugins\LinkInfoOptIn\LinkInfoOptIn.csproj" />
+    <ProjectReference Include="..\..\Plugins\Messenger\Messenger.csproj" />
+    <ProjectReference Include="..\..\Plugins\Quotes\Quotes.csproj" />
+    <ProjectReference Include="..\..\Plugins\Reinvite\Reinvite.csproj" />
+    <ProjectReference Include="..\..\Plugins\Thanks\Thanks.csproj" />
+    <ProjectReference Include="..\..\Plugins\Weather\Weather.csproj" />
+    <ProjectReference Include="..\..\Plugins\WhoDoYouThinkIs\WhoDoYouThinkIs.csproj" />
+  </ItemGroup>
+
+</Project>
