@@ -3,8 +3,8 @@
   <PropertyGroup>
     <TargetFramework>netcoreapp1.1</TargetFramework>
     <DebugType>portable</DebugType>
-    <AssemblyName>AllographRegexTests</AssemblyName>
-    <PackageId>AllographRegexTests</PackageId>
+    <AssemblyName>AllographTests</AssemblyName>
+    <PackageId>AllographTests</PackageId>
     <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
     <PackageTargetFallback>$(PackageTargetFallback);dotnet5.4;portable-net451+win8</PackageTargetFallback>
     <RuntimeFrameworkVersion>1.1.1</RuntimeFrameworkVersion>
@@ -12,6 +12,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Plugins\Allograph\Allograph.csproj" />
+    <ProjectReference Include="..\..\Plugins\LinkInfo\LinkInfo.csproj" />
+    <ProjectReference Include="..\TestPlumbing\TestPlumbing.csproj" />
   </ItemGroup>
 
   <ItemGroup>

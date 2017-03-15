@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using Xunit;
 using Allograph.RegularExpressions;
 
-namespace AllographRegexTests
+namespace AllographTests
 {
     public class Tests
     {
@@ -14,25 +14,25 @@ namespace AllographRegexTests
         }
 
         [Fact]
-        public void SimpleReplacement() 
+        public void SimpleReplacement()
         {
             TestReplacement("aaqqccqqddqqeeqq", "b", "q", "aabbccbbddbbeebb");
         }
 
         [Fact]
-        public void SimpleLongerReplacement() 
+        public void SimpleLongerReplacement()
         {
             TestReplacement("aapqpqccpqpqddpqpqeepqpq", "b", "pq", "aabbccbbddbbeebb");
         }
 
         [Fact]
-        public void DollarSignReplacement() 
+        public void DollarSignReplacement()
         {
             TestReplacement("aap$qp$qccp$qp$qddp$qp$qeep$qp$q", "b", "p$$q", "aabbccbbddbbeebb");
         }
 
         [Fact]
-        public void NumericalGroupReferenceReplacement() 
+        public void NumericalGroupReferenceReplacement()
         {
             TestReplacement("pbqprqrpkqf", "a(.)c", "p$1q", "abcarcrakcf");
             TestReplacement("bprprkpf", "a(.)c", "$1p", "abcarcrakcf");
