@@ -1,0 +1,9 @@
+language: csharp
+mono: none
+dotnet: 1.1.1
+before_install:
+  - ./contrib/travis/before-install.sh
+install:
+  - ./contrib/travis/install.sh
+script:
+  - ./contrib/travis/build-and-test.sh
