@@ -222,6 +222,21 @@ namespace SharpIrcBot.Tests.SedTests
         }
 
         [Fact]
+        public void TestMultiplePatterns()
+        {
+            TestConnectionManager mgr = ObtainConnectionManager();
+
+            mgr.InjectChannelMessage(TestChannelName, "OneUser", "a one, a two, a three, a four");
+            mgr.InjectChannelMessage(TestChannelName, "YetAnotherUser", " s_e_o_g s/a/e/g  ");
+
+            Assert.Equal(1, mgr.EventLog.Count);
+            TestMessage sentMessage = Assert.IsType<TestMessage>(mgr.EventLog[0]);
+            Assert.Equal(MessageType.Message, sentMessage.Type);
+            Assert.Equal(TestChannelName, sentMessage.Target);
+            Assert.Equal("e ono, e two, e throo, e four", sentMessage.Body);
+        }
+
+        [Fact]
         public void TestUnmatchedReplacement()
         {
             TestConnectionManager mgr = ObtainConnectionManager();

@@ -1,6 +1,6 @@
 using System.Text.RegularExpressions;
 
-namespace SharpIrcBot.Plugins.Sed
+namespace SharpIrcBot.Plugins.Sed.Parsing
 {
     public class SubFlags
     {

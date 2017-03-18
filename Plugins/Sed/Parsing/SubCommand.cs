@@ -1,4 +1,4 @@
-namespace SharpIrcBot.Plugins.Sed
+namespace SharpIrcBot.Plugins.Sed.Parsing
 {
     public class SubCommand
     {
