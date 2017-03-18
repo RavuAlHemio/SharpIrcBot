@@ -30,6 +30,7 @@
     <ProjectReference Include="..\Plugins\Punt\Punt.csproj" />
     <ProjectReference Include="..\Plugins\Quotes\Quotes.csproj" />
     <ProjectReference Include="..\Plugins\Reinvite\Reinvite.csproj" />
+    <ProjectReference Include="..\Plugins\Sed\Sed.csproj" />
     <ProjectReference Include="..\Plugins\Smileys\Smileys.csproj" />
     <ProjectReference Include="..\Plugins\Sockpuppet\Sockpuppet.csproj" />
     <ProjectReference Include="..\Plugins\TextCommands\TextCommands.csproj" />
