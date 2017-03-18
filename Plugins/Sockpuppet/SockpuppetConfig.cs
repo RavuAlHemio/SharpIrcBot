@@ -2,7 +2,7 @@
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-namespace Sockpuppet
+namespace SharpIrcBot.Plugins.Sockpuppet
 {
     [JsonObject(MemberSerialization.OptOut)]
     public class SockpuppetConfig

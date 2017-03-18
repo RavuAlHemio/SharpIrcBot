@@ -1,4 +1,4 @@
-namespace DasIstNenFehler.ORM
+namespace SharpIrcBot.Plugins.DasIstNenFehler.ORM
 {
     public enum DegreeOfComparison : byte
     {

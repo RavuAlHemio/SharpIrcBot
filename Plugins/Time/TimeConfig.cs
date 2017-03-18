@@ -2,7 +2,7 @@
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-namespace Time
+namespace SharpIrcBot.Plugins.Time
 {
     [JsonObject(MemberSerialization.OptOut)]
     public class TimeConfig

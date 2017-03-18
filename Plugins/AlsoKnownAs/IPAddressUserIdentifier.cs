@@ -4,7 +4,7 @@ using System.Net;
 using System.Net.Sockets;
 using JetBrains.Annotations;
 
-namespace AlsoKnownAs
+namespace SharpIrcBot.Plugins.AlsoKnownAs
 {
     public class IPAddressUserIdentifier : UserIdentifier
     {

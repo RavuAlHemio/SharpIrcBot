@@ -3,8 +3,9 @@
   <PropertyGroup>
     <TargetFrameworks>netstandard1.6;net461</TargetFrameworks>
     <DebugType>portable</DebugType>
-    <AssemblyName>Time</AssemblyName>
-    <PackageId>Time</PackageId>
+    <RootNamespace>SharpIrcBot.Plugins.Time</RootNamespace>
+    <AssemblyName>SharpIrcBot.Plugins.Time</AssemblyName>
+    <PackageId>SharpIrcBot.Plugins.Time</PackageId>
   </PropertyGroup>
 
   <ItemGroup>

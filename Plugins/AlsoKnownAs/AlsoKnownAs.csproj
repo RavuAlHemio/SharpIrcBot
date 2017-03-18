@@ -3,16 +3,9 @@
   <PropertyGroup>
     <TargetFrameworks>netstandard1.6;net461</TargetFrameworks>
     <DebugType>portable</DebugType>
-    <AssemblyName>AlsoKnownAs</AssemblyName>
-    <PackageId>AlsoKnownAs</PackageId>
-    <GenerateAssemblyTitleAttribute>false</GenerateAssemblyTitleAttribute>
-    <GenerateAssemblyDescriptionAttribute>false</GenerateAssemblyDescriptionAttribute>
-    <GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
-    <GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
-    <GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
-    <GenerateAssemblyCopyrightAttribute>false</GenerateAssemblyCopyrightAttribute>
-    <GenerateAssemblyVersionAttribute>false</GenerateAssemblyVersionAttribute>
-    <GenerateAssemblyFileVersionAttribute>false</GenerateAssemblyFileVersionAttribute>
+    <RootNamespace>SharpIrcBot.Plugins.AlsoKnownAs</RootNamespace>
+    <AssemblyName>SharpIrcBot.Plugins.AlsoKnownAs</AssemblyName>
+    <PackageId>SharpIrcBot.Plugins.AlsoKnownAs</PackageId>
   </PropertyGroup>
 
   <ItemGroup>

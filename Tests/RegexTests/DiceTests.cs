@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Linq;
 using System.Text.RegularExpressions;
-using Dice;
+using SharpIrcBot.Plugins.Dice;
 using Xunit;
 
-namespace RegexTests
+namespace SharpIrcBot.Tests.RegexTests
 {
     public class DiceTests
     {

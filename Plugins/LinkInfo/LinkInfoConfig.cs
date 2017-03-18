@@ -3,7 +3,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using SharpIrcBot.Config;
 
-namespace LinkInfo
+namespace SharpIrcBot.Plugins.LinkInfo
 {
     [JsonObject(MemberSerialization.OptOut)]
     public class LinkInfoConfig

@@ -3,14 +3,13 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
-using Messenger.ORM;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
-using SharpIrcBot;
 using SharpIrcBot.Events;
 using SharpIrcBot.Events.Irc;
+using SharpIrcBot.Plugins.Messenger.ORM;
 
-namespace Messenger
+namespace SharpIrcBot.Plugins.Messenger
 {
     /// <summary>
     /// Delivers messages to users when they return.

@@ -1,7 +1,7 @@
 ﻿using System;
 using JetBrains.Annotations;
 
-namespace LinkInfo
+namespace SharpIrcBot.Plugins.LinkInfo
 {
     public class LinkAndInfo
     {

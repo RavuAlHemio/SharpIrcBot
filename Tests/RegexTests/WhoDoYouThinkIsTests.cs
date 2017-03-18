@@ -1,7 +1,7 @@
-﻿using WhoDoYouThinkIs;
+﻿using SharpIrcBot.Plugins.WhoDoYouThinkIs;
 using Xunit;
 
-namespace RegexTests
+namespace SharpIrcBot.Tests.RegexTests
 {
     public class WhoDoYouThinkIsTests
     {

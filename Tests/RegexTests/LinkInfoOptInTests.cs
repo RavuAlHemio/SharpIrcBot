@@ -1,7 +1,7 @@
-﻿using LinkInfoOptIn;
+﻿using SharpIrcBot.Plugins.LinkInfoOptIn;
 using Xunit;
 
-namespace RegexTests
+namespace SharpIrcBot.Tests.RegexTests
 {
     public class LinkInfoOptInTests
     {

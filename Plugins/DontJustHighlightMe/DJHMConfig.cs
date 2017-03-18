@@ -2,7 +2,7 @@
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-namespace DontJustHighlightMe
+namespace SharpIrcBot.Plugins.DontJustHighlightMe
 {
     [JsonObject(MemberSerialization.OptOut)]
     public class DJHMConfig

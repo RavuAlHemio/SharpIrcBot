@@ -7,11 +7,10 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
-using SharpIrcBot;
 using SharpIrcBot.Events.Irc;
-using Weather.Wunderground;
+using SharpIrcBot.Plugins.Weather.Wunderground;
 
-namespace Weather
+namespace SharpIrcBot.Plugins.Weather
 {
     public class WeatherPlugin : IPlugin, IReloadableConfiguration
     {

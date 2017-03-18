@@ -2,15 +2,14 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
-using LinkInfo;
-using LinkInfoOptIn.ORM;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
-using SharpIrcBot;
 using SharpIrcBot.Events;
 using SharpIrcBot.Events.Irc;
+using SharpIrcBot.Plugins.LinkInfo;
+using SharpIrcBot.Plugins.LinkInfoOptIn.ORM;
 
-namespace LinkInfoOptIn
+namespace SharpIrcBot.Plugins.LinkInfoOptIn
 {
     public class LinkInfoOptInPlugin : LinkInfoPlugin
     {

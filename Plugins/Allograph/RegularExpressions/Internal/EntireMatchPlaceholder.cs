@@ -1,4 +1,4 @@
-namespace Allograph.RegularExpressions.Internal
+namespace SharpIrcBot.Plugins.Allograph.RegularExpressions.Internal
 {
     public class EntireMatchPlaceholder : IPlaceholder
     {

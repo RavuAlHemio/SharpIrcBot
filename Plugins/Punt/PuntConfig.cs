@@ -2,7 +2,7 @@
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-namespace Punt
+namespace SharpIrcBot.Plugins.Punt
 {
     [JsonObject(MemberSerialization.OptOut)]
     public class PuntConfig

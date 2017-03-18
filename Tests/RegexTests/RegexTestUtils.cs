@@ -2,7 +2,7 @@
 using System.Text;
 using System.Collections.Generic;
 
-namespace RegexTests
+namespace SharpIrcBot.Tests.RegexTests
 {
     public static class RegexTestUtils
     {

@@ -2,10 +2,9 @@
 using System.Collections.Generic;
 using System.Text;
 using Newtonsoft.Json.Linq;
-using SharpIrcBot;
 using SharpIrcBot.Events.Irc;
 
-namespace Belch
+namespace SharpIrcBot.Plugins.Belch
 {
     public class BelchPlugin : IPlugin
     {

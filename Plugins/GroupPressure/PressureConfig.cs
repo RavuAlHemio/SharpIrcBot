@@ -2,7 +2,7 @@
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-namespace GroupPressure
+namespace SharpIrcBot.Plugins.GroupPressure
 {
     [JsonObject(MemberSerialization.OptOut)]
     public class PressureConfig

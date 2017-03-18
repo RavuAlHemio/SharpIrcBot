@@ -1,4 +1,4 @@
-﻿namespace Thanks
+﻿namespace SharpIrcBot.Plugins.Thanks
 {
     public class NicknameAndCount
     {

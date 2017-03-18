@@ -3,10 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
-using SharpIrcBot;
 using SharpIrcBot.Events.Irc;
 
-namespace DontJustHighlightMe
+namespace SharpIrcBot.Plugins.DontJustHighlightMe
 {
     public class DontJustHighlightMePlugin : IPlugin, IReloadableConfiguration
     {

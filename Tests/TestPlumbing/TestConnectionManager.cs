@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using SharpIrcBot.Chunks;
 using SharpIrcBot.Events;
 using SharpIrcBot.Events.Irc;
-using SharpIrcBot.TestPlumbing.Events.Feeding;
-using SharpIrcBot.TestPlumbing.Events.Logging;
+using SharpIrcBot.Tests.TestPlumbing.Events.Feeding;
+using SharpIrcBot.Tests.TestPlumbing.Events.Logging;
 
-namespace SharpIrcBot.TestPlumbing
+namespace SharpIrcBot.Tests.TestPlumbing
 {
     public class TestConnectionManager : IConnectionManager
     {

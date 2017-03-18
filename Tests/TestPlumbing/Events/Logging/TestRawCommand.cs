@@ -1,4 +1,4 @@
-namespace SharpIrcBot.TestPlumbing.Events.Logging
+namespace SharpIrcBot.Tests.TestPlumbing.Events.Logging
 {
     public class TestRawCommand : ITestIrcEvent
     {

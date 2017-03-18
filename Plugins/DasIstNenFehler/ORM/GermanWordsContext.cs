@@ -1,7 +1,7 @@
 using System.Linq;
 using Microsoft.EntityFrameworkCore;
 
-namespace DasIstNenFehler.ORM
+namespace SharpIrcBot.Plugins.DasIstNenFehler.ORM
 {
     public class GermanWordsContext : DbContext
     {

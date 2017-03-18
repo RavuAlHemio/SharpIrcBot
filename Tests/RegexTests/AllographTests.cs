@@ -1,7 +1,7 @@
-﻿using Allograph;
+﻿using SharpIrcBot.Plugins.Allograph;
 using Xunit;
 
-namespace RegexTests
+namespace SharpIrcBot.Tests.RegexTests
 {
     public class AllographTests
     {

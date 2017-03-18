@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using Newtonsoft.Json;
 
-namespace Punt
+namespace SharpIrcBot.Plugins.Punt
 {
     [JsonObject(MemberSerialization.OptOut)]
     public class PuntPattern

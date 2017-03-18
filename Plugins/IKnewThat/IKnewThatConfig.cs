@@ -1,8 +1,7 @@
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using SharpIrcBot;
 
-namespace IKnewThat
+namespace SharpIrcBot.Plugins.IKnewThat
 {
     [JsonObject(MemberSerialization.OptOut)]
     public class IKnewThatConfig : IDatabaseModuleConfig

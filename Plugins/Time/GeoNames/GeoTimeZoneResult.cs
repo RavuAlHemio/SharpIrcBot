@@ -2,7 +2,7 @@ using System;
 using System.Globalization;
 using Newtonsoft.Json;
 
-namespace Time.GeoNames
+namespace SharpIrcBot.Plugins.Time.GeoNames
 {
     [JsonObject]
     public class GeoTimeZoneResult

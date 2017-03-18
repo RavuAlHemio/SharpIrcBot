@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace UnoBot
+namespace SharpIrcBot.Plugins.UnoBot
 {
     public struct Card : IComparable<Card>, IEquatable<Card>
     {

@@ -1,7 +1,7 @@
-﻿using Messenger;
+﻿using SharpIrcBot.Plugins.Messenger;
 using Xunit;
 
-namespace RegexTests
+namespace SharpIrcBot.Tests.RegexTests
 {
     public class MessengerTests
     {

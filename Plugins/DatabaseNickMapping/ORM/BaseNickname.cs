@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace DatabaseNickMapping.ORM
+namespace SharpIrcBot.Plugins.DatabaseNickMapping.ORM
 {
     public class BaseNickname
     {

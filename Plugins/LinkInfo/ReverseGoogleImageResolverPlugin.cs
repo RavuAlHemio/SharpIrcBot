@@ -10,9 +10,8 @@ using JetBrains.Annotations;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using SharpIrcBot;
 
-namespace LinkInfo
+namespace SharpIrcBot.Plugins.LinkInfo
 {
     public class ReverseGoogleImageResolverPlugin : ILinkResolverPlugin
     {

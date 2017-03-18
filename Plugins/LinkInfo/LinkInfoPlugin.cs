@@ -11,13 +11,12 @@ using System.Reflection;
 using JetBrains.Annotations;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
-using SharpIrcBot;
 using SharpIrcBot.Chunks;
 using SharpIrcBot.Config;
 using SharpIrcBot.Events;
 using SharpIrcBot.Events.Irc;
 
-namespace LinkInfo
+namespace SharpIrcBot.Plugins.LinkInfo
 {
     public class LinkInfoPlugin : IPlugin, IReloadableConfiguration
     {

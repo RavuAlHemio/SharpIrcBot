@@ -3,8 +3,9 @@
   <PropertyGroup>
     <TargetFrameworks>netstandard1.6;net461</TargetFrameworks>
     <DebugType>portable</DebugType>
-    <AssemblyName>DasIstNenFehler</AssemblyName>
-    <PackageId>DasIstNenFehler</PackageId>
+    <RootNamespace>SharpIrcBot.Plugins.DasIstNenFehler</RootNamespace>
+    <AssemblyName>SharpIrcBot.Plugins.DasIstNenFehler</AssemblyName>
+    <PackageId>SharpIrcBot.Plugins.DasIstNenFehler</PackageId>
   </PropertyGroup>
 
   <ItemGroup>

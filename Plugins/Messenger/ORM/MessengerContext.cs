@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 
-namespace Messenger.ORM
+namespace SharpIrcBot.Plugins.Messenger.ORM
 {
     public class MessengerContext : DbContext
     {

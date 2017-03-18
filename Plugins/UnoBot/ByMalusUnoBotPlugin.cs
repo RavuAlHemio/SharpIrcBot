@@ -2,9 +2,8 @@
 using System.Linq;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
-using SharpIrcBot;
 
-namespace UnoBot
+namespace SharpIrcBot.Plugins.UnoBot
 {
     public class ByMalusUnoBotPlugin : UnoBotPlugin
     {

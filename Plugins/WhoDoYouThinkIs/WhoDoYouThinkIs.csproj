@@ -3,16 +3,9 @@
   <PropertyGroup>
     <TargetFrameworks>netstandard1.6;net461</TargetFrameworks>
     <DebugType>portable</DebugType>
-    <AssemblyName>WhoDoYouThinkIs</AssemblyName>
-    <PackageId>WhoDoYouThinkIs</PackageId>
-    <GenerateAssemblyTitleAttribute>false</GenerateAssemblyTitleAttribute>
-    <GenerateAssemblyDescriptionAttribute>false</GenerateAssemblyDescriptionAttribute>
-    <GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
-    <GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
-    <GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
-    <GenerateAssemblyCopyrightAttribute>false</GenerateAssemblyCopyrightAttribute>
-    <GenerateAssemblyVersionAttribute>false</GenerateAssemblyVersionAttribute>
-    <GenerateAssemblyFileVersionAttribute>false</GenerateAssemblyFileVersionAttribute>
+    <RootNamespace>SharpIrcBot.Plugins.WhoDoYouThinkIs</RootNamespace>
+    <AssemblyName>SharpIrcBot.Plugins.WhoDoYouThinkIs</AssemblyName>
+    <PackageId>SharpIrcBot.Plugins.WhoDoYouThinkIs</PackageId>
   </PropertyGroup>
 
   <ItemGroup>

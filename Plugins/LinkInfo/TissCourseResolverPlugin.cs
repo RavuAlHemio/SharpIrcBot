@@ -8,9 +8,8 @@ using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Primitives;
 using Newtonsoft.Json.Linq;
-using SharpIrcBot;
 
-namespace LinkInfo
+namespace SharpIrcBot.Plugins.LinkInfo
 {
     public class TissCourseResolverPlugin : ILinkResolverPlugin
     {

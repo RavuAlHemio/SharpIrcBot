@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace UnoBot.RuntimeTweaking
+namespace SharpIrcBot.Plugins.UnoBot.RuntimeTweaking
 {
     [AttributeUsage(AttributeTargets.Property)]
     public class NotTweakableAtRuntimeAttribute : Attribute

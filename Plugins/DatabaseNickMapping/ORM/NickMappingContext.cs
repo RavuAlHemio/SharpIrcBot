@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 
-namespace DatabaseNickMapping.ORM
+namespace SharpIrcBot.Plugins.DatabaseNickMapping.ORM
 {
     public class NickMappingContext : DbContext
     {

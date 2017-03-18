@@ -1,4 +1,4 @@
-﻿namespace Dice
+﻿namespace SharpIrcBot.Plugins.Dice
 {
     public class DiceGroup
     {

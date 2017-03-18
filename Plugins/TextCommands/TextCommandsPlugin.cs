@@ -4,10 +4,9 @@ using System.Diagnostics;
 using System.Linq;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
-using SharpIrcBot;
 using SharpIrcBot.Events.Irc;
 
-namespace TextCommands
+namespace SharpIrcBot.Plugins.TextCommands
 {
     public class TextCommandsPlugin : IPlugin, IReloadableConfiguration
     {

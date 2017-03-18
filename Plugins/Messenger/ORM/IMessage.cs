@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Messenger.ORM
+namespace SharpIrcBot.Plugins.Messenger.ORM
 {
     public interface IMessage
     {

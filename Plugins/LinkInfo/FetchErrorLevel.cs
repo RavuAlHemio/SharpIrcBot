@@ -1,4 +1,4 @@
-﻿namespace LinkInfo
+﻿namespace SharpIrcBot.Plugins.LinkInfo
 {
     public enum FetchErrorLevel
     {

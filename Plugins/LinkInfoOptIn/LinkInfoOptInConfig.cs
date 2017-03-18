@@ -1,9 +1,8 @@
-﻿using LinkInfo;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using SharpIrcBot;
+using SharpIrcBot.Plugins.LinkInfo;
 
-namespace LinkInfoOptIn
+namespace SharpIrcBot.Plugins.LinkInfoOptIn
 {
     [JsonObject(MemberSerialization.OptOut)]
     public class LinkInfoOptInConfig : LinkInfoConfig, IDatabaseModuleConfig

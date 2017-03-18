@@ -1,12 +1,10 @@
 ﻿using System;
 using System.Net;
 using System.Net.Http;
-using System.Threading.Tasks;
 using Newtonsoft.Json;
-using SharpIrcBot;
-using Weather.Wunderground;
+using SharpIrcBot.Plugins.Weather.Wunderground;
 
-namespace Weather
+namespace SharpIrcBot.Plugins.Weather
 {
     public class WundergroundClient
     {

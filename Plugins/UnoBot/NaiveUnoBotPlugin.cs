@@ -1,8 +1,7 @@
 ﻿using System.Linq;
-using SharpIrcBot;
 using Newtonsoft.Json.Linq;
 
-namespace UnoBot
+namespace SharpIrcBot.Plugins.UnoBot
 {
     public class NaiveUnoBotPlugin : UnoBotPlugin
     {

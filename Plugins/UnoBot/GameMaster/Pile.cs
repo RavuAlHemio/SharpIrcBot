@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace UnoBot.GameMaster
+namespace SharpIrcBot.Plugins.UnoBot.GameMaster
 {
     public class Pile<T> : IList<T>
     {

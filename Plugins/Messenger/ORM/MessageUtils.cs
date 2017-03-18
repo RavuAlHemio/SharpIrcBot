@@ -1,4 +1,4 @@
-﻿namespace Messenger.ORM
+﻿namespace SharpIrcBot.Plugins.Messenger.ORM
 {
     public static class MessageUtils
     {

@@ -1,8 +1,7 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using SharpIrcBot;
 
-namespace DatabaseNickMapping
+namespace SharpIrcBot.Plugins.DatabaseNickMapping
 {
     [JsonObject(MemberSerialization.OptOut)]
     public class DatabaseNickMappingConfig : IDatabaseModuleConfig

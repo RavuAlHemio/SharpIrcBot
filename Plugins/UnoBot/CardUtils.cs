@@ -1,6 +1,6 @@
 ﻿using System.Globalization;
 
-namespace UnoBot
+namespace SharpIrcBot.Plugins.UnoBot
 {
     public static class CardUtils
     {

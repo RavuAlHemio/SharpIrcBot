@@ -1,6 +1,6 @@
 ﻿using JetBrains.Annotations;
 
-namespace DontJustHighlightMe
+namespace SharpIrcBot.Plugins.DontJustHighlightMe
 {
     public class HighlightOccurrence
     {

@@ -1,7 +1,7 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-namespace Reinvite
+namespace SharpIrcBot.Plugins.Reinvite
 {
     [JsonObject(MemberSerialization.OptOut)]
     public class ReinviteConfig

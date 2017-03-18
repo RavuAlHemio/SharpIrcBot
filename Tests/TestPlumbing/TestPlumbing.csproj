@@ -2,6 +2,9 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard1.6</TargetFramework>
+    <RootNamespace>SharpIrcBot.Tests.TestPlumbing</RootNamespace>
+    <AssemblyName>SharpIrcBot.Tests.TestPlumbing</AssemblyName>
+    <PackageId>SharpIrcBot.Tests.TestPlumbing</PackageId>
   </PropertyGroup>
 
   <ItemGroup>

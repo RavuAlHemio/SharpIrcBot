@@ -2,10 +2,9 @@
 using System.Linq;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
-using SharpIrcBot;
 using SharpIrcBot.Events.Irc;
 
-namespace GroupPressure
+namespace SharpIrcBot.Plugins.GroupPressure
 {
     /// <summary>
     /// Submit to group pressure: if enough people say a specific thing in the last X messages,

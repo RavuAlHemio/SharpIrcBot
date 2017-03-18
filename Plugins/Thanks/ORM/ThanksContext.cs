@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 
-namespace Thanks.ORM
+namespace SharpIrcBot.Plugins.Thanks.ORM
 {
     public class ThanksContext : DbContext
     {

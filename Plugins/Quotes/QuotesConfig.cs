@@ -1,8 +1,7 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using SharpIrcBot;
 
-namespace Quotes
+namespace SharpIrcBot.Plugins.Quotes
 {
     [JsonObject(MemberSerialization.OptOut)]
     public class QuotesConfig : IDatabaseModuleConfig

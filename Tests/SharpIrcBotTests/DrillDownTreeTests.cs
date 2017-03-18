@@ -3,7 +3,7 @@ using System.Collections.Immutable;
 using SharpIrcBot.Collections;
 using Xunit;
 
-namespace SharpIrcBotTests
+namespace SharpIrcBot.Tests.SharpIrcBotTests
 {
     public class DrillDownTreeTests
     {

@@ -2,7 +2,7 @@
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-namespace TextCommands
+namespace SharpIrcBot.Plugins.TextCommands
 {
     [JsonObject(MemberSerialization.OptOut)]
     public class TextCommandsConfig

@@ -1,9 +1,8 @@
 ﻿using System.Collections.Generic;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using SharpIrcBot;
 
-namespace Messenger
+namespace SharpIrcBot.Plugins.Messenger
 {
     [JsonObject(MemberSerialization.OptOut)]
     public class MessengerConfig : IDatabaseModuleConfig

@@ -1,13 +1,12 @@
 ﻿using System.Linq;
 using System.Text.RegularExpressions;
-using DatabaseNickMapping.ORM;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
-using SharpIrcBot;
 using SharpIrcBot.Events;
 using SharpIrcBot.Events.Irc;
+using SharpIrcBot.Plugins.DatabaseNickMapping.ORM;
 
-namespace DatabaseNickMapping
+namespace SharpIrcBot.Plugins.DatabaseNickMapping
 {
     public class DatabaseNickMappingPlugin : IPlugin, IReloadableConfiguration
     {

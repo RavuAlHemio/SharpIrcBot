@@ -1,7 +1,7 @@
-﻿using DatabaseNickMapping;
+﻿using SharpIrcBot.Plugins.DatabaseNickMapping;
 using Xunit;
 
-namespace RegexTests
+namespace SharpIrcBot.Tests.RegexTests
 {
     public class DatabaseNickMappingTests
     {

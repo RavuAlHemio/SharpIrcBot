@@ -1,7 +1,7 @@
-﻿using Weather;
+﻿using SharpIrcBot.Plugins.Weather;
 using Xunit;
 
-namespace RegexTests
+namespace SharpIrcBot.Tests.RegexTests
 {
     public class WeatherTests
     {

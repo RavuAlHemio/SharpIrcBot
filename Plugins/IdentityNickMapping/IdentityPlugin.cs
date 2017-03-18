@@ -1,9 +1,8 @@
 ﻿using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
-using SharpIrcBot;
 using SharpIrcBot.Events;
 
-namespace IdentityNickMapping
+namespace SharpIrcBot.Plugins.IdentityNickMapping
 {
     public class IdentityPlugin : IPlugin
     {

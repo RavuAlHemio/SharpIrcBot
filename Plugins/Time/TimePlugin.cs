@@ -9,11 +9,10 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NodaTime;
 using NodaTime.TimeZones;
-using SharpIrcBot;
 using SharpIrcBot.Events.Irc;
-using Time.GeoNames;
+using SharpIrcBot.Plugins.Time.GeoNames;
 
-namespace Time
+namespace SharpIrcBot.Plugins.Time
 {
     public class TimePlugin : IPlugin, IReloadableConfiguration
     {

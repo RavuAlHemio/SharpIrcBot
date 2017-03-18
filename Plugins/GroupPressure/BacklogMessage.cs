@@ -1,4 +1,4 @@
-﻿namespace GroupPressure
+﻿namespace SharpIrcBot.Plugins.GroupPressure
 {
     public class BacklogMessage
     {

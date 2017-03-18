@@ -3,14 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using Allograph.RegularExpressions;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
-using SharpIrcBot;
 using SharpIrcBot.Chunks;
 using SharpIrcBot.Events.Irc;
+using SharpIrcBot.Plugins.Allograph.RegularExpressions;
 
-namespace Allograph
+namespace SharpIrcBot.Plugins.Allograph
 {
     public class AllographPlugin : IPlugin, IReloadableConfiguration
     {

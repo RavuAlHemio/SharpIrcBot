@@ -4,10 +4,9 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
-using SharpIrcBot;
 using SharpIrcBot.Events.Irc;
 
-namespace Punt
+namespace SharpIrcBot.Plugins.Punt
 {
     public class PuntPlugin : IPlugin, IReloadableConfiguration
     {

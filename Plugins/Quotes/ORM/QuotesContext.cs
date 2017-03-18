@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 
-namespace Quotes.ORM
+namespace SharpIrcBot.Plugins.Quotes.ORM
 {
     public class QuotesContext : DbContext
     {

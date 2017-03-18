@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 
-namespace IKnewThat.ORM
+namespace SharpIrcBot.Plugins.IKnewThat.ORM
 {
     public class IKnewThatContext : DbContext
     {

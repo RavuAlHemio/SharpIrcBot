@@ -2,7 +2,7 @@
 using System.Collections.Immutable;
 using JetBrains.Annotations;
 
-namespace AlsoKnownAs
+namespace SharpIrcBot.Plugins.AlsoKnownAs
 {
     public abstract class UserIdentifier : IEquatable<UserIdentifier>
     {

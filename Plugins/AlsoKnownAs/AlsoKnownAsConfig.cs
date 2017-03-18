@@ -2,7 +2,7 @@
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-namespace AlsoKnownAs
+namespace SharpIrcBot.Plugins.AlsoKnownAs
 {
     [JsonObject(MemberSerialization.OptOut)]
     public class AlsoKnownAsConfig

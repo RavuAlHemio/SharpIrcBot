@@ -2,7 +2,7 @@
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-namespace Weather
+namespace SharpIrcBot.Plugins.Weather
 {
     [JsonObject(MemberSerialization.OptOut)]
     public class WeatherConfig

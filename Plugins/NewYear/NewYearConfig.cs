@@ -2,7 +2,7 @@
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-namespace NewYear
+namespace SharpIrcBot.Plugins.NewYear
 {
     [JsonObject(MemberSerialization.OptOut)]
     public class NewYearConfig

@@ -1,7 +1,7 @@
-﻿using Quotes;
+﻿using SharpIrcBot.Plugins.Quotes;
 using Xunit;
 
-namespace RegexTests
+namespace SharpIrcBot.Tests.RegexTests
 {
     public class QuotesTests
     {

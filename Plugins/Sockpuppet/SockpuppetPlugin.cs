@@ -1,9 +1,8 @@
 ﻿using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
-using SharpIrcBot;
 using SharpIrcBot.Events.Irc;
 
-namespace Sockpuppet
+namespace SharpIrcBot.Plugins.Sockpuppet
 {
     public class SockpuppetPlugin : IPlugin, IReloadableConfiguration
     {

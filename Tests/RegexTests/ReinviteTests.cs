@@ -1,7 +1,7 @@
-﻿using Reinvite;
+﻿using SharpIrcBot.Plugins.Reinvite;
 using Xunit;
 
-namespace RegexTests
+namespace SharpIrcBot.Tests.RegexTests
 {
     public class ReinviteTests
     {

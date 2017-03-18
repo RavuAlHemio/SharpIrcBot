@@ -1,9 +1,9 @@
 ﻿using System.Collections.Generic;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using UnoBot.RuntimeTweaking;
+using SharpIrcBot.Plugins.UnoBot.RuntimeTweaking;
 
-namespace UnoBot
+namespace SharpIrcBot.Plugins.UnoBot
 {
     [JsonObject(MemberSerialization.OptOut)]
     public class UnoBotConfig

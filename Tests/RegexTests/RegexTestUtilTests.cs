@@ -1,7 +1,7 @@
 ﻿using System.Linq;
 using Xunit;
 
-namespace RegexTests
+namespace SharpIrcBot.Tests.RegexTests
 {
     public class RegexTestUtilTests
     {

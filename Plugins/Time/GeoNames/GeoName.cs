@@ -1,6 +1,6 @@
 using Newtonsoft.Json;
 
-namespace Time.GeoNames
+namespace SharpIrcBot.Plugins.Time.GeoNames
 {
     [JsonObject]
     public class GeoName

@@ -1,7 +1,7 @@
-﻿using Thanks;
+﻿using SharpIrcBot.Plugins.Thanks;
 using Xunit;
 
-namespace RegexTests
+namespace SharpIrcBot.Tests.RegexTests
 {
     public class ThanksTests
     {

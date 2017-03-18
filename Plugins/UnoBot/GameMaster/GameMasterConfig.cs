@@ -1,7 +1,7 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-namespace UnoBot.GameMaster
+namespace SharpIrcBot.Plugins.UnoBot.GameMaster
 {
     [JsonObject(MemberSerialization.OptOut)]
     public class GameMasterConfig

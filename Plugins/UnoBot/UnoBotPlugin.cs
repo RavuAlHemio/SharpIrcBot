@@ -5,11 +5,10 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
-using SharpIrcBot;
 using SharpIrcBot.Events.Irc;
-using UnoBot.RuntimeTweaking;
+using SharpIrcBot.Plugins.UnoBot.RuntimeTweaking;
 
-namespace UnoBot
+namespace SharpIrcBot.Plugins.UnoBot
 {
     public class UnoBotPlugin : IPlugin, IReloadableConfiguration
     {

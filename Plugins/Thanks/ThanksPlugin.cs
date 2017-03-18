@@ -4,12 +4,11 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
-using SharpIrcBot;
 using SharpIrcBot.Events;
 using SharpIrcBot.Events.Irc;
-using Thanks.ORM;
+using SharpIrcBot.Plugins.Thanks.ORM;
 
-namespace Thanks
+namespace SharpIrcBot.Plugins.Thanks
 {
     public class ThanksPlugin : IPlugin, IReloadableConfiguration
     {

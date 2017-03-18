@@ -1,4 +1,4 @@
-﻿namespace LinkInfoOptIn.ORM
+﻿namespace SharpIrcBot.Plugins.LinkInfoOptIn.ORM
 {
     public class OptedInUser
     {

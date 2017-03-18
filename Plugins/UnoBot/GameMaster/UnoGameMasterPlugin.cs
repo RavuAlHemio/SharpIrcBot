@@ -8,11 +8,10 @@ using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using SharpIrcBot;
 using SharpIrcBot.Events.Irc;
 using Timer = System.Threading.Timer;
 
-namespace UnoBot.GameMaster
+namespace SharpIrcBot.Plugins.UnoBot.GameMaster
 {
     public class UnoGameMasterPlugin : IPlugin
     {

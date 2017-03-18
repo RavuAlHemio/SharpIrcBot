@@ -2,7 +2,7 @@
 using JetBrains.Annotations;
 using Newtonsoft.Json;
 
-namespace Weather.Wunderground
+namespace SharpIrcBot.Plugins.Weather.Wunderground
 {
     [JsonObject]
     public class WundergroundSimpleForecast

@@ -1,7 +1,7 @@
-﻿using AlsoKnownAs;
+﻿using SharpIrcBot.Plugins.AlsoKnownAs;
 using Xunit;
 
-namespace RegexTests
+namespace SharpIrcBot.Tests.RegexTests
 {
     public class AlsoKnownAsTests
     {

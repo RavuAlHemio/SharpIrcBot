@@ -4,11 +4,10 @@ using System.Linq;
 using System.Threading;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
-using SharpIrcBot;
 using SharpIrcBot.Events;
 using SharpIrcBot.Events.Irc;
 
-namespace WhoisLoginNickMapping
+namespace SharpIrcBot.Plugins.WhoisLoginNickMapping
 {
     public class WhoisLoginPlugin : IPlugin, IReloadableConfiguration
     {

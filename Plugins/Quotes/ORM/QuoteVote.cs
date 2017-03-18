@@ -1,4 +1,4 @@
-﻿namespace Quotes.ORM
+﻿namespace SharpIrcBot.Plugins.Quotes.ORM
 {
     public class QuoteVote
     {

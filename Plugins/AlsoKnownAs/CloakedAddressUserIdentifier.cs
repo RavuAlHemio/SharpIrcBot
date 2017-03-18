@@ -3,7 +3,7 @@ using System.Collections.Immutable;
 using System.Linq;
 using JetBrains.Annotations;
 
-namespace AlsoKnownAs
+namespace SharpIrcBot.Plugins.AlsoKnownAs
 {
     public class CloakedAddressUserIdentifier : UserIdentifier
     {

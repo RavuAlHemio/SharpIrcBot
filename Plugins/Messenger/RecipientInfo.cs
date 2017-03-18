@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using JetBrains.Annotations;
 
-namespace Messenger
+namespace SharpIrcBot.Plugins.Messenger
 {
     public class RecipientInfo
     {

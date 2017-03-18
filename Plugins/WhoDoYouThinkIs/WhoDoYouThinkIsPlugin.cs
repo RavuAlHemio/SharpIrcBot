@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Text.RegularExpressions;
 using Newtonsoft.Json.Linq;
-using SharpIrcBot;
 using SharpIrcBot.Events.Irc;
 
-namespace WhoDoYouThinkIs
+namespace SharpIrcBot.Plugins.WhoDoYouThinkIs
 {
     public class WhoDoYouThinkIsPlugin : IPlugin
     {

@@ -1,4 +1,4 @@
-﻿namespace UnoBot
+﻿namespace SharpIrcBot.Plugins.UnoBot
 {
     public enum CardValue
     {

@@ -3,11 +3,10 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Text.RegularExpressions;
 using Newtonsoft.Json.Linq;
-using DasIstNenFehler.ORM;
-using SharpIrcBot;
 using SharpIrcBot.Events.Irc;
+using SharpIrcBot.Plugins.DasIstNenFehler.ORM;
 
-namespace DasIstNenFehler
+namespace SharpIrcBot.Plugins.DasIstNenFehler
 {
     public class NenPlugin : IPlugin, IReloadableConfiguration
     {

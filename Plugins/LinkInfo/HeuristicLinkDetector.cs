@@ -4,7 +4,7 @@ using System.Globalization;
 using System.Linq;
 using JetBrains.Annotations;
 
-namespace LinkInfo
+namespace SharpIrcBot.Plugins.LinkInfo
 {
     public class HeuristicLinkDetector
     {

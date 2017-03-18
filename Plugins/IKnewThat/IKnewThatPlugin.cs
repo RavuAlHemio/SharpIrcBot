@@ -1,13 +1,12 @@
 ﻿using System;
 using System.Linq;
 using System.Text.RegularExpressions;
-using IKnewThat.ORM;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
-using SharpIrcBot;
 using SharpIrcBot.Events.Irc;
+using SharpIrcBot.Plugins.IKnewThat.ORM;
 
-namespace IKnewThat
+namespace SharpIrcBot.Plugins.IKnewThat
 {
     public class IKnewThatPlugin : IPlugin
     {

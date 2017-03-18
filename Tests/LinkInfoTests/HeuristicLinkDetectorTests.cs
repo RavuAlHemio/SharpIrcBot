@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using LinkInfo;
+using SharpIrcBot.Plugins.LinkInfo;
 using Xunit;
 
-namespace LinkInfoTests
+namespace SharpIrcBot.Tests.LinkInfoTests
 {
     public class HeuristicLinkDetectorTests
     {

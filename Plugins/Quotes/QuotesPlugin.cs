@@ -5,12 +5,11 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json.Linq;
-using Quotes.ORM;
-using SharpIrcBot;
 using SharpIrcBot.Events;
 using SharpIrcBot.Events.Irc;
+using SharpIrcBot.Plugins.Quotes.ORM;
 
-namespace Quotes
+namespace SharpIrcBot.Plugins.Quotes
 {
     public class QuotesPlugin : IPlugin, IReloadableConfiguration
     {

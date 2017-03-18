@@ -3,8 +3,9 @@
   <PropertyGroup>
     <TargetFrameworks>netstandard1.6;net461</TargetFrameworks>
     <DebugType>portable</DebugType>
-    <AssemblyName>IKnewThat</AssemblyName>
-    <PackageId>IKnewThat</PackageId>
+    <RootNamespace>SharpIrcBot.Plugins.IKnewThat</RootNamespace>
+    <AssemblyName>SharpIrcBot.Plugins.IKnewThat</AssemblyName>
+    <PackageId>SharpIrcBot.Plugins.IKnewThat</PackageId>
   </PropertyGroup>
 
   <ItemGroup>

@@ -1,6 +1,6 @@
 using SharpIrcBot.Events.Irc;
 
-namespace SharpIrcBot.TestPlumbing.Events.Feeding
+namespace SharpIrcBot.Tests.TestPlumbing.Events.Feeding
 {
     public class TestChannelMessageEventArgs : IChannelMessageEventArgs
     {

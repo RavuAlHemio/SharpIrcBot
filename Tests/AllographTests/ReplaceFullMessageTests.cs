@@ -1,11 +1,11 @@
-using Allograph;
-using LinkInfo;
 using Newtonsoft.Json.Linq;
-using SharpIrcBot.TestPlumbing;
-using SharpIrcBot.TestPlumbing.Events.Logging;
+using SharpIrcBot.Plugins.Allograph;
+using SharpIrcBot.Plugins.LinkInfo;
+using SharpIrcBot.Tests.TestPlumbing;
+using SharpIrcBot.Tests.TestPlumbing.Events.Logging;
 using Xunit;
 
-namespace AllographTests
+namespace SharpIrcBot.Tests.AllographTests
 {
     public class ReplaceFullMessageTests
     {

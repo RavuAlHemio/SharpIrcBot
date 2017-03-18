@@ -1,4 +1,4 @@
-﻿namespace Quotes
+﻿namespace SharpIrcBot.Plugins.Quotes
 {
     public enum QuoteRating
     {

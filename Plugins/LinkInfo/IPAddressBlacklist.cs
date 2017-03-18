@@ -2,7 +2,7 @@
 using System.Net;
 using System.Net.Sockets;
 
-namespace LinkInfo
+namespace SharpIrcBot.Plugins.LinkInfo
 {
     static class IPAddressBlacklist
     {

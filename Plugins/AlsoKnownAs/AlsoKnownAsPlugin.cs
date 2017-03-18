@@ -5,11 +5,10 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using JetBrains.Annotations;
 using Newtonsoft.Json.Linq;
-using SharpIrcBot;
 using SharpIrcBot.Collections;
 using SharpIrcBot.Events.Irc;
 
-namespace AlsoKnownAs
+namespace SharpIrcBot.Plugins.AlsoKnownAs
 {
     public class AlsoKnownAsPlugin : IPlugin, IReloadableConfiguration
     {

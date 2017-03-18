@@ -1,9 +1,8 @@
 ﻿using System;
 using Microsoft.Extensions.Logging;
-using SharpIrcBot;
 using Newtonsoft.Json.Linq;
 
-namespace NewYear
+namespace SharpIrcBot.Plugins.NewYear
 {
     public class NewYearPlugin : IPlugin, IReloadableConfiguration
     {

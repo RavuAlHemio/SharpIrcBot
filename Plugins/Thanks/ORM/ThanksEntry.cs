@@ -1,7 +1,7 @@
 ﻿using System;
 using JetBrains.Annotations;
 
-namespace Thanks.ORM
+namespace SharpIrcBot.Plugins.Thanks.ORM
 {
     public class ThanksEntry
     {

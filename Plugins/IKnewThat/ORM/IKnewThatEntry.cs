@@ -1,6 +1,6 @@
 using System;
 
-namespace IKnewThat.ORM
+namespace SharpIrcBot.Plugins.IKnewThat.ORM
 {
     public class IKnewThatEntry
     {

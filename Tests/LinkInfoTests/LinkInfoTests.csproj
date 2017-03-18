@@ -2,6 +2,9 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp1.1</TargetFramework>
+    <RootNamespace>SharpIrcBot.Tests.LinkInfoTests</RootNamespace>
+    <AssemblyName>SharpIrcBot.Tests.LinkInfoTests</AssemblyName>
+    <PackageId>SharpIrcBot.Tests.LinkInfoTests</PackageId>
   </PropertyGroup>
 
   <ItemGroup>

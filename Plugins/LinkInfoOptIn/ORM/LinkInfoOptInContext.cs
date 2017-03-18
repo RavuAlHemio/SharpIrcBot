@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 
-namespace LinkInfoOptIn.ORM
+namespace SharpIrcBot.Plugins.LinkInfoOptIn.ORM
 {
     public class LinkInfoOptInContext : DbContext
     {

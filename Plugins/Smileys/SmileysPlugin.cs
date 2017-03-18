@@ -1,10 +1,8 @@
-﻿using System;
-using System.Text;
+﻿using System.Text;
 using Newtonsoft.Json.Linq;
-using SharpIrcBot;
 using SharpIrcBot.Events.Irc;
 
-namespace Smileys
+namespace SharpIrcBot.Plugins.Smileys
 {
     public class SmileysPlugin : IPlugin, IReloadableConfiguration
     {

@@ -2,7 +2,7 @@
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-namespace Dice
+namespace SharpIrcBot.Plugins.Dice
 {
     [JsonObject(MemberSerialization.OptOut)]
     public class DiceConfig

@@ -2,7 +2,7 @@
 using System.Linq;
 using System.Reflection;
 
-namespace UnoBot.RuntimeTweaking
+namespace SharpIrcBot.Plugins.UnoBot.RuntimeTweaking
 {
     public static class ConfigTweaking
     {

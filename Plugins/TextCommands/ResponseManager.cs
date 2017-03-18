@@ -2,9 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.Linq;
-using SharpIrcBot;
 
-namespace TextCommands
+namespace SharpIrcBot.Plugins.TextCommands
 {
     public class ResponseManager
     {

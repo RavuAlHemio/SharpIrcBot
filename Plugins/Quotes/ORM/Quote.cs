@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Quotes.ORM
+namespace SharpIrcBot.Plugins.Quotes.ORM
 {
     public class Quote
     {

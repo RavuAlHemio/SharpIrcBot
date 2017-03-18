@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using SharpIrcBot.Plugins.Allograph.RegularExpressions;
 using Xunit;
-using Allograph.RegularExpressions;
 
-namespace AllographTests
+namespace SharpIrcBot.Tests.AllographTests
 {
     public class Tests
     {
