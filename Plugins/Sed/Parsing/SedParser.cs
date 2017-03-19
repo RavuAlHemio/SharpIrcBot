@@ -19,9 +19,14 @@ namespace SharpIrcBot.Plugins.Sed.Parsing
             // shortest possible command
             if (trimmedMessage.Length < "s/a//".Length)
             {
+                // if we fail at this stage, it's probably not supposed to be a sed command
                 return null;
             }
             if (trimmedMessage[0] != 's')
+            {
+                return null;
+            }
+            if (!Splitters.Contains(trimmedMessage[1]))
             {
                 return null;
             }
@@ -43,11 +48,11 @@ namespace SharpIrcBot.Plugins.Sed.Parsing
                 trimmedMessage = rest;
             }
 
-            // if we fail at this stage, it's probably not supposed to be a sed command
-            // return null
+            // probably is supposed to be a sed command but they are doing it wrong
+            // return an empty list
             if (subCommands.Count == 0)
             {
-                return null;
+                return new List<ReplacementSpec>();
             }
 
             var ret = new List<ReplacementSpec>(subCommands.Count);
@@ -57,8 +62,6 @@ namespace SharpIrcBot.Plugins.Sed.Parsing
                 if (subFlags == null)
                 {
                     // invalid flags
-                    // probably is supposed to be a sed command but they are doing it wrong
-                    // return an empty list
                     return new List<ReplacementSpec>();
                 }
 
