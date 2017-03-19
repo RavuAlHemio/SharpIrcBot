@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text.RegularExpressions;
+﻿using System.Collections.Generic;
 using Newtonsoft.Json.Linq;
 using SharpIrcBot.Events.Irc;
 using SharpIrcBot.Plugins.Sed.Parsing;
