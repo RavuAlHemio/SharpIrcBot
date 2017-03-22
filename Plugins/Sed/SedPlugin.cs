@@ -7,6 +7,8 @@ namespace SharpIrcBot.Plugins.Sed
 {
     public class SedPlugin : IPlugin, IReloadableConfiguration
     {
+        private static readonly ILogger Logger = SharpIrcBotUtil.LoggerFactory.CreateLogger<SedPlugin>();
+
         protected IConnectionManager ConnectionManager { get; }
         protected SedConfig Config { get; set; }
 
@@ -111,6 +113,10 @@ namespace SharpIrcBot.Plugins.Sed
                     // success!
                     ConnectionManager.SendChannelMessage(e.Channel, replaced);
                     break;
+                }
+                else
+                {
+                    Logger.LogInfo("no recent messages found to match replacements {ReplacementsString}", e.Message);
                 }
             }
 
