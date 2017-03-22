@@ -5,6 +5,7 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using Microsoft.Extensions.Logging;
 
 namespace SharpIrcBot.Plugins.Sed.Parsing
 {
@@ -40,7 +41,7 @@ namespace SharpIrcBot.Plugins.Sed.Parsing
                 SubCommand subCommand = TakeSubCommand(trimmedMessage, out rest);
                 if (subCommand == null)
                 {
-                    Logger.LogInfo("error when parsing first replacement of {ReplacementsString}", trimmedMessage);
+                    Logger.LogInformation("error when parsing first replacement of {ReplacementsString}", trimmedMessage);
                     break;
                 }
 
@@ -55,7 +56,7 @@ namespace SharpIrcBot.Plugins.Sed.Parsing
             // return an empty list
             if (subCommands.Count == 0)
             {
-                Logger.LogInfo("already the first replacement command was invalid in {ReplacementsString}", trimmedMessage);
+                Logger.LogInformation("already the first replacement command was invalid in {ReplacementsString}", trimmedMessage);
                 return new List<ReplacementSpec>();
             }
 
@@ -66,7 +67,7 @@ namespace SharpIrcBot.Plugins.Sed.Parsing
                 if (subFlags == null)
                 {
                     // invalid flags
-                    Logger.LogInfo("invalid flags {Flags}", subCommand.Flags);
+                    Logger.LogInformation("invalid flags {Flags}", subCommand.Flags);
                     return new List<ReplacementSpec>();
                 }
 
@@ -79,7 +80,7 @@ namespace SharpIrcBot.Plugins.Sed.Parsing
                 catch (ArgumentException)
                 {
                     // syntactic error in pattern
-                    Logger.LogInfo("syntactic error in pattern {Pattern}", subCommand.PatternSed);
+                    Logger.LogInformation("syntactic error in pattern {Pattern}", subCommand.PatternSed);
                     return new List<ReplacementSpec>();
                 }
 

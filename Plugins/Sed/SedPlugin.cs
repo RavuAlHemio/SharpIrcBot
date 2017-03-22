@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 using SharpIrcBot.Events.Irc;
 using SharpIrcBot.Plugins.Sed.Parsing;
@@ -116,7 +117,7 @@ namespace SharpIrcBot.Plugins.Sed
                 }
                 else
                 {
-                    Logger.LogInfo("no recent messages found to match replacements {ReplacementsString}", e.Message);
+                    Logger.LogInformation("no recent messages found to match replacements {ReplacementsString}", e.Message);
                 }
             }
 
