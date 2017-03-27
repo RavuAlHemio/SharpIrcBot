@@ -41,7 +41,6 @@ namespace SharpIrcBot.Plugins.Sed.Parsing
                 SubCommand subCommand = TakeSubCommand(trimmedMessage, out rest);
                 if (subCommand == null)
                 {
-                    Logger.LogInformation("error when parsing first replacement of {ReplacementsString}", trimmedMessage);
                     break;
                 }
 

@@ -82,6 +82,7 @@ namespace SharpIrcBot.Plugins.Sed
                 return true;
             }
 
+            bool foundAny = false;
             foreach (string lastBody in lastBodies)
             {
                 string replaced = lastBody;
@@ -113,12 +114,14 @@ namespace SharpIrcBot.Plugins.Sed
                 {
                     // success!
                     ConnectionManager.SendChannelMessage(e.Channel, replaced);
+                    foundAny = true;
                     break;
                 }
-                else
-                {
-                    Logger.LogInformation("no recent messages found to match replacements {ReplacementsString}", e.Message);
-                }
+            }
+
+            if (!foundAny)
+            {
+                Logger.LogInformation("no recent messages found to match replacements {ReplacementsString}", e.Message);
             }
 
             return true;
