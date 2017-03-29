@@ -36,9 +36,14 @@ namespace SharpIrcBot.Plugins.Allograph
             ConnectionManager.QueryMessage += HandleQueryMessage;
         }
 
-        public void ReloadConfiguration(JObject newConfig)
+        public virtual void ReloadConfiguration(JObject newConfig)
         {
             Config = new AllographConfig(newConfig);
+            PostConfigReload();
+        }
+
+        protected virtual void PostConfigReload()
+        {
             CooldownsPerChannel.Clear();
             RecompileReplacerRegexes();
         }

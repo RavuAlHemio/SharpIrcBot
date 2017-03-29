@@ -38,7 +38,11 @@ namespace SharpIrcBot.Plugins.Time
         public virtual void ReloadConfiguration(JObject newConfig)
         {
             Config = new TimeConfig(newConfig);
+            PostConfigReload();
+        }
 
+        protected virtual void PostConfigReload()
+        {
             LoadTimeZoneData();
         }
 

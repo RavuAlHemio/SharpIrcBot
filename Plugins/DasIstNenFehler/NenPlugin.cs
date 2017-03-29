@@ -33,10 +33,14 @@ namespace SharpIrcBot.Plugins.DasIstNenFehler
             ConnectionManager.ChannelAction += HandleChannelMessageOrAction;
         }
 
-        public void ReloadConfiguration(JObject newConfig)
+        public virtual void ReloadConfiguration(JObject newConfig)
         {
             Config = new NenConfig(newConfig);
+            PostConfigReload();
+        }
 
+        protected virtual void PostConfigReload()
+        {
             LoadWords();
         }
 

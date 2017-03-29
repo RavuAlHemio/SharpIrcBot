@@ -31,10 +31,14 @@ namespace SharpIrcBot.Plugins.Punt
             RebuildRegexCache();
         }
 
-        public void ReloadConfiguration(JObject newConfig)
+        public virtual void ReloadConfiguration(JObject newConfig)
         {
             Config = new PuntConfig(newConfig);
+            PostConfigReload();
+        }
 
+        protected virtual void PostConfigReload()
+        {
             RebuildRegexCache();
         }
 

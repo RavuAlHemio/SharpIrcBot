@@ -46,10 +46,14 @@ namespace SharpIrcBot.Plugins.Quotes
             ConnectionManager.BaseNickChanged += HandleBaseNickChanged;
         }
 
-        public void ReloadConfiguration(JObject newConfig)
+        public virtual void ReloadConfiguration(JObject newConfig)
         {
             Config = new QuotesConfig(newConfig);
+            PostConfigReload();
+        }
 
+        protected virtual void PostConfigReload()
+        {
             // invalidate
             ShuffledAnyQuotes = null;
             ShuffledBadQuotes = null;

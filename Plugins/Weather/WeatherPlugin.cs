@@ -45,10 +45,14 @@ namespace SharpIrcBot.Plugins.Weather
             ConnectionManager.ChannelMessage += HandleChannelMessage;
         }
 
-        public void ReloadConfiguration(JObject newConfig)
+        public virtual void ReloadConfiguration(JObject newConfig)
         {
             Config = new WeatherConfig(newConfig);
+            PostConfigReload();
+        }
 
+        protected virtual void PostConfigReload()
+        {
             // a new client must be created if a request has already been performed
             Client = new WundergroundClient
             {

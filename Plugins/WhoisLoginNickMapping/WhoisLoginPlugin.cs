@@ -33,10 +33,14 @@ namespace SharpIrcBot.Plugins.WhoisLoginNickMapping
             ConnectionManager.RawMessage += HandleRawMessage;
         }
 
-        public void ReloadConfiguration(JObject newConfig)
+        public virtual void ReloadConfiguration(JObject newConfig)
         {
             Config = new WhoisLoginConfig(newConfig);
+            PostConfigReload();
+        }
 
+        protected virtual void PostConfigReload()
+        {
             WhoisEveryoneTimer?.Change(TimeSpan.Zero, TimeSpan.FromMinutes(Config.ChannelSyncPeriodMinutes));
         }
 

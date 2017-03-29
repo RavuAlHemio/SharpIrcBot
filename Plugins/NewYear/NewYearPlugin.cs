@@ -19,9 +19,14 @@ namespace SharpIrcBot.Plugins.NewYear
             ScheduleNewYear();
         }
 
-        public void ReloadConfiguration(JObject newConfig)
+        public virtual void ReloadConfiguration(JObject newConfig)
         {
             Config = new NewYearConfig(newConfig);
+            PostConfigReload();
+        }
+
+        protected virtual void PostConfigReload()
+        {
         }
 
         protected virtual void ScheduleNewYear()

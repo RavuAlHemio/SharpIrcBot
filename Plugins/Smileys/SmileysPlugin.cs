@@ -18,9 +18,14 @@ namespace SharpIrcBot.Plugins.Smileys
             ConnectionManager.QueryMessage += HandleChannelOrQueryMessage;
         }
 
-        public void ReloadConfiguration(JObject newConfig)
+        public virtual void ReloadConfiguration(JObject newConfig)
         {
             Config = new SmileysConfig(newConfig);
+            PostConfigReload();
+        }
+
+        protected virtual void PostConfigReload()
+        {
         }
 
         void HandleChannelOrQueryMessage(object sender, IUserMessageEventArgs e, MessageFlags flags)

@@ -39,9 +39,14 @@ namespace SharpIrcBot.Plugins.Messenger
             ConnectionManager.BaseNickChanged += HandleBaseNickChanged;
         }
 
-        public void ReloadConfiguration(JObject newConfig)
+        public virtual void ReloadConfiguration(JObject newConfig)
         {
             Config = new MessengerConfig(newConfig);
+            PostConfigReload();
+        }
+
+        protected virtual void PostConfigReload()
+        {
         }
 
         protected void PotentialMessageSend(IChannelMessageEventArgs message)

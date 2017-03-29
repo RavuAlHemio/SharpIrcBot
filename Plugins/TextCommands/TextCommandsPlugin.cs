@@ -32,10 +32,14 @@ namespace SharpIrcBot.Plugins.TextCommands
             CreateResponseManagers();
         }
 
-        public void ReloadConfiguration(JObject newConfig)
+        public virtual void ReloadConfiguration(JObject newConfig)
         {
             Config = new TextCommandsConfig(newConfig);
+            PostConfigReload();
+        }
 
+        protected virtual void PostConfigReload()
+        {
             CreateResponseManagers();
         }
 

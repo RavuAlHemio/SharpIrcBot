@@ -21,9 +21,14 @@ namespace SharpIrcBot.Plugins.Reinvite
             ConnectionManager.Invited += HandleInvite;
         }
 
-        public void ReloadConfiguration(JObject newConfig)
+        public virtual void ReloadConfiguration(JObject newConfig)
         {
             Config = new ReinviteConfig(newConfig);
+            PostConfigReload();
+        }
+
+        protected virtual void PostConfigReload()
+        {
         }
 
         protected virtual void HandleQueryMessage(object sender, IPrivateMessageEventArgs e, MessageFlags flags)

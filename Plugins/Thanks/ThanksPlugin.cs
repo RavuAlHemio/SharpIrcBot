@@ -28,9 +28,14 @@ namespace SharpIrcBot.Plugins.Thanks
             ConnectionManager.BaseNickChanged += HandleBaseNickChanged;
         }
 
-        public void ReloadConfiguration(JObject newConfig)
+        public virtual void ReloadConfiguration(JObject newConfig)
         {
             Config = new ThanksConfig(newConfig);
+            PostConfigReload();
+        }
+
+        protected virtual void PostConfigReload()
+        {
         }
 
         protected void HandleChannelMessage(object sender, IChannelMessageEventArgs args, MessageFlags flags)

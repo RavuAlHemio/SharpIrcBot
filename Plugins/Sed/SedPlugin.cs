@@ -27,9 +27,14 @@ namespace SharpIrcBot.Plugins.Sed
             ConnectionManager.ChannelMessage += HandleChannelMessage;
         }
 
-        public void ReloadConfiguration(JObject newConfig)
+        public virtual void ReloadConfiguration(JObject newConfig)
         {
             Config = new SedConfig(newConfig);
+            PostConfigReload();
+        }
+
+        protected virtual void PostConfigReload()
+        {
         }
 
         protected virtual void HandleChannelMessage(object sender, IChannelMessageEventArgs e, MessageFlags flags)

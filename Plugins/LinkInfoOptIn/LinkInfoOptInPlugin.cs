@@ -36,6 +36,7 @@ namespace SharpIrcBot.Plugins.LinkInfoOptIn
         public override void ReloadConfiguration(JObject newConfig)
         {
             Config = new LinkInfoOptInConfig(newConfig);
+            PostConfigReload();
         }
 
         protected override void LinksAction(IChannelMessageEventArgs args, MessageFlags flags, IList<Uri> links)

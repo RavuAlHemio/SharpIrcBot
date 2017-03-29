@@ -54,7 +54,11 @@ namespace SharpIrcBot.Plugins.LinkInfo
         public virtual void ReloadConfiguration(JObject newConfig)
         {
             Config = new LinkInfoConfig(newConfig);
+            PostConfigReload();
+        }
 
+        protected virtual void PostConfigReload()
+        {
             // recreate heuristic link detector at next use
             LinkDetector = null;
 

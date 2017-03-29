@@ -19,9 +19,14 @@ namespace SharpIrcBot.Plugins.Sockpuppet
             ConnectionManager.QueryMessage += HandleQueryMessage;
         }
 
-        public void ReloadConfiguration(JObject newConfig)
+        public virtual void ReloadConfiguration(JObject newConfig)
         {
             Config = new SockpuppetConfig(newConfig);
+            PostConfigReload();
+        }
+
+        protected virtual void PostConfigReload()
+        {
         }
 
         protected string VerifyIdentity(IUserMessageEventArgs message)

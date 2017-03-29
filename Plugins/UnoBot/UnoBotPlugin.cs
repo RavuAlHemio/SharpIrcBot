@@ -76,9 +76,14 @@ namespace SharpIrcBot.Plugins.UnoBot
             Randomizer = new Random();
         }
 
-        public void ReloadConfiguration(JObject newConfig)
+        public virtual void ReloadConfiguration(JObject newConfig)
         {
             Config = new UnoBotConfig(newConfig);
+            PostConfigReload();
+        }
+
+        protected virtual void PostConfigReload()
+        {
         }
 
         public static string StripColors(string str)

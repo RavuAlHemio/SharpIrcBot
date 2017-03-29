@@ -28,9 +28,14 @@ namespace SharpIrcBot.Plugins.GroupPressure
             Connection.ChannelAction += HandleChannelAction;
         }
 
-        public void ReloadConfiguration(JObject newConfig)
+        public virtual void ReloadConfiguration(JObject newConfig)
         {
             Config = new PressureConfig(newConfig);
+            PostConfigReload();
+        }
+
+        protected virtual void PostConfigReload()
+        {
         }
 
         private void HandleChannelMessage(object sender, IChannelMessageEventArgs args, MessageFlags flags)

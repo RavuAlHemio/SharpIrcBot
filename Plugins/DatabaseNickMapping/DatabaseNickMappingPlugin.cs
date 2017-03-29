@@ -28,9 +28,14 @@ namespace SharpIrcBot.Plugins.DatabaseNickMapping
             ConnectionManager.NickMapping += HandleNickMapping;
         }
 
-        public void ReloadConfiguration(JObject newConfig)
+        public virtual void ReloadConfiguration(JObject newConfig)
         {
             Config = new DatabaseNickMappingConfig(newConfig);
+            PostConfigReload();
+        }
+
+        protected virtual void PostConfigReload()
+        {
         }
 
         protected virtual void HandleChannelMessage(object sender, IChannelMessageEventArgs args, MessageFlags flags)
