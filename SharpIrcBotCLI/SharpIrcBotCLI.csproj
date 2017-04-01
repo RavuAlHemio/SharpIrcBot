@@ -36,6 +36,7 @@
     <ProjectReference Include="..\Plugins\TextCommands\TextCommands.csproj" />
     <ProjectReference Include="..\Plugins\Thanks\Thanks.csproj" />
     <ProjectReference Include="..\Plugins\Time\Time.csproj" />
+    <ProjectReference Include="..\Plugins\Trivia\Trivia.csproj" />
     <ProjectReference Include="..\Plugins\UnoBot\UnoBot.csproj" />
     <ProjectReference Include="..\Plugins\Weather\Weather.csproj" />
     <ProjectReference Include="..\Plugins\WhoDoYouThinkIs\WhoDoYouThinkIs.csproj" />

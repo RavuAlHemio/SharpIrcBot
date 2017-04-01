@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>netstandard1.6;net461</TargetFrameworks>
+    <DebugType>portable</DebugType>
+    <RootNamespace>SharpIrcBot.Plugins.Trivia</RootNamespace>
+    <AssemblyName>SharpIrcBot.Plugins.Trivia</AssemblyName>
+    <PackageId>SharpIrcBot.Plugins.Trivia</PackageId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\SharpIrcBot\SharpIrcBot.csproj" />
+  </ItemGroup>
+
+</Project>
