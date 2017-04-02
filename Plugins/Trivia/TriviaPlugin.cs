@@ -135,7 +135,8 @@ namespace SharpIrcBot.Plugins.Trivia
                 Questions = new List<QuestionAnswers>(),
                 CurrentQuestionIndex = -1,
                 HintsAlreadyShown = 0,
-                Timer = new Timer(TimerElapsed, null, Timeout.InfiniteTimeSpan, Timeout.InfiniteTimeSpan)
+                Timer = new Timer(TimerElapsed, null, Timeout.InfiniteTimeSpan, Timeout.InfiniteTimeSpan),
+                Lock = new object()
             };
 
             // load questions
