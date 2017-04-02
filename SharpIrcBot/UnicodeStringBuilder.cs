@@ -28,15 +28,18 @@ namespace SharpIrcBot
 
         public virtual void Append(string str)
         {
-            for (int i = 0; i < str.Length; ++i)
+            int i = 0;
+            while (i < str.Length)
             {
                 if (char.IsHighSurrogate(str[i]) && i < str.Length - 1 && char.IsLowSurrogate(str[i+1]))
                 {
                     Characters.Add(char.ConvertToUtf32(str, i));
+                    i += 2;
                 }
                 else
                 {
                     Characters.Add(str[i]);
+                    ++i;
                 }
             }
         }
