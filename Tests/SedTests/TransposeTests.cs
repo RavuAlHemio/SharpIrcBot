@@ -209,6 +209,36 @@ namespace SharpIrcBot.Tests.SedTests
         }
 
         [Fact]
+        public void TestDeleteMissingTo()
+        {
+            TestConnectionManager mgr = TestCommon.ObtainConnectionManager();
+
+            mgr.InjectChannelMessage(TestChannelName, "OneUser", "the quick brown fox jumps over the lazy dog");
+            mgr.InjectChannelMessage(TestChannelName, "AnotherUser", "tr/aeiouy//d");
+
+            Assert.Equal(1, mgr.EventLog.Count);
+            TestMessage sentMessage = Assert.IsType<TestMessage>(mgr.EventLog[0]);
+            Assert.Equal(MessageType.Message, sentMessage.Type);
+            Assert.Equal(TestChannelName, sentMessage.Target);
+            Assert.Equal("th qck brwn fx jmps vr th lz dg", sentMessage.Body);
+        }
+
+        [Fact]
+        public void TestRepeatLastTo()
+        {
+            TestConnectionManager mgr = TestCommon.ObtainConnectionManager();
+
+            mgr.InjectChannelMessage(TestChannelName, "OneUser", "the quick brown fox jumps over the lazy dog");
+            mgr.InjectChannelMessage(TestChannelName, "AnotherUser", "tr/aeiouy/q/r");
+
+            Assert.Equal(1, mgr.EventLog.Count);
+            TestMessage sentMessage = Assert.IsType<TestMessage>(mgr.EventLog[0]);
+            Assert.Equal(MessageType.Message, sentMessage.Type);
+            Assert.Equal(TestChannelName, sentMessage.Target);
+            Assert.Equal("thq qqqck brqwn fqx jqmps qvqr thq lqzq dqg", sentMessage.Body);
+        }
+
+        [Fact]
         public void TestOverlongRange()
         {
             TestConnectionManager mgr = TestCommon.ObtainConnectionManager();
@@ -281,6 +311,28 @@ namespace SharpIrcBot.Tests.SedTests
 
             mgr.InjectChannelMessage(TestChannelName, "OneUser", "the quick brown fox jumps over the lazy dog");
             mgr.InjectChannelMessage(TestChannelName, "AnotherUser", "tr_the_a_g_");
+
+            Assert.Equal(0, mgr.EventLog.Count);
+        }
+
+        [Fact]
+        public void TestInvalidFlag()
+        {
+            TestConnectionManager mgr = TestCommon.ObtainConnectionManager();
+
+            mgr.InjectChannelMessage(TestChannelName, "OneUser", "the quick brown fox jumps over the lazy dog");
+            mgr.InjectChannelMessage(TestChannelName, "AnotherUser", "tr_a_b_q");
+
+            Assert.Equal(0, mgr.EventLog.Count);
+        }
+
+        [Fact]
+        public void TestRepeatNoLastTo()
+        {
+            TestConnectionManager mgr = TestCommon.ObtainConnectionManager();
+
+            mgr.InjectChannelMessage(TestChannelName, "OneUser", "the quick brown fox jumps over the lazy dog");
+            mgr.InjectChannelMessage(TestChannelName, "AnotherUser", "tr/a//r");
 
             Assert.Equal(0, mgr.EventLog.Count);
         }

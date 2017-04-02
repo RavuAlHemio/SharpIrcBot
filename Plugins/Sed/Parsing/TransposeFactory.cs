@@ -29,7 +29,7 @@ namespace SharpIrcBot.Plugins.Sed.Parsing
             {
                 transMode = TranspositionMode.RepeatLastTo;
             }
-            else
+            else if (command.Flags != "")
             {
                 Logger.LogInformation("incorrect flags {Flags}", command.Flags);
                 return null;
