@@ -57,14 +57,19 @@ namespace SharpIrcBot.Plugins.Trivia
                 lock (GameState.Lock)
                 {
                     CheckForCorrectAnswer(e.SenderNickname, e.Message);
+
+                    if (e.Message == "!question")
+                    {
+                        OutputCurrentQuestion();
+                    }
                 }
             }
-
-            if (e.Message == "!starttrivia")
+            else if (e.Message == "!starttrivia")
             {
                 StartGame();
                 return;
             }
+
             if (e.Message == "!stoptrivia")
             {
                 StopGame();
@@ -183,6 +188,7 @@ namespace SharpIrcBot.Plugins.Trivia
         {
             if (GameState == null)
             {
+                ConnectionManager.SendChannelMessage(Config.TriviaChannel,"There is no running trivia game.");
                 return;
             }
 
@@ -191,6 +197,8 @@ namespace SharpIrcBot.Plugins.Trivia
                 GameState.Timer.Dispose();
                 GameState = null;
             }
+
+            ConnectionManager.SendChannelMessage(Config.TriviaChannel, "Trivia game stopped.");
         }
 
         protected virtual void TimerElapsed(object theStateIDontActuallyCareAbout)
@@ -227,12 +235,35 @@ namespace SharpIrcBot.Plugins.Trivia
                 GameState.CurrentQuestionIndex = Randomizer.Next(GameState.Questions.Count);
                 GameState.HintsAlreadyShown = 0;
 
+                OutputCurrentQuestion();
+                StartTimer();
+            }
+        }
+
+        protected virtual void OutputCurrentQuestion()
+        {
+            Debug.Assert(GameState != null);
+
+            lock (GameState.Lock)
+            {
                 ConnectionManager.SendChannelMessage(
                     Config.TriviaChannel,
                     $"Question: {GameState.CurrentQuestion.Question}"
                 );
 
-                StartTimer();
+                // calculate and display answer pattern
+                var pattern = new UnicodeStringBuilder(GameState.CurrentQuestion.MainAnswer);
+                for (int i = 0; i < pattern.Length; ++i)
+                {
+                    if (char.IsLetterOrDigit(pattern.CharAtAsString(i), 0))
+                    {
+                        pattern[i] = '_';
+                    }
+                }
+                ConnectionManager.SendChannelMessage(
+                    Config.TriviaChannel,
+                    $"Answer Pattern: {pattern}"
+                );
             }
         }
 
