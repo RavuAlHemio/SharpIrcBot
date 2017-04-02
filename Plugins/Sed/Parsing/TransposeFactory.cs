@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using Microsoft.Extensions.Logging;
 
 namespace SharpIrcBot.Plugins.Sed.Parsing
@@ -7,18 +9,35 @@ namespace SharpIrcBot.Plugins.Sed.Parsing
     {
         private static readonly ILogger Logger = SharpIrcBotUtil.LoggerFactory.CreateLogger<TransposeFactory>();
 
+        protected enum TranspositionMode
+        {
+            OneToOne,
+            DeleteMissingTo,
+            RepeatLastTo
+        }
+
         public const int MaxRangeDifference = 128;
 
         public ITransformCommand Construct(GenericReplacementCommand command)
         {
-            // currently, no flags are supported
-            if (command.Flags.Length > 0)
+            var transMode = TranspositionMode.OneToOne;
+            if (command.Flags == "d")
             {
-                Logger.LogInformation("we don't accept flags; got {Flags}", command.Flags);
+                transMode = TranspositionMode.DeleteMissingTo;
+            }
+            else if (command.Flags == "r")
+            {
+                transMode = TranspositionMode.RepeatLastTo;
+            }
+            else
+            {
+                Logger.LogInformation("incorrect flags {Flags}", command.Flags);
                 return null;
             }
 
-            Dictionary<int, int> transpositionDictionary = ParseTranspositions(command.OldString, command.NewString);
+            Dictionary<int, int> transpositionDictionary = ParseTranspositions(
+                command.OldString, command.NewString, transMode
+            );
             if (transpositionDictionary == null)
             {
                 return null;
@@ -27,11 +46,12 @@ namespace SharpIrcBot.Plugins.Sed.Parsing
             return new TransposeCommand(transpositionDictionary);
         }
 
-        protected virtual Dictionary<int, int> ParseTranspositions(string fromString, string toString)
+        protected virtual Dictionary<int, int> ParseTranspositions(string fromString, string toString,
+                TranspositionMode transMode)
         {
             List<int> fromStringChars = new UnicodeStringBuilder(fromString).GetCharacterListCopy();
             List<int> toStringChars = new UnicodeStringBuilder(toString).GetCharacterListCopy();
-            
+
             List<int> froms = ParseWithRanges(fromStringChars);
             if (froms == null)
             {
@@ -44,20 +64,64 @@ namespace SharpIrcBot.Plugins.Sed.Parsing
                 return null;
             }
 
-            if (froms.Count != tos.Count)
+            switch (transMode)
             {
-                Logger.LogInformation(
-                    "from characters ({FromCount}) and to characters ({ToCount}) differ in count",
-                    froms.Count, tos.Count
-                );
+                case TranspositionMode.OneToOne:
+                    if (froms.Count != tos.Count)
+                    {
+                        Logger.LogInformation(
+                            "from characters ({FromCount}) and to characters ({ToCount}) differ in count",
+                            froms.Count, tos.Count
+                        );
+                        return null;
+                    }
+                    break;
+                case TranspositionMode.RepeatLastTo:
+                case TranspositionMode.DeleteMissingTo:
+                    // tos may be shorter than froms but not vice versa
+                    if (froms.Count < tos.Count)
+                    {
+                        Logger.LogInformation(
+                            "fewer from characters ({FromCount}) than to characters ({ToCount})",
+                            froms.Count, tos.Count
+                        );
+                        return null;
+                    }
+                    break;
+                default:
+                    Debug.Assert(false);
+                    break;
+            }
+
+            if (transMode == TranspositionMode.RepeatLastTo && tos.Count == 0)
+            {
+                Logger.LogInformation("mode is RepeatLastTo but there are no to characters");
                 return null;
             }
 
             var ret = new Dictionary<int, int>();
-            for (int i = 0; i < froms.Count; ++i)
+            for (int i = 0; i < Math.Min(froms.Count, tos.Count); ++i)
             {
                 ret[froms[i]] = tos[i];
             }
+
+            if (transMode == TranspositionMode.RepeatLastTo)
+            {
+                Debug.Assert(froms.Count >= tos.Count);
+                for (int i = tos.Count; i < froms.Count; ++i)
+                {
+                    ret[froms[i]] = tos[tos.Count - 1];
+                }
+            }
+            else if (transMode == TranspositionMode.DeleteMissingTo)
+            {
+                Debug.Assert(froms.Count >= tos.Count);
+                for (int i = tos.Count; i < froms.Count; ++i)
+                {
+                    ret[froms[i]] = -1;
+                }
+            }
+
             return ret;
         }
 

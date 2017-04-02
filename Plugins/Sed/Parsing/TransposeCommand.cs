@@ -13,7 +13,10 @@ namespace SharpIrcBot.Plugins.Sed.Parsing
 
         public string Transform(string text)
         {
-            var usb = new UnicodeStringBuilder(text);
+            var usb = new UnicodeStringBuilder(text)
+            {
+                AllowSkipCharacters = true
+            };
             for (int i = 0; i < usb.Length; ++i)
             {
                 int newValue;
