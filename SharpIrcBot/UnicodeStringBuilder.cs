@@ -108,5 +108,10 @@ namespace SharpIrcBot
             }
             return builder.ToString();
         }
+
+        public List<int> GetCharacterListCopy()
+        {
+            return new List<int>(Characters);
+        }
     }
 }

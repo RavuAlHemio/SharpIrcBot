@@ -1,19 +1,17 @@
-using Newtonsoft.Json.Linq;
-using SharpIrcBot.Plugins.Sed;
 using SharpIrcBot.Tests.TestPlumbing;
 using SharpIrcBot.Tests.TestPlumbing.Events.Logging;
 using Xunit;
 
 namespace SharpIrcBot.Tests.SedTests
 {
-    public class SedReplacementTests
+    public class SubTests
     {
         const string TestChannelName = "#test";
 
         [Fact]
         public void TestSingleReplacement()
         {
-            TestConnectionManager mgr = ObtainConnectionManager();
+            TestConnectionManager mgr = TestCommon.ObtainConnectionManager();
 
             mgr.InjectChannelMessage(TestChannelName, "OneUser", "the quick brown fox jumps over the lazy dog");
             mgr.InjectChannelMessage(TestChannelName, "AnotherUser", "s/d/fr/");
@@ -28,7 +26,7 @@ namespace SharpIrcBot.Tests.SedTests
         [Fact]
         public void TestSingleReplacementWithMultipleCandidates()
         {
-            TestConnectionManager mgr = ObtainConnectionManager();
+            TestConnectionManager mgr = TestCommon.ObtainConnectionManager();
 
             mgr.InjectChannelMessage(TestChannelName, "OneUser", "the quick brown fox jumps over the lazy dog");
             mgr.InjectChannelMessage(TestChannelName, "AnotherUser", "s_the_a_");
@@ -43,7 +41,7 @@ namespace SharpIrcBot.Tests.SedTests
         [Fact]
         public void TestMultipleReplacement()
         {
-            TestConnectionManager mgr = ObtainConnectionManager();
+            TestConnectionManager mgr = TestCommon.ObtainConnectionManager();
 
             mgr.InjectChannelMessage(TestChannelName, "OneUser", "the quick brown fox jumps over the lazy dog");
             mgr.InjectChannelMessage(TestChannelName, "AnotherUser", "s_the_a_g");
@@ -58,7 +56,7 @@ namespace SharpIrcBot.Tests.SedTests
         [Fact]
         public void TestLastButOneMatched()
         {
-            TestConnectionManager mgr = ObtainConnectionManager();
+            TestConnectionManager mgr = TestCommon.ObtainConnectionManager();
 
             mgr.InjectChannelMessage(TestChannelName, "OneUser", "what is this anyway?");
             mgr.InjectChannelMessage(TestChannelName, "AnotherUser", "the quick brown fox jumps over the lazy dog");
@@ -74,7 +72,7 @@ namespace SharpIrcBot.Tests.SedTests
         [Fact]
         public void TestMatchOnlyMostRecent()
         {
-            TestConnectionManager mgr = ObtainConnectionManager();
+            TestConnectionManager mgr = TestCommon.ObtainConnectionManager();
 
             mgr.InjectChannelMessage(TestChannelName, "OneUser", "what is this anyway?");
             mgr.InjectChannelMessage(TestChannelName, "OneUser", "what are we talking about?");
@@ -91,7 +89,7 @@ namespace SharpIrcBot.Tests.SedTests
         [Fact]
         public void TestEscapedSeparator()
         {
-            TestConnectionManager mgr = ObtainConnectionManager();
+            TestConnectionManager mgr = TestCommon.ObtainConnectionManager();
 
             mgr.InjectChannelMessage(TestChannelName, "OneUser", "how and/or why?");
             mgr.InjectChannelMessage(TestChannelName, "YetAnotherUser", "s/and\\/or/and\\/or\\/xor\\/nand\\/n\\or/");
@@ -106,7 +104,7 @@ namespace SharpIrcBot.Tests.SedTests
         [Fact]
         public void TestReplacementReference()
         {
-            TestConnectionManager mgr = ObtainConnectionManager();
+            TestConnectionManager mgr = TestCommon.ObtainConnectionManager();
 
             mgr.InjectChannelMessage(TestChannelName, "OneUser", "the quick brown fox jumps over the lazy dog");
             mgr.InjectChannelMessage(TestChannelName, "YetAnotherUser", "s_the_\\0 little_g");
@@ -121,7 +119,7 @@ namespace SharpIrcBot.Tests.SedTests
         [Fact]
         public void TestReplacementReferenceToGroup()
         {
-            TestConnectionManager mgr = ObtainConnectionManager();
+            TestConnectionManager mgr = TestCommon.ObtainConnectionManager();
 
             mgr.InjectChannelMessage(TestChannelName, "OneUser", "a one, a two, a three, a four");
             mgr.InjectChannelMessage(TestChannelName, "YetAnotherUser", "s_(,)( a)_\\1 and\\2_g");
@@ -136,7 +134,7 @@ namespace SharpIrcBot.Tests.SedTests
         [Fact]
         public void TestReplaceFirstE()
         {
-            TestConnectionManager mgr = ObtainConnectionManager();
+            TestConnectionManager mgr = TestCommon.ObtainConnectionManager();
 
             mgr.InjectChannelMessage(
                 TestChannelName,
@@ -158,7 +156,7 @@ namespace SharpIrcBot.Tests.SedTests
         [Fact]
         public void TestReplaceFifthE()
         {
-            TestConnectionManager mgr = ObtainConnectionManager();
+            TestConnectionManager mgr = TestCommon.ObtainConnectionManager();
 
             mgr.InjectChannelMessage(
                 TestChannelName,
@@ -180,7 +178,7 @@ namespace SharpIrcBot.Tests.SedTests
         [Fact]
         public void TestReplaceEveryE()
         {
-            TestConnectionManager mgr = ObtainConnectionManager();
+            TestConnectionManager mgr = TestCommon.ObtainConnectionManager();
 
             mgr.InjectChannelMessage(
                 TestChannelName,
@@ -202,7 +200,7 @@ namespace SharpIrcBot.Tests.SedTests
         [Fact]
         public void TestReplaceFifthAndLaterE()
         {
-            TestConnectionManager mgr = ObtainConnectionManager();
+            TestConnectionManager mgr = TestCommon.ObtainConnectionManager();
 
             mgr.InjectChannelMessage(
                 TestChannelName,
@@ -224,7 +222,7 @@ namespace SharpIrcBot.Tests.SedTests
         [Fact]
         public void TestMultiplePatterns()
         {
-            TestConnectionManager mgr = ObtainConnectionManager();
+            TestConnectionManager mgr = TestCommon.ObtainConnectionManager();
 
             mgr.InjectChannelMessage(TestChannelName, "OneUser", "a one, a two, a three, a four");
             mgr.InjectChannelMessage(TestChannelName, "YetAnotherUser", " s_e_o_g s/a/e/g  ");
@@ -239,7 +237,7 @@ namespace SharpIrcBot.Tests.SedTests
         [Fact]
         public void TestUnmatchedReplacement()
         {
-            TestConnectionManager mgr = ObtainConnectionManager();
+            TestConnectionManager mgr = TestCommon.ObtainConnectionManager();
 
             mgr.InjectChannelMessage(TestChannelName, "OneUser", "the quick brown fox jumps over the lazy dog");
             mgr.InjectChannelMessage(TestChannelName, "AnotherUser", "s+tiny++");
@@ -250,7 +248,7 @@ namespace SharpIrcBot.Tests.SedTests
         [Fact]
         public void TestInvalidSeparator()
         {
-            TestConnectionManager mgr = ObtainConnectionManager();
+            TestConnectionManager mgr = TestCommon.ObtainConnectionManager();
 
             mgr.InjectChannelMessage(TestChannelName, "OneUser", "the quick brown fox jumps over the lazy dog");
             mgr.InjectChannelMessage(TestChannelName, "AnotherUser", "s\\the\\a\\g");
@@ -261,7 +259,7 @@ namespace SharpIrcBot.Tests.SedTests
         [Fact]
         public void TestUnterminatedReplacement()
         {
-            TestConnectionManager mgr = ObtainConnectionManager();
+            TestConnectionManager mgr = TestCommon.ObtainConnectionManager();
 
             mgr.InjectChannelMessage(TestChannelName, "OneUser", "the quick brown fox jumps over the lazy dog");
             mgr.InjectChannelMessage(TestChannelName, "AnotherUser", "s_the_a");
@@ -272,7 +270,7 @@ namespace SharpIrcBot.Tests.SedTests
         [Fact]
         public void TestUnterminatedPattern()
         {
-            TestConnectionManager mgr = ObtainConnectionManager();
+            TestConnectionManager mgr = TestCommon.ObtainConnectionManager();
 
             mgr.InjectChannelMessage(TestChannelName, "OneUser", "the quick brown fox jumps over the lazy dog");
             mgr.InjectChannelMessage(TestChannelName, "AnotherUser", "s_the");
@@ -283,24 +281,12 @@ namespace SharpIrcBot.Tests.SedTests
         [Fact]
         public void TestTooManySeparators()
         {
-            TestConnectionManager mgr = ObtainConnectionManager();
+            TestConnectionManager mgr = TestCommon.ObtainConnectionManager();
 
             mgr.InjectChannelMessage(TestChannelName, "OneUser", "the quick brown fox jumps over the lazy dog");
             mgr.InjectChannelMessage(TestChannelName, "AnotherUser", "s_the_a_g_");
 
             Assert.Equal(0, mgr.EventLog.Count);
-        }
-
-        protected TestConnectionManager ObtainConnectionManager()
-        {
-            var mgr = new TestConnectionManager();
-            var sedConfig = new JObject
-            {
-                ["RememberLastMessages"] = new JValue(50)
-            };
-
-            var sed = new SedPlugin(mgr, sedConfig);
-            return mgr;
         }
     }
 }

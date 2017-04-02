@@ -1,16 +1,43 @@
+using System.Text.RegularExpressions;
+
 namespace SharpIrcBot.Plugins.Sed.Parsing
 {
-    public class SubCommand
+    public class SubCommand : ITransformCommand
     {
-        public string PatternSed { get; set; }
-        public string ReplacementSed { get; set; }
-        public string Flags { get; set; }
+        public Regex Pattern { get; set; }
+        public string Replacement { get; set; }
+        public int FirstMatch { get; set; }
+        public bool ReplaceAll { get; set; }
 
-        public SubCommand(string patternSed, string replacementSed, string flags)
+        public SubCommand(Regex pattern, string replacement, int firstMatch, bool replaceAll)
         {
-            PatternSed = patternSed;
-            ReplacementSed = replacementSed;
-            Flags = flags;
+            Pattern = pattern;
+            Replacement = replacement;
+            FirstMatch = firstMatch;
+            ReplaceAll = replaceAll;
+        }
+
+        public string Transform(string text)
+        {
+            int matchIndex = -1;
+            return Pattern.Replace(text, match =>
+            {
+                ++matchIndex;
+
+                if (matchIndex < FirstMatch)
+                {
+                    // unchanged
+                    return match.Value;
+                }
+
+                if (matchIndex > FirstMatch && !ReplaceAll)
+                {
+                    // unchanged
+                    return match.Value;
+                }
+
+                return match.Result(Replacement);
+            });
         }
     }
 }

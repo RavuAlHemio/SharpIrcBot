@@ -1,10 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Globalization;
 using System.Linq;
 using System.Text;
-using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
 
 namespace SharpIrcBot.Plugins.Sed.Parsing
@@ -14,89 +12,94 @@ namespace SharpIrcBot.Plugins.Sed.Parsing
         private static readonly ILogger Logger = SharpIrcBotUtil.LoggerFactory.CreateLogger<SedParser>();
 
         protected readonly HashSet<char> Splitters = new HashSet<char>("!\"#$%&'*+,-./:;=?^_`|~");
+        protected readonly Dictionary<string, IReplacementFactory> CommandsToFactories
+                = new Dictionary<string, IReplacementFactory>
+        {
+            ["s"] = new SubFactory(),
+            ["tr"] = new TransposeFactory()
+        };
 
-        public virtual List<ReplacementSpec> ParseSubCommands(string message)
+        public virtual List<ITransformCommand> ParseSubCommands(string message)
         {
             string trimmedMessage = message.Trim();
 
             // shortest possible command
             if (trimmedMessage.Length < "s/a//".Length)
             {
-                // if we fail at this stage, it's probably not supposed to be a sed command
+                // too short
+                // (if we fail at this stage, it's probably not supposed to be a sed command)
                 return null;
             }
-            if (trimmedMessage[0] != 's')
+            if (trimmedMessage.Count(c => Splitters.Contains(c)) < 3)
             {
+                // not enough splitter characters: not a command
                 return null;
             }
-            if (!Splitters.Contains(trimmedMessage[1]))
+            if (Splitters.Max(splitter => trimmedMessage.Count(c => c == splitter)) < 3)
             {
+                // not enough of the same splitter character: not a command
                 return null;
             }
 
-            var subCommands = new List<SubCommand>();
+            var replacementCommands = new List<GenericReplacementCommand>();
             for (;;)
             {
                 string rest;
-                SubCommand subCommand = TakeSubCommand(trimmedMessage, out rest);
+                bool invalidCommand;
+                GenericReplacementCommand subCommand = TakeReplacementCommand(trimmedMessage, out rest, out invalidCommand);
                 if (subCommand == null)
                 {
-                    break;
+                    if (invalidCommand)
+                    {
+                        // assume it's not supposed to be a sed command
+                        return null;
+                    }
+                    else
+                    {
+                        // assume it's a syntactically incorrect sed command
+                        break;
+                    }
                 }
 
                 // ensure that the string is getting shorter
                 Debug.Assert(rest.Length < trimmedMessage.Length);
 
-                subCommands.Add(subCommand);
+                replacementCommands.Add(subCommand);
                 trimmedMessage = rest;
             }
 
             // probably is supposed to be a sed command but they are doing it wrong
             // return an empty list
-            if (subCommands.Count == 0)
+            if (replacementCommands.Count == 0)
             {
                 Logger.LogInformation("already the first replacement command was invalid in {ReplacementsString}", trimmedMessage);
-                return new List<ReplacementSpec>();
+                return new List<ITransformCommand>();
             }
 
-            var ret = new List<ReplacementSpec>(subCommands.Count);
-            foreach (SubCommand subCommand in subCommands)
+            var ret = new List<ITransformCommand>(replacementCommands.Count);
+            foreach (GenericReplacementCommand replacementCommand in replacementCommands)
             {
-                SubFlags subFlags = ParseSubFlags(subCommand.Flags);
-                if (subFlags == null)
+                IReplacementFactory factory;
+                if (!CommandsToFactories.TryGetValue(replacementCommand.Command, out factory))
                 {
-                    // invalid flags
-                    Logger.LogInformation("invalid flags {Flags}", subCommand.Flags);
-                    return new List<ReplacementSpec>();
+                    return new List<ITransformCommand>();
                 }
 
-                string replacementString = TransformReplacementString(subCommand.ReplacementSed);
-                Regex pattern;
-                try
+                ITransformCommand command = factory.Construct(replacementCommand);
+                if (command == null)
                 {
-                    pattern = new Regex(subCommand.PatternSed, subFlags.Options);
-                }
-                catch (ArgumentException)
-                {
-                    // syntactic error in pattern
-                    Logger.LogInformation("syntactic error in pattern {Pattern}", subCommand.PatternSed);
-                    return new List<ReplacementSpec>();
+                    return new List<ITransformCommand>();
                 }
 
-                ret.Add(new ReplacementSpec
-                {
-                    Pattern = pattern,
-                    Replacement = replacementString,
-                    FirstMatch = subFlags.FirstMatch,
-                    ReplaceAll = subFlags.ReplaceAll
-                });
+                ret.Add(command);
             }
 
             return ret;
         }
 
-        protected virtual SubCommand TakeSubCommand(string command, out string rest)
+        protected virtual GenericReplacementCommand TakeReplacementCommand(string fullCommand, out string rest, out bool invalidCommand)
         {
+            string command = null;
             string pattern = null;
             string replacement = null;
             char splitter = '\0';
@@ -106,36 +109,43 @@ namespace SharpIrcBot.Plugins.Sed.Parsing
             var builder = new StringBuilder();
 
             // trim initial whitespace
-            command = command.TrimStart();
+            fullCommand = fullCommand.TrimStart();
 
-            foreach (Tuple<char, int> tuple in command.Select(Tuple.Create<char, int>))
+            invalidCommand = false;
+
+            foreach (Tuple<char, int> tuple in fullCommand.Select(Tuple.Create<char, int>))
             {
                 char c = tuple.Item1;
                 int i = tuple.Item2;
 
                 if (state == ParserState.AwaitingCommand)
                 {
-                    if (c == 's')
+                    if (c >= 'a' && c <= 'z')
                     {
-                        state = ParserState.AwaitingSeparatorAfterCommand;
+                        builder.Append(c);
+                    }
+                    else if (Splitters.Contains(c))
+                    {
+                        splitter = c;
+                        command = builder.ToString();
+                        builder.Clear();
+
+                        if (!CommandsToFactories.ContainsKey(command))
+                        {
+                            // unknown command
+                            rest = fullCommand;
+                            return null;
+                        }
+
+                        state = ParserState.AwaitingPattern;
                     }
                     else
                     {
-                        // wrong command
-                        rest = command;
+                        // obviously not a command
+                        invalidCommand = true;
+                        rest = fullCommand;
                         return null;
                     }
-                }
-                else if (state == ParserState.AwaitingSeparatorAfterCommand)
-                {
-                    if (!Splitters.Contains(c))
-                    {
-                        // invalid splitter
-                        rest = command;
-                        return null;
-                    }
-                    splitter = c;
-                    state = ParserState.AwaitingPattern;
                 }
                 else
                 {
@@ -174,7 +184,7 @@ namespace SharpIrcBot.Plugins.Sed.Parsing
                         else
                         {
                             // too many separators!
-                            rest = command;
+                            rest = fullCommand;
                             return null;
                         }
                     }
@@ -183,8 +193,8 @@ namespace SharpIrcBot.Plugins.Sed.Parsing
                         // we're done
 
                         // rest should include the current (whitespace) character!
-                        rest = command.Substring(i);
-                        return new SubCommand(pattern, replacement, builder.ToString());
+                        rest = fullCommand.Substring(i);
+                        return new GenericReplacementCommand(command, pattern, replacement, builder.ToString());
                     }
                     else
                     {
@@ -202,118 +212,17 @@ namespace SharpIrcBot.Plugins.Sed.Parsing
                 }
             }
 
-            if (pattern == null || replacement == null)
+            if (command == null || pattern == null || replacement == null)
             {
                 // incomplete command!
-                rest = command;
+                rest = fullCommand;
                 return null;
             }
 
             // fell out of the loop: nothing left
             rest = "";
 
-            return new SubCommand(pattern, replacement, builder.ToString());
-        }
-
-        protected virtual SubFlags ParseSubFlags(string flags)
-        {
-            RegexOptions options = RegexOptions.None;
-            int firstMatch = 0;
-            bool replaceAll = false;
-
-            bool readingNumber = false;
-            var firstMatchBuilder = new StringBuilder();
-
-            foreach (char c in flags)
-            {
-                if (c >= '0' && c <= '9')
-                {
-                    if (!readingNumber && firstMatchBuilder.Length > 0)
-                    {
-                        // i123n456 => invalid
-                        return null;
-                    }
-                    readingNumber = true;
-                    firstMatchBuilder.Append(c);
-                }
-                else
-                {
-                    readingNumber = false;
-
-                    switch (c)
-                    {
-                        case 'i':
-                            options |= RegexOptions.IgnoreCase;
-                            break;
-                        case 'n':
-                            options |= RegexOptions.ExplicitCapture;
-                            break;
-                        case 'x':
-                            options |= RegexOptions.IgnorePatternWhitespace;
-                            break;
-                        case 'g':
-                            replaceAll = true;
-                            break;
-                        default:
-                            // invalid flag
-                            return null;
-                    }
-                }
-            }
-
-            if (firstMatchBuilder.Length > 0)
-            {
-                if (!int.TryParse(
-                    firstMatchBuilder.ToString(), NumberStyles.None, CultureInfo.InvariantCulture, out firstMatch
-                ))
-                {
-                    // invalid count
-                    return null;
-                }
-            }
-
-            return new SubFlags(options, firstMatch, replaceAll);
-        }
-
-        protected virtual string TransformReplacementString(string replacementStringSed)
-        {
-            var ret = new StringBuilder();
-
-            bool escaping = false;
-            foreach (char c in replacementStringSed)
-            {
-                if (c == '\\')
-                {
-                    if (escaping)
-                    {
-                        ret.Append(c);
-                        escaping = false;
-                    }
-                    else
-                    {
-                        escaping = true;
-                    }
-                }
-                else if (c == '$')
-                {
-                    ret.Append("$$");
-                    escaping = false;
-                }
-                else if (c >= '0' && c <= '9' && escaping)
-                {
-                    // group reference
-                    ret.Append('$');
-                    ret.Append(c);
-                    escaping = false;
-                }
-                else
-                {
-                    ret.Append(c);
-                    escaping = false;
-                }
-            }
-
-            return ret.ToString();
+            return new GenericReplacementCommand(command, pattern, replacement, builder.ToString());
         }
     }
 }

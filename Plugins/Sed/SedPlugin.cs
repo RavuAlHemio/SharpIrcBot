@@ -66,14 +66,14 @@ namespace SharpIrcBot.Plugins.Sed
 
         protected virtual bool HandleReplacementCommand(IChannelMessageEventArgs e)
         {
-            List<ReplacementSpec> replacements = Parser.ParseSubCommands(e.Message);
-            if (replacements == null)
+            List<ITransformCommand> transformations = Parser.ParseSubCommands(e.Message);
+            if (transformations == null)
             {
                 // something that didn't even look like sed commands
                 return false;
             }
 
-            if (replacements.Count == 0)
+            if (transformations.Count == 0)
             {
                 // something that looked like sed commands but didn't work
                 return true;
@@ -92,27 +92,9 @@ namespace SharpIrcBot.Plugins.Sed
             {
                 string replaced = lastBody;
 
-                foreach (ReplacementSpec spec in replacements)
+                foreach (ITransformCommand transformation in transformations)
                 {
-                    int matchIndex = -1;
-                    replaced = spec.Pattern.Replace(replaced, match =>
-                    {
-                        ++matchIndex;
-
-                        if (matchIndex < spec.FirstMatch)
-                        {
-                            // unchanged
-                            return match.Value;
-                        }
-
-                        if (matchIndex > spec.FirstMatch && !spec.ReplaceAll)
-                        {
-                            // unchanged
-                            return match.Value;
-                        }
-
-                        return match.Result(spec.Replacement);
-                    });
+                    replaced = transformation.Transform(replaced);
                 }
 
                 if (replaced != lastBody)
@@ -126,7 +108,7 @@ namespace SharpIrcBot.Plugins.Sed
 
             if (!foundAny)
             {
-                Logger.LogInformation("no recent messages found to match replacements {ReplacementsString}", e.Message);
+                Logger.LogInformation("no recent messages found to match transformations {TransformationsString}", e.Message);
             }
 
             return true;
