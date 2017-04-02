@@ -177,6 +177,23 @@ namespace SharpIrcBot.Tests.SedTests
         }
 
         [Fact]
+        public void TestGermanPangram()
+        {
+            // (I know that the capitalization of sharp S is currently not considered correct)
+
+            TestConnectionManager mgr = TestCommon.ObtainConnectionManager();
+
+            mgr.InjectChannelMessage(TestChannelName, "OneUser", "zwölf boxkämpfer jagen viktor quer über den großen sylter deich");
+            mgr.InjectChannelMessage(TestChannelName, "AnotherUser", "tr/a-zäöüß/A-ZÄÖÜẞ/");
+
+            Assert.Equal(1, mgr.EventLog.Count);
+            TestMessage sentMessage = Assert.IsType<TestMessage>(mgr.EventLog[0]);
+            Assert.Equal(MessageType.Message, sentMessage.Type);
+            Assert.Equal(TestChannelName, sentMessage.Target);
+            Assert.Equal("ZWÖLF BOXKÄMPFER JAGEN VIKTOR QUER ÜBER DEN GROẞEN SYLTER DEICH", sentMessage.Body);
+        }
+
+        [Fact]
         public void TestEmoji()
         {
             TestConnectionManager mgr = TestCommon.ObtainConnectionManager();
