@@ -123,6 +123,8 @@ namespace SharpIrcBot.Plugins.Trivia
                     }
                     ctx.SaveChanges();
                 }
+
+                NewQuestion();
             }
         }
 
