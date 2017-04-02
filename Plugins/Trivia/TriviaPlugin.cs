@@ -245,10 +245,18 @@ namespace SharpIrcBot.Plugins.Trivia
                 int currentHint = GameState.HintsAlreadyShown + 1;
                 Debug.Assert(currentHint <= Config.HintCount);
 
-                var maskedAnswer = new StringBuilder(GameState.CurrentQuestion.MainAnswer.Length);
-                int lettersToShowCount = currentHint * maskedAnswer.Length / (Config.HintCount + 1);
-                int lettersToMaskCount = maskedAnswer.Length - lettersToShowCount;
-                List<int> unmaskedIndexes = Enumerable.Range(0, maskedAnswer.Length).ToList();
+                var maskedAnswer = new UnicodeStringBuilder(GameState.CurrentQuestion.MainAnswer);
+                var unmaskedIndexes = new List<int>();
+                for (int i = 0; i < maskedAnswer.Length; ++i)
+                {
+                    if (char.IsLetterOrDigit(maskedAnswer.CharAtAsString(i), 0))
+                    {
+                        unmaskedIndexes.Add(i);
+                    }
+                }
+
+                int lettersToShowCount = currentHint * unmaskedIndexes.Count / (Config.HintCount + 1);
+                int lettersToMaskCount = unmaskedIndexes.Count - lettersToShowCount;
 
                 for (int i = 0; i < lettersToMaskCount; ++i)
                 {
