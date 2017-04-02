@@ -260,11 +260,11 @@ namespace SharpIrcBot.Plugins.Trivia
 
                 for (int i = 0; i < lettersToMaskCount; ++i)
                 {
-                    int j = Randomizer.Next(unmaskedIndexes.Count);
-                    int k = unmaskedIndexes[j];
-                    unmaskedIndexes.Remove(j);
+                    int unmaskedIndexesIndex = Randomizer.Next(unmaskedIndexes.Count);
+                    int indexToMask = unmaskedIndexes[unmaskedIndexesIndex];
+                    unmaskedIndexes.RemoveAt(unmaskedIndexesIndex);
 
-                    maskedAnswer[k] = '_';
+                    maskedAnswer[indexToMask] = '_';
                 }
 
                 ConnectionManager.SendChannelMessage(
