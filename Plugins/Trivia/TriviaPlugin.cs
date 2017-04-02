@@ -243,7 +243,7 @@ namespace SharpIrcBot.Plugins.Trivia
             lock (GameState.Lock)
             {
                 int currentHint = GameState.HintsAlreadyShown + 1;
-                Debug.Assert(currentHint >= Config.HintCount);
+                Debug.Assert(currentHint <= Config.HintCount);
 
                 var maskedAnswer = new StringBuilder(GameState.CurrentQuestion.MainAnswer.Length);
                 int lettersToShowCount = currentHint * maskedAnswer.Length / (Config.HintCount + 1);
