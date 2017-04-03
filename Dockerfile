@@ -1,6 +1,7 @@
+# runtime Dockerfile
 FROM microsoft/dotnet:runtime
 WORKDIR /
-COPY contrib/docker/launch.sh .
+COPY contrib/docker/container-launch.sh .
 WORKDIR /app
 COPY out .
-ENTRYPOINT ["/bin/sh", "/launch.sh"]
+ENTRYPOINT ["/bin/sh", "/container-launch.sh"]
