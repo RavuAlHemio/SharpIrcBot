@@ -4,11 +4,11 @@
 
 # install Docker
 apt-get update
-apt-get --assume-yes install apt-transport-https lsb-release software-properties-common
+DEBIAN_FRONTEND=noninteractive apt-get --assume-yes install apt-transport-https lsb-release software-properties-common
 curl -fsSL https://download.docker.com/linux/debian/gpg | apt-key add -
 echo "deb [arch=amd64] https://download.docker.com/linux/debian $(lsb_release -cs) stable" >> "/etc/apt/sources.list.d/docker.list"
 apt-get update
-apt-get --assume-yes install docker-ce
+DEBIAN_FRONTEND=noninteractive apt-get --assume-yes install docker-ce
 
 # clone the repo
 git clone --recurse-submodules https://github.com/RavuAlHemio/SharpIrcBot.git /src
