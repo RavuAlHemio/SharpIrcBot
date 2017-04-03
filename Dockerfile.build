@@ -1,0 +1,5 @@
+# build-within-Docker Dockerfile
+FROM microsoft/dotnet:latest
+WORKDIR /
+COPY contrib/docker/buildcontainer-run-build.sh .
+ENTRYPOINT ["/bin/sh", "/buildcontainer-run-build.sh"]
