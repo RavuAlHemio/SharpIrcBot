@@ -6,6 +6,7 @@ docker build \
     --tag "sharpircbot-build" \
     .
 docker run \
+    --rm \
     --interactive \
     --tty \
     --volume /run/docker.sock:/run/docker.sock \
