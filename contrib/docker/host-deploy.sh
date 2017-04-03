@@ -1,4 +1,6 @@
 #!/bin/sh
+# deploys an instance of SharpIrcBot on the host
+
 docker \
     create \
     --interactive \

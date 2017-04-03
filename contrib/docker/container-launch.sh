@@ -1,4 +1,5 @@
 #!/bin/sh
+# launches SharpIrcBot within a Docker container
 
 # the admin might want to mount /app/config as a Docker volume
 mkdir -p /app/config

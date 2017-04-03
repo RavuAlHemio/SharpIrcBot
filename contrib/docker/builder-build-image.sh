@@ -1,4 +1,6 @@
 #!/bin/sh
+# builds SharpIrcBot and packs it into a Docker image
+
 cd "$(dirname "$0")/../.."
 dotnet restore
 cd SharpIrcBotCLI
