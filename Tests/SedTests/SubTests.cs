@@ -235,6 +235,22 @@ namespace SharpIrcBot.Tests.SedTests
         }
 
         [Fact]
+        public void TestTypo()
+        {
+            TestConnectionManager mgr = TestCommon.ObtainConnectionManager();
+
+            mgr.InjectChannelMessage(TestChannelName, "OneUser", "i like the waether");
+            mgr.InjectChannelMessage(TestChannelName, "OneUser", "s/ae/ea");
+            mgr.InjectChannelMessage(TestChannelName, "OneUser", "s/ae/ea/");
+
+            Assert.Equal(1, mgr.EventLog.Count);
+            TestMessage sentMessage = Assert.IsType<TestMessage>(mgr.EventLog[0]);
+            Assert.Equal(MessageType.Message, sentMessage.Type);
+            Assert.Equal(TestChannelName, sentMessage.Target);
+            Assert.Equal("i like the weather", sentMessage.Body);
+        }
+
+        [Fact]
         public void TestUnmatchedReplacement()
         {
             TestConnectionManager mgr = TestCommon.ObtainConnectionManager();
