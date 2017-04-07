@@ -1,32 +1,28 @@
-using System.Diagnostics.Contracts;
+using JetBrains.Annotations;
 
 namespace SharpIrcBot.Plugins.Sed.Parsing
 {
     public class GenericReplacementCommand
     {
+        [NotNull]
         public string Command { get; set; }
+
+        [NotNull]
         public string OldString { get; set; }
+
+        [NotNull]
         public string NewString { get; set; }
+
+        [CanBeNull]
         public string Flags { get; set; }
 
-        public GenericReplacementCommand(string command, string oldString, string newString, string flags)
+        public GenericReplacementCommand([NotNull] string command, [NotNull] string oldString,
+                [NotNull] string newString, [CanBeNull] string flags)
         {
-            Contract.Requires(command != null);
-            Contract.Requires(oldString != null);
-            Contract.Requires(newString != null);
-
             Command = command;
             OldString = oldString;
             NewString = newString;
             Flags = flags;
-        }
-
-        [ContractInvariantMethod]
-        private void ObjectInvariant()
-        {
-            Contract.Invariant(Command != null);
-            Contract.Invariant(OldString != null);
-            Contract.Invariant(NewString != null);
         }
     }
 }
