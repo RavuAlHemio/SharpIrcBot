@@ -30,12 +30,12 @@ namespace SharpIrcBot.Plugins.Sed.Parsing
                 // (if we fail at this stage, it's probably not supposed to be a sed command)
                 return null;
             }
-            if (trimmedMessage.Count(c => Splitters.Contains(c)) < 3)
+            if (trimmedMessage.Count(c => Splitters.Contains(c)) < 2)
             {
                 // not enough splitter characters: not a command
                 return null;
             }
-            if (Splitters.Max(splitter => trimmedMessage.Count(c => c == splitter)) < 3)
+            if (Splitters.Max(splitter => trimmedMessage.Count(c => c == splitter)) < 2)
             {
                 // not enough of the same splitter character: not a command
                 return null;
@@ -47,6 +47,7 @@ namespace SharpIrcBot.Plugins.Sed.Parsing
                 string rest;
                 bool invalidCommand;
                 GenericReplacementCommand subCommand = TakeReplacementCommand(trimmedMessage, out rest, out invalidCommand);
+
                 if (subCommand == null)
                 {
                     if (invalidCommand)
@@ -59,6 +60,11 @@ namespace SharpIrcBot.Plugins.Sed.Parsing
                         // assume it's a syntactically incorrect sed command
                         break;
                     }
+                }
+                else if (subCommand.Flags == null)
+                {
+                    // no flags: assume syntactically incorrect sed command as well
+                    break;
                 }
 
                 // ensure that the string is getting shorter
@@ -133,6 +139,7 @@ namespace SharpIrcBot.Plugins.Sed.Parsing
                         if (!CommandsToFactories.ContainsKey(command))
                         {
                             // unknown command
+                            invalidCommand = true;
                             rest = fullCommand;
                             return null;
                         }
@@ -212,7 +219,7 @@ namespace SharpIrcBot.Plugins.Sed.Parsing
                 }
             }
 
-            if (command == null || pattern == null || replacement == null)
+            if (command == null || pattern == null)
             {
                 // incomplete command!
                 rest = fullCommand;
@@ -221,6 +228,12 @@ namespace SharpIrcBot.Plugins.Sed.Parsing
 
             // fell out of the loop: nothing left
             rest = "";
+
+            // allow null flags; let the caller take care of it
+            if (replacement == null)
+            {
+                return new GenericReplacementCommand(command, pattern, builder.ToString(), null);
+            }
 
             return new GenericReplacementCommand(command, pattern, replacement, builder.ToString());
         }
