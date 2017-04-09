@@ -30,6 +30,14 @@ namespace SharpIrcBot.Plugins.LinkInfo
             {
                 return null;
             }
+            catch (NullReferenceException)
+            {
+                // HACK
+                // System.Text.Encoding.CodePages <= 4.3.0 has a bug that throws
+                // NullReferenceException when attempting to decode an invalid
+                // codepoint with ExceptionFallback. Work around this.
+                return null;
+            }
         }
 
         public static string GuessEncodingAndDecode(byte[] data, string contentTypeHeader)
