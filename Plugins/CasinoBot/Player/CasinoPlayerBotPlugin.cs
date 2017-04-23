@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -149,6 +150,8 @@ namespace SharpIrcBot.Plugins.CasinoBot.Player
         public virtual void HandleEventHandInfo([EventValue("player")] string player,
                 [EventValue("hand")] List<Card> hand, [EventValue("split_round")] int? splitRound = null)
         {
+            DistributeHandAssistance(player, hand, splitRound);
+
             if (player != ConnectionManager.MyNickname)
             {
                 return;
@@ -274,6 +277,70 @@ namespace SharpIrcBot.Plugins.CasinoBot.Player
             }
 
             ConnectionManager.SendChannelMessage(Config.CasinoChannel, stand ? ".stand" : ".hit");
+        }
+
+        protected virtual void DistributeHandAssistance(string player, List<Card> hand, int? splitRound = null)
+        {
+            string handMessage = null;
+
+            foreach (string casinoNick in ConnectionManager.NicknamesInChannel(Config.CasinoChannel))
+            {
+                string registeredNick = ConnectionManager.RegisteredNameForNick(casinoNick) ?? casinoNick;
+                if (!Config.AssistPlayers.Contains(registeredNick))
+                {
+                    // this player is not interested
+                    continue;
+                }
+
+                if (handMessage == null)
+                {
+                    // time to assemble it
+                    string playerIdentifier = splitRound.HasValue
+                        ? $"{player}-{splitRound.Value}"
+                        : player;
+
+                    string[] handValues = hand.BlackjackValues()
+                        .OrderBy(v => v)
+                        .Select(AnnotateHandValue)
+                        .ToArray();
+
+                    string splitChunk = (hand.Count == 2 && hand[0].Value == hand[1].Value)
+                        ? "IS SPLITTABLE and "
+                        : "";
+
+                    handMessage = $"{playerIdentifier}'s hand {splitChunk}amounts to {string.Join(" or ", handValues)}";
+                }
+
+                ConnectionManager.SendQueryNotice(casinoNick, handMessage);
+            }
+        }
+
+        protected virtual string AnnotateHandValue(int handValue)
+        {
+            if (handValue <= BlackjackSafeMaximum)
+            {
+                // safe
+                return $"{handValue} s";
+            }
+            if (handValue < BlackjackDealerMinimum)
+            {
+                // under the dealer's minimum
+                return $"{handValue} u";
+            }
+            if (handValue < BlackjackTargetValue)
+            {
+                // duelling the dealer
+                return $"{handValue} d";
+            }
+            if (handValue == BlackjackTargetValue)
+            {
+                // blackjack
+                return $"{handValue} !";
+            }
+
+            Debug.Assert(handValue > BlackjackTargetValue);
+            // bust
+            return $"{handValue} b";
         }
     }
 }

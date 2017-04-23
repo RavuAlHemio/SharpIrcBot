@@ -11,6 +11,7 @@ namespace SharpIrcBot.Plugins.CasinoBot.Player
         public string GameMasterNickname { get; set; }
         public List<string> Curses { get; set; }
         public List<string> Gloats { get; set; }
+        public HashSet<string> AssistPlayers { get; set; }
         public int LowStandNum { get; set; }
         public int LowStandDen { get; set; }
         public int HighStandNum { get; set; }
@@ -22,6 +23,7 @@ namespace SharpIrcBot.Plugins.CasinoBot.Player
             GameMasterNickname = "CasinoBot";
             Curses = new List<string>();
             Gloats = new List<string>();
+            AssistPlayers = new HashSet<string>();
             LowStandNum = 1;
             LowStandDen = 5;
             HighStandNum = 4;
