@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 
-namespace SharpIrcBot.Plugins.UnoBot.GameMaster
+namespace SharpIrcBot.Collections
 {
     public class SortedMultiset<T> : ISet<T>
     {

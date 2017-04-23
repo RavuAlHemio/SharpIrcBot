@@ -1,4 +1,6 @@
-﻿namespace SharpIrcBot.Plugins.UnoBot.GameMaster
+﻿using SharpIrcBot.Collections;
+
+namespace SharpIrcBot.Plugins.UnoBot.GameMaster
 {
     public class Player
     {
