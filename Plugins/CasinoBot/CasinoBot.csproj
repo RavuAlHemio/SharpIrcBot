@@ -2,6 +2,10 @@
 
   <PropertyGroup>
     <TargetFrameworks>netstandard1.6;net461</TargetFrameworks>
+    <DebugType>portable</DebugType>
+    <RootNamespace>SharpIrcBot.Plugins.CasinoBot</RootNamespace>
+    <AssemblyName>SharpIrcBot.Plugins.CasinoBot</AssemblyName>
+    <PackageId>SharpIrcBot.Plugins.CasinoBot</PackageId>
   </PropertyGroup>
 
   <ItemGroup>
