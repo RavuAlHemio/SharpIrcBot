@@ -7,8 +7,8 @@ namespace SharpIrcBot.Plugins.CasinoBot.Player
     [JsonObject(MemberSerialization.OptOut)]
     public class PlayerConfig
     {
-        public string CasinoBotName { get; set; }
         public string CasinoChannel { get; set; }
+        public string GameMasterNickname { get; set; }
         public List<string> Curses { get; set; }
         public List<string> Gloats { get; set; }
         public int LowStandNum { get; set; }
@@ -18,8 +18,8 @@ namespace SharpIrcBot.Plugins.CasinoBot.Player
 
         public PlayerConfig(JObject obj)
         {
-            CasinoBotName = "CasinoBot";
             CasinoChannel = "#casino";
+            GameMasterNickname = "CasinoBot";
             Curses = new List<string>();
             Gloats = new List<string>();
             LowStandNum = 1;

@@ -89,7 +89,7 @@ namespace SharpIrcBot.Plugins.CasinoBot.Player
                 return;
             }
 
-            if (!string.Equals(args.SenderNickname, Config.CasinoBotName, StringComparison.OrdinalIgnoreCase))
+            if (!string.Equals(args.SenderNickname, Config.GameMasterNickname, StringComparison.OrdinalIgnoreCase))
             {
                 return;
             }
