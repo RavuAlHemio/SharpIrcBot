@@ -161,7 +161,7 @@ namespace SharpIrcBot.Plugins.CasinoBot.Player
             // grow additional hands
             while (handIndex >= MyHands.Count)
             {
-                MyHands.Append(null);
+                MyHands.Add(null);
             }
 
             if (MyHands[handIndex] == null)
