@@ -22,7 +22,7 @@ namespace SharpIrcBot.Plugins.CasinoBot.Player
         protected PlayerConfig Config { get; set; }
         protected EventDispatcher Dispatcher { get; set; }
         protected BlackjackState State { get; set; }
-        protected SortedMultiset<Card> MyHand { get; set; }
+        protected List<Hand> MyHands { get; set; }
         protected Random Randomizer { get; set; }
 
         public CasinoPlayerBotPlugin(IConnectionManager connMgr, JObject config)
@@ -31,7 +31,7 @@ namespace SharpIrcBot.Plugins.CasinoBot.Player
             Config = new PlayerConfig(config);
             Dispatcher = new EventDispatcher();
             State = BlackjackState.None;
-            MyHand = null;
+            MyHands = new List<Hand>(2);
             Randomizer = new Random();
 
             ConnectionManager.ChannelMessage += HandleChannelMessage;
@@ -119,35 +119,70 @@ namespace SharpIrcBot.Plugins.CasinoBot.Player
                 return;
             }
 
+            // my hands are empty again
+            MyHands.Clear();
+
             PlaceBlackjackBet();
         }
 
         [Event("turn_info")]
-        public virtual void HandleEventTurnInfo([EventValue("player")] string player)
+        public virtual void HandleEventTurnInfo([EventValue("player")] string player,
+                [EventValue("split_round")] int? splitRound = null)
         {
             State = (player == ConnectionManager.MyNickname)
                 ? BlackjackState.MyTurn
                 : BlackjackState.OthersTurn;
 
+            // warning: assumes order: hand_info -> turn_info -> hand_info -> hand_info -> hand_info ...
+
+            int handIndex = splitRound.HasValue
+                ? (splitRound.Value - 1)
+                : 0;
+
             if (State == BlackjackState.MyTurn)
             {
-                MakeBlackjackMove();
+                MakeBlackjackMove(handIndex);
             }
         }
 
         [Event("hand_info")]
-        public virtual void HandleEventHandInfo([EventValue("player")] string player, [EventValue("hand")] List<Card> hand)
+        public virtual void HandleEventHandInfo([EventValue("player")] string player,
+                [EventValue("hand")] List<Card> hand, [EventValue("split_round")] int? splitRound = null)
         {
             if (player != ConnectionManager.MyNickname)
             {
                 return;
             }
 
-            MyHand = new SortedMultiset<Card>(hand);
+            int handIndex = splitRound.HasValue
+                ? (splitRound.Value - 1)
+                : 0;
+
+            // grow additional hands
+            while (handIndex >= MyHands.Count)
+            {
+                MyHands.Append(null);
+            }
+
+            if (MyHands[handIndex] == null)
+            {
+                MyHands[handIndex] = new Hand
+                {
+                    Cards = new SortedMultiset<Card>(hand),
+                    Round = 0
+                };
+            }
+            else
+            {
+                MyHands[handIndex].Cards = new SortedMultiset<Card>(hand);
+                ++MyHands[handIndex].Round;
+            }
+
+            // warning: assumes order: hand_info[0] -> turn_info -> hand_info[1] -> hand_info[2] -> hand_info[3] ...
 
             if (State == BlackjackState.MyTurn)
             {
-                MakeBlackjackMove();
+                MakeBlackjackMove(handIndex);
             }
         }
 
@@ -163,10 +198,16 @@ namespace SharpIrcBot.Plugins.CasinoBot.Player
             ConnectionManager.SendChannelMessage(Config.CasinoChannel, ".bet 5");
         }
 
-        protected virtual void MakeBlackjackMove()
+        protected virtual void MakeBlackjackMove(int handIndex)
         {
-            List<int> handValues = MyHand.BlackjackValues()
+            Debug.Assert(handIndex >= 0 && handIndex < MyHands.Count);
+            Hand hand = MyHands[handIndex];
+            Debug.Assert(hand != null);
+
+            List<int> handValues = hand.Cards.BlackjackValues()
                 .ToList();
+
+            // stand immediately if blackjack
             if (handValues.Any(hv => hv == BlackjackTargetValue))
             {
                 // aw yiss
@@ -177,6 +218,28 @@ namespace SharpIrcBot.Plugins.CasinoBot.Player
                 }
                 ConnectionManager.SendChannelMessage(Config.CasinoChannel, ".stand");
                 return;
+            }
+
+            // can we split?
+            if (hand.Round == 0 && hand.Cards.Count == 2)
+            {
+                Card[] bothCards = hand.Cards.ToArray();
+                Debug.Assert(bothCards.Length == 2);
+
+                if (bothCards[0].Value == bothCards[1].Value)
+                {
+                    // yes
+                    ConnectionManager.SendChannelMessage(Config.CasinoChannel, ".split");
+
+                    // the game master will now list all our hands; forget the existing ones
+                    // (this also ensures that all hands are counted from round 0, allowing additional splits)
+                    MyHands.Clear();
+
+                    // don't play upon the next hand_info; wait for the turn_info
+                    State = BlackjackState.SplittingMyHand;
+
+                    return;
+                }
             }
 
             int minValue = handValues.Min();

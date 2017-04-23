@@ -6,6 +6,7 @@ namespace SharpIrcBot.Plugins.CasinoBot.Player
         MyBetting,
         OthersBetting,
         MyTurn,
-        OthersTurn
+        OthersTurn,
+        SplittingMyHand
     }
 }
