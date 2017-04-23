@@ -170,7 +170,11 @@ namespace SharpIrcBot.Plugins.CasinoBot.Player
             if (handValues.Any(hv => hv == BlackjackTargetValue))
             {
                 // aw yiss
-                ConnectionManager.SendChannelMessage(Config.CasinoChannel, "yeah");
+                if (Config.Gloats.Count > 0)
+                {
+                    string gloat = Config.Gloats[Randomizer.Next(Config.Gloats.Count)];
+                    ConnectionManager.SendChannelMessage(Config.CasinoChannel, gloat);
+                }
                 ConnectionManager.SendChannelMessage(Config.CasinoChannel, ".stand");
                 return;
             }
@@ -179,7 +183,11 @@ namespace SharpIrcBot.Plugins.CasinoBot.Player
             if (minValue > BlackjackTargetValue)
             {
                 // bust
-                ConnectionManager.SendChannelMessage(Config.CasinoChannel, "darn");
+                if (Config.Curses.Count > 0)
+                {
+                    string curse = Config.Curses[Randomizer.Next(Config.Curses.Count)];
+                    ConnectionManager.SendChannelMessage(Config.CasinoChannel, curse);
+                }
                 return;
             }
 
