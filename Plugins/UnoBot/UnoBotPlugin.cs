@@ -299,7 +299,7 @@ namespace SharpIrcBot.Plugins.UnoBot
                 return;
             }
 
-            if (args.SenderNickname == ConnectionManager.MyNickname)
+            if (!string.Equals(args.SenderNickname, Config.GameMasterNickname, StringComparison.OrdinalIgnoreCase))
             {
                 return;
             }

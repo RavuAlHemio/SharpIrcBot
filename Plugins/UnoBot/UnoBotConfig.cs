@@ -9,6 +9,7 @@ namespace SharpIrcBot.Plugins.UnoBot
     public class UnoBotConfig
     {
         public string UnoChannel { get; set; }
+        public string GameMasterNickname { get; set; }
         public List<string> Curses { get; set; }
         public int ManyCardsCurseThreshold { get; set; }
         public int ManyDrawsCurseThreshold { get; set; }
