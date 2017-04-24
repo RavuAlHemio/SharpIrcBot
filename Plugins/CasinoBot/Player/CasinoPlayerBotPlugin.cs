@@ -216,14 +216,18 @@ namespace SharpIrcBot.Plugins.CasinoBot.Player
                 // aw yiss
                 if (Config.Gloats.Count > 0)
                 {
-                    string gloat = Config.Gloats[Randomizer.Next(Config.Gloats.Count)];
-                    ConnectionManager.SendChannelMessage(Config.CasinoChannel, gloat);
+                    if (Randomizer.Next(Config.GloatDen) < Config.GloatNum)
+                    {
+                        string gloat = Config.Gloats[Randomizer.Next(Config.Gloats.Count)];
+                        ConnectionManager.SendChannelMessage(Config.CasinoChannel, gloat);
+                    }
                 }
                 ConnectionManager.SendChannelMessage(Config.CasinoChannel, ".stand");
                 return;
             }
 
             // can we split?
+            // TODO: also test if we have enough money to split
             if (hand.Round == 0 && hand.Cards.Count == 2)
             {
                 Card[] bothCards = hand.Cards.ToArray();
@@ -251,8 +255,11 @@ namespace SharpIrcBot.Plugins.CasinoBot.Player
                 // bust
                 if (Config.Curses.Count > 0)
                 {
-                    string curse = Config.Curses[Randomizer.Next(Config.Curses.Count)];
-                    ConnectionManager.SendChannelMessage(Config.CasinoChannel, curse);
+                    if (Randomizer.Next(Config.CurseDen) < Config.CurseNum)
+                    {
+                        string curse = Config.Curses[Randomizer.Next(Config.Curses.Count)];
+                        ConnectionManager.SendChannelMessage(Config.CasinoChannel, curse);
+                    }
                 }
                 return;
             }
