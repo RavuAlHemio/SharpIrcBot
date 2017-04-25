@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
+using SharpIrcBot.Commands;
 using SharpIrcBot.Events;
 using SharpIrcBot.Events.Irc;
 using SharpIrcBot.Plugins.Thanks.ORM;
@@ -13,8 +14,6 @@ namespace SharpIrcBot.Plugins.Thanks
     public class ThanksPlugin : IPlugin, IReloadableConfiguration
     {
         private static readonly ILogger Logger = SharpIrcBotUtil.LoggerFactory.CreateLogger<ThanksPlugin>();
-        public static readonly Regex ThankRegex = new Regex("^!(?:thank|thanks|thx)\\s+(?<force>--force\\s+)?(?<thankee>[^-\\s]\\S*)(?:\\s+(?<reason>\\S+(?:\\s+\\S+)*))?\\s*$", RegexOptions.Compiled);
-        public static readonly Regex ThankedRegex = new Regex("^!thanked\\s+(?<raw>--raw\\s+)?(?<thankee>[^-\\s]\\S*)\\s*$", RegexOptions.Compiled);
 
         protected IConnectionManager ConnectionManager { get; }
         protected ThanksConfig Config { get; set; }
@@ -24,8 +23,62 @@ namespace SharpIrcBot.Plugins.Thanks
             ConnectionManager = connMgr;
             Config = new ThanksConfig(config);
 
-            ConnectionManager.ChannelMessage += HandleChannelMessage;
             ConnectionManager.BaseNickChanged += HandleBaseNickChanged;
+
+            ConnectionManager.CommandManager.RegisterChannelMessageCommandHandler(
+                new Command(
+                    CommandUtil.MakeNames("thank", "thanks", "thx"),
+                    CommandUtil.MakeOptions(
+                        CommandUtil.MakeFlag("--force")
+                    ),
+                    CommandUtil.MakeArguments(
+                        CommandUtil.NonzeroStringMatcherRequiredWordTaker, // target
+                        RestTaker.Instance // reason
+                    ),
+                    forbiddenFlags: MessageFlags.UserBanned
+                ),
+                HandleThankCommand
+            );
+            ConnectionManager.CommandManager.RegisterChannelMessageCommandHandler(
+                new Command(
+                    CommandUtil.MakeNames("thanked"),
+                    CommandUtil.MakeOptions(
+                        CommandUtil.MakeFlag("--raw")
+                    ),
+                    CommandUtil.MakeArguments(
+                        CommandUtil.NonzeroStringMatcherRequiredWordTaker // target
+                    ),
+                    forbiddenFlags: MessageFlags.UserBanned
+                ),
+                HandleThankedCommand
+            );
+            ConnectionManager.CommandManager.RegisterChannelMessageCommandHandler(
+                new Command(
+                    CommandUtil.MakeNames("grateful"),
+                    CommandUtil.MakeOptions(
+                        CommandUtil.MakeFlag("--raw")
+                    ),
+                    CommandUtil.MakeArguments(
+                        CommandUtil.NonzeroStringMatcherRequiredWordTaker // target
+                    ),
+                    forbiddenFlags: MessageFlags.UserBanned
+                ),
+                HandleGratefulCommand
+            );
+            ConnectionManager.CommandManager.RegisterChannelMessageCommandHandler(
+                new Command(
+                    CommandUtil.MakeNames("topthanked"),
+                    forbiddenFlags: MessageFlags.UserBanned
+                ),
+                HandleTopThankedCommand
+            );
+            ConnectionManager.CommandManager.RegisterChannelMessageCommandHandler(
+                new Command(
+                    CommandUtil.MakeNames("topgrateful"),
+                    forbiddenFlags: MessageFlags.UserBanned
+                ),
+                HandleTopGratefulCommand
+            );
         }
 
         public virtual void ReloadConfiguration(JObject newConfig)
@@ -38,232 +91,288 @@ namespace SharpIrcBot.Plugins.Thanks
         {
         }
 
-        protected void HandleChannelMessage(object sender, IChannelMessageEventArgs args, MessageFlags flags)
+        protected virtual void HandleThankCommand(CommandMatch cmd, IChannelMessageEventArgs msg)
         {
-            if (flags.HasFlag(MessageFlags.UserBanned))
+            string thankerNick = msg.SenderNickname;
+
+            bool forceThanks = cmd.Options.Any(f => f.Key == "--force");
+            var thankeeNick = (string)cmd.Arguments[0];
+            string reason = ((string)cmd.Arguments[1]).Trim();
+
+            if (reason.Length == 0)  // trimmed!
             {
-                return;
+                reason = null;
             }
 
-            if (args.SenderNickname == ConnectionManager.MyNickname)
+            string thanker;
+            string thankee;
+            if (forceThanks)
             {
-                return;
+                thanker = thankerNick;
+                thankee = thankeeNick;
             }
-
-            var thankMatch = ThankRegex.Match(args.Message);
-            if (thankMatch.Success)
+            else
             {
-                var thankerNick = args.SenderNickname;
-
-                bool forceThanks = thankMatch.Groups["force"].Success;
-                var thankeeNick = thankMatch.Groups["thankee"].Value;
-                var reason = thankMatch.Groups["reason"].Value.Trim();
-
-                if (reason.Length == 0)  // trimmed!
-                {
-                    reason = null;
-                }
-
-                string thanker;
-                string thankee;
-                if (forceThanks)
-                {
-                    thanker = thankerNick;
-                    thankee = thankeeNick;
-                }
-                else
-                {
-                    thanker = ConnectionManager.RegisteredNameForNick(thankerNick);
-                    if (thanker == null)
-                    {
-                        ConnectionManager.SendChannelMessageFormat(
-                            args.Channel,
-                            "{0}: You can't use this unless you're logged in with NickServ.",
-                            thankerNick
-                        );
-                        return;
-                    }
-
-                    thankee = ConnectionManager.RegisteredNameForNick(thankeeNick);
-                    if (thankee == null)
-                    {
-                        ConnectionManager.SendChannelMessageFormat(
-                            args.Channel,
-                            "{0}: Unfortunately, {1} doesn't seem to be logged in with NickServ.",
-                            thankerNick,
-                            thankeeNick
-                        );
-                        return;
-                    }
-                }
-
-                var thankerLower = thanker.ToLowerInvariant();
-                var thankeeLower = thankee.ToLowerInvariant();
-
-                if (thankeeLower == thankerLower)
+                thanker = ConnectionManager.RegisteredNameForNick(thankerNick);
+                if (thanker == null)
                 {
                     ConnectionManager.SendChannelMessageFormat(
-                        args.Channel,
-                        "You are so full of yourself, {0}.",
+                        msg.Channel,
+                        "{0}: You can't use this unless you're logged in with NickServ.",
                         thankerNick
                     );
                     return;
                 }
 
-                Logger.LogDebug("{Thanker} thanks {Thankee}", thanker, thankee);
-
-                long thankedCount;
-                using (var ctx = GetNewContext())
+                thankee = ConnectionManager.RegisteredNameForNick(thankeeNick);
+                if (thankee == null)
                 {
-                    var entry = new ThanksEntry
-                    {
-                        Channel = args.Channel,
-                        ThankerLowercase = thankerLower,
-                        ThankeeLowercase = thankeeLower,
-                        Timestamp = DateTime.Now.ToUniversalTimeForDatabase(),
-                        Deleted = false,
-                        Reason = reason
-                    };
-                    ctx.ThanksEntries.Add(entry);
-                    ctx.SaveChanges();
-
-                    thankedCount = ctx.ThanksEntries.Count(te => te.ThankeeLowercase == thankeeLower && !te.Deleted);
+                    ConnectionManager.SendChannelMessageFormat(
+                        msg.Channel,
+                        "{0}: Unfortunately, {1} doesn't seem to be logged in with NickServ.",
+                        thankerNick,
+                        thankeeNick
+                    );
+                    return;
                 }
+            }
 
+            var thankerLower = thanker.ToLowerInvariant();
+            var thankeeLower = thankee.ToLowerInvariant();
+
+            if (thankeeLower == thankerLower)
+            {
                 ConnectionManager.SendChannelMessageFormat(
-                    args.Channel,
-                    "{0}: Alright! By the way, {1} has been thanked {2} until now.",
-                    args.SenderNickname,
-                    thankee,
-                    (thankedCount == 1) ? "once" : (thankedCount + " times")
+                    msg.Channel,
+                    "You are so full of yourself, {0}.",
+                    thankerNick
                 );
                 return;
             }
 
-            var thankedMatch = ThankedRegex.Match(args.Message);
-            if (thankedMatch.Success)
+            Logger.LogDebug("{Thanker} thanks {Thankee}", thanker, thankee);
+
+            long thankedCount;
+            using (var ctx = GetNewContext())
             {
-                bool raw = thankedMatch.Groups["raw"].Success;
-                var nickname = thankedMatch.Groups["thankee"].Value;
-                if (!raw)
+                var entry = new ThanksEntry
                 {
-                    var username = ConnectionManager.RegisteredNameForNick(nickname);
-                    if (username != null)
-                    {
-                        nickname = username;
-                    }
-                }
+                    Channel = msg.Channel,
+                    ThankerLowercase = thankerLower,
+                    ThankeeLowercase = thankeeLower,
+                    Timestamp = DateTime.Now.ToUniversalTimeForDatabase(),
+                    Deleted = false,
+                    Reason = reason
+                };
+                ctx.ThanksEntries.Add(entry);
+                ctx.SaveChanges();
 
-                var lowerNickname = nickname.ToLowerInvariant();
-
-                long thankedCount;
-                using (var ctx = GetNewContext())
-                {
-                    thankedCount = ctx.ThanksEntries.Count(te => te.ThankeeLowercase == lowerNickname && !te.Deleted);
-                }
-
-                string countPhrase;
-                bool showStats = (thankedCount != 0);
-
-                if (thankedCount == 0)
-                {
-                    countPhrase = "not been thanked";
-                }
-                else if (thankedCount == 1)
-                {
-                    countPhrase = "been thanked once";
-                }
-                else
-                {
-                    countPhrase = string.Format("been thanked {0} times", thankedCount);
-                }
-
-                var statsString = "";
-                if (showStats)
-                {
-                    List<string> mostGratefulStrings;
-                    using (var ctx = GetNewContext())
-                    {
-                        mostGratefulStrings = ctx.ThanksEntries
-                            .Where(te => te.ThankeeLowercase == lowerNickname && !te.Deleted)
-                            .GroupBy(te => te.ThankerLowercase, (thanker, thanksEnumerable) => new NicknameAndCount { Nickname = thanker, Count = thanksEnumerable.Count() })
-                            .OrderByDescending(te => te.Count)
-                            .Take(Config.MostGratefulCount + 1)
-                            .ToList()
-                            .Select(te => string.Format("{0}: {1}\u00D7", te.Nickname, te.Count))
-                            .ToList();
-                    }
-
-                    // mention that the list is truncated if there are more than MostGratefulCount entries
-                    var countString = (mostGratefulStrings.Count <= Config.MostGratefulCount) ? "" : (" " + Config.MostGratefulCountText);
-                    statsString = string.Format(
-                        " (Most grateful{0}: {1})",
-                        countString,
-                        string.Join(", ", mostGratefulStrings.Take(Config.MostGratefulCount))
-                    );
-                }
-
-                ConnectionManager.SendChannelMessageFormat(
-                    args.Channel,
-                    "{0}: {1} has {2} until now.{3}",
-                    args.SenderNickname,
-                    nickname,
-                    countPhrase,
-                    statsString
-                );
+                thankedCount = ctx.ThanksEntries.Count(te => te.ThankeeLowercase == thankeeLower && !te.Deleted);
             }
 
-            if (args.Message == "!topthanked")
+            ConnectionManager.SendChannelMessageFormat(
+                msg.Channel,
+                "{0}: Alright! By the way, {1} has been thanked {2} until now.",
+                msg.SenderNickname,
+                thankee,
+                (thankedCount == 1) ? "once" : (thankedCount + " times")
+            );
+        }
+
+        protected virtual void HandleThankedCommand(CommandMatch cmd, IChannelMessageEventArgs msg)
+        {
+            bool raw = cmd.Options.Any(f => f.Key == "--raw");
+            var nickname = (string)cmd.Arguments[0];
+            if (!raw)
             {
-                List<NicknameAndCount> top;
+                var username = ConnectionManager.RegisteredNameForNick(nickname);
+                if (username != null)
+                {
+                    nickname = username;
+                }
+            }
+
+            var lowerNickname = nickname.ToLowerInvariant();
+
+            long thankedCount;
+            using (var ctx = GetNewContext())
+            {
+                thankedCount = ctx.ThanksEntries.Count(te => te.ThankeeLowercase == lowerNickname && !te.Deleted);
+            }
+
+            string countPhrase;
+            bool showStats = (thankedCount != 0);
+
+            if (thankedCount == 0)
+            {
+                countPhrase = "not been thanked";
+            }
+            else if (thankedCount == 1)
+            {
+                countPhrase = "been thanked once";
+            }
+            else
+            {
+                countPhrase = string.Format("been thanked {0} times", thankedCount);
+            }
+
+            var statsString = "";
+            if (showStats)
+            {
+                List<string> mostGratefulStrings;
                 using (var ctx = GetNewContext())
                 {
-                    top = ctx.ThanksEntries
-                        .Where(te => !te.Deleted)
-                        .GroupBy(te => te.ThankeeLowercase, (thankee, thanksEntries) => new NicknameAndCount
-                        {
-                            Nickname = thankee,
-                            Count = thanksEntries.Count()
-                        })
-                        .OrderByDescending(teg => teg.Count)
-                        .Take(Config.MostThankedCount)
+                    mostGratefulStrings = ctx.ThanksEntries
+                        .Where(te => te.ThankeeLowercase == lowerNickname && !te.Deleted)
+                        .GroupBy(te => te.ThankerLowercase, (thanker, thanksEnumerable) => new NicknameAndCount { Nickname = thanker, Count = thanksEnumerable.Count() })
+                        .OrderByDescending(te => te.Count)
+                        .Take(Config.MostGratefulCount + 1)
                         .ToList()
-                    ;
+                        .Select(te => string.Format("{0}: {1}\u00D7", te.Nickname, te.Count))
+                        .ToList();
                 }
 
-                ConnectionManager.SendChannelMessageFormat(
-                    args.Channel,
-                    "{0}: {1}",
-                    args.SenderNickname,
-                    string.Join(", ", top.Select(NicknameAndCountString))
+                // mention that the list is truncated if there are more than MostGratefulCount entries
+                var countString = (mostGratefulStrings.Count <= Config.MostGratefulCount) ? "" : (" " + Config.MostGratefulCountText);
+                statsString = string.Format(
+                    " (Most grateful{0}: {1})",
+                    countString,
+                    string.Join(", ", mostGratefulStrings.Take(Config.MostGratefulCount))
                 );
             }
 
-            if (args.Message == "!topgrateful")
+            ConnectionManager.SendChannelMessageFormat(
+                msg.Channel,
+                "{0}: {1} has {2} until now.{3}",
+                msg.SenderNickname,
+                nickname,
+                countPhrase,
+                statsString
+            );
+        }
+
+        protected virtual void HandleGratefulCommand(CommandMatch cmd, IChannelMessageEventArgs msg)
+        {
+            bool raw = cmd.Options.Any(f => f.Key == "--raw");
+            var nickname = (string)cmd.Arguments[0];
+            if (!raw)
             {
-                List<NicknameAndCount> top;
+                var username = ConnectionManager.RegisteredNameForNick(nickname);
+                if (username != null)
+                {
+                    nickname = username;
+                }
+            }
+
+            var lowerNickname = nickname.ToLowerInvariant();
+
+            long gratefulCount;
+            using (var ctx = GetNewContext())
+            {
+                gratefulCount = ctx.ThanksEntries.Count(te => te.ThankerLowercase == lowerNickname && !te.Deleted);
+            }
+
+            string countPhrase;
+            bool showStats = (gratefulCount != 0);
+
+            if (gratefulCount == 0)
+            {
+                countPhrase = "not thanked anybody";
+            }
+            else if (gratefulCount == 1)
+            {
+                countPhrase = "thanked once";
+            }
+            else
+            {
+                countPhrase = string.Format("thanked {0} times", gratefulCount);
+            }
+
+            var statsString = "";
+            if (showStats)
+            {
+                List<string> mostThankedStrings;
                 using (var ctx = GetNewContext())
                 {
-                    top = ctx.ThanksEntries
-                        .Where(te => !te.Deleted)
-                        .GroupBy(te => te.ThankerLowercase, (thanker, thanksEntries) => new NicknameAndCount
-                        {
-                            Nickname = thanker,
-                            Count = thanksEntries.Count()
-                        })
-                        .OrderByDescending(teg => teg.Count)
-                        .Take(Config.MostThankedCount)
+                    mostThankedStrings = ctx.ThanksEntries
+                        .Where(te => te.ThankerLowercase == lowerNickname && !te.Deleted)
+                        .GroupBy(te => te.ThankeeLowercase, (thankee, thanksEnumerable) => new NicknameAndCount { Nickname = thankee, Count = thanksEnumerable.Count() })
+                        .OrderByDescending(te => te.Count)
+                        .Take(Config.MostGratefulCount + 1)
                         .ToList()
-                    ;
+                        .Select(te => string.Format("{0}: {1}\u00D7", te.Nickname, te.Count))
+                        .ToList();
                 }
 
-                ConnectionManager.SendChannelMessageFormat(
-                    args.Channel,
-                    "{0}: {1}",
-                    args.SenderNickname,
-                    string.Join(", ", top.Select(NicknameAndCountString))
+                // mention that the list is truncated if there are more than MostGratefulCount entries
+                var countString = (mostThankedStrings.Count <= Config.MostGratefulCount) ? "" : (" " + Config.MostGratefulCountText);
+                statsString = string.Format(
+                    " (Most thanked{0}: {1})",
+                    countString,
+                    string.Join(", ", mostThankedStrings.Take(Config.MostGratefulCount))
                 );
             }
+
+            ConnectionManager.SendChannelMessageFormat(
+                msg.Channel,
+                "{0}: {1} has {2} until now.{3}",
+                msg.SenderNickname,
+                nickname,
+                countPhrase,
+                statsString
+            );
+        }
+
+        protected virtual void HandleTopThankedCommand(CommandMatch cmd, IChannelMessageEventArgs msg)
+        {
+            List<NicknameAndCount> top;
+            using (var ctx = GetNewContext())
+            {
+                top = ctx.ThanksEntries
+                    .Where(te => !te.Deleted)
+                    .GroupBy(te => te.ThankeeLowercase, (thankee, thanksEntries) => new NicknameAndCount
+                    {
+                        Nickname = thankee,
+                        Count = thanksEntries.Count()
+                    })
+                    .OrderByDescending(teg => teg.Count)
+                    .Take(Config.MostThankedCount)
+                    .ToList()
+                ;
+            }
+
+            ConnectionManager.SendChannelMessageFormat(
+                msg.Channel,
+                "{0}: {1}",
+                msg.SenderNickname,
+                string.Join(", ", top.Select(NicknameAndCountString))
+            );
+        }
+
+        protected virtual void HandleTopGratefulCommand(CommandMatch cmd, IChannelMessageEventArgs msg)
+        {
+            List<NicknameAndCount> top;
+            using (var ctx = GetNewContext())
+            {
+                top = ctx.ThanksEntries
+                    .Where(te => !te.Deleted)
+                    .GroupBy(te => te.ThankerLowercase, (thanker, thanksEntries) => new NicknameAndCount
+                    {
+                        Nickname = thanker,
+                        Count = thanksEntries.Count()
+                    })
+                    .OrderByDescending(teg => teg.Count)
+                    .Take(Config.MostThankedCount)
+                    .ToList()
+                ;
+            }
+
+            ConnectionManager.SendChannelMessageFormat(
+                msg.Channel,
+                "{0}: {1}",
+                msg.SenderNickname,
+                string.Join(", ", top.Select(NicknameAndCountString))
+            );
         }
 
         protected virtual void HandleBaseNickChanged(object sender, BaseNickChangedEventArgs args)

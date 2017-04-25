@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json.Linq;
+using SharpIrcBot.Commands;
 using SharpIrcBot.Events;
 using SharpIrcBot.Events.Irc;
 using SharpIrcBot.Plugins.Quotes.ORM;
@@ -13,12 +14,6 @@ namespace SharpIrcBot.Plugins.Quotes
 {
     public class QuotesPlugin : IPlugin, IReloadableConfiguration
     {
-        public static readonly Regex AddQuoteRegex = new Regex("^!addquote\\s+(?<quote>\\S.*)$", RegexOptions.Compiled);
-        public static readonly Regex RememberRegex = new Regex("^!remember\\s+(?<nick>\\S+)\\s+(?<pattern>\\S.*)$", RegexOptions.Compiled);
-        public static readonly Regex QuoteRegex = new Regex("^!(?<rated>any|bad)?(?<showRating>r)?quote(?:\\s+(?<search>\\S.*)|\\s*)$", RegexOptions.Compiled);
-        public static readonly Regex QuoteUserRegex = new Regex("^!(?<rated>any|bad)?(?<showRating>r)?quoteuser\\s+(?<username>\\S+)\\s*$", RegexOptions.Compiled);
-        public static readonly Regex NextQuoteRegex = new Regex("^!next(?<rated>any|bad)?(?<showRating>r)?quote\\s*$", RegexOptions.Compiled);
-
         protected IConnectionManager ConnectionManager { get; }
         protected QuotesConfig Config { get; set; }
         protected Dictionary<string, List<Quote>> PotentialQuotesPerChannel { get; }
@@ -42,8 +37,114 @@ namespace SharpIrcBot.Plugins.Quotes
 
             ConnectionManager.ChannelMessage += HandleChannelMessage;
             ConnectionManager.ChannelAction += HandleChannelAction;
-            ConnectionManager.QueryMessage += HandleQueryMessage;
             ConnectionManager.BaseNickChanged += HandleBaseNickChanged;
+
+            ConnectionManager.CommandManager.RegisterChannelMessageCommandHandler(
+                new Command(
+                    CommandUtil.MakeNames("addquote"),
+                    CommandUtil.NoOptions,
+                    CommandUtil.MakeArguments(
+                        RestTaker.Instance // quote body
+                    ),
+                    forbiddenFlags: MessageFlags.UserBanned
+                ),
+                HandleAddQuoteCommand
+            );
+            ConnectionManager.CommandManager.RegisterChannelMessageCommandHandler(
+                new Command(
+                    CommandUtil.MakeNames("remember"),
+                    CommandUtil.NoOptions,
+                    CommandUtil.MakeArguments(
+                        CommandUtil.NonzeroStringMatcherRequiredWordTaker, // quote author
+                        RestTaker.Instance // search string
+                    ),
+                    forbiddenFlags: MessageFlags.UserBanned
+                ),
+                HandleRememberCommand
+            );
+
+            {
+                var quoteCommand = new Command(
+                    CommandUtil.MakeNames("quote"),
+                    CommandUtil.MakeOptions(
+                        CommandUtil.MakeFlag("--any"),
+                        CommandUtil.MakeFlag("--bad"),
+                        CommandUtil.MakeFlag("-r")
+                    ),
+                    CommandUtil.MakeArguments(
+                        RestTaker.Instance // search string (optional)
+                    ),
+                    forbiddenFlags: MessageFlags.UserBanned
+                );
+                ConnectionManager.CommandManager.RegisterChannelMessageCommandHandler(quoteCommand, HandleQuoteCommand);
+                ConnectionManager.CommandManager.RegisterQueryMessageCommandHandler(quoteCommand, HandleQuoteCommand);
+            }
+
+            {
+                var quoteUserCommand = new Command(
+                    CommandUtil.MakeNames("quoteuser"),
+                    CommandUtil.MakeOptions(
+                        CommandUtil.MakeFlag("--any"),
+                        CommandUtil.MakeFlag("--bad"),
+                        CommandUtil.MakeFlag("-r")
+                    ),
+                    CommandUtil.MakeArguments(
+                        CommandUtil.NonzeroStringMatcherRequiredWordTaker // nickname
+                    ),
+                    forbiddenFlags: MessageFlags.UserBanned
+                );
+                ConnectionManager.CommandManager.RegisterChannelMessageCommandHandler(
+                    quoteUserCommand, HandleQuoteUserCommand
+                );
+                ConnectionManager.CommandManager.RegisterQueryMessageCommandHandler(
+                    quoteUserCommand, HandleQuoteUserCommand
+                );
+            }
+
+            {
+                var nextQuoteCommand = new Command(
+                    CommandUtil.MakeNames("nextquote"),
+                    CommandUtil.MakeOptions(
+                        CommandUtil.MakeFlag("--any"),
+                        CommandUtil.MakeFlag("--bad"),
+                        CommandUtil.MakeFlag("-r")
+                    ),
+                    CommandUtil.NoArguments,
+                    forbiddenFlags: MessageFlags.UserBanned
+                );
+                ConnectionManager.CommandManager.RegisterChannelMessageCommandHandler(
+                    nextQuoteCommand, HandleNextQuoteCommand
+                );
+                ConnectionManager.CommandManager.RegisterQueryMessageCommandHandler(
+                    nextQuoteCommand, HandleNextQuoteCommand
+                );
+            }
+
+            {
+                var upquoteCommand = new Command(
+                    CommandUtil.MakeNames("upquote", "uq"),
+                    forbiddenFlags: MessageFlags.UserBanned
+                );
+                ConnectionManager.CommandManager.RegisterChannelMessageCommandHandler(
+                    upquoteCommand, HandleUpquoteCommand
+                );
+                ConnectionManager.CommandManager.RegisterQueryMessageCommandHandler(
+                    upquoteCommand, HandleUpquoteCommand
+                );
+            }
+
+            {
+                var downquoteCommand = new Command(
+                    CommandUtil.MakeNames("downquote", "dq"),
+                    forbiddenFlags: MessageFlags.UserBanned
+                );
+                ConnectionManager.CommandManager.RegisterChannelMessageCommandHandler(
+                    downquoteCommand, HandleDownquoteCommand
+                );
+                ConnectionManager.CommandManager.RegisterQueryMessageCommandHandler(
+                    downquoteCommand, HandleDownquoteCommand
+                );
+            }
         }
 
         public virtual void ReloadConfiguration(JObject newConfig)
@@ -148,6 +249,99 @@ namespace SharpIrcBot.Plugins.Quotes
             }
         }
 
+        protected virtual void HandleAddQuoteCommand(CommandMatch cmd, IChannelMessageEventArgs msg)
+        {
+            string normalizedNick = ConnectionManager.RegisteredNameForNick(msg.SenderNickname) ?? msg.SenderNickname;
+
+            using (var ctx = GetNewContext())
+            {
+                var newFreeFormQuote = new Quote
+                {
+                    Timestamp = DateTime.Now.ToUniversalTimeForDatabase(),
+                    Channel = msg.Channel,
+                    Author = normalizedNick,
+                    MessageType = "F",
+                    Body = (string)cmd.Arguments[0]
+                };
+                ctx.Quotes.Add(newFreeFormQuote);
+                ctx.SaveChanges();
+                LastQuoteIDs[msg.Channel] = newFreeFormQuote.ID;
+            }
+            ConnectionManager.SendChannelMessage(
+                msg.Channel,
+                "Done."
+            );
+
+            // invalidate these
+            ShuffledAnyQuotes = null;
+            ShuffledBadQuotes = null;
+            ShuffledGoodQuotes = null;
+        }
+
+        protected virtual void HandleRememberCommand(CommandMatch cmd, IChannelMessageEventArgs msg)
+        {
+            var nick = (string)cmd.Arguments[0];
+            var substring = (string)cmd.Arguments[1];
+            if (substring.StartsWith(" "))
+            {
+                substring = substring.Substring(1);
+            }
+
+            string lowercaseSubstring = substring.ToLowerInvariant();
+
+            string registeredNick = ConnectionManager.RegisteredNameForNick(nick) ?? nick;
+            string lowercaseRegisteredNick = registeredNick.ToLowerInvariant();
+
+            string normalizedNick = ConnectionManager.RegisteredNameForNick(msg.SenderNickname) ?? msg.SenderNickname;
+
+            if (lowercaseRegisteredNick == normalizedNick.ToLowerInvariant())
+            {
+                ConnectionManager.SendChannelMessageFormat(
+                    msg.Channel,
+                    "Sorry, {0}, someone else has to remember your quotes.",
+                    msg.SenderNickname
+                );
+                return;
+            }
+
+            // find it
+            Quote matchedQuote = PotentialQuotesPerChannel.ContainsKey(msg.Channel)
+                ? PotentialQuotesPerChannel[msg.Channel]
+                    .OrderByDescending(potQuote => potQuote.Timestamp)
+                    .FirstOrDefault(potQuote => potQuote.Author.ToLower() == lowercaseRegisteredNick && potQuote.Body.ToLower().Contains(lowercaseSubstring))
+                : null;
+
+            if (matchedQuote == null)
+            {
+                ConnectionManager.SendChannelMessageFormat(
+                    msg.Channel,
+                    "Sorry, {0}, I don't remember what {1} said about \"{2}\".",
+                    msg.SenderNickname,
+                    nick,
+                    substring
+                );
+                return;
+            }
+
+            using (var ctx = GetNewContext())
+            {
+                ctx.Quotes.Add(matchedQuote);
+                ctx.SaveChanges();
+                LastQuoteIDs[msg.Channel] = matchedQuote.ID;
+            }
+
+            ConnectionManager.SendChannelMessageFormat(
+                msg.Channel,
+                "Remembering {0}",
+                FormatQuote(matchedQuote, 0)
+            );
+
+            // invalidate these
+            ShuffledAnyQuotes = null;
+            ShuffledBadQuotes = null;
+            ShuffledGoodQuotes = null;
+        }
+
         protected virtual void HandleChannelMessage(object sender, IChannelMessageEventArgs e, MessageFlags flags)
         {
             if (flags.HasFlag(MessageFlags.UserBanned))
@@ -157,108 +351,6 @@ namespace SharpIrcBot.Plugins.Quotes
 
             var body = e.Message;
             var normalizedNick = ConnectionManager.RegisteredNameForNick(e.SenderNickname) ?? e.SenderNickname;
-
-            var addMatch = AddQuoteRegex.Match(body);
-            if (addMatch.Success)
-            {
-                using (var ctx = GetNewContext())
-                {
-                    var newFreeFormQuote = new Quote
-                    {
-                        Timestamp = DateTime.Now.ToUniversalTimeForDatabase(),
-                        Channel = e.Channel,
-                        Author = normalizedNick,
-                        MessageType = "F",
-                        Body = addMatch.Groups["quote"].Value
-                    };
-                    ctx.Quotes.Add(newFreeFormQuote);
-                    ctx.SaveChanges();
-                    LastQuoteIDs[e.Channel] = newFreeFormQuote.ID;
-                }
-                ConnectionManager.SendChannelMessage(
-                    e.Channel,
-                    "Done."
-                );
-
-                // invalidate these
-                ShuffledAnyQuotes = null;
-                ShuffledBadQuotes = null;
-                ShuffledGoodQuotes = null;
-
-                return;
-            }
-
-            var rememberMatch = RememberRegex.Match(body);
-            if (rememberMatch.Success)
-            {
-                var nick = rememberMatch.Groups["nick"].Value;
-                var substring = rememberMatch.Groups["pattern"].Value;
-
-                var lowercaseSubstring = substring.ToLowerInvariant();
-
-                var registeredNick = ConnectionManager.RegisteredNameForNick(nick) ?? nick;
-                var lowercaseRegisteredNick = registeredNick.ToLowerInvariant();
-
-                if (lowercaseRegisteredNick == normalizedNick.ToLowerInvariant())
-                {
-                    ConnectionManager.SendChannelMessageFormat(
-                        e.Channel,
-                        "Sorry, {0}, someone else has to remember your quotes.",
-                        e.SenderNickname
-                    );
-                    return;
-                }
-
-                // find it
-                var matchedQuote = PotentialQuotesPerChannel.ContainsKey(e.Channel)
-                    ? PotentialQuotesPerChannel[e.Channel]
-                        .OrderByDescending(potQuote => potQuote.Timestamp)
-                        .FirstOrDefault(potQuote => potQuote.Author.ToLower() == lowercaseRegisteredNick && potQuote.Body.ToLower().Contains(lowercaseSubstring))
-                    : null;
-
-                if (matchedQuote == null)
-                {
-                    ConnectionManager.SendChannelMessageFormat(
-                        e.Channel,
-                        "Sorry, {0}, I don't remember what {1} said about \"{2}\".",
-                        e.SenderNickname,
-                        nick,
-                        substring
-                    );
-                    return;
-                }
-
-                using (var ctx = GetNewContext())
-                {
-                    ctx.Quotes.Add(matchedQuote);
-                    ctx.SaveChanges();
-                    LastQuoteIDs[e.Channel] = matchedQuote.ID;
-                }
-
-                ConnectionManager.SendChannelMessageFormat(
-                    e.Channel,
-                    "Remembering {0}",
-                    FormatQuote(matchedQuote, 0)
-                );
-
-                // invalidate these
-                ShuffledAnyQuotes = null;
-                ShuffledBadQuotes = null;
-                ShuffledGoodQuotes = null;
-
-                return;
-            }
-
-            if (ActuallyHandleChannelOrQueryMessage(
-                e.SenderNickname,
-                e.Channel,
-                e.Message,
-                m => ConnectionManager.SendChannelMessage(e.Channel, m))
-            )
-            {
-                // handled
-                return;
-            }
 
             // put into backlog
             var newQuote = new Quote
@@ -296,165 +388,219 @@ namespace SharpIrcBot.Plugins.Quotes
             CleanOutPotentialQuotes(e.Channel);
         }
 
-        protected virtual void HandleQueryMessage(object sender, IPrivateMessageEventArgs e, MessageFlags flags)
+        protected bool FlagsToQuoteFilter(CommandMatch cmd, out QuoteRating requestedRating, out bool addMyRating)
         {
-            if (flags.HasFlag(MessageFlags.UserBanned))
+            int anyCount = cmd.Options.Count(o => o.Key == "--any");
+            int badCount = cmd.Options.Count(o => o.Key == "--bad");
+            int addRatingCount = cmd.Options.Count(o => o.Key == "-r");
+
+            if (anyCount + badCount == 0)
             {
-                return;
+                requestedRating = QuoteRating.High;
+            }
+            else if (anyCount + badCount > 1)
+            {
+                // too many "--any"s and/or "--bad"s
+                requestedRating = 0;
+                addMyRating = false;
+                return false;
+            }
+            else if (anyCount == 1)
+            {
+                requestedRating = QuoteRating.Any;
+            }
+            else
+            {
+                Debug.Assert(badCount == 1);
+                requestedRating = QuoteRating.Low;
             }
 
-            if (ActuallyHandleChannelOrQueryMessage(
-                e.SenderNickname,
-                e.SenderNickname,
-                e.Message,
-                m => ConnectionManager.SendQueryMessage(e.SenderNickname, m))
-            )
+            if (addRatingCount == 0)
             {
-                // handled
-                return;
+                addMyRating = false;
+            }
+            else if (addRatingCount == 1)
+            {
+                addMyRating = true;
+            }
+            else
+            {
+                // too many "-r"s
+                requestedRating = 0;
+                addMyRating = false;
+                return false;
+            }
+
+            return true;
+        }
+
+        protected void GetReplyActionAndLocationForMessage(IUserMessageEventArgs msg, out Action<string> replyAction,
+                out string location)
+        {
+            var channelMsg = msg as IChannelMessageEventArgs;
+            if (channelMsg != null)
+            {
+                replyAction = (body) => ConnectionManager.SendChannelMessage(channelMsg.Channel, body);
+                location = channelMsg.Channel;
+            }
+            else
+            {
+                Debug.Assert(msg is IPrivateMessageEventArgs);
+                replyAction = (body) => ConnectionManager.SendQueryMessage(msg.SenderNickname, body);
+                location = msg.SenderNickname;
             }
         }
 
-        private QuoteRating QuoteRatingFromRegexGroup(Group group)
+        protected virtual void HandleQuoteCommand(CommandMatch cmd, IUserMessageEventArgs msg)
         {
-            if (!group.Success)
+            Action<string> postReply;
+            string location;
+            QuoteRating rating;
+            bool addMyRating;
+
+            GetReplyActionAndLocationForMessage(msg, out postReply, out location);
+            if (!FlagsToQuoteFilter(cmd, out rating, out addMyRating))
             {
-                return QuoteRating.High;
+                // invalid flags
+                return;
             }
 
-            if (group.Value == "any")
+            string subject = ((string)cmd.Arguments[0]);
+            if (subject.StartsWith(" "))
             {
-                return QuoteRating.Any;
+                subject = subject.Substring(1);
+            }
+            if (subject.Trim().Length == 0)
+            {
+                subject = null;
             }
 
-            if (group.Value == "bad")
-            {
-                return QuoteRating.Low;
-            }
+            var lowercaseSubject = subject?.ToLowerInvariant();
 
-            throw new ArgumentException("unknown group content", nameof(group));
+            using (var ctx = GetNewContext())
+            {
+                IQueryable<Quote> quotes = (lowercaseSubject != null)
+                    ? ctx.Quotes.Where(q => q.Body.ToLower().Contains(lowercaseSubject))
+                    : ctx.Quotes;
+                IQueryable<Quote> quotesWithVotes = quotes.Include(q => q.Votes);
+
+                PostRandomQuote(msg.SenderNickname, location, quotesWithVotes, rating, addMyRating, postReply);
+            }
         }
 
-        protected virtual bool ActuallyHandleChannelOrQueryMessage(string sender, string location, string message, Action<string> postReply)
+        protected virtual void HandleQuoteUserCommand(CommandMatch cmd, IUserMessageEventArgs msg)
         {
-            var normalizedSender = ConnectionManager.RegisteredNameForNick(sender) ?? sender;
+            Action<string> postReply;
+            string location;
+            QuoteRating rating;
+            bool addMyRating;
 
-            var quoteMatch = QuoteRegex.Match(message);
-            if (quoteMatch.Success)
+            GetReplyActionAndLocationForMessage(msg, out postReply, out location);
+            if (!FlagsToQuoteFilter(cmd, out rating, out addMyRating))
             {
-                var rating = QuoteRatingFromRegexGroup(quoteMatch.Groups["rated"]);
-                bool addMyRating = quoteMatch.Groups["showRating"].Success;
-                var subject = quoteMatch.Groups["search"].Success ? quoteMatch.Groups["search"].Value : null;
-                var lowercaseSubject = subject?.ToLowerInvariant();
-
-                using (var ctx = GetNewContext())
-                {
-                    IQueryable<Quote> quotes = (lowercaseSubject != null)
-                        ? ctx.Quotes.Where(q => q.Body.ToLower().Contains(lowercaseSubject))
-                        : ctx.Quotes;
-                    IQueryable<Quote> quotesWithVotes = quotes.Include(q => q.Votes);
-
-                    PostRandomQuote(sender, location, quotesWithVotes, rating, addMyRating, postReply);
-                }
-
-                return true;
+                // invalid flags
+                return;
             }
 
-            var quoteUserMatch = QuoteUserRegex.Match(message);
-            if (quoteUserMatch.Success)
+            var nick = (string)cmd.Arguments[0];
+            string lowercaseNick = nick.ToLowerInvariant();
+
+            using (var ctx = GetNewContext())
             {
-                var rating = QuoteRatingFromRegexGroup(quoteMatch.Groups["rated"]);
-                bool addMyRating = quoteMatch.Groups["showRating"].Success;
-                var nick = quoteMatch.Groups["username"].Value;
-                var lowercaseNick = nick.ToLowerInvariant();
+                IQueryable<Quote> quotesWithVotes = ctx.Quotes
+                    .Include(q => q.Votes)
+                    .Where(q => q.Author.ToLower() == lowercaseNick);
 
-                using (var ctx = GetNewContext())
-                {
-                    IQueryable<Quote> quotesWithVotes = ctx.Quotes
-                        .Include(q => q.Votes)
-                        .Where(q => q.Author.ToLower() == lowercaseNick);
+                PostRandomQuote(msg.SenderNickname, location, quotesWithVotes, rating, addMyRating, postReply);
+            }
+        }
 
-                    PostRandomQuote(sender, location, quotesWithVotes, rating, addMyRating, postReply);
-                }
+        protected virtual void HandleNextQuoteCommand(CommandMatch cmd, IUserMessageEventArgs msg)
+        {
+            Action<string> postReply;
+            string location;
+            QuoteRating rating;
+            bool addMyRating;
 
-                return true;
+            GetReplyActionAndLocationForMessage(msg, out postReply, out location);
+            if (!FlagsToQuoteFilter(cmd, out rating, out addMyRating))
+            {
+                // invalid flags
+                return;
             }
 
-            var nextQuoteMatch = NextQuoteRegex.Match(message);
-            if (nextQuoteMatch.Success)
+            using (var ctx = GetNewContext())
             {
-                var rating = QuoteRatingFromRegexGroup(nextQuoteMatch.Groups["rated"]);
-                bool addMyRating = nextQuoteMatch.Groups["showRating"].Success;
-                
-                using (var ctx = GetNewContext())
+                Quote quote = null;
+                switch (rating)
                 {
-                    Quote quote = null;
-                    switch (rating)
-                    {
-                        case QuoteRating.Any:
-                            if (ShuffledAnyQuotes == null)
-                            {
-                                ShuffledAnyQuotes = GetFilteredQuotes(ctx.Quotes.Include(q => q.Votes), QuoteRating.Any)
-                                    .ToShuffledList();
-                                ShuffledAnyQuotesIndex = 0;
-                            }
-                            quote = ShuffledAnyQuotes[ShuffledAnyQuotesIndex++];
-                            ShuffledAnyQuotesIndex %= ShuffledAnyQuotes.Count;
-                            break;
-                        case QuoteRating.High:
-                            if (ShuffledGoodQuotes == null)
-                            {
-                                ShuffledGoodQuotes = GetFilteredQuotes(ctx.Quotes.Include(q => q.Votes), QuoteRating.High)
-                                    .ToShuffledList();
-                                ShuffledGoodQuotesIndex = 0;
-                            }
-                            quote = ShuffledGoodQuotes[ShuffledGoodQuotesIndex++];
-                            ShuffledGoodQuotesIndex %= ShuffledGoodQuotes.Count;
-                            break;
-                        case QuoteRating.Low:
-                            if (ShuffledBadQuotes == null)
-                            {
-                                ShuffledBadQuotes = GetFilteredQuotes(ctx.Quotes.Include(q => q.Votes), QuoteRating.Low)
-                                    .ToShuffledList();
-                                ShuffledBadQuotesIndex = 0;
-                            }
-                            quote = ShuffledBadQuotes[ShuffledBadQuotesIndex++];
-                            ShuffledBadQuotesIndex %= ShuffledBadQuotes.Count;
-                            break;
-                        default:
-                            Debug.Fail("unexpected quote rating");
-                            break;
-                    }
-                    
-                    PostQuote(quote, sender, location, addMyRating, postReply);
+                    case QuoteRating.Any:
+                        if (ShuffledAnyQuotes == null)
+                        {
+                            ShuffledAnyQuotes = GetFilteredQuotes(ctx.Quotes.Include(q => q.Votes), QuoteRating.Any)
+                                .ToShuffledList();
+                            ShuffledAnyQuotesIndex = 0;
+                        }
+                        quote = ShuffledAnyQuotes[ShuffledAnyQuotesIndex++];
+                        ShuffledAnyQuotesIndex %= ShuffledAnyQuotes.Count;
+                        break;
+                    case QuoteRating.High:
+                        if (ShuffledGoodQuotes == null)
+                        {
+                            ShuffledGoodQuotes = GetFilteredQuotes(ctx.Quotes.Include(q => q.Votes), QuoteRating.High)
+                                .ToShuffledList();
+                            ShuffledGoodQuotesIndex = 0;
+                        }
+                        quote = ShuffledGoodQuotes[ShuffledGoodQuotesIndex++];
+                        ShuffledGoodQuotesIndex %= ShuffledGoodQuotes.Count;
+                        break;
+                    case QuoteRating.Low:
+                        if (ShuffledBadQuotes == null)
+                        {
+                            ShuffledBadQuotes = GetFilteredQuotes(ctx.Quotes.Include(q => q.Votes), QuoteRating.Low)
+                                .ToShuffledList();
+                            ShuffledBadQuotesIndex = 0;
+                        }
+                        quote = ShuffledBadQuotes[ShuffledBadQuotesIndex++];
+                        ShuffledBadQuotesIndex %= ShuffledBadQuotes.Count;
+                        break;
+                    default:
+                        Debug.Fail("unexpected quote rating");
+                        break;
                 }
 
-                return true;
+                PostQuote(quote, msg.SenderNickname, location, addMyRating, postReply);
             }
+        }
 
-            if (message == "!upquote" || message == "!uq")
+        protected virtual void HandleUpquoteCommand(CommandMatch cmd, IUserMessageEventArgs msg)
+        {
+            string normalizedSender = ConnectionManager.RegisteredNameForNick(msg.SenderNickname) ?? msg.SenderNickname;
+
+            Action<string> postReply;
+            string location;
+            GetReplyActionAndLocationForMessage(msg, out postReply, out location);
+
+            if (!LastQuoteIDs.ContainsKey(location))
             {
-                if (!LastQuoteIDs.ContainsKey(location))
-                {
-                    postReply("You'll have to get a quote first...");
-                    return true;
-                }
-                UpsertVote(normalizedSender, LastQuoteIDs[location], 1);
-                return true;
+                postReply("You'll have to get a quote first...");
             }
+            UpsertVote(normalizedSender, LastQuoteIDs[location], 1);
+        }
 
-            if (message == "!downquote" || message == "!dq")
+        protected virtual void HandleDownquoteCommand(CommandMatch cmd, IUserMessageEventArgs msg)
+        {
+            string normalizedSender = ConnectionManager.RegisteredNameForNick(msg.SenderNickname) ?? msg.SenderNickname;
+
+            Action<string> postReply;
+            string location;
+            GetReplyActionAndLocationForMessage(msg, out postReply, out location);
+
+            if (!LastQuoteIDs.ContainsKey(location))
             {
-                if (!LastQuoteIDs.ContainsKey(location))
-                {
-                    postReply("You'll have to get a quote first...");
-                    return true;
-                }
-                UpsertVote(normalizedSender, LastQuoteIDs[location], -1);
-                return true;
+                postReply("You'll have to get a quote first...");
             }
-
-            return false;
+            UpsertVote(normalizedSender, LastQuoteIDs[location], -1);
         }
 
         protected virtual void HandleBaseNickChanged(object sender, BaseNickChangedEventArgs e)

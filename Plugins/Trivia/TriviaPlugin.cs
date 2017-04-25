@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using Newtonsoft.Json.Linq;
+using SharpIrcBot.Commands;
 using SharpIrcBot.Events;
 using SharpIrcBot.Events.Irc;
 using SharpIrcBot.Plugins.Trivia.ORM;
@@ -28,6 +29,28 @@ namespace SharpIrcBot.Plugins.Trivia
 
             ConnectionManager.ChannelMessage += HandleChannelMessage;
             ConnectionManager.BaseNickChanged += HandleBaseNickChanged;
+
+            ConnectionManager.CommandManager.RegisterChannelMessageCommandHandler(
+                new Command(
+                    CommandUtil.MakeNames("question"),
+                    forbiddenFlags: MessageFlags.UserBanned
+                ),
+                HandleQuestionCommand
+            );
+            ConnectionManager.CommandManager.RegisterChannelMessageCommandHandler(
+                new Command(
+                    CommandUtil.MakeNames("starttrivia"),
+                    forbiddenFlags: MessageFlags.UserBanned
+                ),
+                HandleStartTriviaCommand
+            );
+            ConnectionManager.CommandManager.RegisterChannelMessageCommandHandler(
+                new Command(
+                    CommandUtil.MakeNames("stoptrivia"),
+                    forbiddenFlags: MessageFlags.UserBanned
+                ),
+                HandleStopTriviaCommand
+            );
         }
 
         public virtual void ReloadConfiguration(JObject newConfig)
@@ -38,6 +61,45 @@ namespace SharpIrcBot.Plugins.Trivia
 
         protected virtual void PostConfigReload()
         {
+        }
+
+        protected virtual void HandleQuestionCommand(CommandMatch cmd, IChannelMessageEventArgs msg)
+        {
+            if (msg.Channel != Config.TriviaChannel)
+            {
+                return;
+            }
+
+            if (GameState != null)
+            {
+                lock (GameState.Lock)
+                {
+                    OutputCurrentQuestion();
+                }
+            }
+        }
+
+        protected virtual void HandleStartTriviaCommand(CommandMatch cmd, IChannelMessageEventArgs msg)
+        {
+            if (msg.Channel != Config.TriviaChannel)
+            {
+                return;
+            }
+
+            if (GameState == null)
+            {
+                StartGame();
+            }
+        }
+
+        protected virtual void HandleStopTriviaCommand(CommandMatch cmd, IChannelMessageEventArgs msg)
+        {
+            if (msg.Channel != Config.TriviaChannel)
+            {
+                return;
+            }
+
+            StopGame();
         }
 
         protected virtual void HandleChannelMessage(object sender, IChannelMessageEventArgs e, MessageFlags flags)
@@ -57,23 +119,7 @@ namespace SharpIrcBot.Plugins.Trivia
                 lock (GameState.Lock)
                 {
                     CheckForCorrectAnswer(e.SenderNickname, e.Message);
-
-                    if (e.Message == "!question")
-                    {
-                        OutputCurrentQuestion();
-                    }
                 }
-            }
-            else if (e.Message == "!starttrivia")
-            {
-                StartGame();
-                return;
-            }
-
-            if (e.Message == "!stoptrivia")
-            {
-                StopGame();
-                return;
             }
         }
 

@@ -71,4 +71,4 @@ namespace SharpIrcBot.Plugins.NewYear
             }
         }
     }
-}            
+}

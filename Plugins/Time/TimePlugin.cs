@@ -9,6 +9,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NodaTime;
 using NodaTime.TimeZones;
+using SharpIrcBot.Commands;
 using SharpIrcBot.Events.Irc;
 using SharpIrcBot.Plugins.Time.GeoNames;
 
@@ -17,8 +18,6 @@ namespace SharpIrcBot.Plugins.Time
     public class TimePlugin : IPlugin, IReloadableConfiguration
     {
         private static readonly ILogger Logger = SharpIrcBotUtil.LoggerFactory.CreateLogger<TimePlugin>();
-
-        public static readonly Regex TimeRegex = new Regex("^!(?<lucky>l)?time(?:\\s+(?<location>\\S+(?:\\s+\\S+)*))?\\s*$", RegexOptions.Compiled);
 
         protected IConnectionManager ConnectionManager { get; }
         protected TimeConfig Config { get; set; }
@@ -32,7 +31,17 @@ namespace SharpIrcBot.Plugins.Time
 
             LoadTimeZoneData();
 
-            ConnectionManager.ChannelMessage += HandleChannelMessage;
+            ConnectionManager.CommandManager.RegisterChannelMessageCommandHandler(
+                new Command(
+                    CommandUtil.MakeNames("time", "ltime"),
+                    CommandUtil.NoOptions,
+                    CommandUtil.MakeArguments(
+                        RestTaker.Instance // location
+                    ),
+                    forbiddenFlags: MessageFlags.UserBanned
+                ),
+                HandleTimeCommand
+            );
         }
 
         public virtual void ReloadConfiguration(JObject newConfig)
@@ -55,22 +64,13 @@ namespace SharpIrcBot.Plugins.Time
             }
         }
 
-        protected virtual void HandleChannelMessage(object sender, IChannelMessageEventArgs args, MessageFlags flags)
+        protected virtual void HandleTimeCommand(CommandMatch cmd, IChannelMessageEventArgs msg)
         {
-            if (flags.HasFlag(MessageFlags.UserBanned))
+            string location = ((string)cmd.Arguments[0]).Trim();
+            if (location.Length == 0)
             {
-                return;
+                location = Config.DefaultLocation;
             }
-
-            var match = TimeRegex.Match(args.Message);
-            if (!match.Success)
-            {
-                return;
-            }
-
-            string location = match.Groups["location"].Success
-                ? match.Groups["location"].Value
-                : Config.DefaultLocation;
 
             string aliasedLocation;
             if (Config.LocationAliases.TryGetValue(location, out aliasedLocation))
@@ -94,7 +94,7 @@ namespace SharpIrcBot.Plugins.Time
 
             if (!geoSearchResult.GeoNames.Any())
             {
-                ConnectionManager.SendChannelMessage(args.Channel, $"{args.SenderNickname}: GeoNames cannot find that location!");
+                ConnectionManager.SendChannelMessage(msg.Channel, $"{msg.SenderNickname}: GeoNames cannot find that location!");
                 return;
             }
 
@@ -118,17 +118,18 @@ namespace SharpIrcBot.Plugins.Time
             DateTimeZone zone = TimeZoneProvider.GetZoneOrNull(geoTimeZoneResult.TimezoneID);
             if (zone == null)
             {
-                ConnectionManager.SendChannelMessage(args.Channel, $"{args.SenderNickname}: I don't know the timezone {geoTimeZoneResult.TimezoneID}.");
+                ConnectionManager.SendChannelMessage(msg.Channel, $"{msg.SenderNickname}: I don't know the timezone {geoTimeZoneResult.TimezoneID}.");
                 return;
             }
 
             ZonedDateTime time = SystemClock.Instance.GetCurrentInstant().InZone(zone);
 
+            bool lucky = cmd.CommandName.StartsWith("l");
             ConnectionManager.SendChannelMessage(
-                args.Channel,
-                match.Groups["lucky"].Success
-                    ? $"{args.SenderNickname}: The time there is {time:yyyy-MM-dd HH:mm:ss}."
-                    : $"{args.SenderNickname}: The time in {geoSearchResult.GeoNames[0].Name} is {time:yyyy-MM-dd HH:mm:ss}."
+                msg.Channel,
+                lucky
+                    ? $"{msg.SenderNickname}: The time there is {time:yyyy-MM-dd HH:mm:ss}."
+                    : $"{msg.SenderNickname}: The time in {geoSearchResult.GeoNames[0].Name} is {time:yyyy-MM-dd HH:mm:ss}."
             );
         }
     }

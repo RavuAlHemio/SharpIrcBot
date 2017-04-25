@@ -18,7 +18,7 @@ namespace SharpIrcBot.Plugins.UnoBot
                 .OrderBy(c => c.Malus)
                 .Select(c => (Card?)c)
                 .FirstOrDefault();
-           
+
             if (cardToPlay.HasValue)
             {
                 if (cardToPlay.Value.Color == CardColor.Wild)

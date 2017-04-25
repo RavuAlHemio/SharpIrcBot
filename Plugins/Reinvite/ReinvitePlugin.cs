@@ -1,14 +1,13 @@
 ﻿using System.Linq;
 using System.Text.RegularExpressions;
 using Newtonsoft.Json.Linq;
+using SharpIrcBot.Commands;
 using SharpIrcBot.Events.Irc;
 
 namespace SharpIrcBot.Plugins.Reinvite
 {
     public class ReinvitePlugin : IPlugin, IReloadableConfiguration
     {
-        public static readonly Regex InviteRegex = new Regex("^!invite\\s+(?<channel>[#&]\\S{1,256})\\s*$", RegexOptions.Compiled);
-
         protected IConnectionManager ConnectionManager { get; }
         protected ReinviteConfig Config { get; set; }
 
@@ -16,9 +15,20 @@ namespace SharpIrcBot.Plugins.Reinvite
         {
             ConnectionManager = connMgr;
             Config = new ReinviteConfig(config);
-            
-            ConnectionManager.QueryMessage += HandleQueryMessage;
+
             ConnectionManager.Invited += HandleInvite;
+
+            ConnectionManager.CommandManager.RegisterQueryMessageCommandHandler(
+                new Command(
+                    CommandUtil.MakeNames("invite"),
+                    CommandUtil.NoOptions,
+                    CommandUtil.MakeArguments(
+                        new RegexMatcher("^[#&]\\S{1,256}").ToRequiredWordTaker() // channel name
+                    ),
+                    forbiddenFlags: MessageFlags.UserBanned
+                ),
+                HandleInviteCommand
+            );
         }
 
         public virtual void ReloadConfiguration(JObject newConfig)
@@ -31,25 +41,14 @@ namespace SharpIrcBot.Plugins.Reinvite
         {
         }
 
-        protected virtual void HandleQueryMessage(object sender, IPrivateMessageEventArgs e, MessageFlags flags)
+        protected virtual void HandleInviteCommand(CommandMatch cmd, IPrivateMessageEventArgs e)
         {
             if (!Config.RejoinOnPrivateMessage)
             {
                 return;
             }
 
-            if (flags.HasFlag(MessageFlags.UserBanned))
-            {
-                return;
-            }
-
-            var match = InviteRegex.Match(e.Message);
-            if (!match.Success)
-            {
-                return;
-            }
-
-            var channel = match.Groups["channel"].Value;
+            var channel = ((Match)cmd.Arguments[0]).Value;
             if (Config.AutoJoinedChannelsOnly && !ConnectionManager.AutoJoinChannels.Contains(channel))
             {
                 return;

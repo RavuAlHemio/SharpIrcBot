@@ -17,7 +17,7 @@ namespace SharpIrcBot.Plugins.UnoBot
 
         protected delegate StrategyContinuation StrategyFunction(List<Card> possibleCards);
         protected delegate void FilterFunction(List<Card> possibleCards);
-        
+
         protected const string CurrentPlayerEventName = "current_player";
         protected const string CurrentPlayerOrderEventName = "current_player_order";
         protected const string TopCardEventName = "current_card";
@@ -331,7 +331,7 @@ namespace SharpIrcBot.Plugins.UnoBot
                 // wait for more
                 return;
             }
-            
+
             // ready to parse
             var parseMe = CurrentMessageJson.ToString();
             CurrentMessageJson.Clear();

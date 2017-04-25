@@ -6,6 +6,7 @@ using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 using SharpIrcBot.Chunks;
+using SharpIrcBot.Commands;
 using SharpIrcBot.Events.Irc;
 using SharpIrcBot.Plugins.Allograph.RegularExpressions;
 
@@ -14,7 +15,6 @@ namespace SharpIrcBot.Plugins.Allograph
     public class AllographPlugin : IPlugin, IReloadableConfiguration
     {
         private static readonly ILogger Logger = SharpIrcBotUtil.LoggerFactory.CreateLogger<AllographPlugin>();
-        public static readonly Regex StatsRegex = new Regex("^!allostats\\s+(?<channel>[#&]\\S+)(?:\\s+(?<testmsg>\\S+(?:\\s+\\S+)*))?\\s*$", RegexOptions.Compiled);
 
         protected AllographConfig Config { get; set; }
         protected Random Random { get; }
@@ -33,7 +33,19 @@ namespace SharpIrcBot.Plugins.Allograph
             RecompileReplacerRegexes();
 
             ConnectionManager.ChannelMessage += HandleChannelMessage;
-            ConnectionManager.QueryMessage += HandleQueryMessage;
+
+            ConnectionManager.CommandManager.RegisterQueryMessageCommandHandler(
+                new Command(
+                    CommandUtil.MakeNames("allostats"),
+                    CommandUtil.NoOptions,
+                    CommandUtil.MakeArguments(
+                        new RegexMatcher("^[#&]\\S{1,256}$").ToRequiredWordTaker(), // channel name
+                        RestTaker.Instance // test message (optional)
+                    ),
+                    forbiddenFlags: MessageFlags.UserBanned
+                ),
+                HandleAlloStatsCommand
+            );
         }
 
         public virtual void ReloadConfiguration(JObject newConfig)
@@ -215,32 +227,28 @@ namespace SharpIrcBot.Plugins.Allograph
             }
         }
 
-        protected virtual void HandleQueryMessage(object sender, IPrivateMessageEventArgs args, MessageFlags flags)
+        protected virtual void HandleAlloStatsCommand(CommandMatch cmd, IPrivateMessageEventArgs msg)
         {
-            var nick = args.SenderNickname;
-            var registeredNick = ConnectionManager.RegisteredNameForNick(nick);
+            string nick = msg.SenderNickname;
+            string registeredNick = ConnectionManager.RegisteredNameForNick(nick);
             if (registeredNick == null || !Config.Stewards.Contains(registeredNick))
             {
                 // nope
                 return;
             }
 
-            var match = StatsRegex.Match(args.Message);
-            if (!match.Success)
-            {
-                return;
-            }
-
-            var channel = match.Groups["channel"].Value;
+            string channel = ((Match)cmd.Arguments[0]).Value;
             if (!CooldownsPerChannel.ContainsKey(channel))
             {
                 ConnectionManager.SendQueryMessageFormat(nick, "No cooldowns for {0}.", channel);
                 return;
             }
 
-            string testMessage = match.Groups["testmsg"].Success
-                ? match.Groups["testmsg"].Value
-                : null;
+            string testMessage = ((string)cmd.Arguments[1]).Trim();
+            if (testMessage.Length == 0)
+            {
+                testMessage = null;
+            }
 
             ConnectionManager.SendQueryMessageFormat(nick, "Allograph stats for {0}:", channel);
             var cooldowns = CooldownsPerChannel[channel];

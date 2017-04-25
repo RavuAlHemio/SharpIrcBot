@@ -1,5 +1,6 @@
 ﻿using System.Text;
 using Newtonsoft.Json.Linq;
+using SharpIrcBot.Commands;
 using SharpIrcBot.Events.Irc;
 
 namespace SharpIrcBot.Plugins.Smileys
@@ -14,8 +15,12 @@ namespace SharpIrcBot.Plugins.Smileys
             ConnectionManager = connMgr;
             Config = new SmileysConfig(config);
 
-            ConnectionManager.ChannelMessage += HandleChannelOrQueryMessage;
-            ConnectionManager.QueryMessage += HandleChannelOrQueryMessage;
+            var smileysCommand = new Command(
+                CommandUtil.MakeNames("smileys", "smilies"),
+                forbiddenFlags: MessageFlags.UserBanned
+            );
+            ConnectionManager.CommandManager.RegisterChannelMessageCommandHandler(smileysCommand, HandleSmileysCommand);
+            ConnectionManager.CommandManager.RegisterQueryMessageCommandHandler(smileysCommand, HandleSmileysCommand);
         }
 
         public virtual void ReloadConfiguration(JObject newConfig)
@@ -28,20 +33,7 @@ namespace SharpIrcBot.Plugins.Smileys
         {
         }
 
-        void HandleChannelOrQueryMessage(object sender, IUserMessageEventArgs e, MessageFlags flags)
-        {
-            if (flags.HasFlag(MessageFlags.UserBanned))
-            {
-                return;
-            }
-
-            if (e.Message == "!smileys" || e.Message == "!smilies")
-            {
-                SendSmileysTo(e.SenderNickname);
-            }
-        }
-
-        protected virtual void SendSmileysTo(string whom)
+        protected virtual void HandleSmileysCommand(CommandMatch cmd, IUserMessageEventArgs e)
         {
             foreach (var smiley in Config.Smileys)
             {
@@ -55,7 +47,7 @@ namespace SharpIrcBot.Plugins.Smileys
                     smileyLine.Append('\uFEFF');
                     smileyLine.Append(smiley, 1, smiley.Length - 1);
                 }
-                ConnectionManager.SendQueryMessage(whom, smileyLine.ToString());
+                ConnectionManager.SendQueryMessage(e.SenderNickname, smileyLine.ToString());
             }
         }
     }

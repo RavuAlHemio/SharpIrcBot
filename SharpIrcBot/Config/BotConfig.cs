@@ -42,6 +42,8 @@ namespace SharpIrcBot.Config
         [NotNull, ItemNotNull]
         public ISet<string> BannedUsers { get; set; }
 
+        public CommandConfig Commands { get; set; }
+
         public BotConfig(JObject obj)
         {
             ServerPort = 6669;
@@ -64,6 +66,8 @@ namespace SharpIrcBot.Config
                 new HashSet<string>(),
                 s => s.ToLowerInvariant()
             );
+
+            Commands = new CommandConfig();
 
             JsonSerializer.CreateDefault().Populate(obj.CreateReader(), this);
 

@@ -14,7 +14,7 @@ namespace SharpIrcBot.Chunks
         {
             Text = text;
         }
-        
+
         public override string ToString()
         {
             return Text;

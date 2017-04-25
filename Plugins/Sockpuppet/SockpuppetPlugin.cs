@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
+using SharpIrcBot.Commands;
 using SharpIrcBot.Events.Irc;
 
 namespace SharpIrcBot.Plugins.Sockpuppet
@@ -16,7 +17,24 @@ namespace SharpIrcBot.Plugins.Sockpuppet
             ConnectionManager = connMgr;
             Config = new SockpuppetConfig(config);
 
-            ConnectionManager.QueryMessage += HandleQueryMessage;
+            ConnectionManager.CommandManager.RegisterQueryMessageCommandHandler(
+                new Command(
+                    CommandUtil.MakeNames("sockpuppet"),
+                    CommandUtil.NoOptions,
+                    CommandUtil.MakeArguments(
+                        RestTaker.Instance // raw IRC command
+                    ),
+                    forbiddenFlags: MessageFlags.UserBanned
+                ),
+                HandleSockpuppetCommand
+            );
+            ConnectionManager.CommandManager.RegisterQueryMessageCommandHandler(
+                new Command(
+                    CommandUtil.MakeNames("reload"),
+                    forbiddenFlags: MessageFlags.UserBanned
+                ),
+                HandleReloadCommand
+            );
         }
 
         public virtual void ReloadConfiguration(JObject newConfig)
@@ -51,10 +69,8 @@ namespace SharpIrcBot.Plugins.Sockpuppet
             return username;
         }
 
-        protected void PerformSockpuppet(string username, string nick, string message)
+        protected void PerformSockpuppet(string username, string nick, string command)
         {
-            var command = message.Substring("!sockpuppet ".Length);
-
             var unescapedCommand = SharpIrcBotUtil.UnescapeString(command);
             if (unescapedCommand == null)
             {
@@ -68,40 +84,33 @@ namespace SharpIrcBot.Plugins.Sockpuppet
             ConnectionManager.SendQueryMessage(nick, "OK");
         }
 
-        protected void HandleQueryMessage(object sender, IPrivateMessageEventArgs args, MessageFlags flags)
+        protected virtual void HandleSockpuppetCommand(CommandMatch cmd, IPrivateMessageEventArgs msg)
         {
-            if (flags.HasFlag(MessageFlags.UserBanned))
+            string username = VerifyIdentity(msg);
+            if (username == null)
             {
                 return;
             }
 
-            if (args.SenderNickname == ConnectionManager.MyNickname)
+            var command = (string)cmd.Arguments[0];
+            if (command.StartsWith(" "))
+            {
+                command = command.Substring(1);
+            }
+
+            PerformSockpuppet(username, msg.SenderNickname, command);
+        }
+
+        protected virtual void HandleReloadCommand(CommandMatch cmd, IPrivateMessageEventArgs msg)
+        {
+            string username = VerifyIdentity(msg);
+            if (username == null)
             {
                 return;
             }
 
-            if (args.Message.StartsWith("!sockpuppet "))
-            {
-                string username = VerifyIdentity(args);
-                if (username == null)
-                {
-                    return;
-                }
-                PerformSockpuppet(username, args.SenderNickname, args.Message);
-                return;
-            }
-
-            if (args.Message == "!reload")
-            {
-                string username = VerifyIdentity(args);
-                if (username == null)
-                {
-                    return;
-                }
-                ConnectionManager.ReloadConfiguration();
-                ConnectionManager.SendQueryMessage(args.SenderNickname, "OK");
-                return;
-            }
+            ConnectionManager.ReloadConfiguration();
+            ConnectionManager.SendQueryMessage(msg.SenderNickname, "OK");
         }
     }
 }

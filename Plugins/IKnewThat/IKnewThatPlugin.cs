@@ -3,6 +3,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
+using SharpIrcBot.Commands;
 using SharpIrcBot.Events.Irc;
 using SharpIrcBot.Plugins.IKnewThat.ORM;
 
@@ -11,8 +12,6 @@ namespace SharpIrcBot.Plugins.IKnewThat
     public class IKnewThatPlugin : IPlugin
     {
         private static readonly ILogger Logger = SharpIrcBotUtil.LoggerFactory.CreateLogger<IKnewThatPlugin>();
-        public static readonly Regex IKnowThatRegex = new Regex("^!iknowthat\\s+(?<keyword>\\S+)\\s+(?<message>\\S+(?:\\s+\\S+)*)\\s*$", RegexOptions.Compiled);
-        public static readonly Regex IKnewThatRegex = new Regex("^!iknewthat\\s+(?<keyword>\\S+)\\s*$", RegexOptions.Compiled);
 
         protected IKnewThatConfig Config { get; set; }
         protected IConnectionManager ConnectionManager;
@@ -22,26 +21,36 @@ namespace SharpIrcBot.Plugins.IKnewThat
             ConnectionManager = connMgr;
             Config = new IKnewThatConfig(config);
 
-            ConnectionManager.ChannelMessage += HandleChannelMessage;
-            ConnectionManager.QueryMessage += HandleQueryMessage;
+            ConnectionManager.CommandManager.RegisterChannelMessageCommandHandler(
+                new Command(
+                    CommandUtil.MakeNames("iknewthat"),
+                    CommandUtil.NoOptions,
+                    CommandUtil.MakeArguments(
+                        CommandUtil.NonzeroStringMatcherRequiredWordTaker // keyword
+                    ),
+                    forbiddenFlags: MessageFlags.UserBanned
+                ),
+                HandleIKnewThatChannelCommand
+            );
+            ConnectionManager.CommandManager.RegisterQueryMessageCommandHandler(
+                new Command(
+                    CommandUtil.MakeNames("iknowthat"),
+                    CommandUtil.NoOptions,
+                    CommandUtil.MakeArguments(
+                        CommandUtil.NonzeroStringMatcherRequiredWordTaker, // keyword
+                        RestTaker.Instance // description
+                    ),
+                    forbiddenFlags: MessageFlags.UserBanned
+                ),
+                HandleIKnowThatQueryCommand
+            );
         }
 
-        protected virtual void HandleChannelMessage(object sender, IChannelMessageEventArgs args, MessageFlags flags)
+        protected virtual void HandleIKnewThatChannelCommand(CommandMatch cmd, IChannelMessageEventArgs args)
         {
-            if (flags.HasFlag(MessageFlags.UserBanned))
-            {
-                return;
-            }
-
-            Match knewMatch = IKnewThatRegex.Match(args.Message);
-            if (!knewMatch.Success)
-            {
-                return;
-            }
-
             string senderLower = (ConnectionManager.RegisteredNameForNick(args.SenderNickname) ?? args.SenderNickname)
                 .ToLowerInvariant();
-            string keywordLower = knewMatch.Groups["keyword"].Value.ToLowerInvariant();
+            string keywordLower = ((string)cmd.Arguments[0]).ToLowerInvariant();
 
             using (var ctx = GetNewContext())
             {
@@ -69,23 +78,12 @@ namespace SharpIrcBot.Plugins.IKnewThat
             }
         }
 
-        protected virtual void HandleQueryMessage(object sender, IPrivateMessageEventArgs args, MessageFlags flags)
+        protected virtual void HandleIKnowThatQueryCommand(CommandMatch cmd, IPrivateMessageEventArgs args)
         {
-            if (flags.HasFlag(MessageFlags.UserBanned))
-            {
-                return;
-            }
-
-            Match knowMatch = IKnowThatRegex.Match(args.Message);
-            if (!knowMatch.Success)
-            {
-                return;
-            }
-
             string senderLower = (ConnectionManager.RegisteredNameForNick(args.SenderNickname) ?? args.SenderNickname)
                 .ToLowerInvariant();
-            string keywordLower = knowMatch.Groups["keyword"].Value.ToLowerInvariant();
-            string message = knowMatch.Groups["message"].Value;
+            string keywordLower = ((string)cmd.Arguments[0]).ToLowerInvariant();
+            string message = ((string)cmd.Arguments[1]).Trim();
 
             using (var ctx = GetNewContext())
             {

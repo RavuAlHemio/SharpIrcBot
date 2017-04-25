@@ -8,6 +8,7 @@ using JetBrains.Annotations;
 using Meebey.SmartIrc4net;
 using Microsoft.Extensions.Logging;
 using SharpIrcBot.Chunks;
+using SharpIrcBot.Commands;
 using SharpIrcBot.Config;
 using SharpIrcBot.Events;
 using SharpIrcBot.Events.Irc;
@@ -41,6 +42,7 @@ namespace SharpIrcBot
         /// <remarks>For on-demand configuration reloading.</remarks>
         [CanBeNull]
         public PluginManager PluginManager { get; set; }
+        public CommandManager CommandManager { get; set; }
 
         public int MaxMessageLength => 230;
 
@@ -227,6 +229,7 @@ namespace SharpIrcBot
             Client.OnInvite += HandleInvite;
             ActualTimers = new TimerTrigger();
             Canceller = new CancellationTokenSource();
+            CommandManager = new CommandManager(Config.Commands, this);
 
             ConfigFilePathKnown = false;
             ConfigPath = null;
@@ -271,6 +274,7 @@ namespace SharpIrcBot
             }
 
             Config = SharpIrcBotUtil.LoadConfig(ConfigPath);
+            CommandManager.Config = Config.Commands;
 
             if (PluginManager == null)
             {

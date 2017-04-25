@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using SharpIrcBot.Chunks;
+using SharpIrcBot.Commands;
+using SharpIrcBot.Config;
 using SharpIrcBot.Events;
 using SharpIrcBot.Events.Irc;
 using SharpIrcBot.Tests.TestPlumbing.Events.Feeding;
@@ -10,6 +12,7 @@ namespace SharpIrcBot.Tests.TestPlumbing
 {
     public class TestConnectionManager : IConnectionManager
     {
+        #pragma warning disable CS0067
         public event SharpIrcBotEventHandler<IChannelMessageEventArgs> ChannelMessage;
         public event SharpIrcBotEventHandler<IChannelMessageEventArgs> ChannelAction;
         public event SharpIrcBotEventHandler<IChannelMessageEventArgs> ChannelNotice;
@@ -33,6 +36,7 @@ namespace SharpIrcBot.Tests.TestPlumbing
         public event EventHandler<BaseNickChangedEventArgs> BaseNickChanged;
         public event EventHandler<IUserInvitedToChannelEventArgs> Invited;
         public event EventHandler<MessageChunkingEventArgs> SplitToChunks;
+        #pragma warning restore CS0067
 
         public string MyNickname => MyUsername;
         public string MyUsername => "TestBot";
@@ -43,6 +47,13 @@ namespace SharpIrcBot.Tests.TestPlumbing
 
         public List<string> ActuallyJoinedChannels { get; } = new List<string>();
         public List<ITestIrcEvent> EventLog { get; } = new List<ITestIrcEvent>();
+
+        public CommandManager CommandManager { get; }
+
+        public TestConnectionManager()
+        {
+            CommandManager = new CommandManager(new CommandConfig(), this);
+        }
 
         public void SendChannelMessage(string channel, string message)
         {
@@ -72,8 +83,8 @@ namespace SharpIrcBot.Tests.TestPlumbing
         public void SendQueryNotice(string nick, string message)
         {
             LogMessage(MessageType.Notice, nick, message);
-
         }
+
         protected void LogMessage(MessageType messageType, string target, string body)
         {
             EventLog.Add(new TestMessage

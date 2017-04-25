@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using JetBrains.Annotations;
 using SharpIrcBot.Chunks;
+using SharpIrcBot.Commands;
 using SharpIrcBot.Events;
 using SharpIrcBot.Events.Irc;
 
@@ -39,6 +40,7 @@ namespace SharpIrcBot
         [NotNull] ITimerTrigger Timers { get; }
         [NotNull, ItemNotNull] IReadOnlyList<string> AutoJoinChannels { get; }
         [NotNull] IReadOnlyList<string> JoinedChannels { get; }
+        [NotNull] CommandManager CommandManager { get; }
 
         void SendChannelMessage([NotNull] string channel, [NotNull] string message);
         void SendChannelAction([NotNull] string channel, [NotNull] string message);

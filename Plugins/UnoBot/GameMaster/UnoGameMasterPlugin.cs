@@ -8,6 +8,7 @@ using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using SharpIrcBot.Commands;
 using SharpIrcBot.Events.Irc;
 using Timer = System.Threading.Timer;
 
@@ -18,9 +19,6 @@ namespace SharpIrcBot.Plugins.UnoBot.GameMaster
         private static readonly ILogger Logger = SharpIrcBotUtil.LoggerFactory.CreateLogger<UnoGameMasterPlugin>();
 
         protected static readonly CardColor[] RegularColors = { CardColor.Red, CardColor.Green, CardColor.Blue, CardColor.Yellow };
-        public static readonly Regex StartGameRegex = new Regex("^!uno(?:\\s+\\+([a-zA-Z]))*\\s*$", RegexOptions.Compiled);
-        public static readonly Regex PlayCardRegex = new Regex("^!p(?:lay)?\\s+([A-Za-z0-9]+)\\s+([A-Za-z0-9]+)\\s*$", RegexOptions.Compiled);
-        public static readonly Regex BotTestRegex = new Regex("^!bottest\\s+([0-9]+)\\s*$", RegexOptions.Compiled);
 
         protected IConnectionManager ConnectionManager;
         protected GameMasterConfig Config;
@@ -38,7 +36,7 @@ namespace SharpIrcBot.Plugins.UnoBot.GameMaster
         protected Timer TurnTickTimer;
         protected object TurnLock;
         protected Random Randomizer;
-        protected int BotTestCount;
+        protected long BotTestCount;
         protected DateTime? BotTestJoinRequested;
 
         public UnoGameMasterPlugin(IConnectionManager connMgr, JObject config)
@@ -62,10 +60,87 @@ namespace SharpIrcBot.Plugins.UnoBot.GameMaster
             BotTestCount = 0;
             BotTestJoinRequested = null;
 
-            ConnectionManager.ChannelMessage += HandleChannelMessage;
             ConnectionManager.NickChange += HandleNickChange;
             ConnectionManager.UserLeftChannel += HandleUserLeftChannel;
             ConnectionManager.UserQuitServer += HandleUserQuitServer;
+
+            ConnectionManager.CommandManager.RegisterChannelMessageCommandHandler(
+                new Command(
+                    CommandUtil.MakeNames("uno"),
+                    CommandUtil.MakeOptions(
+                        CommandUtil.MakeFlag("+a"),
+                        CommandUtil.MakeFlag("+e")
+                    ),
+                    CommandUtil.NoArguments,
+                    forbiddenFlags: MessageFlags.UserBanned
+                ),
+                HandleUnoCommand
+            );
+            ConnectionManager.CommandManager.RegisterChannelMessageCommandHandler(
+                new Command(
+                    CommandUtil.MakeNames("play", "p"),
+                    CommandUtil.NoOptions,
+                    CommandUtil.MakeArguments(
+                        CommandUtil.NonzeroStringMatcherRequiredWordTaker, // color or wildcard value
+                        CommandUtil.NonzeroStringMatcherRequiredWordTaker // value or change-to-color
+                    ),
+                    forbiddenFlags: MessageFlags.UserBanned
+                ),
+                HandlePlayCommand
+            );
+            ConnectionManager.CommandManager.RegisterChannelMessageCommandHandler(
+                new Command(
+                    CommandUtil.MakeNames("bottest"),
+                    CommandUtil.NoOptions,
+                    CommandUtil.MakeArguments(
+                        new LongMatcher().ToRequiredWordTaker() // number of rounds
+                    ),
+                    forbiddenFlags: MessageFlags.UserBanned
+                ),
+                HandleBotTestCommand
+            );
+            ConnectionManager.CommandManager.RegisterChannelMessageCommandHandler(
+                new Command(
+                    CommandUtil.MakeNames("join", "botjoin"),
+                    forbiddenFlags: MessageFlags.UserBanned
+                ),
+                HandleJoinCommand
+            );
+            ConnectionManager.CommandManager.RegisterChannelMessageCommandHandler(
+                new Command(
+                    CommandUtil.MakeNames("leave"),
+                    forbiddenFlags: MessageFlags.UserBanned
+                ),
+                HandleLeaveCommand
+            );
+            ConnectionManager.CommandManager.RegisterChannelMessageCommandHandler(
+                new Command(
+                    CommandUtil.MakeNames("deal"),
+                    forbiddenFlags: MessageFlags.UserBanned
+                ),
+                HandleDealCommand
+            );
+            ConnectionManager.CommandManager.RegisterChannelMessageCommandHandler(
+                new Command(
+                    CommandUtil.MakeNames("draw"),
+                    forbiddenFlags: MessageFlags.UserBanned
+                ),
+                HandleDrawCommand
+            );
+            ConnectionManager.CommandManager.RegisterChannelMessageCommandHandler(
+                new Command(
+                    CommandUtil.MakeNames("pass"),
+                    forbiddenFlags: MessageFlags.UserBanned
+                ),
+                HandlePassCommand
+            );
+            ConnectionManager.CommandManager.RegisterChannelMessageCommandHandler(
+                new Command(
+                    CommandUtil.MakeNames("endgame"),
+                    forbiddenFlags: MessageFlags.UserBanned
+                ),
+                HandleEndGameCommand
+            );
         }
 
         public virtual Player CurrentPlayer
@@ -407,357 +482,483 @@ namespace SharpIrcBot.Plugins.UnoBot.GameMaster
             }
         }
 
-        protected virtual void HandleChannelMessage(object sender, IChannelMessageEventArgs e, MessageFlags flags)
+        protected virtual void HandlePlayCommand(CommandMatch cmd, IChannelMessageEventArgs msg)
         {
-            if (flags.HasFlag(MessageFlags.UserBanned))
-            {
-                return;
-            }
-
-            if (e.Channel != Config.UnoChannel)
+            if (msg.Channel != Config.UnoChannel)
             {
                 return;
             }
 
             lock (TurnLock)
             {
-                var body = e.Message;
-                var bodyTrimmedEnd = body.TrimEnd();
-
-                // !play or !p
-                var playCardMatch = PlayCardRegex.Match(bodyTrimmedEnd);
-                if (playCardMatch.Success)
+                if (CurrentPlayer.Nick != msg.SenderNickname)
                 {
-                    if (CurrentPlayer.Nick != e.SenderNickname)
+                    ConnectionManager.SendChannelMessageFormat(Config.UnoChannel, "It's not your turn, {0}.", msg.SenderNickname);
+                    return;
+                }
+
+                var primaryString = (string)cmd.Arguments[0];
+                var secondaryString = (string)cmd.Arguments[1];
+
+                // !play COLOR VALUE for colors or !play VALUE CHOSENCOLOR for wilds
+                CardColor? color = CardUtils.ParseColor(primaryString);
+                if (!color.HasValue || color.Value == CardColor.Wild)
+                {
+                    // try parsing it as a value instead (wild card)
+                    CardValue? value = CardUtils.ParseValue(primaryString);
+                    CardColor? chosenColor = CardUtils.ParseColor(secondaryString);
+                    if (!value.HasValue || (value.Value != CardValue.Wild && value.Value != CardValue.WildDrawFour) || !chosenColor.HasValue)
                     {
-                        ConnectionManager.SendChannelMessageFormat(Config.UnoChannel, "It's not your turn, {0}.", e.SenderNickname);
+                        ConnectionManager.SendChannelMessageFormat(
+                            Config.UnoChannel,
+                            "{0}: Play a card using !play COLOR VALUE for normal cards or !play VALUE CHOSENCOLOR for wild cards!",
+                            msg.SenderNickname
+                        );
                         return;
                     }
 
-                    var primaryString = playCardMatch.Groups[1].Value;
-                    var secondaryString = playCardMatch.Groups[2].Value;
+                    // wild cards can be played independent of top card's color or value
 
-                    // !play COLOR VALUE for colors or !play VALUE CHOSENCOLOR for wilds
-                    CardColor? color = CardUtils.ParseColor(primaryString);
-                    if (!color.HasValue || color.Value == CardColor.Wild)
+                    // take the card from the player's hand
+                    var requestedCard = new Card(CardColor.Wild, value.Value);
+                    if (!CurrentPlayer.Hand.Remove(requestedCard))
                     {
-                        // try parsing it as a value instead (wild card)
-                        CardValue? value = CardUtils.ParseValue(primaryString);
-                        CardColor? chosenColor = CardUtils.ParseColor(secondaryString);
-                        if (!value.HasValue || (value.Value != CardValue.Wild && value.Value != CardValue.WildDrawFour) || !chosenColor.HasValue)
-                        {
-                            ConnectionManager.SendChannelMessageFormat(Config.UnoChannel, "{0}: Play a card using !play COLOR VALUE for normal cards or !play VALUE CHOSENCOLOR for wild cards!", e.SenderNickname);
-                            return;
-                        }
-
-                        // wild cards can be played independent of top card's color or value
-
-                        // take the card from the player's hand
-                        var requestedCard = new Card(CardColor.Wild, value.Value);
-                        if (!CurrentPlayer.Hand.Remove(requestedCard))
-                        {
-                            ConnectionManager.SendChannelMessageFormat(Config.UnoChannel, "{0}: You don't have that card.", e.SenderNickname);
-                            return;
-                        }
-
-                        // toss its colorful equivalent on top of the discard pile
-                        var disCard = new Card(chosenColor.Value, value.Value);
-                        DiscardPile.Push(disCard);
-
-                        // if this is a WD4, feed the next player with 4 cards
-                        if (value.Value == CardValue.WildDrawFour)
-                        {
-                            // advancing here and advancing later simply skips this player
-                            AdvanceCurrentPlayerIndex();
-                            ConnectionManager.SendChannelMessageFormat(Config.UnoChannel, "{0} draws four cards.", CurrentPlayer.Nick);
-                            CurrentPlayer.Hand.UnionWith(DrawCards(4));
-
-                            // inform the player of their new hand
-                            SendPlayerHandInfoEvent(CurrentPlayer);
-                        }
-                    }
-                    else
-                    {
-                        CardValue? value = CardUtils.ParseValue(secondaryString);
-                        if (!value.HasValue)
-                        {
-                            ConnectionManager.SendChannelMessageFormat(Config.UnoChannel, "{0}: Play a card using !play COLOR VALUE for normal cards or !play VALUE CHOSENCOLOR for wild cards!", e.SenderNickname);
-                            return;
-                        }
-
-                        // see if this card is playable at all
-                        if (TopCard.Color != color.Value && TopCard.Value != value.Value)
-                        {
-                            ConnectionManager.SendChannelMessageFormat(Config.UnoChannel, "{0}: You cannot play this card.", e.SenderNickname);
-                            return;
-                        }
-
-                        // take the card from the player's hand
-                        var requestedCard = new Card(color.Value, value.Value);
-                        if (!CurrentPlayer.Hand.Remove(requestedCard))
-                        {
-                            ConnectionManager.SendChannelMessageFormat(Config.UnoChannel, "{0}: You don't have that card.", e.SenderNickname);
-                            return;
-                        }
-
-                        // toss it on the top of the discard pile
-                        DiscardPile.Push(requestedCard);
-
-                        // if this is a Skip (or a Reverse with less than three players), skip the next player
-                        if (value.Value == CardValue.Skip || (value.Value == CardValue.Reverse && Players.Count < 3))
-                        {
-                            AdvanceCurrentPlayerIndex();
-                            ConnectionManager.SendChannelMessageFormat(Config.UnoChannel, "{0} has been skipped.", CurrentPlayer.Nick);
-                        }
-                        // if this is a Reverse (with at least three players), reverse the direction
-                        else if (value.Value == CardValue.Reverse)
-                        {
-                            PlayerOrderReversed = !PlayerOrderReversed;
-                            ConnectionManager.SendChannelMessageFormat(Config.UnoChannel, "{0} reversed the player order.", CurrentPlayer.Nick);
-                        }
-                        // if this is a D2, feed the next player with 2 cards
-                        else if (value.Value == CardValue.DrawTwo)
-                        {
-                            // advancing here and advancing later simply skips this player
-                            AdvanceCurrentPlayerIndex();
-                            ConnectionManager.SendChannelMessageFormat(Config.UnoChannel, "{0} draws two cards.", CurrentPlayer.Nick);
-                            CurrentPlayer.Hand.UnionWith(DrawCards(2));
-
-                            // inform the player of their new hand
-                            SendPlayerHandInfoEvent(CurrentPlayer);
-                        }
+                        ConnectionManager.SendChannelMessageFormat(
+                            Config.UnoChannel,
+                            "{0}: You don't have that card.",
+                            msg.SenderNickname
+                        );
+                        return;
                     }
 
-                    // is any player out of cards?
-                    var firstPlayerWithNoCards = Players.FirstOrDefault(p => p.Hand.Count == 0);
-                    if (firstPlayerWithNoCards != null)
+                    // toss its colorful equivalent on top of the discard pile
+                    var disCard = new Card(chosenColor.Value, value.Value);
+                    DiscardPile.Push(disCard);
+
+                    // if this is a WD4, feed the next player with 4 cards
+                    if (value.Value == CardValue.WildDrawFour)
                     {
-                        // this player wins!
-                        ConnectionManager.SendChannelMessageFormat(Config.UnoChannel, "{0} is the winner!", firstPlayerWithNoCards.Nick);
-                        Logger.LogInformation("Uno game won by {0}", firstPlayerWithNoCards.Nick);
+                        // advancing here and advancing later simply skips this player
+                        AdvanceCurrentPlayerIndex();
+                        ConnectionManager.SendChannelMessageFormat(
+                            Config.UnoChannel,
+                            "{0} draws four cards.",
+                            CurrentPlayer.Nick
+                        );
+                        CurrentPlayer.Hand.UnionWith(DrawCards(4));
 
-                        // clean up the game
-                        StopGame();
+                        // inform the player of their new hand
+                        SendPlayerHandInfoEvent(CurrentPlayer);
+                    }
+                }
+                else
+                {
+                    CardValue? value = CardUtils.ParseValue(secondaryString);
+                    if (!value.HasValue)
+                    {
+                        ConnectionManager.SendChannelMessageFormat(
+                            Config.UnoChannel,
+                            "{0}: Play a card using !play COLOR VALUE for normal cards or !play VALUE CHOSENCOLOR for wild cards!",
+                            msg.SenderNickname
+                        );
+                        return;
+                    }
 
+                    // see if this card is playable at all
+                    if (TopCard.Color != color.Value && TopCard.Value != value.Value)
+                    {
+                        ConnectionManager.SendChannelMessageFormat(
+                            Config.UnoChannel,
+                            "{0}: You cannot play this card.",
+                            msg.SenderNickname
+                        );
+                        return;
+                    }
+
+                    // take the card from the player's hand
+                    var requestedCard = new Card(color.Value, value.Value);
+                    if (!CurrentPlayer.Hand.Remove(requestedCard))
+                    {
+                        ConnectionManager.SendChannelMessageFormat(
+                            Config.UnoChannel,
+                            "{0}: You don't have that card.",
+                            msg.SenderNickname
+                        );
+                        return;
+                    }
+
+                    // toss it on the top of the discard pile
+                    DiscardPile.Push(requestedCard);
+
+                    // if this is a Skip (or a Reverse with less than three players), skip the next player
+                    if (value.Value == CardValue.Skip || (value.Value == CardValue.Reverse && Players.Count < 3))
+                    {
+                        AdvanceCurrentPlayerIndex();
+                        ConnectionManager.SendChannelMessageFormat(
+                            Config.UnoChannel,
+                            "{0} has been skipped.",
+                            CurrentPlayer.Nick
+                        );
+                    }
+                    // if this is a Reverse (with at least three players), reverse the direction
+                    else if (value.Value == CardValue.Reverse)
+                    {
+                        PlayerOrderReversed = !PlayerOrderReversed;
+                        ConnectionManager.SendChannelMessageFormat(
+                            Config.UnoChannel,
+                            "{0} reversed the player order.",
+                            CurrentPlayer.Nick
+                        );
+                    }
+                    // if this is a D2, feed the next player with 2 cards
+                    else if (value.Value == CardValue.DrawTwo)
+                    {
+                        // advancing here and advancing later simply skips this player
+                        AdvanceCurrentPlayerIndex();
+                        ConnectionManager.SendChannelMessageFormat(
+                            Config.UnoChannel,
+                            "{0} draws two cards.",
+                            CurrentPlayer.Nick
+                        );
+                        CurrentPlayer.Hand.UnionWith(DrawCards(2));
+
+                        // inform the player of their new hand
+                        SendPlayerHandInfoEvent(CurrentPlayer);
+                    }
+                }
+
+                // is any player out of cards?
+                var firstPlayerWithNoCards = Players.FirstOrDefault(p => p.Hand.Count == 0);
+                if (firstPlayerWithNoCards != null)
+                {
+                    // this player wins!
+                    ConnectionManager.SendChannelMessageFormat(
+                        Config.UnoChannel,
+                        "{0} is the winner!",
+                        firstPlayerWithNoCards.Nick
+                    );
+                    Logger.LogInformation("Uno game won by {0}", firstPlayerWithNoCards.Nick);
+
+                    // clean up the game
+                    StopGame();
+
+                    if (BotTestCount > 0)
+                    {
+                        --BotTestCount;
                         if (BotTestCount > 0)
                         {
-                            --BotTestCount;
-                            if (BotTestCount > 0)
-                            {
-                                // start another round, inviting all bots!
-                                ConnectionManager.SendChannelMessageFormat(Config.UnoChannel, "I'm in bot test mode; {0} game{1} left!", BotTestCount, (BotTestCount == 1) ? "" : "s");
-                                Logger.LogInformation("{Count} bot test game/s left", BotTestCount);
-                                PrepareGame();
-                                ConnectionManager.SendChannelMessage(Config.UnoChannel, "?join");
-                                BotTestJoinRequested = DateTime.UtcNow;
-                            }
-                        }
-
-                        return;
-                    }
-
-                    // next player's turn!
-                    AdvanceToNextPlayer();
-                }
-
-                // !uno
-                var startGameMatch = StartGameRegex.Match(bodyTrimmedEnd);
-                if (startGameMatch.Success)
-                {
-                    switch (CurrentGameState)
-                    {
-                        case GameState.Preparation:
-                        case GameState.InProgress:
-                            Logger.LogDebug("{Nickname} is trying to start a game although one is already in progress", e.SenderNickname);
-                            return;
-                        case GameState.NoGame:
-                            // continue below
-                            break;
-                        default:
-                            Logger.LogError("invalid game state when trying to start new game");
-                            return;
-                    }
-
-                    // process options
-                    AttackMode = false;
-                    ExtremeMode = false;
-                    foreach (Capture cap in startGameMatch.Captures)
-                    {
-                        switch (cap.Value)
-                        {
-                            case "A":
-                            case "a":
-                                AttackMode = true;
-                                break;
-                            case "E":
-                            case "e":
-                                ExtremeMode = true;
-                                break;
+                            // start another round, inviting all bots!
+                            ConnectionManager.SendChannelMessageFormat(
+                                Config.UnoChannel,
+                                "I'm in bot test mode; {0} game{1} left!",
+                                BotTestCount,
+                                (BotTestCount == 1) ? "" : "s"
+                            );
+                            Logger.LogInformation("{Count} bot test game/s left", BotTestCount);
+                            PrepareGame();
+                            ConnectionManager.SendChannelMessage(Config.UnoChannel, "?join");
+                            BotTestJoinRequested = DateTime.UtcNow;
                         }
                     }
-
-                    // prepare game
-                    PrepareGame();
-
-                    // add player who launched the game
-                    Players.Add(Player.Create(e.SenderNickname));
-
-                    ConnectionManager.SendChannelMessageFormat(Config.UnoChannel, "{0} started a game of Uno!", e.SenderNickname);
 
                     return;
                 }
 
-                var botTestMatch = BotTestRegex.Match(bodyTrimmedEnd);
-                if (botTestMatch.Success)
+                // next player's turn!
+                AdvanceToNextPlayer();
+            }
+        }
+
+        protected virtual void HandleUnoCommand(CommandMatch cmd, IChannelMessageEventArgs msg)
+        {
+            if (msg.Channel != Config.UnoChannel)
+            {
+                return;
+            }
+
+            lock (TurnLock)
+            {
+                switch (CurrentGameState)
                 {
-                    BotTestCount = int.Parse(botTestMatch.Groups[1].Value, CultureInfo.InvariantCulture);
+                    case GameState.Preparation:
+                    case GameState.InProgress:
+                        Logger.LogDebug(
+                            "{Nickname} is trying to start a game although one is already in progress",
+                            msg.SenderNickname
+                        );
+                        return;
+                    case GameState.NoGame:
+                        // continue below
+                        break;
+                    default:
+                        Logger.LogError("invalid game state when trying to start new game");
+                        return;
+                }
 
-                    ConnectionManager.SendChannelMessageFormat(Config.UnoChannel, "{0} engaged bot test mode; {1} games left!", e.SenderNickname, BotTestCount);
+                // process options
+                AttackMode = cmd.Options.Any(o => o.Key.ToLowerInvariant() == "+a");
+                ExtremeMode = cmd.Options.Any(o => o.Key.ToLowerInvariant() == "+e");
 
-                    // prepare a game
-                    PrepareGame();
+                // prepare game
+                PrepareGame();
 
-                    // trigger bot joinage
-                    ConnectionManager.SendChannelMessage(Config.UnoChannel, "?join");
+                // add player who launched the game
+                Players.Add(Player.Create(msg.SenderNickname));
 
-                    // wait for bot joinage
-                    BotTestJoinRequested = DateTime.UtcNow;
+                ConnectionManager.SendChannelMessageFormat(
+                    Config.UnoChannel,
+                    "{0} started a game of Uno!",
+                    msg.SenderNickname
+                );
+            }
+        }
+
+        protected virtual void HandleBotTestCommand(CommandMatch cmd, IChannelMessageEventArgs msg)
+        {
+            if (msg.Channel != Config.UnoChannel)
+            {
+                return;
+            }
+
+            lock (TurnLock)
+            {
+                BotTestCount = (long)cmd.Arguments[0];
+
+                ConnectionManager.SendChannelMessageFormat(
+                    Config.UnoChannel,
+                    "{0} engaged bot test mode; {1} games left!",
+                    msg.SenderNickname,
+                    BotTestCount
+                );
+
+                // prepare a game
+                PrepareGame();
+
+                // trigger bot joinage
+                ConnectionManager.SendChannelMessage(Config.UnoChannel, "?join");
+
+                // wait for bot joinage
+                BotTestJoinRequested = DateTime.UtcNow;
+            }
+        }
+
+        protected virtual void HandleJoinCommand(CommandMatch cmd, IChannelMessageEventArgs msg)
+        {
+            if (msg.Channel != Config.UnoChannel)
+            {
+                return;
+            }
+
+            bool isBot = (cmd.CommandName == "botjoin");
+
+            lock (TurnLock)
+            {
+                switch (CurrentGameState)
+                {
+                    case GameState.NoGame:
+                        Logger.LogDebug("{Nickname} is trying to join no game", msg.SenderNickname);
+                        return;
+                    default:
+                        Logger.LogError("invalid game state when trying to add player to game");
+                        return;
+                    case GameState.Preparation:
+                    case GameState.InProgress:
+                        // continue below
+                        break;
+                }
+
+                var existingPlayer = Players.FirstOrDefault(p => p.Nick == msg.SenderNickname);
+                if (existingPlayer != null)
+                {
+                    // player already joined
+                    // they become what they chose
+                    existingPlayer.IsBot = isBot;
+                    ConnectionManager.SendChannelMessageFormat(
+                        Config.UnoChannel,
+                        "{0} became {1}!",
+                        msg.SenderNickname,
+                        isBot ? "a bot" : "human"
+                    );
+                }
+                else
+                {
+                    // add them
+                    var newPlayer = Player.Create(msg.SenderNickname, isBot);
+
+                    if (CurrentGameState == GameState.InProgress)
+                    {
+                        // deal cards to them
+                        var drawnCards = DrawCards(Config.InitialDealSize);
+                        newPlayer.Hand.UnionWith(drawnCards);
+                    }
+
+                    Players.Add(newPlayer);
+
+                    ConnectionManager.SendChannelMessageFormat(
+                        Config.UnoChannel,
+                        "{0} joined the fray!",
+                        msg.SenderNickname
+                    );
+                }
+            }
+        }
+
+        protected virtual void HandleLeaveCommand(CommandMatch cmd, IChannelMessageEventArgs msg)
+        {
+            if (msg.Channel != Config.UnoChannel)
+            {
+                return;
+            }
+
+            lock (TurnLock)
+            {
+                RemovePlayerFromGame(msg.SenderNickname);
+            }
+        }
+
+        protected virtual void HandleDealCommand(CommandMatch cmd, IChannelMessageEventArgs msg)
+        {
+            if (msg.Channel != Config.UnoChannel)
+            {
+                return;
+            }
+
+            lock (TurnLock)
+            {
+                switch (CurrentGameState)
+                {
+                    case GameState.NoGame:
+                        Logger.LogDebug("{Nickname} is trying to deal no game", msg.SenderNickname);
+                        return;
+                    default:
+                        Logger.LogError("invalid game state when trying to add player to game");
+                        return;
+                    case GameState.Preparation:
+                    case GameState.InProgress:
+                        // continue below
+                        break;
+                }
+
+                DealGame();
+            }
+        }
+
+        protected virtual void HandleDrawCommand(CommandMatch cmd, IChannelMessageEventArgs msg)
+        {
+            if (msg.Channel != Config.UnoChannel)
+            {
+                return;
+            }
+
+            lock (TurnLock)
+            {
+                if (CurrentPlayer.Nick != msg.SenderNickname)
+                {
+                    ConnectionManager.SendChannelMessageFormat(
+                        Config.UnoChannel,
+                        "It's not your turn, {0}.",
+                        msg.SenderNickname
+                    );
                     return;
                 }
 
-                if (bodyTrimmedEnd == "!join" || bodyTrimmedEnd == "!botjoin")
+                if (DrewLast)
                 {
-                    var isBot = (bodyTrimmedEnd == "!botjoin");
+                    ConnectionManager.SendChannelMessageFormat(
+                        Config.UnoChannel,
+                        "You already drew, {0}.",
+                        msg.SenderNickname
+                    );
+                    return;
+                }
 
-                    switch (CurrentGameState)
+                // mark this
+                DrewLast = true;
+
+                bool drawn = false;
+                if (AttackMode)
+                {
+                    bool wasAttacked = (Randomizer.Next(5) == 0);
+                    if (wasAttacked)
                     {
-                        case GameState.NoGame:
-                            Logger.LogDebug("{Nickname} is trying to join no game", e.SenderNickname);
-                            return;
-                        default:
-                            Logger.LogError("invalid game state when trying to add player to game");
-                            return;
-                        case GameState.Preparation:
-                        case GameState.InProgress:
-                            // continue below
-                            break;
-                    }
-
-                    var existingPlayer = Players.FirstOrDefault(p => p.Nick == e.SenderNickname);
-                    if (existingPlayer != null)
-                    {
-                        // player already joined
-                        // they become what they chose
-                        existingPlayer.IsBot = isBot;
-                        ConnectionManager.SendChannelMessageFormat(Config.UnoChannel, "{0} became {1}!", e.SenderNickname, isBot ? "a bot" : "human");
-                    }
-                    else
-                    {
-                        // add them
-                        var newPlayer = Player.Create(e.SenderNickname, isBot);
-
-                        if (CurrentGameState == GameState.InProgress)
-                        {
-                            // deal cards to them
-                            var drawnCards = DrawCards(Config.InitialDealSize);
-                            newPlayer.Hand.UnionWith(drawnCards);
-                        }
-
-                        Players.Add(newPlayer);
-
-                        ConnectionManager.SendChannelMessageFormat(Config.UnoChannel, "{0} joined the fray!", e.SenderNickname);
+                        int drawCount = Randomizer.Next(7);
+                        ConnectionManager.SendChannelMessageFormat(
+                            Config.UnoChannel,
+                            "{0} has been Uno-attacked! They have to draw {1} cards!",
+                            CurrentPlayer.Nick,
+                            drawCount
+                        );
+                        CurrentPlayer.Hand.UnionWith(DrawCards(drawCount));
+                        drawn = true;
                     }
                 }
-                else if (bodyTrimmedEnd == "!leave")
+
+                if (!drawn)
                 {
-                    RemovePlayerFromGame(e.SenderNickname);
+                    // draw a card
+                    CurrentPlayer.Hand.Add(DrawCard());
                 }
-                else if (bodyTrimmedEnd == "!deal")
+
+                // tell them what they drew
+                SendPlayerHandInfoEvent(CurrentPlayer);
+                SendPlayerHandNotice(CurrentPlayer);
+
+                // broadcast that they drew
+                BroadcastAnchorPlayerDrewCardEvent(CurrentPlayer.Nick);
+
+                // restart counting down
+                TurnStartedUtc = DateTime.UtcNow;
+            }
+        }
+
+        protected virtual void HandlePassCommand(CommandMatch cmd, IChannelMessageEventArgs msg)
+        {
+            if (msg.Channel != Config.UnoChannel)
+            {
+                return;
+            }
+
+            lock (TurnLock)
+            {
+                if (CurrentPlayer.Nick != msg.SenderNickname)
                 {
-                    switch (CurrentGameState)
-                    {
-                        case GameState.NoGame:
-                            Logger.LogDebug("{Nickname} is trying to deal no game", e.SenderNickname);
-                            return;
-                        default:
-                            Logger.LogError("invalid game state when trying to add player to game");
-                            return;
-                        case GameState.Preparation:
-                        case GameState.InProgress:
-                            // continue below
-                            break;
-                    }
-
-                    DealGame();
+                    ConnectionManager.SendChannelMessageFormat(
+                        Config.UnoChannel,
+                        "It's not your turn, {0}.",
+                        msg.SenderNickname
+                    );
+                    return;
                 }
-                else if (bodyTrimmedEnd == "!draw")
+
+                if (!DrewLast)
                 {
-                    if (CurrentPlayer.Nick != e.SenderNickname)
-                    {
-                        ConnectionManager.SendChannelMessageFormat(Config.UnoChannel, "It's not your turn, {0}.", e.SenderNickname);
-                        return;
-                    }
-
-                    if (DrewLast)
-                    {
-                        ConnectionManager.SendChannelMessageFormat(Config.UnoChannel, "You already drew, {0}.", e.SenderNickname);
-                        return;
-                    }
-
-                    // mark this
-                    DrewLast = true;
-
-                    bool drawn = false;
-                    if (AttackMode)
-                    {
-                        bool wasAttacked = (Randomizer.Next(5) == 0);
-                        if (wasAttacked)
-                        {
-                            int drawCount = Randomizer.Next(7);
-                            ConnectionManager.SendChannelMessageFormat(Config.UnoChannel, "{0} has been Uno-attacked! They have to draw {1} cards!", CurrentPlayer.Nick, drawCount);
-                            CurrentPlayer.Hand.UnionWith(DrawCards(drawCount));
-                            drawn = true;
-                        }
-                    }
-
-                    if (!drawn)
-                    {
-                        // draw a card
-                        CurrentPlayer.Hand.Add(DrawCard());
-                    }
-
-                    // tell them what they drew
-                    SendPlayerHandInfoEvent(CurrentPlayer);
-                    SendPlayerHandNotice(CurrentPlayer);
-
-                    // broadcast that they drew
-                    BroadcastAnchorPlayerDrewCardEvent(CurrentPlayer.Nick);
-
-                    // restart counting down
-                    TurnStartedUtc = DateTime.UtcNow;
+                    ConnectionManager.SendChannelMessageFormat(
+                        Config.UnoChannel,
+                        "You have to draw first, {0}.",
+                        msg.SenderNickname
+                    );
+                    return;
                 }
-                else if (bodyTrimmedEnd == "!pass")
-                {
-                    if (CurrentPlayer.Nick != e.SenderNickname)
-                    {
-                        ConnectionManager.SendChannelMessageFormat(Config.UnoChannel, "It's not your turn, {0}.", e.SenderNickname);
-                        return;
-                    }
 
-                    if (!DrewLast)
-                    {
-                        ConnectionManager.SendChannelMessageFormat(Config.UnoChannel, "You have to draw first, {0}.", e.SenderNickname);
-                        return;
-                    }
+                // skip to the next player
+                AdvanceToNextPlayer();
+            }
+        }
 
-                    // skip to the next player
-                    AdvanceToNextPlayer();
-                }
-                else if (bodyTrimmedEnd == "!endgame")
-                {
-                    StopGame();
-                    ConnectionManager.SendChannelMessage(Config.UnoChannel, "Game stopped.");
-                }
+        protected virtual void HandleEndGameCommand(CommandMatch cmd, IChannelMessageEventArgs msg)
+        {
+            if (msg.Channel != Config.UnoChannel)
+            {
+                return;
+            }
+
+            lock (TurnLock)
+            {
+                StopGame();
+                ConnectionManager.SendChannelMessage(
+                    Config.UnoChannel,
+                    "Game stopped."
+                );
             }
         }
 

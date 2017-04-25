@@ -6,14 +6,13 @@ using System.Text.RegularExpressions;
 using JetBrains.Annotations;
 using Newtonsoft.Json.Linq;
 using SharpIrcBot.Collections;
+using SharpIrcBot.Commands;
 using SharpIrcBot.Events.Irc;
 
 namespace SharpIrcBot.Plugins.AlsoKnownAs
 {
     public class AlsoKnownAsPlugin : IPlugin, IReloadableConfiguration
     {
-        public static readonly Regex AlsoKnownAsRegex = new Regex("^!aka\\s+(?<nickname>\\S+)\\s*", RegexOptions.Compiled);
-
         protected IConnectionManager ConnectionManager { get; set; }
         protected AlsoKnownAsConfig Config { get; set; }
 
@@ -28,8 +27,21 @@ namespace SharpIrcBot.Plugins.AlsoKnownAs
             HostToNicks = new DrillDownTree<string, HashSet<string>>();
             NickToMostRecentHost = new Dictionary<string, UserIdentifier>(StringComparer.OrdinalIgnoreCase);
 
-            ConnectionManager.ChannelMessage += HandleChannelMessage;
-            ConnectionManager.QueryMessage += HandleQueryMessage;
+            var akaCommand = new Command(
+                CommandUtil.MakeNames("aka"),
+                CommandUtil.NoOptions,
+                CommandUtil.MakeArguments(
+                    CommandUtil.NonzeroStringMatcherRequiredWordTaker // nickname
+                ),
+                forbiddenFlags: MessageFlags.UserBanned
+            );
+            ConnectionManager.CommandManager.RegisterChannelMessageCommandHandler(
+                akaCommand, HandleChannelAka
+            );
+            ConnectionManager.CommandManager.RegisterQueryMessageCommandHandler(
+                akaCommand, HandleQueryAka
+            );
+
             ConnectionManager.JoinedChannel += HandleJoinedChannel;
             ConnectionManager.NickChange += HandleNickChange;
             ConnectionManager.RawMessage += HandleRawMessage;
@@ -45,36 +57,26 @@ namespace SharpIrcBot.Plugins.AlsoKnownAs
         {
         }
 
-        private void HandleChannelMessage([CanBeNull] object sender, [NotNull] IChannelMessageEventArgs e, MessageFlags flags)
+        private void HandleChannelAka([NotNull] CommandMatch cmd, [NotNull] IChannelMessageEventArgs e)
         {
-            ActuallyHandleChannelOrQueryMessage(
-                sender, e, flags,
+            ActuallyHandleChannelOrQueryAka(
+                cmd, e,
                 txt => ConnectionManager.SendChannelMessage(e.Channel, $"{e.SenderNickname}: {txt}")
             );
         }
 
-        private void HandleQueryMessage([CanBeNull] object sender, [NotNull] IPrivateMessageEventArgs e, MessageFlags flags)
+        private void HandleQueryAka([NotNull] CommandMatch cmd, [NotNull] IPrivateMessageEventArgs e)
         {
-            ActuallyHandleChannelOrQueryMessage(
-                sender, e, flags,
+            ActuallyHandleChannelOrQueryAka(
+                cmd, e,
                 txt => ConnectionManager.SendQueryMessage(e.SenderNickname, txt)
             );
         }
 
-        protected virtual void ActuallyHandleChannelOrQueryMessage([CanBeNull] object sender, [NotNull] IUserMessageEventArgs e, MessageFlags flags, [NotNull] Action<string> respond)
+        protected virtual void ActuallyHandleChannelOrQueryAka([NotNull] CommandMatch cmd,
+                [NotNull] IUserMessageEventArgs e, [NotNull] Action<string> respond)
         {
-            if (flags.HasFlag(MessageFlags.UserBanned))
-            {
-                return;
-            }
-
-            var akaMatch = AlsoKnownAsRegex.Match(e.Message);
-            if (!akaMatch.Success)
-            {
-                return;
-            }
-
-            var nickToSearch = akaMatch.Groups["nickname"].Value;
+            string nickToSearch = (string)cmd.Arguments[0];
 
             if (!NickToMostRecentHost.ContainsKey(nickToSearch))
             {
@@ -84,7 +86,6 @@ namespace SharpIrcBot.Plugins.AlsoKnownAs
 
             var identifier = NickToMostRecentHost[nickToSearch];
             var identifierParts = identifier.Parts;
-
 
             ImmutableList<HashSet<string>> matches;
             int matchDepth = HostToNicks.GetBestMatches(identifierParts, out matches);

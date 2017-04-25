@@ -12,6 +12,7 @@ using JetBrains.Annotations;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 using SharpIrcBot.Chunks;
+using SharpIrcBot.Commands;
 using SharpIrcBot.Config;
 using SharpIrcBot.Events;
 using SharpIrcBot.Events.Irc;
@@ -34,6 +35,8 @@ namespace SharpIrcBot.Plugins.LinkInfo
         [CanBeNull]
         protected HeuristicLinkDetector LinkDetector { get; set; }
 
+        protected string LinkCommandPrefix => $"{ConnectionManager.CommandManager.Config.CommandPrefix}link ";
+
         public LinkInfoPlugin(IConnectionManager connMgr, JObject config)
         {
             ConnectionManager = connMgr;
@@ -47,6 +50,14 @@ namespace SharpIrcBot.Plugins.LinkInfo
             ConnectionManager.ChannelMessage += HandleChannelMessage;
             ConnectionManager.OutgoingChannelMessage += HandleOutgoingChannelMessage;
             ConnectionManager.SplitToChunks += HandleSplitToChunks;
+
+            ConnectionManager.CommandManager.RegisterChannelMessageCommandHandler(
+                new Command(
+                    CommandUtil.MakeNames("ll", "lastlink"),
+                    forbiddenFlags: MessageFlags.UserBanned
+                ),
+                HandleLastLinkCommand
+            );
 
             RepopulatePluginList();
         }
@@ -90,27 +101,10 @@ namespace SharpIrcBot.Plugins.LinkInfo
                 return;
             }
 
-            var body = args.Message;
-            if (body == "!lastlink" || body == "!ll")
-            {
-                if (LastLinkAndInfo == null)
-                {
-                    ConnectionManager.SendChannelMessage(args.Channel, "No last link!");
-                }
-                else
-                {
-                    // fetch if not fetched yet or a transient error occurred last time
-                    if (LastLinkAndInfo.ShouldRefetch)
-                    {
-                        LastLinkAndInfo = ObtainLinkInfo(LastLinkAndInfo.Link);
-                    }
-                    PostLinkInfoToChannel(LastLinkAndInfo, args.Channel);
-                }
-                return;
-            }
+            string body = args.Message;
 
             // find all the links
-            var links = FindLinks(body);
+            IList<Uri> links = FindLinks(body);
 
             // store the new "last link"
             if (links.Count > 0)
@@ -122,10 +116,27 @@ namespace SharpIrcBot.Plugins.LinkInfo
             LinksAction(args, flags, links);
         }
 
+        protected virtual void HandleLastLinkCommand(CommandMatch cmd, IChannelMessageEventArgs args)
+        {
+            if (LastLinkAndInfo == null)
+            {
+                ConnectionManager.SendChannelMessage(args.Channel, "No last link!");
+            }
+            else
+            {
+                // fetch if not fetched yet or a transient error occurred last time
+                if (LastLinkAndInfo.ShouldRefetch)
+                {
+                    LastLinkAndInfo = ObtainLinkInfo(LastLinkAndInfo.Link);
+                }
+                PostLinkInfoToChannel(LastLinkAndInfo, args.Channel);
+            }
+        }
+
         protected virtual void LinksAction(IChannelMessageEventArgs args, MessageFlags flags, IList<Uri> links)
         {
             // respond?
-            if (Config.AutoShowLinkInfo || args.Message.StartsWith("!link "))
+            if (Config.AutoShowLinkInfo || args.Message.StartsWith(LinkCommandPrefix))
             {
                 foreach (var linkAndInfo in links.Select(ObtainLinkInfo))
                 {

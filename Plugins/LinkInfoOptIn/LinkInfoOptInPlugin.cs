@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
+using SharpIrcBot.Commands;
 using SharpIrcBot.Events;
 using SharpIrcBot.Events.Irc;
 using SharpIrcBot.Plugins.LinkInfo;
@@ -14,7 +15,6 @@ namespace SharpIrcBot.Plugins.LinkInfoOptIn
     public class LinkInfoOptInPlugin : LinkInfoPlugin
     {
         private static readonly ILogger Logger = SharpIrcBotUtil.LoggerFactory.CreateLogger<LinkInfoOptInPlugin>();
-        public static readonly Regex AutoLinkInfoRegex = new Regex("^!(?<unsub>no)?autolinkinfo\\s*$", RegexOptions.Compiled);
 
         public Uri LastBroadcastLink { get; set; }
 
@@ -30,7 +30,14 @@ namespace SharpIrcBot.Plugins.LinkInfoOptIn
             Config = new LinkInfoOptInConfig(config);
 
             ConnectionManager.BaseNickChanged += HandleBaseNickChanged;
-            ConnectionManager.ChannelMessage += HandleChannelMessageOptIn;
+
+            ConnectionManager.CommandManager.RegisterChannelMessageCommandHandler(
+                new Command(
+                    CommandUtil.MakeNames("autolinkinfo", "noautolinkinfo"),
+                    forbiddenFlags: MessageFlags.UserBanned
+                ),
+                HandleAutoLinkInfoCommand
+            );
         }
 
         public override void ReloadConfiguration(JObject newConfig)
@@ -50,7 +57,7 @@ namespace SharpIrcBot.Plugins.LinkInfoOptIn
             }
 
             // post the regular response?
-            if (args.Message.StartsWith("!link "))
+            if (args.Message.StartsWith(LinkCommandPrefix))
             {
                 postToChannel = true;
             }
@@ -113,19 +120,8 @@ namespace SharpIrcBot.Plugins.LinkInfoOptIn
             }
         }
 
-        protected void HandleChannelMessageOptIn(object sender, IChannelMessageEventArgs args, MessageFlags flags)
+        protected void HandleAutoLinkInfoCommand(CommandMatch cmd, IChannelMessageEventArgs args)
         {
-            if (flags.HasFlag(MessageFlags.UserBanned))
-            {
-                return;
-            }
-
-            var match = AutoLinkInfoRegex.Match(args.Message);
-            if (!match.Success)
-            {
-                return;
-            }
-
             var senderUsername = ConnectionManager.RegisteredNameForNick(args.SenderNickname);
             if (senderUsername == null)
             {
@@ -133,7 +129,7 @@ namespace SharpIrcBot.Plugins.LinkInfoOptIn
                 return;
             }
 
-            bool removeSubscription = match.Groups["unsub"].Success;
+            bool removeSubscription = (cmd.CommandName == "noautolinkinfo");
 
             using (var ctx = GetNewContext())
             {

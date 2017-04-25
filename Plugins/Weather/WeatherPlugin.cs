@@ -7,6 +7,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
+using SharpIrcBot.Commands;
 using SharpIrcBot.Events.Irc;
 using SharpIrcBot.Plugins.Weather.Wunderground;
 
@@ -15,8 +16,6 @@ namespace SharpIrcBot.Plugins.Weather
     public class WeatherPlugin : IPlugin, IReloadableConfiguration
     {
         private static readonly ILogger Logger = SharpIrcBotUtil.LoggerFactory.CreateLogger<WeatherPlugin>();
-
-        public static readonly Regex WeatherRegex = new Regex("^!(?<lucky>l)?weather(?:\\s+(?<location>\\S+(?:\\s+\\S+)*))?\\s*$", RegexOptions.Compiled);
 
         protected IConnectionManager ConnectionManager { get; }
         protected WeatherConfig Config { get; set; }
@@ -42,7 +41,17 @@ namespace SharpIrcBot.Plugins.Weather
             RequestsTodayEST = 0;
             RNG = new Random();
 
-            ConnectionManager.ChannelMessage += HandleChannelMessage;
+            ConnectionManager.CommandManager.RegisterChannelMessageCommandHandler(
+                new Command(
+                    CommandUtil.MakeNames("weather", "lweather"),
+                    CommandUtil.NoOptions,
+                    CommandUtil.MakeArguments(
+                        RestTaker.Instance // location
+                    ),
+                    forbiddenFlags: MessageFlags.UserBanned
+                ),
+                HandleWeatherCommand
+            );
         }
 
         public virtual void ReloadConfiguration(JObject newConfig)
@@ -268,24 +277,15 @@ namespace SharpIrcBot.Plugins.Weather
             ConnectionManager.SendChannelMessage(channel, weather.ToString());
         }
 
-        protected virtual void HandleChannelMessage(object sender, IChannelMessageEventArgs args, MessageFlags flags)
+        protected virtual void HandleWeatherCommand(CommandMatch cmd, IChannelMessageEventArgs msg)
         {
-            if (flags.HasFlag(MessageFlags.UserBanned))
+            string location = ((string)cmd.Arguments[0]).Trim();
+            if (location.Length == 0)
             {
-                return;
+                location = Config.DefaultLocation;
             }
 
-            var match = WeatherRegex.Match(args.Message);
-            if (!match.Success)
-            {
-                return;
-            }
-
-            string location = match.Groups["location"].Success
-                ? match.Groups["location"].Value
-                : Config.DefaultLocation;
-
-            GetWeatherForLocation(location, args.Channel, args.SenderNickname, match.Groups["lucky"].Success);
+            GetWeatherForLocation(location, msg.Channel, msg.SenderNickname, cmd.CommandName[0] == 'l');
         }
     }
 }

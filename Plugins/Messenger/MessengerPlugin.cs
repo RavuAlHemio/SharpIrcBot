@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
+using SharpIrcBot.Commands;
 using SharpIrcBot.Events;
 using SharpIrcBot.Events.Irc;
 using SharpIrcBot.Plugins.Messenger.ORM;
@@ -17,13 +18,6 @@ namespace SharpIrcBot.Plugins.Messenger
     public class MessengerPlugin : IPlugin, IReloadableConfiguration
     {
         private static readonly ILogger Logger = SharpIrcBotUtil.LoggerFactory.CreateLogger<MessengerPlugin>();
-        public static readonly Regex SendMessageRegex = new Regex("^!(?<silence>s?)(?:msg|mail)\\s+(?<recipient>[^ :]+):?\\s+(?<message>\\S+(?:\\s+\\S+)*)\\s*$", RegexOptions.Compiled);
-        public static readonly Regex DeliverMessageRegex = new Regex("^!deliver(?:msg|mail)\\s+(?<count>[1-9][0-9]*)\\s*$", RegexOptions.Compiled);
-        public static readonly Regex ReplayMessageRegex = new Regex("^!replay(?:msg|mail)\\s+(?<count>[1-9][0-9]*)\\s*$", RegexOptions.Compiled);
-        public static readonly Regex IgnoreMessageRegex = new Regex("^!(?<command>(?:un)?ignore)(?:msg|mail)\\s+(?<target>\\S+)\\s*$", RegexOptions.Compiled);
-        public static readonly Regex QuiesceRegex = new Regex("^!(?:msg|mail)gone\\s+(?<messageCount>0|[1-9][0-9]*)\\s+(?<durationHours>[1-9][0-9]*)h\\s*$", RegexOptions.Compiled);
-        public static readonly Regex UnQuiesceRegex = new Regex("^!(?:msg|mail)back\\s*$", RegexOptions.Compiled);
-        public static readonly Regex PrivateMessageRegex = new Regex("^!p(?:m|msg|mail)\\s+(?<recipient>[^ :]+):?\\s+(?<message>\\S+(?:\\s+\\S+)*)\\s*$", RegexOptions.Compiled);
 
         protected MessengerConfig Config { get; set; }
         protected IConnectionManager ConnectionManager { get; set; }
@@ -35,8 +29,84 @@ namespace SharpIrcBot.Plugins.Messenger
 
             ConnectionManager.ChannelMessage += HandleChannelMessage;
             ConnectionManager.ChannelAction += HandleChannelAction;
-            ConnectionManager.QueryMessage += HandleQueryMessage;
             ConnectionManager.BaseNickChanged += HandleBaseNickChanged;
+
+            ConnectionManager.CommandManager.RegisterChannelMessageCommandHandler(
+                new Command(
+                    CommandUtil.MakeNames("msg", "mail", "smsg", "smail"),
+                    CommandUtil.NoOptions,
+                    CommandUtil.MakeArguments(
+                        CommandUtil.NonzeroStringMatcherRequiredWordTaker, // recipient
+                        RestTaker.Instance // message
+                    ),
+                    forbiddenFlags: MessageFlags.UserBanned
+                ),
+                HandleMsgCommand
+            );
+            ConnectionManager.CommandManager.RegisterChannelMessageCommandHandler(
+                new Command(
+                    CommandUtil.MakeNames("delivermsg", "delivermail"),
+                    CommandUtil.NoOptions,
+                    CommandUtil.MakeArguments(
+                        new LongMatcher().ToRequiredWordTaker() // count
+                    ),
+                    forbiddenFlags: MessageFlags.UserBanned
+                ),
+                HandleDeliverCommand
+            );
+            ConnectionManager.CommandManager.RegisterChannelMessageCommandHandler(
+                new Command(
+                    CommandUtil.MakeNames("replaymsg", "replaymail"),
+                    CommandUtil.NoOptions,
+                    CommandUtil.MakeArguments(
+                        new LongMatcher().ToRequiredWordTaker() // count
+                    ),
+                    forbiddenFlags: MessageFlags.UserBanned
+                ),
+                HandleReplayCommand
+            );
+            ConnectionManager.CommandManager.RegisterChannelMessageCommandHandler(
+                new Command(
+                    CommandUtil.MakeNames("ignoremsg", "ignoremail", "unignoremsg", "unignoremail"),
+                    CommandUtil.NoOptions,
+                    CommandUtil.MakeArguments(
+                        CommandUtil.NonzeroStringMatcherRequiredWordTaker // sender
+                    ),
+                    forbiddenFlags: MessageFlags.UserBanned
+                ),
+                HandleIgnoreCommand
+            );
+            ConnectionManager.CommandManager.RegisterChannelMessageCommandHandler(
+                new Command(
+                    CommandUtil.MakeNames("msggone", "mailgone"),
+                    CommandUtil.NoOptions,
+                    CommandUtil.MakeArguments(
+                        new LongMatcher().ToRequiredWordTaker(), // number of messages to redeliver eventually
+                        new RegexMatcher("^(?<hours>[1-9][0-9]*)h$").ToRequiredWordTaker() // duration
+                    ),
+                    forbiddenFlags: MessageFlags.UserBanned
+                ),
+                HandleGoneCommand
+            );
+            ConnectionManager.CommandManager.RegisterChannelMessageCommandHandler(
+                new Command(
+                    CommandUtil.MakeNames("msgback", "mailback"),
+                    forbiddenFlags: MessageFlags.UserBanned
+                ),
+                HandleBackCommand
+            );
+            ConnectionManager.CommandManager.RegisterQueryMessageCommandHandler(
+                new Command(
+                    CommandUtil.MakeNames("pm", "pmsg", "pmail"),
+                    CommandUtil.NoOptions,
+                    CommandUtil.MakeArguments(
+                        CommandUtil.NonzeroStringMatcherRequiredWordTaker, // recipient
+                        RestTaker.Instance // message
+                    ),
+                    forbiddenFlags: MessageFlags.UserBanned
+                ),
+                HandlePrivateMessageCommand
+            );
         }
 
         public virtual void ReloadConfiguration(JObject newConfig)
@@ -49,15 +119,9 @@ namespace SharpIrcBot.Plugins.Messenger
         {
         }
 
-        protected void PotentialMessageSend(IChannelMessageEventArgs message)
+        protected void HandleMsgCommand(CommandMatch cmd, IChannelMessageEventArgs message)
         {
-            var match = SendMessageRegex.Match(message.Message);
-            if (!match.Success)
-            {
-                return;
-            }
-
-            string rawRecipientNickString = match.Groups["recipient"].Value;
+            string rawRecipientNickString = ((string)cmd.Arguments[0]).TrimEnd(':');
             string[] rawRecipientNicks = rawRecipientNickString.Split(';');
             if (rawRecipientNicks.Length > 1 && !Config.AllowMulticast)
             {
@@ -65,7 +129,7 @@ namespace SharpIrcBot.Plugins.Messenger
                 return;
             }
 
-            var rawBody = match.Groups["message"].Value;
+            var rawBody = (string)cmd.Arguments[1];
             var body = SharpIrcBotUtil.RemoveControlCharactersAndTrim(rawBody);
 
             var sender = ConnectionManager.RegisteredNameForNick(message.SenderNickname) ?? message.SenderNickname;
@@ -157,7 +221,7 @@ namespace SharpIrcBot.Plugins.Messenger
                 }
             }
 
-            if (match.Groups["silence"].Value == "s")
+            if (cmd.CommandName[0] == 's')
             {
                 // silent msg
                 return;
@@ -218,16 +282,12 @@ namespace SharpIrcBot.Plugins.Messenger
             }
         }
 
-        protected void PotentialDeliverRequest(IChannelMessageEventArgs message)
+        protected void HandleDeliverCommand(CommandMatch cmd, IChannelMessageEventArgs message)
         {
-            var match = DeliverMessageRegex.Match(message.Message);
-            if (!match.Success)
-            {
-                return;
-            }
+            var longFetchCount = (long)cmd.Arguments[0];
 
             // overflow avoidance
-            if (match.Groups["count"].Length > 3)
+            if (longFetchCount > 999)
             {
                 ConnectionManager.SendChannelMessageFormat(
                     message.Channel,
@@ -236,7 +296,7 @@ namespace SharpIrcBot.Plugins.Messenger
                 );
                 return;
             }
-            var fetchCount = int.Parse(match.Groups["count"].Value);
+            var fetchCount = (int)longFetchCount;
             var sender = ConnectionManager.RegisteredNameForNick(message.SenderNickname) ?? message.SenderNickname;
             var lowerSender = sender.ToLowerInvariant();
 
@@ -322,15 +382,12 @@ namespace SharpIrcBot.Plugins.Messenger
             }
         }
 
-        protected void PotentialReplayRequest(IChannelMessageEventArgs message)
+        protected void HandleReplayCommand(CommandMatch cmd, IChannelMessageEventArgs message)
         {
-            var match = ReplayMessageRegex.Match(message.Message);
-            if (!match.Success)
-            {
-                return;
-            }
+            var longReplayCount = (long)cmd.Arguments[0];
 
-            if (match.Groups["count"].Length > 3)
+            // overflow avoidance
+            if (longReplayCount > 999)
             {
                 ConnectionManager.SendChannelMessageFormat(
                     message.Channel,
@@ -339,8 +396,8 @@ namespace SharpIrcBot.Plugins.Messenger
                 );
                 return;
             }
+            var replayCount = (int)longReplayCount;
 
-            var replayCount = int.Parse(match.Groups["count"].Value);
             if (replayCount > Config.MaxMessagesToReplay)
             {
                 ConnectionManager.SendChannelMessageFormat(
@@ -423,20 +480,14 @@ namespace SharpIrcBot.Plugins.Messenger
             );
         }
 
-        protected void PotentialIgnoreListRequest(IChannelMessageEventArgs message)
+        protected void HandleIgnoreCommand(CommandMatch cmd, IChannelMessageEventArgs message)
         {
-            var match = IgnoreMessageRegex.Match(message.Message);
-            if (!match.Success)
-            {
-                return;
-            }
-
-            var command = match.Groups["command"].Value;
-            var blockSenderNickname = match.Groups["target"].Value.Trim();
-            var blockSender = ConnectionManager.RegisteredNameForNick(blockSenderNickname) ?? blockSenderNickname;
-            var blockSenderLower = blockSender.ToLowerInvariant();
-            var blockRecipient = ConnectionManager.RegisteredNameForNick(message.SenderNickname) ?? message.SenderNickname;
-            var blockRecipientLower = blockRecipient.ToLowerInvariant();
+            var blockSenderNickname = (string)cmd.Arguments[0];
+            string blockSender = ConnectionManager.RegisteredNameForNick(blockSenderNickname) ?? blockSenderNickname;
+            string blockSenderLower = blockSender.ToLowerInvariant();
+            string blockRecipient = ConnectionManager.RegisteredNameForNick(message.SenderNickname)
+                    ?? message.SenderNickname;
+            string blockRecipientLower = blockRecipient.ToLowerInvariant();
 
             bool isIgnored;
             using (var ctx = GetNewContext())
@@ -445,7 +496,7 @@ namespace SharpIrcBot.Plugins.Messenger
                     .Any(ie => ie.SenderLowercase == blockSenderLower && ie.RecipientLowercase == blockRecipientLower);
             }
 
-            if (command == "ignore")
+            if (cmd.CommandName.StartsWith("ignore"))
             {
                 if (isIgnored)
                 {
@@ -482,7 +533,7 @@ namespace SharpIrcBot.Plugins.Messenger
                     blockSender
                 );
             }
-            else if (command == "unignore")
+            else if (cmd.CommandName.StartsWith("unignore"))
             {
                 if (!isIgnored)
                 {
@@ -518,16 +569,10 @@ namespace SharpIrcBot.Plugins.Messenger
             }
         }
 
-        protected void PotentialQuiesceRequest(IChannelMessageEventArgs message)
+        protected void HandleGoneCommand(CommandMatch cmd, IChannelMessageEventArgs message)
         {
-            var match = QuiesceRegex.Match(message.Message);
-            if (!match.Success)
-            {
-                return;
-            }
-
-            int lastMessageCount, hoursToSkip;
-            if (!int.TryParse(match.Groups["messageCount"].Value, NumberStyles.None, CultureInfo.InvariantCulture, out lastMessageCount))
+            var longLastMessageCount = (long)cmd.Arguments[0];
+            if (longLastMessageCount > int.MaxValue)
             {
                 ConnectionManager.SendChannelMessageFormat(
                     message.Channel,
@@ -536,9 +581,12 @@ namespace SharpIrcBot.Plugins.Messenger
                 );
                 return;
             }
+            var lastMessageCount = (int)longLastMessageCount;
 
+            int hoursToSkip;
             const string tooManyHoursFormat = "{0}: I seriously doubt you\u2019ll live that long...";
-            if (!int.TryParse(match.Groups["durationHours"].Value, NumberStyles.None, CultureInfo.InvariantCulture, out hoursToSkip))
+            var hoursMatch = (Match)cmd.Arguments[1];
+            if (!int.TryParse(hoursMatch.Groups["hours"].Value, NumberStyles.None, CultureInfo.InvariantCulture, out hoursToSkip))
             {
                 ConnectionManager.SendChannelMessageFormat(
                     message.Channel,
@@ -548,7 +596,9 @@ namespace SharpIrcBot.Plugins.Messenger
                 return;
             }
 
-            var quiesceUserLowercase = (ConnectionManager.RegisteredNameForNick(message.SenderNickname) ?? message.SenderNickname).ToLowerInvariant();
+            var quiesceUserLowercase =
+                    (ConnectionManager.RegisteredNameForNick(message.SenderNickname) ?? message.SenderNickname)
+                    .ToLowerInvariant();
 
             // calculate end time
             DateTimeOffset endTime;
@@ -633,15 +683,11 @@ namespace SharpIrcBot.Plugins.Messenger
             }
         }
 
-        protected void PotentialUnquiesceRequest(IChannelMessageEventArgs message)
+        protected void HandleBackCommand(CommandMatch cmd, IChannelMessageEventArgs message)
         {
-            var match = UnQuiesceRegex.Match(message.Message);
-            if (!match.Success)
-            {
-                return;
-            }
-
-            var unquiesceUserLowercase = (ConnectionManager.RegisteredNameForNick(message.SenderNickname) ?? message.SenderNickname).ToLowerInvariant();
+            string unquiesceUserLowercase =
+                    (ConnectionManager.RegisteredNameForNick(message.SenderNickname) ?? message.SenderNickname)
+                    .ToLowerInvariant();
             using (var ctx = GetNewContext())
             {
                 var quiescence = ctx.Quiescences
@@ -667,15 +713,9 @@ namespace SharpIrcBot.Plugins.Messenger
             );
         }
 
-        protected void PotentialPrivateMessageSend(IPrivateMessageEventArgs message)
+        protected void HandlePrivateMessageCommand(CommandMatch cmd, IPrivateMessageEventArgs message)
         {
-            var match = PrivateMessageRegex.Match(message.Message);
-            if (!match.Success)
-            {
-                return;
-            }
-
-            string rawRecipientNickString = match.Groups["recipient"].Value;
+            string rawRecipientNickString = ((string)cmd.Arguments[0]).TrimEnd(':');
             string[] rawRecipientNicks = rawRecipientNickString.Split(';');
             if (rawRecipientNicks.Length > 1 && !Config.AllowMulticast)
             {
@@ -683,7 +723,7 @@ namespace SharpIrcBot.Plugins.Messenger
                 return;
             }
 
-            var rawBody = match.Groups["message"].Value;
+            var rawBody = (string)cmd.Arguments[1];
             var body = SharpIrcBotUtil.RemoveControlCharactersAndTrim(rawBody);
 
             var sender = ConnectionManager.RegisteredNameForNick(message.SenderNickname) ?? message.SenderNickname;
@@ -746,7 +786,7 @@ namespace SharpIrcBot.Plugins.Messenger
                 SharpIrcBotUtil.LiteralString(body),
                 string.Join(", ", recipients.Select(r => SharpIrcBotUtil.LiteralString(r.Recipient)))
             );
-            
+
             using (var ctx = GetNewContext())
             {
                 foreach (var recipient in recipients)
@@ -812,19 +852,7 @@ namespace SharpIrcBot.Plugins.Messenger
             var senderUser = ConnectionManager.RegisteredNameForNick(args.SenderNickname) ?? args.SenderNickname;
             var senderLower = senderUser.ToLowerInvariant();
 
-            if (!flags.HasFlag(MessageFlags.UserBanned))
-            {
-                PotentialMessageSend(args);
-                PotentialReplayRequest(args);
-                PotentialIgnoreListRequest(args);
-                PotentialQuiesceRequest(args);
-                PotentialUnquiesceRequest(args);
-            }
-
-            PotentialDeliverRequest(args);
-
             // even banned users get messages; they just can't respond to them
-
             RegularMessageDelivery(args, senderLower);
             RegularPrivateMessageDelivery(args, senderLower);
         }
@@ -835,19 +863,6 @@ namespace SharpIrcBot.Plugins.Messenger
             var senderLower = senderUser.ToLowerInvariant();
             RegularMessageDelivery(args, senderLower);
             RegularPrivateMessageDelivery(args, senderLower);
-        }
-
-        protected void HandleQueryMessage(object sender, IPrivateMessageEventArgs args, MessageFlags flags)
-        {
-            if (args.SenderNickname == ConnectionManager.MyNickname)
-            {
-                return;
-            }
-
-            if (!flags.HasFlag(MessageFlags.UserBanned))
-            {
-                PotentialPrivateMessageSend(args);
-            }
         }
 
         protected virtual void RegularMessageDelivery(IChannelMessageEventArgs args, string senderLower)
@@ -1018,7 +1033,7 @@ namespace SharpIrcBot.Plugins.Messenger
                     .OrderBy(m => m.ID)
                     .ToList()
                 ;
-                
+
                 if (privateMessages.Count == 0)
                 {
                     // meh

@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using Newtonsoft.Json.Linq;
+using SharpIrcBot.Commands;
 using SharpIrcBot.Events.Irc;
 
 namespace SharpIrcBot.Plugins.Belch
@@ -26,71 +28,100 @@ namespace SharpIrcBot.Plugins.Belch
         public BelchPlugin(IConnectionManager connMgr, JObject config)
         {
             ConnectionManager = connMgr;
-            ConnectionManager.ChannelMessage += HandleChannelMessage;
+
+            ConnectionManager.CommandManager.RegisterChannelMessageCommandHandler(
+                new Command(
+                    CommandUtil.MakeNames("belch"),
+                    CommandUtil.NoOptions,
+                    CommandUtil.NoArguments,
+                    forbiddenFlags: MessageFlags.UserBanned
+                ),
+                HandleBelchCommand
+            );
+            ConnectionManager.CommandManager.RegisterChannelMessageCommandHandler(
+                new Command(
+                    CommandUtil.MakeNames("skittles"),
+                    CommandUtil.NoOptions,
+                    CommandUtil.MakeArguments(RestTaker.Instance),
+                    forbiddenFlags: MessageFlags.UserBanned
+                ),
+                HandleSkittlesCommand
+            );
+            ConnectionManager.CommandManager.RegisterChannelMessageCommandHandler(
+                new Command(
+                    CommandUtil.MakeNames("tel"),
+                    CommandUtil.NoOptions,
+                    CommandUtil.MakeArguments(RestTaker.Instance),
+                    forbiddenFlags: MessageFlags.UserBanned
+                ),
+                HandleTelCommand
+            );
         }
 
-        private void HandleChannelMessage(object sender, IChannelMessageEventArgs args, MessageFlags flags)
+        protected virtual void HandleBelchCommand(CommandMatch cmd, IChannelMessageEventArgs args)
         {
-            if (flags.HasFlag(MessageFlags.UserBanned))
+            ConnectionManager.SendChannelAction(args.Channel, "belches loudly");
+        }
+
+        protected virtual void HandleSkittlesCommand(CommandMatch cmd, IChannelMessageEventArgs args)
+        {
+            const string formatReset = "\x0F";
+            string message = ((string)cmd.Arguments[0]);
+            if (message.Length > 0)
             {
-                return;
+                // remove leading space
+                message = message.Substring(1);
             }
+            var currentPiece = new StringBuilder();
+            var skittledPieces = new List<string>();
+            var colorCodeOffset = new Random().Next(SkittlesCodes.Length);
 
-            if (string.Equals(args.Message, "!belch"))
+            for (int i = 0; i < message.Length; ++i)
             {
-                ConnectionManager.SendChannelAction(args.Channel, "belches loudly");
-            }
-
-            if (args.Message.StartsWith("!skittles "))
-            {
-                const string formatReset = "\x0F";
-                var message = args.Message.Substring(("!skittles ").Length);
-                var currentPiece = new StringBuilder();
-                var skittledPieces = new List<string>();
-                var colorCodeOffset = new Random().Next(SkittlesCodes.Length);
-
-                for (int i = 0; i < message.Length; ++i)
+                int colorCode = SkittlesCodes[(i + colorCodeOffset) % SkittlesCodes.Length];
+                var thisCharacter = string.Format("\x03{0:D2},99{1}", colorCode, message[i]);
+                if (currentPiece.Length + thisCharacter.Length + formatReset.Length > ConnectionManager.MaxMessageLength)
                 {
-                    int colorCode = SkittlesCodes[(i + colorCodeOffset) % SkittlesCodes.Length];
-                    var thisCharacter = string.Format("\x03{0:D2},99{1}", colorCode, message[i]);
-                    if (currentPiece.Length + thisCharacter.Length + formatReset.Length > ConnectionManager.MaxMessageLength)
-                    {
-                        currentPiece.Append(formatReset);
-                        skittledPieces.Add(currentPiece.ToString());
-                        currentPiece.Clear();
-                    }
-                    currentPiece.AppendFormat("\x03{0:D2},99{1}", colorCode, message[i]);
+                    currentPiece.Append(formatReset);
+                    skittledPieces.Add(currentPiece.ToString());
+                    currentPiece.Clear();
                 }
-                // reset formatting
-                currentPiece.Append(formatReset);
-                skittledPieces.Add(currentPiece.ToString());
-
-                foreach (var piece in skittledPieces)
-                {
-                    ConnectionManager.SendChannelMessage(args.Channel, piece);
-                }
+                currentPiece.AppendFormat("\x03{0:D2},99{1}", colorCode, message[i]);
             }
+            // reset formatting
+            currentPiece.Append(formatReset);
+            skittledPieces.Add(currentPiece.ToString());
 
-            if (args.Message.StartsWith("!tel "))
+            foreach (var piece in skittledPieces)
             {
-                string telNumber = args.Message.Substring(("!tel ").Length).Trim();
-                var ret = new StringBuilder(telNumber.Length);
-
-                foreach (char c in telNumber)
-                {
-                    char target;
-                    if (TelNoDictionary.TryGetValue(c, out target))
-                    {
-                        ret.Append(target);
-                    }
-                    else
-                    {
-                        ret.Append(c);
-                    }
-                }
-
-                ConnectionManager.SendChannelMessage(args.Channel, ret.ToString());
+                ConnectionManager.SendChannelMessage(args.Channel, piece);
             }
+        }
+
+        protected virtual void HandleTelCommand(CommandMatch cmd, IChannelMessageEventArgs args)
+        {
+            string telNumber = ((string)cmd.Arguments[0]);
+            if (telNumber.Length > 0)
+            {
+                // remove leading space
+                telNumber = telNumber.Substring(1);
+            }
+            var ret = new StringBuilder(telNumber.Length);
+
+            foreach (char c in telNumber)
+            {
+                char target;
+                if (TelNoDictionary.TryGetValue(c, out target))
+                {
+                    ret.Append(target);
+                }
+                else
+                {
+                    ret.Append(c);
+                }
+            }
+
+            ConnectionManager.SendChannelMessage(args.Channel, ret.ToString());
         }
     }
 }
