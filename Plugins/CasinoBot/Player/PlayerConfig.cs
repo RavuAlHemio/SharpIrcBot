@@ -16,10 +16,10 @@ namespace SharpIrcBot.Plugins.CasinoBot.Player
         public int GloatNum { get; set; }
         public int GloatDen { get; set; }
         public HashSet<string> AssistPlayers { get; set; }
-        public int LowStandNum { get; set; }
-        public int LowStandDen { get; set; }
-        public int HighStandNum { get; set; }
-        public int HighStandDen { get; set; }
+        public int BaseBet { get; set; }
+        public double BetAdjustmentFactor { get; set; }
+        public int MinBet { get; set; }
+        public int MaxBet { get; set; }
 
         public PlayerConfig(JObject obj)
         {
@@ -32,10 +32,10 @@ namespace SharpIrcBot.Plugins.CasinoBot.Player
             GloatNum = 1;
             GloatDen = 1;
             AssistPlayers = new HashSet<string>();
-            LowStandNum = 1;
-            LowStandDen = 5;
-            HighStandNum = 4;
-            HighStandDen = 5;
+            BaseBet = 50;
+            BetAdjustmentFactor = 1.0;
+            MinBet = 5;
+            MaxBet = 100;
 
             var ser = new JsonSerializer();
             ser.Populate(obj.CreateReader(), this);
