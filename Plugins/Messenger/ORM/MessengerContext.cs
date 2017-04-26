@@ -78,6 +78,10 @@ namespace SharpIrcBot.Plugins.Messenger.ORM
                 entBuilder.Property(m => m.Body)
                     .IsRequired()
                     .HasColumnName("body");
+                entBuilder.Property(m => m.ExactNickname)
+                    .IsRequired()
+                    .HasDefaultValue(false)
+                    .HasColumnName("exact_nickname");
             });
         }
     }

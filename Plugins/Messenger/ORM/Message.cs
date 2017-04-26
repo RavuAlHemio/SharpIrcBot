@@ -14,6 +14,8 @@ namespace SharpIrcBot.Plugins.Messenger.ORM
 
         public string Body { get; set; }
 
+        public bool ExactNickname { get; set; }
+
         public Message()
         {
         }

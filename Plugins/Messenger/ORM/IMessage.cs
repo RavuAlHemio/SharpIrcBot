@@ -13,5 +13,7 @@ namespace SharpIrcBot.Plugins.Messenger.ORM
         string RecipientLowercase { get; set; }
 
         string Body { get; set; }
+
+        bool ExactNickname { get; set; }
     }
 }

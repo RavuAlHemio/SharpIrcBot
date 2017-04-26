@@ -9,6 +9,7 @@
             toMessage.SenderOriginal = fromMessage.SenderOriginal;
             toMessage.RecipientLowercase = fromMessage.RecipientLowercase;
             toMessage.Body = fromMessage.Body;
+            toMessage.ExactNickname = fromMessage.ExactNickname;
         }
     }
 }

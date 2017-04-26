@@ -6,14 +6,21 @@ namespace SharpIrcBot.Plugins.Messenger
     public class RecipientInfo
     {
         [NotNull] public string RecipientNick { get; }
-        [NotNull] public string Recipient { get; }
-        [NotNull] public string LowerRecipient { get; }
+        [NotNull] public string LowerRecipientNick { get; }
+        [CanBeNull] public string RecipientUser { get; }
+        [CanBeNull] public string LowerRecipientUser { get; }
+        public bool ExactNickname { get; }
 
-        public RecipientInfo([NotNull] string recipientNick, [CanBeNull] string recipient)
+        [NotNull] public string Recipient => ExactNickname ? RecipientNick : RecipientUser;
+        [NotNull] public string LowerRecipient => ExactNickname ? LowerRecipientNick : LowerRecipientUser;
+
+        public RecipientInfo([NotNull] string recipientNick, [CanBeNull] string recipientUser, bool exactNickname)
         {
             RecipientNick = recipientNick;
-            Recipient = recipient ?? recipientNick;
-            LowerRecipient = Recipient.ToLowerInvariant();
+            RecipientUser = recipientUser ?? recipientNick;
+
+            LowerRecipientNick = RecipientNick.ToLowerInvariant();
+            LowerRecipientUser = RecipientUser.ToLowerInvariant();
         }
 
         public class LowerRecipientComparer : EqualityComparer<RecipientInfo>

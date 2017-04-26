@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
@@ -34,7 +35,9 @@ namespace SharpIrcBot.Plugins.Messenger
             ConnectionManager.CommandManager.RegisterChannelMessageCommandHandler(
                 new Command(
                     CommandUtil.MakeNames("msg", "mail", "smsg", "smail"),
-                    CommandUtil.NoOptions,
+                    CommandUtil.MakeOptions(
+                        CommandUtil.MakeFlag("-x"), CommandUtil.MakeFlag("--exact-nickname")
+                    ),
                     CommandUtil.MakeArguments(
                         CommandUtil.NonzeroStringMatcherRequiredWordTaker, // recipient
                         RestTaker.Instance // message
@@ -98,7 +101,9 @@ namespace SharpIrcBot.Plugins.Messenger
             ConnectionManager.CommandManager.RegisterQueryMessageCommandHandler(
                 new Command(
                     CommandUtil.MakeNames("pm", "pmsg", "pmail"),
-                    CommandUtil.NoOptions,
+                    CommandUtil.MakeOptions(
+                        CommandUtil.MakeFlag("-x"), CommandUtil.MakeFlag("--exact-nickname")
+                    ),
                     CommandUtil.MakeArguments(
                         CommandUtil.NonzeroStringMatcherRequiredWordTaker, // recipient
                         RestTaker.Instance // message
@@ -129,11 +134,12 @@ namespace SharpIrcBot.Plugins.Messenger
                 return;
             }
 
+            bool exactNickname = cmd.Options.Any(o => o.Key == "-x" || o.Key == "--exact-nickname");
             var rawBody = (string)cmd.Arguments[1];
             var body = SharpIrcBotUtil.RemoveControlCharactersAndTrim(rawBody);
 
-            var sender = ConnectionManager.RegisteredNameForNick(message.SenderNickname) ?? message.SenderNickname;
-            var lowerSender = sender.ToLowerInvariant();
+            string senderUser = ConnectionManager.RegisteredNameForNick(message.SenderNickname) ?? message.SenderNickname;
+            string lowerSenderUser = senderUser.ToLowerInvariant();
 
             if (body.Length == 0)
             {
@@ -143,7 +149,7 @@ namespace SharpIrcBot.Plugins.Messenger
 
             IEnumerable<RecipientInfo> recipientEnumerable = rawRecipientNicks
                 .Select(SharpIrcBotUtil.RemoveControlCharactersAndTrim)
-                .Select(rn => new RecipientInfo(rn, ConnectionManager.RegisteredNameForNick(rn)));
+                .Select(rn => new RecipientInfo(rn, ConnectionManager.RegisteredNameForNick(rn), exactNickname));
             var recipients = new HashSet<RecipientInfo>(recipientEnumerable, new RecipientInfo.LowerRecipientComparer());
 
             foreach (var recipient in recipients)
@@ -163,8 +169,10 @@ namespace SharpIrcBot.Plugins.Messenger
                 bool isIgnored;
                 using (var ctx = GetNewContext())
                 {
-                    string lowerRecipient = recipient.LowerRecipient;
-                    isIgnored = ctx.IgnoreList.Any(il => il.SenderLowercase == lowerSender && il.RecipientLowercase == lowerRecipient);
+                    string lowerRecipientUser = recipient.LowerRecipientUser;
+                    isIgnored = ctx.IgnoreList.Any(il =>
+                        il.SenderLowercase == lowerSenderUser && il.RecipientLowercase == lowerRecipientUser
+                    );
                 }
 
                 if (isIgnored)
@@ -172,7 +180,7 @@ namespace SharpIrcBot.Plugins.Messenger
                     Logger.LogDebug(
                         "{SenderNickname} ({SenderUsername}) wants to send message {Message} to {Recipient}, but the recipient is ignoring the sender",
                         SharpIrcBotUtil.LiteralString(message.SenderNickname),
-                        SharpIrcBotUtil.LiteralString(sender),
+                        SharpIrcBotUtil.LiteralString(senderUser),
                         SharpIrcBotUtil.LiteralString(body),
                         SharpIrcBotUtil.LiteralString(recipient.Recipient)
                     );
@@ -189,7 +197,7 @@ namespace SharpIrcBot.Plugins.Messenger
             Logger.LogDebug(
                 "{SenderNickname} ({SenderUsername}) sending message {Message} to {Recipients}",
                 SharpIrcBotUtil.LiteralString(message.SenderNickname),
-                SharpIrcBotUtil.LiteralString(sender),
+                SharpIrcBotUtil.LiteralString(senderUser),
                 SharpIrcBotUtil.LiteralString(body),
                 string.Join(", ", recipients.Select(r => SharpIrcBotUtil.LiteralString(r.Recipient)))
             );
@@ -204,7 +212,8 @@ namespace SharpIrcBot.Plugins.Messenger
                         Timestamp = DateTimeOffset.Now,
                         SenderOriginal = message.SenderNickname,
                         RecipientLowercase = recipient.LowerRecipient,
-                        Body = body
+                        Body = body,
+                        ExactNickname = recipient.ExactNickname
                     };
                     ctx.Messages.Add(msg);
                     ctx.SaveChanges();
@@ -238,7 +247,7 @@ namespace SharpIrcBot.Plugins.Messenger
             }
 
             var singleRecipient = recipients.First();
-            if (singleRecipient.LowerRecipient == lowerSender)
+            if (singleRecipient.LowerRecipientUser == lowerSenderUser)
             {
                 if (quiescenceEnd.HasValue)
                 {
@@ -297,8 +306,9 @@ namespace SharpIrcBot.Plugins.Messenger
                 return;
             }
             var fetchCount = (int)longFetchCount;
-            var sender = ConnectionManager.RegisteredNameForNick(message.SenderNickname) ?? message.SenderNickname;
-            var lowerSender = sender.ToLowerInvariant();
+            string senderUser = ConnectionManager.RegisteredNameForNick(message.SenderNickname) ?? message.SenderNickname;
+            string lowerSenderUser = senderUser.ToLowerInvariant();
+            string lowerSenderNick = message.SenderNickname.ToLowerInvariant();
 
             List<MessageOnRetainer> messages;
             int messagesLeft;
@@ -306,7 +316,7 @@ namespace SharpIrcBot.Plugins.Messenger
             {
                 // get the messages
                 messages = ctx.MessagesOnRetainer
-                    .Where(m => m.RecipientLowercase == lowerSender)
+                    .Where(GetMessageSelector<MessageOnRetainer>(lowerSenderNick, lowerSenderUser))
                     .OrderBy(m => m.ID)
                     .Take(fetchCount)
                     .ToList()
@@ -318,7 +328,7 @@ namespace SharpIrcBot.Plugins.Messenger
 
                 // check how many are left
                 messagesLeft = ctx.MessagesOnRetainer
-                    .Count(m => m.RecipientLowercase == lowerSender)
+                    .Count(GetMessageSelector<MessageOnRetainer>(lowerSenderNick, lowerSenderUser))
                 ;
             }
 
@@ -413,15 +423,16 @@ namespace SharpIrcBot.Plugins.Messenger
                 return;
             }
 
-            var sender = ConnectionManager.RegisteredNameForNick(message.SenderNickname) ?? message.SenderNickname;
-            var lowerSender = sender.ToLowerInvariant();
+            string senderUser = ConnectionManager.RegisteredNameForNick(message.SenderNickname) ?? message.SenderNickname;
+            string lowerSenderUser = senderUser.ToLowerInvariant();
+            string lowerSenderNick = message.SenderNickname.ToLowerInvariant();
 
             List<ReplayableMessage> messages;
             using (var ctx = GetNewContext())
             {
                 // get the messages
                 messages = ctx.ReplayableMessages
-                    .Where(m => m.RecipientLowercase == lowerSender)
+                    .Where(GetMessageSelector<ReplayableMessage>(lowerSenderNick, lowerSenderUser))
                     .OrderByDescending(m => m.ID)
                     .Take(replayCount)
                     .ToList()
@@ -723,11 +734,12 @@ namespace SharpIrcBot.Plugins.Messenger
                 return;
             }
 
+            bool exactNickname = cmd.Options.Any(o => o.Key == "-x" || o.Key == "--exact-nickname");
             var rawBody = (string)cmd.Arguments[1];
             var body = SharpIrcBotUtil.RemoveControlCharactersAndTrim(rawBody);
 
-            var sender = ConnectionManager.RegisteredNameForNick(message.SenderNickname) ?? message.SenderNickname;
-            var lowerSender = sender.ToLowerInvariant();
+            string senderUser = ConnectionManager.RegisteredNameForNick(message.SenderNickname) ?? message.SenderNickname;
+            string lowerSenderUser = senderUser.ToLowerInvariant();
 
             if (body.Length == 0)
             {
@@ -737,7 +749,7 @@ namespace SharpIrcBot.Plugins.Messenger
 
             IEnumerable<RecipientInfo> recipientEnumerable = rawRecipientNicks
                 .Select(SharpIrcBotUtil.RemoveControlCharactersAndTrim)
-                .Select(rn => new RecipientInfo(rn, ConnectionManager.RegisteredNameForNick(rn)));
+                .Select(rn => new RecipientInfo(rn, ConnectionManager.RegisteredNameForNick(rn), exactNickname));
             var recipients = new HashSet<RecipientInfo>(recipientEnumerable, new RecipientInfo.LowerRecipientComparer());
 
             foreach (var recipient in recipients)
@@ -757,8 +769,10 @@ namespace SharpIrcBot.Plugins.Messenger
                 bool isIgnored;
                 using (var ctx = GetNewContext())
                 {
-                    string lowerRecipient = recipient.LowerRecipient;
-                    isIgnored = ctx.IgnoreList.Any(il => il.SenderLowercase == lowerSender && il.RecipientLowercase == lowerRecipient);
+                    string lowerRecipientUser = recipient.LowerRecipientUser;
+                    isIgnored = ctx.IgnoreList.Any(il =>
+                        il.SenderLowercase == lowerSenderUser && il.RecipientLowercase == lowerRecipientUser
+                    );
                 }
 
                 if (isIgnored)
@@ -766,7 +780,7 @@ namespace SharpIrcBot.Plugins.Messenger
                     Logger.LogDebug(
                         "{SenderNickname} ({SenderUsername}) wants to send private message {Message} to {Recipient}, but the recipient is ignoring the sender",
                         SharpIrcBotUtil.LiteralString(message.SenderNickname),
-                        SharpIrcBotUtil.LiteralString(sender),
+                        SharpIrcBotUtil.LiteralString(senderUser),
                         SharpIrcBotUtil.LiteralString(body),
                         SharpIrcBotUtil.LiteralString(recipient.Recipient)
                     );
@@ -782,7 +796,7 @@ namespace SharpIrcBot.Plugins.Messenger
             Logger.LogDebug(
                 "{SenderNickname} ({SenderUsername}) sending private message {Message} to {Recipients}",
                 SharpIrcBotUtil.LiteralString(message.SenderNickname),
-                SharpIrcBotUtil.LiteralString(sender),
+                SharpIrcBotUtil.LiteralString(senderUser),
                 SharpIrcBotUtil.LiteralString(body),
                 string.Join(", ", recipients.Select(r => SharpIrcBotUtil.LiteralString(r.Recipient)))
             );
@@ -796,7 +810,8 @@ namespace SharpIrcBot.Plugins.Messenger
                         Timestamp = DateTimeOffset.Now,
                         SenderOriginal = message.SenderNickname,
                         RecipientLowercase = recipient.LowerRecipient,
-                        Body = body
+                        Body = body,
+                        ExactNickname = recipient.ExactNickname
                     };
                     ctx.PrivateMessages.Add(msg);
                     ctx.SaveChanges();
@@ -813,7 +828,7 @@ namespace SharpIrcBot.Plugins.Messenger
             }
 
             var singleRecipient = recipients.First();
-            if (singleRecipient.LowerRecipient == lowerSender)
+            if (singleRecipient.LowerRecipient == lowerSenderUser)
             {
                 ConnectionManager.SendQueryMessage(
                     message.SenderNickname,
@@ -865,7 +880,7 @@ namespace SharpIrcBot.Plugins.Messenger
             RegularPrivateMessageDelivery(args, senderLower);
         }
 
-        protected virtual void RegularMessageDelivery(IChannelMessageEventArgs args, string senderLower)
+        protected virtual void RegularMessageDelivery(IChannelMessageEventArgs args, string senderUserLower)
         {
             // only deliver if we are in a delivery channel
             if (Config.DeliveryChannels.Count > 0 && !Config.DeliveryChannels.Contains(args.Channel))
@@ -873,12 +888,14 @@ namespace SharpIrcBot.Plugins.Messenger
                 return;
             }
 
+            string senderNickLower = args.SenderNickname.ToLowerInvariant();
+
             // check if the sender should get any messages
             List<Message> messages;
             using (var ctx = GetNewContext())
             {
                 var quiescence = ctx.Quiescences
-                    .FirstOrDefault(q => q.UserLowercase == senderLower);
+                    .FirstOrDefault(q => q.UserLowercase == senderUserLower);
                 if (quiescence != null)
                 {
                     if (quiescence.EndTimestamp > DateTimeOffset.Now)
@@ -895,12 +912,12 @@ namespace SharpIrcBot.Plugins.Messenger
                 }
 
                 messages = ctx.Messages
-                    .Where(m => m.RecipientLowercase == senderLower)
+                    .Where(GetMessageSelector<Message>(senderNickLower, senderUserLower))
                     .OrderBy(m => m.ID)
                     .ToList()
                 ;
                 var numberMessagesOnRetainer = ctx.MessagesOnRetainer
-                    .Count(m => m.RecipientLowercase == senderLower);
+                    .Count(GetMessageSelector<MessageOnRetainer>(senderNickLower, senderUserLower));
 
                 var retainerText = (numberMessagesOnRetainer > 0)
                     ? string.Format(" (and {0} pending !delivermsg)", numberMessagesOnRetainer)
@@ -1001,8 +1018,8 @@ namespace SharpIrcBot.Plugins.Messenger
                 }
 
                 // purge the repeat heap if necessary
-                var currentReplayables = ctx.ReplayableMessages
-                    .Where(rm => rm.RecipientLowercase == senderLower)
+                List<ReplayableMessage> currentReplayables = ctx.ReplayableMessages
+                    .Where(GetMessageSelector<ReplayableMessage>(senderNickLower, senderUserLower))
                     .OrderBy(rm => rm.ID)
                     .ToList()
                 ;
@@ -1023,13 +1040,15 @@ namespace SharpIrcBot.Plugins.Messenger
             }
         }
 
-        protected virtual void RegularPrivateMessageDelivery(IChannelMessageEventArgs args, string senderLower)
+        protected virtual void RegularPrivateMessageDelivery(IChannelMessageEventArgs args, string senderUserLower)
         {
+            string senderNickLower = args.SenderNickname.ToLowerInvariant();
+
             using (var ctx = GetNewContext())
             {
                 // check if the sender should get any PMs
                 List<PrivateMessage> privateMessages = ctx.PrivateMessages
-                    .Where(m => m.RecipientLowercase == senderLower)
+                    .Where(GetMessageSelector<PrivateMessage>(senderNickLower, senderUserLower))
                     .OrderBy(m => m.ID)
                     .ToList()
                 ;
@@ -1104,7 +1123,7 @@ namespace SharpIrcBot.Plugins.Messenger
             }
 
             var receivedMessages = messages
-                .Where(m => m.RecipientLowercase == lowerOldNick);
+                .Where(m => m.RecipientLowercase == lowerOldNick && !m.ExactNickname);
             foreach (var receivedMessage in receivedMessages)
             {
                 receivedMessage.RecipientLowercase = lowerNewNick;
@@ -1155,6 +1174,16 @@ namespace SharpIrcBot.Plugins.Messenger
                 }
                 ctx.SaveChanges();
             }
+        }
+
+        static Expression<Func<TMessage, bool>> GetMessageSelector<TMessage>(string recipientNickLower,
+                string recipientUserLower)
+            where TMessage : IMessage
+        {
+            return m =>
+                (!m.ExactNickname && m.RecipientLowercase == recipientUserLower)
+                || (m.ExactNickname && m.RecipientLowercase == recipientNickLower)
+            ;
         }
     }
 }
