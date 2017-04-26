@@ -21,6 +21,8 @@ namespace SharpIrcBot.Plugins.Messenger
 
             LowerRecipientNick = RecipientNick.ToLowerInvariant();
             LowerRecipientUser = RecipientUser.ToLowerInvariant();
+
+            ExactNickname = exactNickname;
         }
 
         public class LowerRecipientComparer : EqualityComparer<RecipientInfo>
