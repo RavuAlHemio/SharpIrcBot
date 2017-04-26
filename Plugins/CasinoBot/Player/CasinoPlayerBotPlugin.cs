@@ -58,17 +58,17 @@ namespace SharpIrcBot.Plugins.CasinoBot.Player
             }
 
             bool botJoin = false;
-            if (args.Message.Trim() == "?botjoin")
+            if (args.Message.Trim() == "?join")
             {
-                // "?botjoin"
+                // "?join"
                 botJoin = true;
             }
             else
             {
                 string[] bits = args.Message.Split(new[] {' '}, StringSplitOptions.RemoveEmptyEntries);
-                if (bits.Length >= 2 && bits[0] == "?botjoin" && bits.Skip(1).Any(b => b == ConnectionManager.MyNickname))
+                if (bits.Length >= 2 && bits[0] == "?join" && bits.Skip(1).Any(b => b == ConnectionManager.MyNickname))
                 {
-                    // "?botjoin MyBot" or "?botjoin ThisBot ThatBot MyBot"
+                    // "?join MyBot" or "?join ThisBot ThatBot MyBot"
                     botJoin = true;
                 }
             }
