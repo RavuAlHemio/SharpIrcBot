@@ -66,7 +66,11 @@ namespace SharpIrcBot.Plugins.CasinoBot.Player
             else
             {
                 string[] bits = args.Message.Split(new[] {' '}, StringSplitOptions.RemoveEmptyEntries);
-                if (bits.Length >= 2 && bits[0] == "?join" && bits.Skip(1).Any(b => b == ConnectionManager.MyNickname))
+                if (
+                    bits.Length >= 2
+                    && bits[0] == "?join"
+                    && bits.Skip(1).Any(b => b.Equals(ConnectionManager.MyNickname, StringComparison.OrdinalIgnoreCase))
+                )
                 {
                     // "?join MyBot" or "?join ThisBot ThatBot MyBot"
                     botJoin = true;
