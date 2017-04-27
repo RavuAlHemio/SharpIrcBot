@@ -115,7 +115,7 @@ namespace SharpIrcBot.Plugins.CasinoBot.Player
                     int origAdj = CardCounter.BetAdjustment;
                     CardCounter.ShoeShuffled();
                     int newAdj = CardCounter.BetAdjustment;
-                    DispatchStratDebugMessage($"strategy: shoe shuffled; {origAdj} -> {newAdj}");
+                    DispatchStratDebugMessage($"shoe shuffled; {origAdj} -> {newAdj}");
                 }
             }
         }
@@ -212,7 +212,7 @@ namespace SharpIrcBot.Plugins.CasinoBot.Player
                     CardCounter.CardDealt(c);
                 }
                 int newAdj = CardCounter.BetAdjustment;
-                DispatchStratDebugMessage($"strategy: seen hand {string.Join(" ", hand.Select(c => c.ToUnicodeString()))}; {origAdj} -> {newAdj}");
+                DispatchStratDebugMessage($"seen hand {string.Join(" ", hand.Select(c => c.ToUnicodeString()))}; {origAdj} -> {newAdj}");
             }
             else
             {
@@ -224,7 +224,7 @@ namespace SharpIrcBot.Plugins.CasinoBot.Player
                     int origAdj = CardCounter.BetAdjustment;
                     CardCounter.CardDealt(lastCard);
                     int newAdj = CardCounter.BetAdjustment;
-                    DispatchStratDebugMessage($"strategy: seen card {lastCard.ToUnicodeString()}; {origAdj} -> {newAdj}");
+                    DispatchStratDebugMessage($"seen card {lastCard.ToUnicodeString()}; {origAdj} -> {newAdj}");
                 }
             }
 
@@ -276,7 +276,7 @@ namespace SharpIrcBot.Plugins.CasinoBot.Player
 
         protected virtual void PlaceBlackjackBet()
         {
-            DispatchStratDebugMessage($"strategy: betting under the influence of {CardCounter.BetAdjustment}");
+            DispatchStratDebugMessage($"betting under the influence of {CardCounter.BetAdjustment}");
 
             var bet = (int)Math.Round(Config.BaseBet + CardCounter.BetAdjustment * Config.BetAdjustmentFactor);
             if (bet < Config.MinBet)
@@ -409,7 +409,7 @@ namespace SharpIrcBot.Plugins.CasinoBot.Player
                         ? "IS SPLITTABLE and "
                         : "";
 
-                    handMessage = $"{playerIdentifier}'s hand {splitChunk}amounts to {string.Join(" or ", handValues)}";
+                    handMessage = $"casino assistance: {playerIdentifier}'s hand {splitChunk}amounts to {string.Join(" or ", handValues)}";
                 }
 
                 ConnectionManager.SendQueryNotice(casinoNick, handMessage);
@@ -484,12 +484,13 @@ namespace SharpIrcBot.Plugins.CasinoBot.Player
                 stratDebuggers = new HashSet<string>(StrategyDebuggers, StringComparer.OrdinalIgnoreCase);
             }
 
+            string fullMessage = $"strategy: {message}";
             foreach (string casinoNick in ConnectionManager.NicknamesInChannel(Config.CasinoChannel))
             {
                 string registeredNick = ConnectionManager.RegisteredNameForNick(casinoNick) ?? casinoNick;
                 if (stratDebuggers.Contains(registeredNick))
                 {
-                    ConnectionManager.SendQueryNotice(casinoNick, message);
+                    ConnectionManager.SendQueryNotice(casinoNick, fullMessage);
                 }
             }
         }
