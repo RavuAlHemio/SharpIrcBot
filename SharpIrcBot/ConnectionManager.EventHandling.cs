@@ -9,29 +9,29 @@ namespace SharpIrcBot
     public partial class ConnectionManager
     {
         #region handler lists (per event)
-        protected List<WeakReference<SharpIrcBotEventHandler<IChannelMessageEventArgs>>> ChannelMessageSubscribers = new List<WeakReference<SharpIrcBotEventHandler<IChannelMessageEventArgs>>>();
-        protected List<WeakReference<SharpIrcBotEventHandler<IChannelMessageEventArgs>>> ChannelActionSubscribers = new List<WeakReference<SharpIrcBotEventHandler<IChannelMessageEventArgs>>>();
-        protected List<WeakReference<SharpIrcBotEventHandler<IChannelMessageEventArgs>>> ChannelNoticeSubscribers = new List<WeakReference<SharpIrcBotEventHandler<IChannelMessageEventArgs>>>();
-        protected List<WeakReference<SharpIrcBotEventHandler<IPrivateMessageEventArgs>>> QueryMessageSubscribers = new List<WeakReference<SharpIrcBotEventHandler<IPrivateMessageEventArgs>>>();
-        protected List<WeakReference<SharpIrcBotEventHandler<IPrivateMessageEventArgs>>> QueryActionSubscribers = new List<WeakReference<SharpIrcBotEventHandler<IPrivateMessageEventArgs>>>();
-        protected List<WeakReference<SharpIrcBotEventHandler<IPrivateMessageEventArgs>>> QueryNoticeSubscribers = new List<WeakReference<SharpIrcBotEventHandler<IPrivateMessageEventArgs>>>();
-        protected List<WeakReference<EventHandler<EventArgs>>> ConnectedToServerSubscribers = new List<WeakReference<EventHandler<EventArgs>>>();
-        protected List<WeakReference<EventHandler<NickMappingEventArgs>>> NickMappingSubscribers = new List<WeakReference<EventHandler<NickMappingEventArgs>>>();
-        protected List<WeakReference<EventHandler<IRawMessageEventArgs>>> RawMessageSubscribers = new List<WeakReference<EventHandler<IRawMessageEventArgs>>>();
-        protected List<WeakReference<EventHandler<INameListEventArgs>>> NamesInChannelSubscribers = new List<WeakReference<EventHandler<INameListEventArgs>>>();
-        protected List<WeakReference<EventHandler<IUserJoinedChannelEventArgs>>> JoinedChannelSubscribers = new List<WeakReference<EventHandler<IUserJoinedChannelEventArgs>>>();
-        protected List<WeakReference<EventHandler<INickChangeEventArgs>>> NickChangeSubscribers = new List<WeakReference<EventHandler<INickChangeEventArgs>>>();
-        protected List<WeakReference<EventHandler<IUserLeftChannelEventArgs>>> UserLeftChannelSubscribers = new List<WeakReference<EventHandler<IUserLeftChannelEventArgs>>>();
-        protected List<WeakReference<EventHandler<IUserQuitServerEventArgs>>> UserQuitServerSubscribers = new List<WeakReference<EventHandler<IUserQuitServerEventArgs>>>();
-        protected List<WeakReference<EventHandler<OutgoingMessageEventArgs>>> OutgoingChannelMessageSubscribers = new List<WeakReference<EventHandler<OutgoingMessageEventArgs>>>();
-        protected List<WeakReference<EventHandler<OutgoingMessageEventArgs>>> OutgoingChannelActionSubscribers = new List<WeakReference<EventHandler<OutgoingMessageEventArgs>>>();
-        protected List<WeakReference<EventHandler<OutgoingMessageEventArgs>>> OutgoingChannelNoticeSubscribers = new List<WeakReference<EventHandler<OutgoingMessageEventArgs>>>();
-        protected List<WeakReference<EventHandler<OutgoingMessageEventArgs>>> OutgoingQueryMessageSubscribers = new List<WeakReference<EventHandler<OutgoingMessageEventArgs>>>();
-        protected List<WeakReference<EventHandler<OutgoingMessageEventArgs>>> OutgoingQueryActionSubscribers = new List<WeakReference<EventHandler<OutgoingMessageEventArgs>>>();
-        protected List<WeakReference<EventHandler<OutgoingMessageEventArgs>>> OutgoingQueryNoticeSubscribers = new List<WeakReference<EventHandler<OutgoingMessageEventArgs>>>();
-        protected List<WeakReference<EventHandler<BaseNickChangedEventArgs>>> BaseNickChangedSubscribers = new List<WeakReference<EventHandler<BaseNickChangedEventArgs>>>();
-        protected List<WeakReference<EventHandler<IUserInvitedToChannelEventArgs>>> InvitedSubscribers = new List<WeakReference<EventHandler<IUserInvitedToChannelEventArgs>>>();
-        protected List<WeakReference<EventHandler<MessageChunkingEventArgs>>> SplitToChunksSubscribers = new List<WeakReference<EventHandler<MessageChunkingEventArgs>>>();
+        protected List<SharpIrcBotEventHandler<IChannelMessageEventArgs>> ChannelMessageSubscribers = new List<SharpIrcBotEventHandler<IChannelMessageEventArgs>>();
+        protected List<SharpIrcBotEventHandler<IChannelMessageEventArgs>> ChannelActionSubscribers = new List<SharpIrcBotEventHandler<IChannelMessageEventArgs>>();
+        protected List<SharpIrcBotEventHandler<IChannelMessageEventArgs>> ChannelNoticeSubscribers = new List<SharpIrcBotEventHandler<IChannelMessageEventArgs>>();
+        protected List<SharpIrcBotEventHandler<IPrivateMessageEventArgs>> QueryMessageSubscribers = new List<SharpIrcBotEventHandler<IPrivateMessageEventArgs>>();
+        protected List<SharpIrcBotEventHandler<IPrivateMessageEventArgs>> QueryActionSubscribers = new List<SharpIrcBotEventHandler<IPrivateMessageEventArgs>>();
+        protected List<SharpIrcBotEventHandler<IPrivateMessageEventArgs>> QueryNoticeSubscribers = new List<SharpIrcBotEventHandler<IPrivateMessageEventArgs>>();
+        protected List<EventHandler<EventArgs>> ConnectedToServerSubscribers = new List<EventHandler<EventArgs>>();
+        protected List<EventHandler<NickMappingEventArgs>> NickMappingSubscribers = new List<EventHandler<NickMappingEventArgs>>();
+        protected List<EventHandler<IRawMessageEventArgs>> RawMessageSubscribers = new List<EventHandler<IRawMessageEventArgs>>();
+        protected List<EventHandler<INameListEventArgs>> NamesInChannelSubscribers = new List<EventHandler<INameListEventArgs>>();
+        protected List<EventHandler<IUserJoinedChannelEventArgs>> JoinedChannelSubscribers = new List<EventHandler<IUserJoinedChannelEventArgs>>();
+        protected List<EventHandler<INickChangeEventArgs>> NickChangeSubscribers = new List<EventHandler<INickChangeEventArgs>>();
+        protected List<EventHandler<IUserLeftChannelEventArgs>> UserLeftChannelSubscribers = new List<EventHandler<IUserLeftChannelEventArgs>>();
+        protected List<EventHandler<IUserQuitServerEventArgs>> UserQuitServerSubscribers = new List<EventHandler<IUserQuitServerEventArgs>>();
+        protected List<EventHandler<OutgoingMessageEventArgs>> OutgoingChannelMessageSubscribers = new List<EventHandler<OutgoingMessageEventArgs>>();
+        protected List<EventHandler<OutgoingMessageEventArgs>> OutgoingChannelActionSubscribers = new List<EventHandler<OutgoingMessageEventArgs>>();
+        protected List<EventHandler<OutgoingMessageEventArgs>> OutgoingChannelNoticeSubscribers = new List<EventHandler<OutgoingMessageEventArgs>>();
+        protected List<EventHandler<OutgoingMessageEventArgs>> OutgoingQueryMessageSubscribers = new List<EventHandler<OutgoingMessageEventArgs>>();
+        protected List<EventHandler<OutgoingMessageEventArgs>> OutgoingQueryActionSubscribers = new List<EventHandler<OutgoingMessageEventArgs>>();
+        protected List<EventHandler<OutgoingMessageEventArgs>> OutgoingQueryNoticeSubscribers = new List<EventHandler<OutgoingMessageEventArgs>>();
+        protected List<EventHandler<BaseNickChangedEventArgs>> BaseNickChangedSubscribers = new List<EventHandler<BaseNickChangedEventArgs>>();
+        protected List<EventHandler<IUserInvitedToChannelEventArgs>> InvitedSubscribers = new List<EventHandler<IUserInvitedToChannelEventArgs>>();
+        protected List<EventHandler<MessageChunkingEventArgs>> SplitToChunksSubscribers = new List<EventHandler<MessageChunkingEventArgs>>();
         #endregion
 
         #region event definitions (per event)
@@ -292,55 +292,35 @@ namespace SharpIrcBot
         #endregion
 
         #region utility functions (shared)
-        private static void AddSubscriber<THandler>(List<WeakReference<THandler>> list, THandler subscriber)
+        private static void AddSubscriber<THandler>(List<THandler> list, THandler subscriber)
             where THandler : class
         {
             lock (list)
             {
-                list.Add(new WeakReference<THandler>(subscriber));
+                list.Add(subscriber);
             }
         }
 
-        private static void RemoveSubscriber<THandler>(List<WeakReference<THandler>> list, THandler subscriber)
+        private static void RemoveSubscriber<THandler>(List<THandler> list, THandler subscriber)
             where THandler : class
         {
             lock (list)
             {
                 list.RemoveAll(sub =>
                 {
-                    THandler handler;
-                    if (!sub.TryGetTarget(out handler))
-                    {
-                        // handler has been destroyed; remove
-                        return true;
-                    }
-
-                    return (handler == subscriber);
+                    return (sub == subscriber);
                 });
             }
         }
 
-        private static void RemoveDestroyed<THandler>(List<WeakReference<THandler>> handlers)
-            where THandler : class
-        {
-            lock (handlers)
-            {
-                handlers.RemoveAll(sub =>
-                {
-                    THandler handler;
-                    return !sub.TryGetTarget(out handler);
-                });
-            }
-        }
-
-        protected virtual void HandleSharpIrcBotEvent<T>(List<WeakReference<SharpIrcBotEventHandler<T>>> subscribers,
+        protected virtual void HandleSharpIrcBotEvent<T>(List<SharpIrcBotEventHandler<T>> subscribers,
                 T e, string description)
             where T : IUserMessageEventArgs
         {
-            List<WeakReference<SharpIrcBotEventHandler<T>>> subscriberList;
+            List<SharpIrcBotEventHandler<T>> subscriberList;
             lock (subscribers)
             {
-                subscriberList = new List<WeakReference<SharpIrcBotEventHandler<T>>>(subscribers);
+                subscriberList = new List<SharpIrcBotEventHandler<T>>(subscribers);
             }
 
             if (subscriberList.Count == 0)
@@ -348,18 +328,9 @@ namespace SharpIrcBot
                 return;
             }
 
-            bool needsDestroyedCleanup = false;
             MessageFlags flags = FlagsForNick(e.SenderNickname);
-            foreach (WeakReference<SharpIrcBotEventHandler<T>> subscriberReference in subscriberList)
+            foreach (SharpIrcBotEventHandler<T> subscriber in subscriberList)
             {
-                SharpIrcBotEventHandler<T> subscriber;
-                if (!subscriberReference.TryGetTarget(out subscriber))
-                {
-                    // destroyed in the meantime
-                    needsDestroyedCleanup = true;
-                    continue;
-                }
-
                 try
                 {
                     subscriber(this, e, flags);
@@ -369,19 +340,14 @@ namespace SharpIrcBot
                     Logger.LogError("error when {Subscriber} was handling {EventType}: {Exception}", subscriber, description, exc);
                 }
             }
-
-            if (needsDestroyedCleanup)
-            {
-                RemoveDestroyed(subscribers);
-            }
         }
 
-        protected virtual void HandleEvent<T>(List<WeakReference<EventHandler<T>>> subscribers, T e, string description)
+        protected virtual void HandleEvent<T>(List<EventHandler<T>> subscribers, T e, string description)
         {
-            List<WeakReference<EventHandler<T>>> subscriberList;
+            List<EventHandler<T>> subscriberList;
             lock (subscribers)
             {
-                subscriberList = new List<WeakReference<EventHandler<T>>>(subscribers);
+                subscriberList = new List<EventHandler<T>>(subscribers);
             }
 
             if (subscriberList.Count == 0)
@@ -389,17 +355,8 @@ namespace SharpIrcBot
                 return;
             }
 
-            bool needsDestroyedCleanup = false;
-            foreach (WeakReference<EventHandler<T>> subscriberReference in subscriberList)
+            foreach (EventHandler<T> subscriber in subscriberList)
             {
-                EventHandler<T> subscriber;
-                if (!subscriberReference.TryGetTarget(out subscriber))
-                {
-                    // destroyed in the meantime
-                    needsDestroyedCleanup = true;
-                    continue;
-                }
-
                 try
                 {
                     subscriber(this, e);
@@ -408,11 +365,6 @@ namespace SharpIrcBot
                 {
                     Logger.LogError("error when {Subscriber} was handling {EventType}: {Exception}", subscriber, description, exc);
                 }
-            }
-
-            if (needsDestroyedCleanup)
-            {
-                RemoveDestroyed(subscribers);
             }
         }
         #endregion
