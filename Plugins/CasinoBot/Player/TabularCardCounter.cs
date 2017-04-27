@@ -39,7 +39,13 @@ namespace SharpIrcBot.Plugins.CasinoBot.Player
         public static readonly Lazy<TabularCardCounter> Zen = MakeLazyTabularCardCounter(_zenTable);
 
         public ImmutableDictionary<CardValue, int> Table { get; }
-        protected int CurrentValue { get; set; }
+        public int TotalDecks { get; set; }
+        protected int RunningCount { get; set; }
+        protected int CardsPlayed { get; set; }
+        protected int DecksPlayed => CardsPlayed / 52;
+        protected int DecksRemaining => Math.Max(1, TotalDecks - DecksPlayed);
+
+        public int BetAdjustment => RunningCount / Math.Max(1, DecksRemaining);
 
         public TabularCardCounter(IEnumerable<KeyValuePair<CardValue, int>> table)
         {
@@ -53,20 +59,20 @@ namespace SharpIrcBot.Plugins.CasinoBot.Player
                 Table = table.ToImmutableDictionary();
             }
 
-            CurrentValue = 0;
+            RunningCount = 0;
+            CardsPlayed = 0;
         }
 
         public void CardDealt(Card card)
         {
-            CurrentValue += Table[card.Value];
+            RunningCount += Table[card.Value];
         }
 
         public void ShoeShuffled()
         {
-            CurrentValue = 0;
+            RunningCount = 0;
+            CardsPlayed = 0;
         }
-
-        public int BetAdjustment => CurrentValue;
 
         private static Lazy<TabularCardCounter> MakeLazyTabularCardCounter(int[] tableArray)
         {

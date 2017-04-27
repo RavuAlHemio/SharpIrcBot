@@ -8,6 +8,8 @@ namespace SharpIrcBot.Plugins.CasinoBot.Player
 
         void ShoeShuffled();
 
+        int TotalDecks { get; set; }
+
         int BetAdjustment { get; }
     }
 }

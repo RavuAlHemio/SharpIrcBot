@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -16,6 +18,8 @@ namespace SharpIrcBot.Plugins.CasinoBot.Player
 {
     public class CasinoPlayerBotPlugin : IPlugin, IReloadableConfiguration
     {
+        protected static readonly Regex DecksInShoeRegex = new Regex("The dealer's shoe has (?<deckCount>[0-9]+) deck\\(s\\) of cards\\.", RegexOptions.Compiled);
+
         protected IConnectionManager ConnectionManager { get; }
         protected PlayerConfig Config { get; set; }
         protected EventDispatcher Dispatcher { get; set; }
@@ -38,6 +42,7 @@ namespace SharpIrcBot.Plugins.CasinoBot.Player
 
             ConnectionManager.ChannelMessage += HandleChannelMessage;
             ConnectionManager.QueryMessage += HandleQueryMessage;
+            ConnectionManager.QueryNotice += HandleQueryNotice;
 
             ConnectionManager.CommandManager.RegisterQueryMessageCommandHandler(
                 new Command(
@@ -102,6 +107,7 @@ namespace SharpIrcBot.Plugins.CasinoBot.Player
             if (botJoin)
             {
                 ConnectionManager.SendChannelMessage(args.Channel, ".botjoin");
+                ConnectionManager.SendChannelMessage(args.Channel, ".grules");
             }
 
             // FIXME: these should be JSON events
@@ -143,6 +149,32 @@ namespace SharpIrcBot.Plugins.CasinoBot.Player
             }
 
             Dispatcher.DispatchEvent(this, eventObject);
+        }
+
+        protected virtual void HandleQueryNotice(object sender, IPrivateMessageEventArgs args, MessageFlags flags)
+        {
+            if (flags.HasFlag(MessageFlags.UserBanned))
+            {
+                return;
+            }
+
+            if (!string.Equals(args.SenderNickname, Config.GameMasterNickname, StringComparison.OrdinalIgnoreCase))
+            {
+                return;
+            }
+
+            Match decksInShoeMatch = DecksInShoeRegex.Match(args.Message);
+            if (decksInShoeMatch.Success)
+            {
+                int decksInShoe;
+                if (int.TryParse(
+                    decksInShoeMatch.Groups["deckCount"].Value, NumberStyles.None, CultureInfo.InvariantCulture,
+                    out decksInShoe
+                ))
+                {
+                    CardCounter.TotalDecks = decksInShoe;
+                }
+            }
         }
 
         [Event("turn_info_betting")]
