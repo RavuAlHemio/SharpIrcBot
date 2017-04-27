@@ -13,6 +13,11 @@ namespace SharpIrcBot.Plugins.CasinoBot.Cards
             Value = value;
         }
 
+        public string ToUnicodeString()
+        {
+            return new string(new[] { Suit.ToUnicode(), Value.ToUnicode() });
+        }
+
         public override string ToString()
         {
             return $"{Value} of {Suit}";

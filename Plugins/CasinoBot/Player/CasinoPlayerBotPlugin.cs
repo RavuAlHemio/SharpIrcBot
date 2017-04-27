@@ -8,6 +8,7 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using SharpIrcBot.Collections;
+using SharpIrcBot.Commands;
 using SharpIrcBot.Events.Irc;
 using SharpIrcBot.Plugins.CasinoBot.Cards;
 
@@ -21,6 +22,8 @@ namespace SharpIrcBot.Plugins.CasinoBot.Player
         protected BlackjackState State { get; set; }
         protected Random Randomizer { get; set; }
         protected ICardCounter CardCounter { get; set; }
+        protected HashSet<string> AssistPlayers { get; set; }
+        protected HashSet<string> StrategyDebuggers { get; set; }
 
         public CasinoPlayerBotPlugin(IConnectionManager connMgr, JObject config)
         {
@@ -30,9 +33,28 @@ namespace SharpIrcBot.Plugins.CasinoBot.Player
             State = new BlackjackState();
             Randomizer = new Random();
             CardCounter = TabularCardCounter.Zen.Value;
+            AssistPlayers = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            StrategyDebuggers = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
             ConnectionManager.ChannelMessage += HandleChannelMessage;
             ConnectionManager.QueryMessage += HandleQueryMessage;
+
+            ConnectionManager.CommandManager.RegisterQueryMessageCommandHandler(
+                new Command(
+                    CommandUtil.MakeNames("casinoassist", "nocasinoassist"),
+                    CommandUtil.NoOptions,
+                    CommandUtil.NoArguments
+                ),
+                HandleCasinoAssistCommand
+            );
+            ConnectionManager.CommandManager.RegisterQueryMessageCommandHandler(
+                new Command(
+                    CommandUtil.MakeNames("stratdebug", "nostratdebug"),
+                    CommandUtil.NoOptions,
+                    CommandUtil.NoArguments
+                ),
+                HandleStratDebugCommand
+            );
         }
 
         public virtual void ReloadConfiguration(JObject newConfig)
@@ -90,7 +112,10 @@ namespace SharpIrcBot.Plugins.CasinoBot.Player
                     || args.Message == "The dealer's shoe has been shuffled."
                 )
                 {
+                    int origAdj = CardCounter.BetAdjustment;
                     CardCounter.ShoeShuffled();
+                    int newAdj = CardCounter.BetAdjustment;
+                    DispatchStratDebugMessage($"strategy: shoe shuffled; {origAdj} -> {newAdj}");
                 }
             }
         }
@@ -181,10 +206,13 @@ namespace SharpIrcBot.Plugins.CasinoBot.Player
             if (State.Stage == BlackjackStage.MyBetting || State.Stage == BlackjackStage.OthersBetting)
             {
                 // fresh hands => forward the whole hand
+                int origAdj = CardCounter.BetAdjustment;
                 foreach (Card c in hand)
                 {
                     CardCounter.CardDealt(c);
                 }
+                int newAdj = CardCounter.BetAdjustment;
+                DispatchStratDebugMessage($"strategy: seen hand {string.Join(" ", hand.Select(c => c.ToUnicodeString()))}; {origAdj} -> {newAdj}");
             }
             else
             {
@@ -192,7 +220,11 @@ namespace SharpIrcBot.Plugins.CasinoBot.Player
                 // this also works for splits, since the first card was dealt previously and the second is new
                 if (hand.Count > 0)
                 {
-                    CardCounter.CardDealt(hand.Last());
+                    Card lastCard = hand.Last();
+                    int origAdj = CardCounter.BetAdjustment;
+                    CardCounter.CardDealt(lastCard);
+                    int newAdj = CardCounter.BetAdjustment;
+                    DispatchStratDebugMessage($"strategy: seen card {lastCard}; {origAdj} -> {newAdj}");
                 }
             }
 
@@ -244,6 +276,8 @@ namespace SharpIrcBot.Plugins.CasinoBot.Player
 
         protected virtual void PlaceBlackjackBet()
         {
+            DispatchStratDebugMessage($"strategy: betting under the influence of {CardCounter.BetAdjustment}");
+
             var bet = (int)Math.Round(Config.BaseBet + CardCounter.BetAdjustment * Config.BetAdjustmentFactor);
             if (bet < Config.MinBet)
             {
@@ -344,10 +378,16 @@ namespace SharpIrcBot.Plugins.CasinoBot.Player
         {
             string handMessage = null;
 
+            HashSet<string> assistPlayers;
+            lock (AssistPlayers)
+            {
+                assistPlayers = new HashSet<string>(AssistPlayers, StringComparer.OrdinalIgnoreCase);
+            }
+
             foreach (string casinoNick in ConnectionManager.NicknamesInChannel(Config.CasinoChannel))
             {
                 string registeredNick = ConnectionManager.RegisteredNameForNick(casinoNick) ?? casinoNick;
-                if (!Config.AssistPlayers.Contains(registeredNick))
+                if (!assistPlayers.Contains(registeredNick))
                 {
                     // this player is not interested
                     continue;
@@ -402,6 +442,56 @@ namespace SharpIrcBot.Plugins.CasinoBot.Player
             Debug.Assert(handValue > BasicStrategy.BlackjackTargetValue);
             // bust
             return $"{handValue} b";
+        }
+
+        protected void HandleCasinoAssistCommand(CommandMatch cmd, IPrivateMessageEventArgs msg)
+        {
+            string registeredNick = ConnectionManager.RegisteredNameForNick(msg.SenderNickname) ?? msg.SenderNickname;
+            lock (AssistPlayers)
+            {
+                if (cmd.CommandName == "nocasinoassist")
+                {
+                    AssistPlayers.Remove(registeredNick);
+                }
+                else
+                {
+                    AssistPlayers.Add(registeredNick);
+                }
+            }
+        }
+
+        protected void HandleStratDebugCommand(CommandMatch cmd, IPrivateMessageEventArgs msg)
+        {
+            string registeredNick = ConnectionManager.RegisteredNameForNick(msg.SenderNickname) ?? msg.SenderNickname;
+            lock (StrategyDebuggers)
+            {
+                if (cmd.CommandName == "nostratdebug")
+                {
+                    StrategyDebuggers.Remove(registeredNick);
+                }
+                else
+                {
+                    StrategyDebuggers.Add(registeredNick);
+                }
+            }
+        }
+
+        protected virtual void DispatchStratDebugMessage(string message)
+        {
+            HashSet<string> stratDebuggers;
+            lock (StrategyDebuggers)
+            {
+                stratDebuggers = new HashSet<string>(StrategyDebuggers, StringComparer.OrdinalIgnoreCase);
+            }
+
+            foreach (string casinoNick in ConnectionManager.NicknamesInChannel(Config.CasinoChannel))
+            {
+                string registeredNick = ConnectionManager.RegisteredNameForNick(casinoNick) ?? casinoNick;
+                if (stratDebuggers.Contains(registeredNick))
+                {
+                    ConnectionManager.SendQueryNotice(casinoNick, message);
+                }
+            }
         }
     }
 }

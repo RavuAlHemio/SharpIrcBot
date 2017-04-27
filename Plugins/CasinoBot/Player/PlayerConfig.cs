@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -15,7 +16,6 @@ namespace SharpIrcBot.Plugins.CasinoBot.Player
         public List<string> Gloats { get; set; }
         public int GloatNum { get; set; }
         public int GloatDen { get; set; }
-        public HashSet<string> AssistPlayers { get; set; }
         public int BaseBet { get; set; }
         public double BetAdjustmentFactor { get; set; }
         public int MinBet { get; set; }
@@ -31,7 +31,6 @@ namespace SharpIrcBot.Plugins.CasinoBot.Player
             Gloats = new List<string>();
             GloatNum = 1;
             GloatDen = 1;
-            AssistPlayers = new HashSet<string>();
             BaseBet = 50;
             BetAdjustmentFactor = 1.0;
             MinBet = 5;
