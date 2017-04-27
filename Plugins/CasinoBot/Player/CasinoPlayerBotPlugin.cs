@@ -246,6 +246,15 @@ namespace SharpIrcBot.Plugins.CasinoBot.Player
                 int newAdj = CardCounter.BetAdjustment;
                 DispatchStratDebugMessage($"seen hand {string.Join(" ", hand.Select(c => c.ToUnicodeString()))}; {origAdj} -> {newAdj}");
             }
+            else if (hand.Count == 2 && player == "Dealer")
+            {
+                // for no good reason, the (initially hidden) hole card is the dealer's first card, not their second
+                Card holeCard = hand.First();
+                int origAdj = CardCounter.BetAdjustment;
+                CardCounter.CardDealt(holeCard);
+                int newAdj = CardCounter.BetAdjustment;
+                DispatchStratDebugMessage($"seen hole card {holeCard.ToUnicodeString()}; {origAdj} -> {newAdj}");
+            }
             else
             {
                 // only forward the new (last) card
