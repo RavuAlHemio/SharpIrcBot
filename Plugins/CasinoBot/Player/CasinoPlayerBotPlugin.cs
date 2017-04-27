@@ -224,7 +224,7 @@ namespace SharpIrcBot.Plugins.CasinoBot.Player
                     int origAdj = CardCounter.BetAdjustment;
                     CardCounter.CardDealt(lastCard);
                     int newAdj = CardCounter.BetAdjustment;
-                    DispatchStratDebugMessage($"strategy: seen card {lastCard}; {origAdj} -> {newAdj}");
+                    DispatchStratDebugMessage($"strategy: seen card {lastCard.ToUnicodeString()}; {origAdj} -> {newAdj}");
                 }
             }
 
