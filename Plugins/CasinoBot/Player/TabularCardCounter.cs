@@ -65,7 +65,13 @@ namespace SharpIrcBot.Plugins.CasinoBot.Player
             MaxBaseBet = config.MaxBaseBet;
         }
 
-        public virtual decimal BetAmount => ((decimal)MaxBaseBet / TotalDecks + RunningCount) * CardsPlayed / 52.0m;
+        /// <remarks>
+        /// If the number of decks played is greater than the total number of decks, assume the dealer is lying and be
+        /// extremely conservative until we see that the shoe has been shuffled.
+        /// </remarks>
+        protected virtual bool DealerIsLying => (CardsPlayed / 52.0m > TotalDecks);
+        protected virtual decimal DecksPlayed => DealerIsLying ? 0.0m : (CardsPlayed / 52.0m);
+        public virtual decimal BetAmount => ((decimal)MaxBaseBet / TotalDecks + RunningCount) * DecksPlayed;
 
         public virtual void CardDealt(Card card)
         {
@@ -82,8 +88,7 @@ namespace SharpIrcBot.Plugins.CasinoBot.Player
         public override string ToString()
         {
             decimal baseBet = (decimal)MaxBaseBet / TotalDecks;
-            decimal decksPlayed = CardsPlayed / 52.0m;
-            return $"[BB({baseBet:F2})+RC({RunningCount:F2})={baseBet+RunningCount:F2}]*DP({decksPlayed:F2})={BetAmount:F2}";
+            return $"[BB({baseBet:F2})+RC({RunningCount:F2})={baseBet+RunningCount:F2}]*DP({DecksPlayed:F2}{(DealerIsLying?"L":"")})={BetAmount:F2}";
         }
 
         private static Lazy<TabularCardCounter> MakeLazyTabularCardCounter(int[] tableArray)
