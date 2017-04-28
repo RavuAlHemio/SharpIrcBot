@@ -16,7 +16,7 @@ namespace SharpIrcBot.Plugins.CasinoBot.Player
         public List<string> Gloats { get; set; }
         public int GloatNum { get; set; }
         public int GloatDen { get; set; }
-        public decimal BetPerSpentPack { get; set; }
+        public int MaxBaseBet { get; set; }
         public int MinBet { get; set; }
         public int MaxBet { get; set; }
 
@@ -30,9 +30,9 @@ namespace SharpIrcBot.Plugins.CasinoBot.Player
             Gloats = new List<string>();
             GloatNum = 1;
             GloatDen = 1;
-            BetPerSpentPack = 30.0m;
+            MaxBaseBet = 300;
             MinBet = 5;
-            MaxBet = 100;
+            MaxBet = 400;
 
             var ser = new JsonSerializer();
             ser.Populate(obj.CreateReader(), this);
