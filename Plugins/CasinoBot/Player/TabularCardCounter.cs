@@ -83,7 +83,7 @@ namespace SharpIrcBot.Plugins.CasinoBot.Player
         {
             decimal baseBet = (decimal)MaxBaseBet / TotalDecks;
             decimal decksPlayed = CardsPlayed / 52.0m;
-            return $"[BB({baseBet})+RC({RunningCount})]*DP({decksPlayed:F2})={BetAmount:F2}";
+            return $"[BB({baseBet:F2})+RC({RunningCount:F2})={baseBet+RunningCount:F2}]*DP({decksPlayed:F2})={BetAmount:F2}";
         }
 
         private static Lazy<TabularCardCounter> MakeLazyTabularCardCounter(int[] tableArray)
