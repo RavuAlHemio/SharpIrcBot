@@ -42,10 +42,7 @@ namespace SharpIrcBot.Plugins.CasinoBot.Player
         public int TotalDecks { get; set; }
         protected int RunningCount { get; set; }
         protected int CardsPlayed { get; set; }
-        protected int DecksPlayed => CardsPlayed / 52;
-        protected int DecksRemaining => Math.Max(1, TotalDecks - DecksPlayed);
-
-        public int BetAdjustment => RunningCount / Math.Max(1, DecksRemaining);
+        protected decimal BetPerSpentPack { get; set; }
 
         public TabularCardCounter(IEnumerable<KeyValuePair<CardValue, int>> table)
         {
@@ -63,15 +60,28 @@ namespace SharpIrcBot.Plugins.CasinoBot.Player
             CardsPlayed = 0;
         }
 
-        public void CardDealt(Card card)
+        public virtual void UpdateFromConfig(PlayerConfig config)
+        {
+            BetPerSpentPack = config.BetPerSpentPack;
+        }
+
+        public virtual decimal BetAmount => (BetPerSpentPack + RunningCount) * CardsPlayed / 52.0m;
+
+        public virtual void CardDealt(Card card)
         {
             RunningCount += Table[card.Value];
         }
 
-        public void ShoeShuffled()
+        public virtual void ShoeShuffled()
         {
             RunningCount = 0;
             CardsPlayed = 0;
+        }
+
+        public override string ToString()
+        {
+            decimal decksPlayed = CardsPlayed / 52.0m;
+            return $"[BPSP({BetPerSpentPack})+RC({RunningCount})]*DP({decksPlayed:F2})={BetAmount:F2}";
         }
 
         private static Lazy<TabularCardCounter> MakeLazyTabularCardCounter(int[] tableArray)

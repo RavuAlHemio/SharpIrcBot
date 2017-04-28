@@ -16,8 +16,7 @@ namespace SharpIrcBot.Plugins.CasinoBot.Player
         public List<string> Gloats { get; set; }
         public int GloatNum { get; set; }
         public int GloatDen { get; set; }
-        public int BaseBet { get; set; }
-        public double BetAdjustmentFactor { get; set; }
+        public decimal BetPerSpentPack { get; set; }
         public int MinBet { get; set; }
         public int MaxBet { get; set; }
 
@@ -31,8 +30,7 @@ namespace SharpIrcBot.Plugins.CasinoBot.Player
             Gloats = new List<string>();
             GloatNum = 1;
             GloatDen = 1;
-            BaseBet = 50;
-            BetAdjustmentFactor = 1.0;
+            BetPerSpentPack = 30.0m;
             MinBet = 5;
             MaxBet = 100;
 

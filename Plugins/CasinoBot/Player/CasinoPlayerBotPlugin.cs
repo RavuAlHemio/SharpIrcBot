@@ -60,6 +60,8 @@ namespace SharpIrcBot.Plugins.CasinoBot.Player
                 ),
                 HandleStratDebugCommand
             );
+
+            CardCounter.UpdateFromConfig(Config);
         }
 
         public virtual void ReloadConfiguration(JObject newConfig)
@@ -70,6 +72,7 @@ namespace SharpIrcBot.Plugins.CasinoBot.Player
 
         protected virtual void PostConfigReload()
         {
+            CardCounter.UpdateFromConfig(Config);
         }
 
         protected virtual void HandleChannelMessage(object sender, IChannelMessageEventArgs args, MessageFlags flags)
@@ -118,10 +121,10 @@ namespace SharpIrcBot.Plugins.CasinoBot.Player
                     || args.Message == "The dealer's shoe has been shuffled."
                 )
                 {
-                    int origAdj = CardCounter.BetAdjustment;
+                    string origDesc = CardCounter.ToString();
                     CardCounter.ShoeShuffled();
-                    int newAdj = CardCounter.BetAdjustment;
-                    DispatchStratDebugMessage($"shoe shuffled; {origAdj} -> {newAdj}");
+                    string newDesc = CardCounter.ToString();
+                    DispatchStratDebugMessage($"shoe shuffled; {origDesc} -> {newDesc}");
                 }
             }
         }
@@ -238,22 +241,22 @@ namespace SharpIrcBot.Plugins.CasinoBot.Player
             if (State.Stage == BlackjackStage.MyBetting || State.Stage == BlackjackStage.OthersBetting)
             {
                 // fresh hands => forward the whole hand
-                int origAdj = CardCounter.BetAdjustment;
+                string origDesc = CardCounter.ToString();
                 foreach (Card c in hand)
                 {
                     CardCounter.CardDealt(c);
                 }
-                int newAdj = CardCounter.BetAdjustment;
-                DispatchStratDebugMessage($"seen hand {string.Join(" ", hand.Select(c => c.ToUnicodeString()))}; {origAdj} -> {newAdj}");
+                string newDesc = CardCounter.ToString();
+                DispatchStratDebugMessage($"seen hand {string.Join(" ", hand.Select(c => c.ToUnicodeString()))}; {origDesc} -> {newDesc}");
             }
             else if (hand.Count == 2 && player == "Dealer")
             {
                 // for no good reason, the (initially hidden) hole card is the dealer's first card, not their second
                 Card holeCard = hand.First();
-                int origAdj = CardCounter.BetAdjustment;
+                string origDesc = CardCounter.ToString();
                 CardCounter.CardDealt(holeCard);
-                int newAdj = CardCounter.BetAdjustment;
-                DispatchStratDebugMessage($"seen hole card {holeCard.ToUnicodeString()}; {origAdj} -> {newAdj}");
+                string newDesc = CardCounter.ToString();
+                DispatchStratDebugMessage($"seen hole card {holeCard.ToUnicodeString()}; {origDesc} -> {newDesc}");
             }
             else
             {
@@ -262,10 +265,10 @@ namespace SharpIrcBot.Plugins.CasinoBot.Player
                 if (hand.Count > 0)
                 {
                     Card lastCard = hand.Last();
-                    int origAdj = CardCounter.BetAdjustment;
+                    string origDesc = CardCounter.ToString();
                     CardCounter.CardDealt(lastCard);
-                    int newAdj = CardCounter.BetAdjustment;
-                    DispatchStratDebugMessage($"seen card {lastCard.ToUnicodeString()}; {origAdj} -> {newAdj}");
+                    string newDesc = CardCounter.ToString();
+                    DispatchStratDebugMessage($"seen card {lastCard.ToUnicodeString()}; {origDesc} -> {newDesc}");
                 }
             }
 
@@ -317,9 +320,9 @@ namespace SharpIrcBot.Plugins.CasinoBot.Player
 
         protected virtual void PlaceBlackjackBet()
         {
-            DispatchStratDebugMessage($"betting under the influence of {CardCounter.BetAdjustment}");
+            DispatchStratDebugMessage($"betting under the influence of {CardCounter}");
 
-            var bet = (int)Math.Round(Config.BaseBet + CardCounter.BetAdjustment * Config.BetAdjustmentFactor);
+            var bet = (int)Math.Round(CardCounter.BetAmount);
             if (bet < Config.MinBet)
             {
                 bet = Config.MinBet;
