@@ -13,10 +13,12 @@ namespace SharpIrcBot.Config
         public string Class { get; set; }
         [NotNull]
         public JObject Config { get; set; }
+        public bool Enabled { get; set; }
 
         public PluginConfig()
         {
             Config = new JObject();
+            Enabled = true;
         }
     }
 }

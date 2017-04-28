@@ -26,7 +26,7 @@ namespace SharpIrcBot
 
         public void LoadPlugins([NotNull] IConnectionManager connManager)
         {
-            foreach (var plugin in Config.Plugins)
+            foreach (PluginConfig plugin in Config.Plugins.Where(p => p.Enabled))
             {
                 var ass = Assembly.Load(new AssemblyName(plugin.Assembly));
                 var type = ass.GetType(plugin.Class);

@@ -80,7 +80,7 @@ namespace SharpIrcBot.Plugins.LinkInfo
         {
             Plugins.Clear();
 
-            foreach (PluginConfig config in Config.LinkResolverPlugins)
+            foreach (PluginConfig config in Config.LinkResolverPlugins.Where(pc => pc.Enabled))
             {
                 Assembly ass = Assembly.Load(new AssemblyName(config.Assembly));
                 Type type = ass.GetType(config.Class);
