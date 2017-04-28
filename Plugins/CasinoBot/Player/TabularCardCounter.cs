@@ -70,6 +70,7 @@ namespace SharpIrcBot.Plugins.CasinoBot.Player
         public virtual void CardDealt(Card card)
         {
             RunningCount += Table[card.Value];
+            ++CardsPlayed;
         }
 
         public virtual void ShoeShuffled()
