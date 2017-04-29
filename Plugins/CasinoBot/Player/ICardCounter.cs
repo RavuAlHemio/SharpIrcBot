@@ -8,10 +8,9 @@ namespace SharpIrcBot.Plugins.CasinoBot.Player
 
         void ShoeShuffled();
 
-        void UpdateFromConfig(PlayerConfig config);
-
         int TotalDecks { get; set; }
 
-        decimal BetAmount { get; }
+        /// <remarks>within [-1.0; 1.0]</remarks>
+        decimal Risk { get; }
     }
 }

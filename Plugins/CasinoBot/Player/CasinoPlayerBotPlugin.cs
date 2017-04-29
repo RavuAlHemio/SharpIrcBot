@@ -60,8 +60,6 @@ namespace SharpIrcBot.Plugins.CasinoBot.Player
                 ),
                 HandleStratDebugCommand
             );
-
-            CardCounter.UpdateFromConfig(Config);
         }
 
         public virtual void ReloadConfiguration(JObject newConfig)
@@ -72,7 +70,6 @@ namespace SharpIrcBot.Plugins.CasinoBot.Player
 
         protected virtual void PostConfigReload()
         {
-            CardCounter.UpdateFromConfig(Config);
         }
 
         protected virtual void HandleChannelMessage(object sender, IChannelMessageEventArgs args, MessageFlags flags)
@@ -322,7 +319,8 @@ namespace SharpIrcBot.Plugins.CasinoBot.Player
         {
             DispatchStratDebugMessage($"betting under the influence of {CardCounter}");
 
-            var bet = (int)Math.Round(CardCounter.BetAmount);
+            decimal risk = CardCounter.Risk;
+            decimal bet = Config.MulRiskFactor * risk * State.Stack + Config.AddRiskFactor * risk;
             if (bet < Config.MinBet)
             {
                 bet = Config.MinBet;
@@ -336,7 +334,7 @@ namespace SharpIrcBot.Plugins.CasinoBot.Player
                 bet = Config.MaxBet;
             }
 
-            State.Bet = bet;
+            State.Bet = (int)bet;
             ConnectionManager.SendChannelMessage(Config.CasinoChannel, $".bet {State.Bet}");
         }
 

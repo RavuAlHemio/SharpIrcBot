@@ -39,6 +39,8 @@ namespace SharpIrcBot.Plugins.CasinoBot.Player
         public static readonly Lazy<TabularCardCounter> Zen = MakeLazyTabularCardCounter(_zenTable);
 
         public ImmutableDictionary<CardValue, int> Table { get; }
+        public int MinCountPerDeck { get; }
+        public int MaxCountPerDeck { get; }
         public int TotalDecks { get; set; }
         protected int RunningCount { get; set; }
         protected int CardsPlayed { get; set; }
@@ -56,13 +58,20 @@ namespace SharpIrcBot.Plugins.CasinoBot.Player
                 Table = table.ToImmutableDictionary();
             }
 
+            var zeroInt = new[] {0};
+            MinCountPerDeck = Table.Values
+                .Where(v => v < 0) // pick out the card values with bad adjustments
+                .Concat(zeroInt) // ensure Sum() doesn't fail
+                .Sum()
+                * 4; // four suits
+            MaxCountPerDeck = Table.Values
+                .Where(v => v > 0) // pick out the card values with good adjustments
+                .Concat(zeroInt)
+                .Sum()
+                * 4;
+
             RunningCount = 0;
             CardsPlayed = 0;
-        }
-
-        public virtual void UpdateFromConfig(PlayerConfig config)
-        {
-            MaxBaseBet = config.MaxBaseBet;
         }
 
         /// <remarks>
@@ -71,7 +80,8 @@ namespace SharpIrcBot.Plugins.CasinoBot.Player
         /// </remarks>
         protected virtual bool DealerIsLying => (CardsPlayed / 52.0m > TotalDecks);
         protected virtual decimal DecksPlayed => DealerIsLying ? 0.0m : (CardsPlayed / 52.0m);
-        public virtual decimal BetAmount => ((decimal)MaxBaseBet / TotalDecks + RunningCount) * DecksPlayed;
+        protected virtual decimal RelevantCountPerDeck => (RunningCount < 0) ? (-MinCountPerDeck) : MaxCountPerDeck;
+        public virtual decimal Risk => (RunningCount * DecksPlayed) / (RelevantCountPerDeck * TotalDecks);
 
         public virtual void CardDealt(Card card)
         {
@@ -87,8 +97,7 @@ namespace SharpIrcBot.Plugins.CasinoBot.Player
 
         public override string ToString()
         {
-            decimal baseBet = (decimal)MaxBaseBet / TotalDecks;
-            return $"[BB({baseBet:F2})+RC({RunningCount:F2})={baseBet+RunningCount:F2}]*DP({DecksPlayed:F2}{(DealerIsLying?"L":"")})={BetAmount:F2}";
+            return $"[RC({RunningCount})*DP({DecksPlayed:F2}{(DealerIsLying?"L":"")})={RunningCount*DecksPlayed:F2}]/[RCPD({RelevantCountPerDeck})*TD({TotalDecks})={MaxCountPerDeck*TotalDecks}]={Risk:F2}";
         }
 
         private static Lazy<TabularCardCounter> MakeLazyTabularCardCounter(int[] tableArray)
