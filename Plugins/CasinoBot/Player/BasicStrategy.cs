@@ -15,7 +15,8 @@ namespace SharpIrcBot.Plugins.CasinoBot.Player
             Hit = (byte)'h',
             DoubleOrHit = (byte)'d',
             DoubleOrStand = (byte)'D',
-            Split = (byte)'p',
+            SplitOrStand = (byte)'P',
+            SplitOrHit = (byte)'p',
             SurrenderOrHit = (byte)'G'
         }
 
@@ -61,17 +62,17 @@ namespace SharpIrcBot.Plugins.CasinoBot.Player
 
         private static readonly string[] _pairsArray =
         {
-            /*         A23456789T */
-            /* A,A */ "pppppppppp",
-            /* 2,2 */ "hpppppphhh",
-            /* 3,3 */ "hpppppphhh",
-            /* 4,4 */ "hhhhpphhhh",
-            /* 5,5 */ "hddddddddh",
-            /* 6,6 */ "hppppphhhh",
-            /* 7,7 */ "hpppppphhh",
-            /* 8,8 */ "pppppppppp",
-            /* 9,9 */ "SpppppSppS",
-            /* T,T */ "SSSSSSSSSS",
+            /*              A23456789T */
+            /* A,A = 13 */ "pPPPPPpppp",
+            /* 2,2 =  4 */ "hpppppphhh",
+            /* 3,3 =  6 */ "hpppppphhh",
+            /* 4,4 =  8 */ "hhhhpphhhh",
+            /* 5,5 = 10 */ "hddddddddh",
+            /* 6,6 = 12 */ "hppPPPhhhh",
+            /* 7,7 = 14 */ "hPPPPPphhh",
+            /* 8,8 = 16 */ "pPPPPPpppp",
+            /* 9,9 = 18 */ "SPPPPPSPPS",
+            /* T,T = 20 */ "SSSSSSSSSS",
         };
 
         // hand total -> dealer card -> strategy outcome
@@ -232,9 +233,14 @@ namespace SharpIrcBot.Plugins.CasinoBot.Player
                     return gameState.CanDoubleDownOnHand(handIndex)
                         ? CourseOfAction.DoubleDown
                         : CourseOfAction.Stand;
-                case StrategyOutcome.Split:
-                    Debug.Assert(gameState.CanSplitHand(handIndex));
-                    return CourseOfAction.Split;
+                case StrategyOutcome.SplitOrHit:
+                    return gameState.CanSplitHand(handIndex)
+                        ? CourseOfAction.Split
+                        : CourseOfAction.Hit;
+                case StrategyOutcome.SplitOrStand:
+                    return gameState.CanSplitHand(handIndex)
+                        ? CourseOfAction.Split
+                        : CourseOfAction.Stand;
                 case StrategyOutcome.SurrenderOrHit:
                     return gameState.CanSurrender
                         ? CourseOfAction.Surrender
