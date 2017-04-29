@@ -111,7 +111,7 @@ namespace SharpIrcBot.Plugins.CasinoBot.Player
             }
 
             // FIXME: these should be JSON events
-            if (args.SenderNickname == Config.GameMasterNickname)
+            if (string.Equals(args.SenderNickname, Config.GameMasterNickname, StringComparison.OrdinalIgnoreCase))
             {
                 if (
                     args.Message == "Merging the discards back into the shoe and shuffling..."
