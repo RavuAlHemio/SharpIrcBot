@@ -370,6 +370,8 @@ namespace SharpIrcBot.Plugins.CasinoBot.Player
 
         protected virtual void MakeBlackjackMove(int handIndex)
         {
+            State.Conservation = (CardCounter.Risk < 0.0m);
+
             CourseOfAction? cOA = BasicStrategy.ApplyStrategy(State, handIndex);
             if (!cOA.HasValue)
             {

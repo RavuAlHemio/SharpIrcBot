@@ -11,6 +11,7 @@ namespace SharpIrcBot.Plugins.CasinoBot.Player
         public int ActionsTaken { get; set; }
         public int Bet { get; set; }
         public int Stack { get; set; }
+        public bool Conservation { get; set; }
         public bool CanSurrender => (ActionsTaken == 0);
 
         public BlackjackState()
@@ -20,6 +21,7 @@ namespace SharpIrcBot.Plugins.CasinoBot.Player
             ActionsTaken = 0;
             Bet = -1;
             Stack = -1;
+            Conservation = false;
         }
 
         public bool CanDoubleDownOnHand(int handIndex)
@@ -33,6 +35,12 @@ namespace SharpIrcBot.Plugins.CasinoBot.Player
             if (Stack < (MyHands.Count + 1) * Bet)
             {
                 // money does not permit
+                return false;
+            }
+
+            if (Conservation)
+            {
+                // wasting money
                 return false;
             }
 
