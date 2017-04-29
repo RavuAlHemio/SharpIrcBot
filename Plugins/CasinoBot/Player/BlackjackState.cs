@@ -8,6 +8,7 @@ namespace SharpIrcBot.Plugins.CasinoBot.Player
         public BlackjackStage Stage { get; set; }
         public List<Hand> MyHands { get; set; }
         public Card DealersUpcard { get; set; }
+        public BasicStrategy BasicStrat { get; set; }
         public int ActionsTaken { get; set; }
         public int Bet { get; set; }
         public int Stack { get; set; }
@@ -18,6 +19,7 @@ namespace SharpIrcBot.Plugins.CasinoBot.Player
         {
             Stage = BlackjackStage.None;
             MyHands = new List<Hand>(2);
+            BasicStrat = BasicStrategy.StandOnSoft17;
             ActionsTaken = 0;
             Bet = -1;
             Stack = -1;
@@ -49,6 +51,11 @@ namespace SharpIrcBot.Plugins.CasinoBot.Player
 
             // if not:
             //return (ActionsTaken == 0);
+        }
+
+        public CourseOfAction? ApplyBasicStrategy(int handIndex)
+        {
+            return BasicStrat.ApplyStrategy(this, handIndex);
         }
     }
 }

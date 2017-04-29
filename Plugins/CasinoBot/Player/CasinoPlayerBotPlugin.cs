@@ -175,6 +175,15 @@ namespace SharpIrcBot.Plugins.CasinoBot.Player
                     CardCounter.TotalDecks = decksInShoe;
                 }
             }
+
+            if (args.Message.Contains("Dealer stands on soft 17."))
+            {
+                State.BasicStrat = BasicStrategy.StandOnSoft17;
+            }
+            else if (args.Message.Contains("Dealer hits on soft 17."))
+            {
+                State.BasicStrat = BasicStrategy.HitOnSoft17;
+            }
         }
 
         [Event("turn_info_betting")]
@@ -372,7 +381,7 @@ namespace SharpIrcBot.Plugins.CasinoBot.Player
         {
             State.Conservation = (CardCounter.Risk < 0.0m);
 
-            CourseOfAction? cOA = BasicStrategy.ApplyStrategy(State, handIndex);
+            CourseOfAction? cOA = State.ApplyBasicStrategy(handIndex);
             if (!cOA.HasValue)
             {
                 return;

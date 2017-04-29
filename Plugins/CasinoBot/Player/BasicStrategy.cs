@@ -7,9 +7,9 @@ using SharpIrcBot.Plugins.CasinoBot.Cards;
 
 namespace SharpIrcBot.Plugins.CasinoBot.Player
 {
-    public static class BasicStrategy
+    public class BasicStrategy
     {
-        enum StrategyOutcome : byte
+        protected enum StrategyOutcome : byte
         {
             Stand = (byte)'S',
             Hit = (byte)'h',
@@ -75,16 +75,43 @@ namespace SharpIrcBot.Plugins.CasinoBot.Player
             /* T,T = 20 */ "SSSSSSSSSS",
         };
 
+        private static readonly Tuple<int, CardValue, StrategyOutcome>[] _patchHardHitOnSoft17 =
+        {
+            Tuple.Create(11, CardValue.Ace, StrategyOutcome.DoubleOrHit),
+            Tuple.Create(15, CardValue.Ace, StrategyOutcome.SurrenderOrHit),
+            Tuple.Create(17, CardValue.Ace, StrategyOutcome.SurrenderOrHit)
+        };
+
+        private static readonly Tuple<CardValue, CardValue, StrategyOutcome>[] _patchSoftHitOnSoft17 =
+        {
+            Tuple.Create(CardValue.Seven, CardValue.Two, StrategyOutcome.DoubleOrStand),
+            Tuple.Create(CardValue.Eight, CardValue.Six, StrategyOutcome.DoubleOrStand)
+        };
+
+        private static readonly Tuple<CardValue, CardValue, StrategyOutcome>[] _patchPairHitOnSoft17 =
+        {
+            Tuple.Create(CardValue.Eight, CardValue.Ace, StrategyOutcome.SurrenderOrHit)
+        };
+
         // hand total -> dealer card -> strategy outcome
-        static readonly ImmutableDictionary<int, ImmutableDictionary<CardValue, StrategyOutcome>> HardTotals;
+        protected ImmutableDictionary<int, ImmutableDictionary<CardValue, StrategyOutcome>> HardTotals { get; }
 
         // other card if one is an ace -> dealer card -> strategy outcome
-        static readonly ImmutableDictionary<CardValue, ImmutableDictionary<CardValue, StrategyOutcome>> SoftTotals;
+        protected ImmutableDictionary<CardValue, ImmutableDictionary<CardValue, StrategyOutcome>> SoftTotals { get; }
 
         // value of one card in a pair -> dealer card -> strategy outcome
-        static readonly ImmutableDictionary<CardValue, ImmutableDictionary<CardValue, StrategyOutcome>> Pairs;
+        protected ImmutableDictionary<CardValue, ImmutableDictionary<CardValue, StrategyOutcome>> Pairs { get; }
+
+        public static BasicStrategy StandOnSoft17 { get; }
+        public static BasicStrategy HitOnSoft17 { get; }
 
         static BasicStrategy()
+        {
+            StandOnSoft17 = new BasicStrategy(hitOnSoft17: false);
+            HitOnSoft17 = new BasicStrategy(hitOnSoft17: true);
+        }
+
+        protected BasicStrategy(bool hitOnSoft17)
         {
             // assemble HardTotals
             {
@@ -102,6 +129,16 @@ namespace SharpIrcBot.Plugins.CasinoBot.Player
                         Debug.Assert(Enum.IsDefined(typeof(StrategyOutcome), outcome));
 
                         var dealerCard = (CardValue)((int)CardValue.Ace + iDealerCard);
+
+                        if (hitOnSoft17)
+                        {
+                            var patch = _patchHardHitOnSoft17
+                                .FirstOrDefault(p => p.Item1 == handSum && p.Item2 == dealerCard);
+                            if (patch != null)
+                            {
+                                outcome = patch.Item3;
+                            }
+                        }
 
                         thisLineBuilder[dealerCard] = outcome;
                     }
@@ -127,6 +164,16 @@ namespace SharpIrcBot.Plugins.CasinoBot.Player
 
                         var dealerCard = (CardValue)((int)CardValue.Ace + iDealerCard);
 
+                        if (hitOnSoft17)
+                        {
+                            var patch = _patchSoftHitOnSoft17
+                                .FirstOrDefault(p => p.Item1 == nonAceCard && p.Item2 == dealerCard);
+                            if (patch != null)
+                            {
+                                outcome = patch.Item3;
+                            }
+                        }
+
                         thisLineBuilder[dealerCard] = outcome;
                     }
 
@@ -151,6 +198,16 @@ namespace SharpIrcBot.Plugins.CasinoBot.Player
 
                         var dealerCard = (CardValue)((int)CardValue.Ace + iDealerCard);
 
+                        if (hitOnSoft17)
+                        {
+                            var patch = _patchPairHitOnSoft17
+                                .FirstOrDefault(p => p.Item1 == pairOneCardValue && p.Item2 == dealerCard);
+                            if (patch != null)
+                            {
+                                outcome = patch.Item3;
+                            }
+                        }
+
                         thisLineBuilder[dealerCard] = outcome;
                     }
 
@@ -160,7 +217,7 @@ namespace SharpIrcBot.Plugins.CasinoBot.Player
             }
         }
 
-        public static CourseOfAction? ApplyStrategy(BlackjackState gameState, int handIndex)
+        public CourseOfAction? ApplyStrategy(BlackjackState gameState, int handIndex)
         {
             Debug.Assert(handIndex >= 0 && handIndex < gameState.MyHands.Count);
             Hand hand = gameState.MyHands[handIndex];
