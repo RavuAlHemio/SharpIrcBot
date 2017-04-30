@@ -34,7 +34,7 @@ namespace SharpIrcBot.Plugins.CasinoBot.Player
 
         public bool CanSplitHand(int handIndex)
         {
-            if (Stack < (MyHands.Count + 1) * Bet)
+            if (Stack < Bet)
             {
                 // money does not permit
                 return false;

@@ -345,6 +345,9 @@ namespace SharpIrcBot.Plugins.CasinoBot.Player
 
             State.Bet = (int)bet;
             ConnectionManager.SendChannelMessage(Config.CasinoChannel, $".bet {State.Bet}");
+
+            // immediately remove from stack
+            State.Stack -= State.Bet;
         }
 
         protected virtual void GloatOrCurse(int handIndex)
@@ -407,6 +410,9 @@ namespace SharpIrcBot.Plugins.CasinoBot.Player
                     // FIXME: breaks if resplits are forbidden
                     State.MyHands.Clear();
 
+                    // remove the bet from the stack once more
+                    State.Stack -= State.Bet;
+
                     break;
                 case CourseOfAction.Surrender:
                     command = ".surrender";
@@ -416,6 +422,9 @@ namespace SharpIrcBot.Plugins.CasinoBot.Player
 
                     // I will be told my new hand, but that's not an invitation to play
                     State.Stage = BlackjackStage.OthersTurn;
+
+                    // remove the bet from the stack once more
+                    State.Stack -= State.Bet;
                     break;
             }
 
