@@ -118,10 +118,8 @@ namespace SharpIrcBot.Plugins.CasinoBot.Player
                     || args.Message == "The dealer's shoe has been shuffled."
                 )
                 {
-                    string origDesc = CardCounter.ToString();
                     CardCounter.ShoeShuffled();
-                    string newDesc = CardCounter.ToString();
-                    DispatchStratDebugMessage($"shoe shuffled; {origDesc} -> {newDesc}");
+                    DispatchStratDebugMessage($"shoe shuffled -> {CardCounter}");
                 }
             }
         }
@@ -247,22 +245,18 @@ namespace SharpIrcBot.Plugins.CasinoBot.Player
             if (State.Stage == BlackjackStage.MyBetting || State.Stage == BlackjackStage.OthersBetting)
             {
                 // fresh hands => forward the whole hand
-                string origDesc = CardCounter.ToString();
                 foreach (Card c in hand)
                 {
                     CardCounter.CardDealt(c);
                 }
-                string newDesc = CardCounter.ToString();
-                DispatchStratDebugMessage($"seen hand {string.Join(" ", hand.Select(c => c.ToUnicodeString()))}; {origDesc} -> {newDesc}");
+                DispatchStratDebugMessage($"seen hand {string.Join(" ", hand.Select(c => c.ToUnicodeString()))} -> {CardCounter}");
             }
             else if (hand.Count == 2 && player == "Dealer")
             {
                 // for no good reason, the (initially hidden) hole card is the dealer's first card, not their second
                 Card holeCard = hand.First();
-                string origDesc = CardCounter.ToString();
                 CardCounter.CardDealt(holeCard);
-                string newDesc = CardCounter.ToString();
-                DispatchStratDebugMessage($"seen hole card {holeCard.ToUnicodeString()}; {origDesc} -> {newDesc}");
+                DispatchStratDebugMessage($"seen hole card {holeCard.ToUnicodeString()} -> {CardCounter}");
             }
             else
             {
@@ -271,10 +265,8 @@ namespace SharpIrcBot.Plugins.CasinoBot.Player
                 if (hand.Count > 0)
                 {
                     Card lastCard = hand.Last();
-                    string origDesc = CardCounter.ToString();
                     CardCounter.CardDealt(lastCard);
-                    string newDesc = CardCounter.ToString();
-                    DispatchStratDebugMessage($"seen card {lastCard.ToUnicodeString()}; {origDesc} -> {newDesc}");
+                    DispatchStratDebugMessage($"seen card {lastCard.ToUnicodeString()} -> {CardCounter}");
                 }
             }
 
