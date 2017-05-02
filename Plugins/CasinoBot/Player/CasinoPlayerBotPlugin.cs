@@ -338,7 +338,7 @@ namespace SharpIrcBot.Plugins.CasinoBot.Player
             {
                 bet = State.Stack;
             }
-            if (bet > Config.MaxBet)
+            if (Config.MaxBet >= 0 && bet > Config.MaxBet)
             {
                 bet = Config.MaxBet;
             }
