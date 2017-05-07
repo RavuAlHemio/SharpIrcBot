@@ -126,7 +126,7 @@ namespace SharpIrcBot.Plugins.Messenger
 
         protected void HandleMsgCommand(CommandMatch cmd, IChannelMessageEventArgs message)
         {
-            string rawRecipientNickString = ((string)cmd.Arguments[0]).TrimEnd(':');
+            string rawRecipientNickString = ((string)cmd.Arguments[0]).TrimEnd(':', ',');
             string[] rawRecipientNicks = rawRecipientNickString.Split(';');
             if (rawRecipientNicks.Length > 1 && !Config.AllowMulticast)
             {
@@ -726,7 +726,7 @@ namespace SharpIrcBot.Plugins.Messenger
 
         protected void HandlePrivateMessageCommand(CommandMatch cmd, IPrivateMessageEventArgs message)
         {
-            string rawRecipientNickString = ((string)cmd.Arguments[0]).TrimEnd(':');
+            string rawRecipientNickString = ((string)cmd.Arguments[0]).TrimEnd(':', ',');
             string[] rawRecipientNicks = rawRecipientNickString.Split(';');
             if (rawRecipientNicks.Length > 1 && !Config.AllowMulticast)
             {

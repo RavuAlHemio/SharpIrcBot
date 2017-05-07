@@ -96,7 +96,7 @@ namespace SharpIrcBot.Plugins.Thanks
             string thankerNick = msg.SenderNickname;
 
             bool forceThanks = cmd.Options.Any(f => f.Key == "--force");
-            var thankeeNick = (string)cmd.Arguments[0];
+            string thankeeNick = ((string)cmd.Arguments[0]).TrimEnd(':', ',', ';');
             string reason = ((string)cmd.Arguments[1]).Trim();
 
             if (reason.Length == 0)  // trimmed!
