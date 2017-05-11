@@ -125,6 +125,11 @@ namespace SharpIrcBot.Tests.TestPlumbing
             throw new NotImplementedException();
         }
 
+        public void ChangeChannelMode(string channel, string modeChange)
+        {
+            throw new NotImplementedException();
+        }
+
         public string RegisteredNameForNick(string nick)
         {
             throw new NotImplementedException();

@@ -54,6 +54,7 @@ namespace SharpIrcBot
         void JoinChannel([NotNull] string channel);
         void RequestNicknamesInChannel([NotNull] string channel);
         void RequestUserInfo([NotNull, ItemNotNull] params string[] nicknames);
+        void ChangeChannelMode([NotNull] string channel, [NotNull] string modeChange);
 
         [CanBeNull] string RegisteredNameForNick([NotNull] string nick);
         void ReportBaseNickChange([NotNull] string oldBaseNick, [NotNull] string newBaseNick);

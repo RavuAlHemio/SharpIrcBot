@@ -527,6 +527,11 @@ namespace SharpIrcBot
             Client.RfcWhois(nicknames);
         }
 
+        public void ChangeChannelMode(string channel, string modeChange)
+        {
+            Client.RfcMode(channel, modeChange);
+        }
+
         public IReadOnlyList<string> NicknamesInChannel(string channel)
         {
             if (channel == null)
