@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 using SharpIrcBot.Collections;
@@ -22,8 +24,9 @@ namespace SharpIrcBot.Plugins.Demoderation
         protected IConnectionManager ConnectionManager { get; set; }
 
         protected Dictionary<string, RingBuffer<ChannelMessage>> ChannelsMessages { get; set; }
-        protected Dictionary<string, long> CommandCache { get; set; }
+        protected Dictionary<string, long> CriterionCommandCache { get; set; }
         protected Dictionary<string, Regex> RegexCache { get; set; }
+        protected Timer CleanupTimer { get; set; }
 
         public DemoderationPlugin(IConnectionManager connMgr, JObject config)
         {
@@ -33,6 +36,9 @@ namespace SharpIrcBot.Plugins.Demoderation
             ChannelsMessages = new Dictionary<string, RingBuffer<ChannelMessage>>();
 
             ConnectionManager.ChannelMessage += HandleChannelMessage;
+            CleanupTimer = new Timer(
+                CleanupTimerElapsed, null, TimeSpan.Zero, TimeSpan.FromMinutes(Config.CleanupPeriodMinutes)
+            );
 
             ConnectionManager.CommandManager.RegisterChannelMessageCommandHandler(
                 new Command(
@@ -58,18 +64,19 @@ namespace SharpIrcBot.Plugins.Demoderation
 
         protected virtual void PostConfigReload()
         {
+            CleanupTimer.Change(TimeSpan.Zero, TimeSpan.FromMilliseconds(Config.CleanupPeriodMinutes));
             UpdateCommandCache();
         }
 
         protected void UpdateCommandCache()
         {
-            CommandCache = new Dictionary<string, long>();
+            CriterionCommandCache = new Dictionary<string, long>();
             RegexCache = new Dictionary<string, Regex>();
             using (DemoderationContext ctx = GetNewContext())
             {
                 foreach (Criterion crit in ctx.Criteria)
                 {
-                    CommandCache[crit.Name] = crit.ID;
+                    CriterionCommandCache[crit.Name] = crit.ID;
                     RegexCache[crit.DetectionRegex] = new Regex(crit.DetectionRegex, RegexOptions.Compiled);
                 }
             }
@@ -121,6 +128,9 @@ namespace SharpIrcBot.Plugins.Demoderation
                     return;
                 }
 
+                // lift the running ban
+                ban.Lifted = true;
+
                 // burn
                 var abuse = new Abuse
                 {
@@ -136,6 +146,7 @@ namespace SharpIrcBot.Plugins.Demoderation
                 ctx.SaveChanges();
             }
 
+            ConnectionManager.ChangeChannelMode(message.Channel, $"-b {ban.OffenderNickname}!*@*");
             ConnectionManager.ChangeChannelMode(message.Channel, $"+b {ban.BannerNickname}!*@*");
             ConnectionManager.KickChannelUser(
                 message.Channel,
@@ -157,9 +168,19 @@ namespace SharpIrcBot.Plugins.Demoderation
                 return;
             }
 
-            if (flags.HasFlag(MessageFlags.UserBanned))
+            if (!flags.HasFlag(MessageFlags.UserBanned))
             {
-                HandlePotentialDemoderation(args.Channel, args.Message);
+                HandlePotentialDemoderation(args.Channel, args.SenderNickname, args.Message);
+            }
+
+            if (args.Message.StartsWith(ConnectionManager.CommandManager.Config.CommandPrefix))
+            {
+                if (args.Message.TrimEnd().IndexOf(' ') == -1)
+                {
+                    // starts with a command character and has no spaces
+                    // do not consider this message relevant
+                    return;
+                }
             }
 
             RingBuffer<ChannelMessage> messages;
@@ -176,7 +197,7 @@ namespace SharpIrcBot.Plugins.Demoderation
             });
         }
 
-        protected void HandlePotentialDemoderation(string channel, string commandString)
+        protected void HandlePotentialDemoderation(string channel, string senderNickname, string commandString)
         {
             string commandPrefix = ConnectionManager.CommandManager.Config.CommandPrefix;
             if (!commandString.StartsWith(commandPrefix))
@@ -186,7 +207,152 @@ namespace SharpIrcBot.Plugins.Demoderation
 
             string command = commandString.Substring(commandPrefix.Length).TrimEnd();
 
-            // TODO
+            // do we know this criterion?
+            long criterionID;
+            if (!CriterionCommandCache.TryGetValue(command, out criterionID))
+            {
+                // no
+                return;
+            }
+
+            string senderUsername = ConnectionManager.RegisteredNameForNick(senderNickname);
+            ChannelMessage matchedMessage = null;
+
+            using (DemoderationContext ctx = GetNewContext())
+            {
+                // obtain the criterion
+                Criterion crit = ctx.Criteria.FirstOrDefault(c => c.ID == criterionID);
+                if (crit == null)
+                {
+                    // not found in database; remove from cache and return
+                    CriterionCommandCache.Remove(command);
+                    return;
+                }
+
+                // is the sender being sanctioned for abuse?
+                bool hasAbuseLock;
+                IQueryable<Abuse> activeAbuseLocks = ctx.Abuses
+                    .Include(a => a.Ban)
+                    .Where(a => a.LockUntil >= DateTimeOffset.Now);
+
+                hasAbuseLock = (senderUsername == null)
+                    ? activeAbuseLocks.Any(a => a.Ban.BannerNickname == senderNickname)
+                    : activeAbuseLocks.Any(
+                        a => a.Ban.BannerNickname == senderNickname
+                        || a.Ban.BannerUsername == senderUsername
+                    );
+
+                if (hasAbuseLock)
+                {
+                    ConnectionManager.SendChannelMessage(
+                        channel,
+                        $"{senderNickname}: You are currently being sanctioned for demod abuse."
+                    );
+                    return;
+                }
+
+                // find the last match in the channel
+                Regex critRegex = GetRegex(crit.DetectionRegex);
+                RingBuffer<ChannelMessage> messages;
+                if (ChannelsMessages.TryGetValue(channel, out messages))
+                {
+                    foreach (ChannelMessage message in messages.Reverse())
+                    {
+                        if (critRegex.IsMatch(message.Body))
+                        {
+                            matchedMessage = message;
+                            break;
+                        }
+                    }
+                }
+
+                if (matchedMessage == null)
+                {
+                    // can't see anyone to sanction there...
+                    ConnectionManager.SendChannelMessage(
+                        channel,
+                        $"{senderNickname}: Can't find a message to sanction."
+                    );
+                    return;
+                }
+
+                // is that user already being sanctioned for this?
+                IQueryable<Ban> runningBans = ctx.Bans
+                    .Where(b => b.BanUntil >= DateTimeOffset.Now);
+                bool alreadyBanned = (matchedMessage.Username == null)
+                    ? runningBans.Any(b => b.OffenderNickname == matchedMessage.Nickname)
+                    : runningBans.Any(b =>
+                        b.OffenderNickname == matchedMessage.Nickname
+                        || b.OffenderUsername == matchedMessage.Username
+                    );
+                if (alreadyBanned)
+                {
+                    ConnectionManager.SendChannelMessage(
+                        channel,
+                        $"{senderNickname}: This user is already being sanctioned."
+                    );
+                    return;
+                }
+
+                // halt. hammerzeit.
+                var ban = new Ban
+                {
+                    CriterionID = crit.ID,
+                    Channel = channel,
+                    OffenderNickname = matchedMessage.Nickname,
+                    OffenderUsername = matchedMessage.Username,
+                    BannerNickname = senderNickname,
+                    BannerUsername = senderUsername,
+                    Timestamp = DateTimeOffset.Now,
+                    BanUntil = DateTimeOffset.Now.AddMinutes(Config.BanMinutes),
+                    Lifted = false
+                };
+                ctx.Bans.Add(ban);
+                ctx.SaveChanges();
+            }
+
+            ConnectionManager.ChangeChannelMode(channel, $"+b {matchedMessage.Nickname}!*@*");
+            ConnectionManager.KickChannelUser(
+                channel,
+                matchedMessage.Nickname,
+                $"demoderation by {senderNickname}"
+            );
+        }
+
+        protected Regex GetRegex(string regexText)
+        {
+            Regex ret;
+            if (!RegexCache.TryGetValue(regexText, out ret))
+            {
+                ret = new Regex(regexText, RegexOptions.Compiled);
+                RegexCache[regexText] = ret;
+            }
+            return ret;
+        }
+
+        protected virtual void CleanupTimerElapsed(object state)
+        {
+            using (var ctx = GetNewContext())
+            {
+                IQueryable<Ban> bansToLift = ctx.Bans
+                    .Where(b => b.BanUntil < DateTimeOffset.Now && !b.Lifted);
+                foreach (Ban ban in bansToLift)
+                {
+                    ConnectionManager.ChangeChannelMode(ban.Channel, $"-b {ban.OffenderNickname}!*@*");
+                    ban.Lifted = true;
+                }
+                ctx.SaveChanges();
+
+                IQueryable<Abuse> abuseBansToLift = ctx.Abuses
+                    .Include(a => a.Ban)
+                    .Where(a => a.BanUntil < DateTimeOffset.Now && !a.Lifted);
+                foreach (Abuse abuse in abuseBansToLift)
+                {
+                    ConnectionManager.ChangeChannelMode(abuse.Ban.Channel, $"-b {abuse.Ban.BannerNickname}!*@*");
+                    abuse.Lifted = true;
+                }
+                ctx.SaveChanges();
+            }
         }
     }
 }

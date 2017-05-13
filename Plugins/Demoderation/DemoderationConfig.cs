@@ -16,6 +16,7 @@ namespace SharpIrcBot.Plugins.Demoderation
         public double BanMinutes { get; set; }
         public double AbuseBanMinutes { get; set; }
         public double AbuseLockMinutes { get; set; }
+        public double CleanupPeriodMinutes { get; set; }
 
         public DemoderationConfig(JObject obj)
         {
@@ -23,6 +24,7 @@ namespace SharpIrcBot.Plugins.Demoderation
             BanMinutes = 5.0;
             AbuseBanMinutes = 10.0;
             AbuseLockMinutes = 1440.0;
+            CleanupPeriodMinutes = 1.0;
 
             var ser = new JsonSerializer();
             ser.Populate(obj.CreateReader(), this);

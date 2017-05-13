@@ -19,6 +19,7 @@
     <ProjectReference Include="..\Plugins\CasinoBot\CasinoBot.csproj" />
     <ProjectReference Include="..\Plugins\DasIstNenFehler\DasIstNenFehler.csproj" />
     <ProjectReference Include="..\Plugins\DatabaseNickMapping\DatabaseNickMapping.csproj" />
+    <ProjectReference Include="..\Plugins\Demoderation\Demoderation.csproj" />
     <ProjectReference Include="..\Plugins\Dice\Dice.csproj" />
     <ProjectReference Include="..\Plugins\DontJustHighlightMe\DontJustHighlightMe.csproj" />
     <ProjectReference Include="..\Plugins\GroupPressure\GroupPressure.csproj" />
