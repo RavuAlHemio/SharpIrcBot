@@ -504,7 +504,6 @@ namespace SharpIrcBot.Plugins.Demoderation
                 ban = new Ban
                 {
                     CriterionID = crit.ID,
-                    Channel = channel,
                     OffenderNickname = matchedMessage.Nickname,
                     OffenderUsername = matchedMessage.Username,
                     BannerNickname = senderNickname,
@@ -558,20 +557,22 @@ namespace SharpIrcBot.Plugins.Demoderation
             using (var ctx = GetNewContext())
             {
                 IQueryable<Ban> bansToLift = ctx.Bans
+                    .Include(b => b.Criterion)
                     .Where(b => b.BanUntil < DateTimeOffset.Now && !b.Lifted);
                 foreach (Ban ban in bansToLift)
                 {
-                    ConnectionManager.ChangeChannelMode(ban.Channel, $"-b {ban.OffenderNickname}!*@*");
+                    ConnectionManager.ChangeChannelMode(ban.Criterion.Channel, $"-b {ban.OffenderNickname}!*@*");
                     ban.Lifted = true;
                 }
                 ctx.SaveChanges();
 
                 IQueryable<Abuse> abuseBansToLift = ctx.Abuses
                     .Include(a => a.Ban)
+                    .Include(a => a.Ban.Criterion)
                     .Where(a => a.BanUntil < DateTimeOffset.Now && !a.Lifted);
                 foreach (Abuse abuse in abuseBansToLift)
                 {
-                    ConnectionManager.ChangeChannelMode(abuse.Ban.Channel, $"-b {abuse.Ban.BannerNickname}!*@*");
+                    ConnectionManager.ChangeChannelMode(abuse.Ban.Criterion.Channel, $"-b {abuse.Ban.BannerNickname}!*@*");
                     abuse.Lifted = true;
                 }
                 ctx.SaveChanges();

@@ -7,7 +7,6 @@ namespace SharpIrcBot.Plugins.Demoderation.ORM
         public long ID { get; set; }
         public long CriterionID { get; set; }
         public Criterion Criterion { get; set; }
-        public string Channel { get; set; }
         public string OffenderNickname { get; set; }
         public string OffenderUsername { get; set; }
         public string BannerNickname { get; set; }

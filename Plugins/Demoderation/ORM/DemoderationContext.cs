@@ -70,11 +70,6 @@ namespace SharpIrcBot.Plugins.Demoderation.ORM
                     .HasColumnName("criterion_id")
                     .ValueGeneratedNever();
 
-                ban.Property(b => b.Channel)
-                    .IsRequired()
-                    .HasMaxLength(255)
-                    .HasColumnName("channel");
-
                 ban.Property(b => b.OffenderNickname)
                     .IsRequired()
                     .HasMaxLength(255)
