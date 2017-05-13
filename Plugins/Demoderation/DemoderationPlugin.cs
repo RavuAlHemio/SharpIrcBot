@@ -24,7 +24,7 @@ namespace SharpIrcBot.Plugins.Demoderation
         protected IConnectionManager ConnectionManager { get; set; }
 
         protected Dictionary<string, RingBuffer<ChannelMessage>> ChannelsMessages { get; set; }
-        protected Dictionary<string, long> CriterionCommandCache { get; set; }
+        protected Dictionary<string, Dictionary<string, long>> ChannelCriterionCommandCache { get; set; }
         protected Dictionary<string, Regex> RegexCache { get; set; }
         protected Timer CleanupTimer { get; set; }
 
@@ -53,6 +53,43 @@ namespace SharpIrcBot.Plugins.Demoderation
                 HandleAbuseCommand
             );
 
+            ConnectionManager.CommandManager.RegisterChannelMessageCommandHandler(
+                new Command(
+                    CommandUtil.MakeNames("dmnew"),
+                    CommandUtil.NoOptions,
+                    CommandUtil.MakeArguments(
+                        CommandUtil.NonzeroStringMatcherRequiredWordTaker, // criterion name
+                        RestTaker.Instance // criterion detection regex
+                    ),
+                    forbiddenFlags: MessageFlags.UserBanned
+                ),
+                HandleNewCommand
+            );
+
+            ConnectionManager.CommandManager.RegisterChannelMessageCommandHandler(
+                new Command(
+                    CommandUtil.MakeNames("dmdel"),
+                    CommandUtil.NoOptions,
+                    CommandUtil.MakeArguments(
+                        CommandUtil.NonzeroStringMatcherRequiredWordTaker // criterion name
+                    ),
+                    forbiddenFlags: MessageFlags.UserBanned
+                ),
+                HandleDeleteCommand
+            );
+
+            ConnectionManager.CommandManager.RegisterChannelMessageCommandHandler(
+                new Command(
+                    CommandUtil.MakeNames("dmrestore"),
+                    CommandUtil.NoOptions,
+                    CommandUtil.MakeArguments(
+                        CommandUtil.NonzeroStringMatcherRequiredWordTaker // criterion name
+                    ),
+                    forbiddenFlags: MessageFlags.UserBanned
+                ),
+                HandleRestoreCommand
+            );
+
             UpdateCommandCache();
         }
 
@@ -70,36 +107,38 @@ namespace SharpIrcBot.Plugins.Demoderation
 
         protected void UpdateCommandCache()
         {
-            CriterionCommandCache = new Dictionary<string, long>();
+            ChannelCriterionCommandCache = new Dictionary<string, Dictionary<string, long>>();
             RegexCache = new Dictionary<string, Regex>();
             using (DemoderationContext ctx = GetNewContext())
             {
-                foreach (Criterion crit in ctx.Criteria)
+                foreach (Criterion crit in ctx.Criteria.Where(c => c.Enabled))
                 {
-                    CriterionCommandCache[crit.Name] = crit.ID;
+                    Dictionary<string, long> commandCacheForChannel = ObtainCommandCacheForChannel(crit.Channel);
+                    commandCacheForChannel[crit.Name] = crit.ID;
+
                     RegexCache[crit.DetectionRegex] = new Regex(crit.DetectionRegex, RegexOptions.Compiled);
                 }
             }
         }
 
-        protected void HandleAbuseCommand(CommandMatch cmd, IChannelMessageEventArgs message)
+        protected virtual void HandleAbuseCommand(CommandMatch cmd, IChannelMessageEventArgs message)
         {
-            ChannelUserLevel level = ConnectionManager.GetChannelLevelForUser(message.Channel, message.SenderNickname);
-            if (level < ChannelUserLevel.HalfOp)
+            if (!EnsureOp(message))
             {
-                ConnectionManager.SendChannelMessage(message.Channel, $"{message.SenderNickname}: You need to be a channel operator.");
                 return;
             }
 
             var bannerNickname = (string)cmd.Arguments[0];
             var criterionName = (string)cmd.Arguments[1];
 
+            Criterion crit;
             Ban ban;
+            Abuse abuse;
             using (var ctx = GetNewContext())
             {
                 // identify the criterion
-                Criterion crit = ctx.Criteria
-                    .FirstOrDefault(c => c.Name == criterionName);
+                crit = ctx.Criteria
+                    .FirstOrDefault(c => c.Name == criterionName && c.Channel == message.Channel);
                 if (crit == null)
                 {
                     ConnectionManager.SendChannelMessage(message.Channel, $"{message.SenderNickname}: Unknown criterion.");
@@ -132,7 +171,7 @@ namespace SharpIrcBot.Plugins.Demoderation
                 ban.Lifted = true;
 
                 // burn
-                var abuse = new Abuse
+                abuse = new Abuse
                 {
                     BanID = ban.ID,
                     OpNickname = message.SenderNickname,
@@ -146,6 +185,13 @@ namespace SharpIrcBot.Plugins.Demoderation
                 ctx.SaveChanges();
             }
 
+            Logger.LogDebug(
+                "{OpNickname} is sanctioning {BannerNickname} for abusing criterion {CriterionID} ({CriterionName}) " +
+                "in channel {Channel} banning {OffenderNickname} (ban {BanID}), creating abuse entry {AbuseID}",
+                message.SenderNickname, ban.BannerNickname, ban.CriterionID, crit.Name, message.Channel,
+                ban.OffenderNickname, ban.ID, abuse.ID
+            );
+
             ConnectionManager.ChangeChannelMode(message.Channel, $"-b {ban.OffenderNickname}!*@*");
             ConnectionManager.ChangeChannelMode(message.Channel, $"+b {ban.BannerNickname}!*@*");
             ConnectionManager.KickChannelUser(
@@ -155,13 +201,164 @@ namespace SharpIrcBot.Plugins.Demoderation
             );
         }
 
-        private DemoderationContext GetNewContext()
+        protected virtual void HandleNewCommand(CommandMatch cmd, IChannelMessageEventArgs message)
+        {
+            if (!EnsureOp(message))
+            {
+                return;
+            }
+
+            var criterionName = (string)cmd.Arguments[0];
+            string detectionRegexString = ((string)cmd.Arguments[1]).Trim();
+
+            try
+            {
+                ObtainRegex(detectionRegexString);
+            }
+            catch (ArgumentException)
+            {
+                ConnectionManager.SendChannelMessage(message.Channel, $"{message.SenderNickname}: Invalid regular expression.");
+                return;
+            }
+
+            using (var ctx = GetNewContext())
+            {
+                // see if a criterion already matches
+                Criterion crit = ctx.Criteria
+                    .FirstOrDefault(c => c.Name == criterionName && c.Channel == message.Channel);
+                if (crit == null)
+                {
+                    // create a new criterion
+                    crit = new Criterion
+                    {
+                        Name = criterionName,
+                        Channel = message.Channel,
+                        DetectionRegex = detectionRegexString,
+                        Enabled = true
+                    };
+                }
+                else if (crit.Enabled)
+                {
+                    ConnectionManager.SendChannelMessage(
+                        message.Channel,
+                        $"{message.SenderNickname}: That criterion name is already in use."
+                    );
+                    return;
+                }
+                else
+                {
+                    // modify the existing criterion and re-enable it
+                    crit.DetectionRegex = detectionRegexString;
+                    crit.Enabled = true;
+                }
+                ctx.SaveChanges();
+
+                // update the cache
+                Dictionary<string, long> commandsIDs = ObtainCommandCacheForChannel(message.Channel);
+                commandsIDs[crit.Name] = crit.ID;
+            }
+        }
+
+        protected virtual void HandleDeleteCommand(CommandMatch cmd, IChannelMessageEventArgs message)
+        {
+            if (!EnsureOp(message))
+            {
+                return;
+            }
+
+            var criterionName = (string)cmd.Arguments[0];
+
+            using (DemoderationContext ctx = GetNewContext())
+            {
+                Criterion crit = ctx.Criteria
+                    .FirstOrDefault(c => c.Name == criterionName && c.Channel == message.Channel && c.Enabled);
+                if (crit == null)
+                {
+                    ConnectionManager.SendChannelMessage(message.Channel, $"{message.SenderNickname}: Cannot find that criterion.");
+                    return;
+                }
+
+                Logger.LogDebug(
+                    "disabling criterion {ID} ({Name} in {Channel}) on the behest of {Nickname}",
+                    crit.ID,
+                    crit.Name,
+                    crit.Channel,
+                    message.SenderNickname
+                );
+
+                crit.Enabled = false;
+                ctx.SaveChanges();
+
+                // remove from cache too
+                Dictionary<string, long> channelCriteria = ObtainCommandCacheForChannel(message.Channel);
+                channelCriteria.Remove(crit.Name);
+            }
+
+            ConnectionManager.SendChannelMessage(message.Channel, $"{message.SenderNickname}: Criterion deleted.");
+        }
+
+        protected virtual void HandleRestoreCommand(CommandMatch cmd, IChannelMessageEventArgs message)
+        {
+            if (!EnsureOp(message))
+            {
+                return;
+            }
+
+            var criterionName = (string)cmd.Arguments[0];
+
+            using (DemoderationContext ctx = GetNewContext())
+            {
+                Criterion crit = ctx.Criteria
+                    .FirstOrDefault(c => c.Name == criterionName && c.Channel == message.Channel);
+                if (crit == null)
+                {
+                    ConnectionManager.SendChannelMessage(message.Channel, $"{message.SenderNickname}: Cannot find that criterion.");
+                    return;
+                }
+                else if (crit.Enabled)
+                {
+                    ConnectionManager.SendChannelMessage(message.Channel, $"{message.SenderNickname}: That criterion is alive and kicking.");
+                    return;
+                }
+
+                Logger.LogDebug(
+                    "re-enabling criterion {ID} ({Name} in {Channel}) on the behest of {Nickname}",
+                    crit.ID,
+                    crit.Name,
+                    crit.Channel,
+                    message.SenderNickname
+                );
+
+                crit.Enabled = true;
+                ctx.SaveChanges();
+
+                // restore to cache as well
+                Dictionary<string, long> channelCriteria = ObtainCommandCacheForChannel(message.Channel);
+                channelCriteria[crit.Name] = crit.ID;
+            }
+
+            ConnectionManager.SendChannelMessage(message.Channel, $"{message.SenderNickname}: Criterion restored.");
+        }
+
+        protected virtual bool EnsureOp(IChannelMessageEventArgs message)
+        {
+            ChannelUserLevel level = ConnectionManager.GetChannelLevelForUser(message.Channel, message.SenderNickname);
+            if (level < ChannelUserLevel.HalfOp)
+            {
+                ConnectionManager.SendChannelMessage(message.Channel, $"{message.SenderNickname}: You need to be a channel operator.");
+                return false;
+            }
+
+            return true;
+        }
+
+        protected DemoderationContext GetNewContext()
         {
             var opts = SharpIrcBotUtil.GetContextOptions<DemoderationContext>(Config);
             return new DemoderationContext(opts);
         }
 
-        protected void HandleChannelMessage(object sender, IChannelMessageEventArgs args, MessageFlags flags)
+        protected virtual void HandleChannelMessage(object sender, IChannelMessageEventArgs args, MessageFlags flags)
         {
             if (args.SenderNickname == ConnectionManager.MyNickname)
             {
@@ -183,12 +380,9 @@ namespace SharpIrcBot.Plugins.Demoderation
                 }
             }
 
-            RingBuffer<ChannelMessage> messages;
-            if (!ChannelsMessages.TryGetValue(args.Channel, out messages))
-            {
-                messages = new RingBuffer<ChannelMessage>(Config.BacklogSize);
-                ChannelsMessages[args.Channel] = messages;
-            }
+            RingBuffer<ChannelMessage> messages = GetOrCreateValue(
+                ChannelsMessages, args.Channel, chan => new RingBuffer<ChannelMessage>(Config.BacklogSize)
+            );
             messages.Add(new ChannelMessage
             {
                 Nickname = args.SenderNickname,
@@ -197,7 +391,7 @@ namespace SharpIrcBot.Plugins.Demoderation
             });
         }
 
-        protected void HandlePotentialDemoderation(string channel, string senderNickname, string commandString)
+        protected virtual void HandlePotentialDemoderation(string channel, string senderNickname, string commandString)
         {
             string commandPrefix = ConnectionManager.CommandManager.Config.CommandPrefix;
             if (!commandString.StartsWith(commandPrefix))
@@ -207,9 +401,17 @@ namespace SharpIrcBot.Plugins.Demoderation
 
             string command = commandString.Substring(commandPrefix.Length).TrimEnd();
 
+            // do we know this channel?
+            Dictionary<string, long> criteriaForChannel;
+            if (!ChannelCriterionCommandCache.TryGetValue(channel, out criteriaForChannel))
+            {
+                // no
+                return;
+            }
+
             // do we know this criterion?
             long criterionID;
-            if (!CriterionCommandCache.TryGetValue(command, out criterionID))
+            if (!criteriaForChannel.TryGetValue(command, out criterionID))
             {
                 // no
                 return;
@@ -218,14 +420,18 @@ namespace SharpIrcBot.Plugins.Demoderation
             string senderUsername = ConnectionManager.RegisteredNameForNick(senderNickname);
             ChannelMessage matchedMessage = null;
 
+            Criterion crit;
+            Ban ban;
             using (DemoderationContext ctx = GetNewContext())
             {
                 // obtain the criterion
-                Criterion crit = ctx.Criteria.FirstOrDefault(c => c.ID == criterionID);
+                crit = ctx.Criteria
+                    .Where(c => c.Enabled && c.Channel == channel)
+                    .FirstOrDefault(c => c.ID == criterionID);
                 if (crit == null)
                 {
                     // not found in database; remove from cache and return
-                    CriterionCommandCache.Remove(command);
+                    criteriaForChannel.Remove(command);
                     return;
                 }
 
@@ -252,7 +458,7 @@ namespace SharpIrcBot.Plugins.Demoderation
                 }
 
                 // find the last match in the channel
-                Regex critRegex = GetRegex(crit.DetectionRegex);
+                Regex critRegex = ObtainRegex(crit.DetectionRegex);
                 RingBuffer<ChannelMessage> messages;
                 if (ChannelsMessages.TryGetValue(channel, out messages))
                 {
@@ -295,7 +501,7 @@ namespace SharpIrcBot.Plugins.Demoderation
                 }
 
                 // halt. hammerzeit.
-                var ban = new Ban
+                ban = new Ban
                 {
                     CriterionID = crit.ID,
                     Channel = channel,
@@ -311,6 +517,12 @@ namespace SharpIrcBot.Plugins.Demoderation
                 ctx.SaveChanges();
             }
 
+            Logger.LogDebug(
+                "{BannerNickname} matched criterion {CriterionID} ({CriterionName}) in channel {Channel} banning " +
+                "{OffenderNickname}, creating ban {BanID}",
+                senderNickname, crit.ID, crit.Name, channel, ban.OffenderNickname, ban.ID
+            );
+
             ConnectionManager.ChangeChannelMode(channel, $"+b {matchedMessage.Nickname}!*@*");
             ConnectionManager.KickChannelUser(
                 channel,
@@ -319,13 +531,24 @@ namespace SharpIrcBot.Plugins.Demoderation
             );
         }
 
-        protected Regex GetRegex(string regexText)
+        protected Dictionary<string, long> ObtainCommandCacheForChannel(string channel)
         {
-            Regex ret;
-            if (!RegexCache.TryGetValue(regexText, out ret))
+            return GetOrCreateValue(ChannelCriterionCommandCache, channel, c => new Dictionary<string, long>());
+        }
+
+        protected Regex ObtainRegex(string regexText)
+        {
+            return GetOrCreateValue(RegexCache, regexText, k => new Regex(k, RegexOptions.Compiled));
+        }
+
+        static TValue GetOrCreateValue<TKey, TValue>(IDictionary<TKey, TValue> dict, TKey key,
+                Func<TKey, TValue> generator)
+        {
+            TValue ret;
+            if (!dict.TryGetValue(key, out ret))
             {
-                ret = new Regex(regexText, RegexOptions.Compiled);
-                RegexCache[regexText] = ret;
+                ret = generator.Invoke(key);
+                dict[key] = ret;
             }
             return ret;
         }

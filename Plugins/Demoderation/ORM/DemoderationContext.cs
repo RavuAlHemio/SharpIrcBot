@@ -37,9 +37,21 @@ namespace SharpIrcBot.Plugins.Demoderation.ORM
                     .IsRequired()
                     .HasColumnName("name");
 
+                criterion.Property(c => c.Channel)
+                    .IsRequired()
+                    .HasMaxLength(255)
+                    .HasColumnName("channel");
+
                 criterion.Property(c => c.DetectionRegex)
                     .IsRequired()
                     .HasColumnName("detection_regex");
+
+                criterion.Property(c => c.Enabled)
+                    .IsRequired()
+                    .HasColumnName("enabled")
+                    .HasDefaultValue(true);
+
+                criterion.HasAlternateKey(c => new { c.Name, c.Channel });
             });
 
             builder.Entity<Ban>(ban =>
