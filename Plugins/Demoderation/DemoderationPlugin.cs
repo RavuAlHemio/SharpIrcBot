@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -387,7 +388,8 @@ namespace SharpIrcBot.Plugins.Demoderation
             {
                 Nickname = args.SenderNickname,
                 Username = ConnectionManager.RegisteredNameForNick(args.SenderNickname),
-                Body = args.Message
+                Body = args.Message,
+                Sanctioned = false
             });
         }
 
@@ -462,7 +464,11 @@ namespace SharpIrcBot.Plugins.Demoderation
                 RingBuffer<ChannelMessage> messages;
                 if (ChannelsMessages.TryGetValue(channel, out messages))
                 {
-                    foreach (ChannelMessage message in messages.Reverse())
+                    IEnumerable<ChannelMessage> unsanctionedMessagesReversed = messages
+                        .Where(m => !m.Sanctioned)
+                        .Reverse();
+
+                    foreach (ChannelMessage message in unsanctionedMessagesReversed)
                     {
                         if (critRegex.IsMatch(message.Body))
                         {
@@ -514,6 +520,9 @@ namespace SharpIrcBot.Plugins.Demoderation
                 };
                 ctx.Bans.Add(ban);
                 ctx.SaveChanges();
+
+                // mark the message as sanctioned so as not to allow it to be sanctioned again
+                matchedMessage.Sanctioned = true;
             }
 
             Logger.LogDebug(
