@@ -91,6 +91,32 @@ namespace SharpIrcBot.Plugins.Demoderation
                 HandleRestoreCommand
             );
 
+            ConnectionManager.CommandManager.RegisterChannelMessageCommandHandler(
+                new Command(
+                    CommandUtil.MakeNames("dmimmunity"),
+                    CommandUtil.NoOptions,
+                    CommandUtil.MakeArguments(
+                        CommandUtil.NonzeroStringMatcherRequiredWordTaker, // nickname
+                        new RegexMatcher("(?:[#+&][^ ,:]+|GLOBAL)").ToRequiredWordTaker() // channel or "GLOBAL"
+                    ),
+                    forbiddenFlags: MessageFlags.UserBanned
+                ),
+                HandleImmunityCommand
+            );
+
+            ConnectionManager.CommandManager.RegisterChannelMessageCommandHandler(
+                new Command(
+                    CommandUtil.MakeNames("dmdelimmunity"),
+                    CommandUtil.NoOptions,
+                    CommandUtil.MakeArguments(
+                        CommandUtil.NonzeroStringMatcherRequiredWordTaker, // nickname
+                        new RegexMatcher("(?:[#+&][^ ,:]+|GLOBAL)").ToRequiredWordTaker() // channel or "GLOBAL"
+                    ),
+                    forbiddenFlags: MessageFlags.UserBanned
+                ),
+                HandleDeleteImmunityCommand
+            );
+
             UpdateCommandCache();
         }
 
@@ -341,6 +367,97 @@ namespace SharpIrcBot.Plugins.Demoderation
             ConnectionManager.SendChannelMessage(message.Channel, $"{message.SenderNickname}: Criterion restored.");
         }
 
+        protected virtual void HandleImmunityCommand(CommandMatch cmd, IChannelMessageEventArgs message)
+        {
+            if (!EnsureOp(message))
+            {
+                return;
+            }
+
+            var nickname = (string)cmd.Arguments[0];
+            var channel = (string)cmd.Arguments[1];
+
+            if (channel == "GLOBAL")
+            {
+                channel = null;
+            }
+
+            using (DemoderationContext ctx = GetNewContext())
+            {
+                Immunity immu = ctx.Immunities
+                    .FirstOrDefault(i =>
+                        i.NicknameOrUsername.ToLowerInvariant() == nickname.ToLowerInvariant()
+                        && i.Channel == channel
+                    );
+                if (immu != null)
+                {
+                    ConnectionManager.SendChannelMessage(message.Channel, $"{message.SenderNickname}: {nickname} already enjoys immunity.");
+                    return;
+                }
+
+                immu = new Immunity
+                {
+                    NicknameOrUsername = nickname,
+                    Channel = channel
+                };
+                ctx.Immunities.Add(immu);
+                ctx.SaveChanges();
+
+                Logger.LogDebug(
+                    "{OpNickname} grants immunity {ID} to {ImmuneNickname} in {Channel}",
+                    message.SenderNickname,
+                    immu.ID,
+                    immu.NicknameOrUsername,
+                    immu.Channel
+                );
+            }
+
+            ConnectionManager.SendChannelMessage(message.Channel, $"{message.SenderNickname}: {nickname} is now immune.");
+        }
+
+        protected virtual void HandleDeleteImmunityCommand(CommandMatch cmd, IChannelMessageEventArgs message)
+        {
+            if (!EnsureOp(message))
+            {
+                return;
+            }
+
+            var nickname = (string)cmd.Arguments[0];
+            var channel = (string)cmd.Arguments[1];
+
+            if (channel == "GLOBAL")
+            {
+                channel = null;
+            }
+
+            using (DemoderationContext ctx = GetNewContext())
+            {
+                Immunity immu = ctx.Immunities
+                    .FirstOrDefault(i =>
+                        i.NicknameOrUsername.ToLowerInvariant() == nickname.ToLowerInvariant()
+                        && i.Channel == channel
+                    );
+                if (immu == null)
+                {
+                    ConnectionManager.SendChannelMessage(message.Channel, $"{message.SenderNickname}: {nickname} is not immune.");
+                    return;
+                }
+
+                ctx.Immunities.Remove(immu);
+                ctx.SaveChanges();
+
+                Logger.LogDebug(
+                    "{OpNickname} deletes immunity {ID} previously granted to {ImmuneNickname} in {Channel}",
+                    message.SenderNickname,
+                    immu.ID,
+                    immu.NicknameOrUsername,
+                    immu.Channel
+                );
+            }
+
+            ConnectionManager.SendChannelMessage(message.Channel, $"{message.SenderNickname}: {nickname} is now immune.");
+        }
+
         protected virtual bool EnsureOp(IChannelMessageEventArgs message)
         {
             ChannelUserLevel level = ConnectionManager.GetChannelLevelForUser(message.Channel, message.SenderNickname);
@@ -381,9 +498,18 @@ namespace SharpIrcBot.Plugins.Demoderation
                 }
             }
 
+            using (var ctx = GetNewContext())
+            {
+                if (IsImmune(ctx, args.Channel, args.SenderNickname))
+                {
+                    return;
+                }
+            }
+
             RingBuffer<ChannelMessage> messages = GetOrCreateValue(
                 ChannelsMessages, args.Channel, chan => new RingBuffer<ChannelMessage>(Config.BacklogSize)
             );
+
             messages.Add(new ChannelMessage
             {
                 Nickname = args.SenderNickname,
@@ -470,6 +596,12 @@ namespace SharpIrcBot.Plugins.Demoderation
 
                     foreach (ChannelMessage message in unsanctionedMessagesReversed)
                     {
+                        // last-second check for immunity
+                        if (IsImmune(ctx, channel, message.Nickname))
+                        {
+                            continue;
+                        }
+
                         if (critRegex.IsMatch(message.Body))
                         {
                             matchedMessage = message;
@@ -539,6 +671,26 @@ namespace SharpIrcBot.Plugins.Demoderation
             );
         }
 
+        protected virtual bool IsImmune(DemoderationContext ctx, string channel, string nickname)
+        {
+            string usernameLower = ConnectionManager.RegisteredNameForNick(nickname)
+                ?.ToLowerInvariant();
+
+            return ctx.Immunities.Any(i =>
+                (
+                    i.NicknameOrUsername.ToLowerInvariant() == nickname.ToLowerInvariant()
+                    || (
+                        usernameLower != null
+                        && i.NicknameOrUsername.ToLowerInvariant() == usernameLower
+                    )
+                )
+                && (
+                    i.Channel == null
+                    || i.Channel.ToLowerInvariant() == channel.ToLowerInvariant()
+                )
+            );
+        }
+
         protected Dictionary<string, long> ObtainCommandCacheForChannel(string channel)
         {
             return GetOrCreateValue(ChannelCriterionCommandCache, channel, c => new Dictionary<string, long>());
@@ -563,7 +715,7 @@ namespace SharpIrcBot.Plugins.Demoderation
 
         protected virtual void CleanupTimerElapsed(object state)
         {
-            using (var ctx = GetNewContext())
+            using (DemoderationContext ctx = GetNewContext())
             {
                 IQueryable<Ban> bansToLift = ctx.Bans
                     .Include(b => b.Criterion)
