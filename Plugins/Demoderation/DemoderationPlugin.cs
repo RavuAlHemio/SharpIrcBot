@@ -375,7 +375,7 @@ namespace SharpIrcBot.Plugins.Demoderation
             }
 
             var nickname = (string)cmd.Arguments[0];
-            var channel = (string)cmd.Arguments[1];
+            string channel = ((Match)cmd.Arguments[1]).Value;
 
             if (channel == "GLOBAL")
             {
@@ -423,7 +423,7 @@ namespace SharpIrcBot.Plugins.Demoderation
             }
 
             var nickname = (string)cmd.Arguments[0];
-            var channel = (string)cmd.Arguments[1];
+            string channel = ((Match)cmd.Arguments[1]).Value;
 
             if (channel == "GLOBAL")
             {
