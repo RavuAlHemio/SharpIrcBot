@@ -1,12 +1,15 @@
 ﻿using System.Collections.Generic;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using SharpIrcBot.Plugins.Libraries.GeoNames;
 
 namespace SharpIrcBot.Plugins.Weather
 {
     [JsonObject(MemberSerialization.OptOut)]
     public class WeatherConfig
     {
+        public GeoNamesConfig GeoNames { get; set; }
+
         public string WunderApiKey { get; set; }
 
         public string DefaultLocation { get; set; }
@@ -23,6 +26,8 @@ namespace SharpIrcBot.Plugins.Weather
 
         public WeatherConfig(JObject obj)
         {
+            GeoNames = new GeoNamesConfig();
+
             MaxRequestsPerMinute = 10;
             MaxRequestsPerESTDay = 500;
             CoolDownResponses = new List<string>();

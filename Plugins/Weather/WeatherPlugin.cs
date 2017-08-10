@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
@@ -9,12 +10,15 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 using SharpIrcBot.Commands;
 using SharpIrcBot.Events.Irc;
+using SharpIrcBot.Plugins.Libraries.GeoNames;
 using SharpIrcBot.Plugins.Weather.Wunderground;
 
 namespace SharpIrcBot.Plugins.Weather
 {
     public class WeatherPlugin : IPlugin, IReloadableConfiguration
     {
+        protected static readonly Regex LatLonRegex = new Regex("^\\s*[0-9]+(?:[.][0-9]*)?,\\s*[0-9]+(?:[.][0-9]*)?\\s*$");
+
         private static readonly ILogger Logger = SharpIrcBotUtil.LoggerFactory.CreateLogger<WeatherPlugin>();
 
         protected IConnectionManager ConnectionManager { get; }
@@ -138,6 +142,20 @@ namespace SharpIrcBot.Plugins.Weather
                 {
                     location = aliasedLocation;
                 }
+            }
+
+            // find the location using GeoNames (Wunderground's geocoding is really bad)
+            if (!location.StartsWith("pws:") && !LatLonRegex.IsMatch(location))
+            {
+                var geoClient = new GeoNamesClient(Config.GeoNames);
+                GeoSearchResult found = geoClient.SearchForLocation(location).SyncWait();
+                if (!found.GeoNames.Any())
+                {
+                    ConnectionManager.SendChannelMessage(channel, $"{nick}: GeoNames cannot find that location!");
+                    return;
+                }
+
+                location = Inv($"{found.GeoNames[0].Latitude},{found.GeoNames[0].Longitude}");
             }
 
             // obtain weather info
@@ -286,6 +304,11 @@ namespace SharpIrcBot.Plugins.Weather
             }
 
             GetWeatherForLocation(location, msg.Channel, msg.SenderNickname, cmd.CommandName[0] == 'l');
+        }
+
+        private static string Inv(FormattableString formattable)
+        {
+            return formattable.ToString(CultureInfo.InvariantCulture);
         }
     }
 }
