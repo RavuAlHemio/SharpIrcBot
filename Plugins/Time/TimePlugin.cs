@@ -79,18 +79,8 @@ namespace SharpIrcBot.Plugins.Time
             }
 
             // obtain location
-            var geoSearchResult = new GeoSearchResult();
-            using (var client = new HttpClient())
-            {
-                var geoSearchUri = new Uri($"http://api.geonames.org/searchJSON?maxRows=1&q={WebUtility.UrlEncode(location)}&username={WebUtility.UrlEncode(Config.GeoNamesUsername)}");
-                string geoSearchResponse = client.GetStringAsync(geoSearchUri).SyncWait();
-                Logger.LogDebug("geo search response: {Response}", geoSearchResponse);
-
-                using (var sr = new StringReader(geoSearchResponse))
-                {
-                    JsonSerializer.Create().Populate(sr, geoSearchResult);
-                }
-            }
+            var client = new GeoNamesClient(Config.GeoNames);
+            GeoSearchResult geoSearchResult = client.SearchForLocation(location).SyncWait();
 
             if (!geoSearchResult.GeoNames.Any())
             {
@@ -101,18 +91,7 @@ namespace SharpIrcBot.Plugins.Time
             GeoName loc = geoSearchResult.GeoNames[0];
 
             // obtain timezone
-            var geoTimeZoneResult = new GeoTimeZoneResult();
-            using (var client = new HttpClient())
-            {
-                var timeZoneSearchUri = new Uri($"http://api.geonames.org/timezoneJSON?lat={loc.Latitude}&lng={loc.Longitude}&username={WebUtility.UrlEncode(Config.GeoNamesUsername)}");
-                string timeZoneSearchResponse = client.GetStringAsync(timeZoneSearchUri).SyncWait();
-                Logger.LogDebug("timezone search response: {Response}", timeZoneSearchResponse);
-
-                using (var sr = new StringReader(timeZoneSearchResponse))
-                {
-                    JsonSerializer.Create().Populate(sr, geoTimeZoneResult);
-                }
-            }
+            GeoTimeZoneResult geoTimeZoneResult = client.GetTimezone(loc.Latitude, loc.Longitude).SyncWait();
 
             // find actual date/time using our zone data
             DateTimeZone zone = TimeZoneProvider.GetZoneOrNull(geoTimeZoneResult.TimezoneID);
