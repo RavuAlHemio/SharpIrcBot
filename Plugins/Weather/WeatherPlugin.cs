@@ -145,7 +145,7 @@ namespace SharpIrcBot.Plugins.Weather
             }
 
             // find the location using GeoNames (Wunderground's geocoding is really bad)
-            if (!location.StartsWith("pws:") && !LatLonRegex.IsMatch(location))
+            if (!location.StartsWith("pws:") && !location.StartsWith("zmw:") && !LatLonRegex.IsMatch(location))
             {
                 var geoClient = new GeoNamesClient(Config.GeoNames);
                 GeoSearchResult found = geoClient.SearchForLocation(location).SyncWait();
