@@ -14,7 +14,19 @@ dotnet build "SharpIrcBot.csproj" -f "netstandard1.6"
 for plugindir in "$topdir/Plugins"/*
 do
     cd "$plugindir"
-    dotnet build -f "netstandard1.6"
+    if [ -f *.csproj ]
+    then
+        dotnet build -f "netstandard1.6"
+    fi
+done
+
+for plugindir in "$topdir/Plugins/Libraries"/*
+do
+    cd "$plugindir"
+    if [ -f *.csproj ]
+    then
+        dotnet build -f "netstandard1.6"
+    fi
 done
 
 cd "$topdir/SharpIrcBotCLI"
