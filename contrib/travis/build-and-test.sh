@@ -1,5 +1,6 @@
 #!/bin/sh
 set -e
+set -x
 topdir="`pwd`"
 
 cd "$topdir/Libraries/HtmlAgilityPack"
