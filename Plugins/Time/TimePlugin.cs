@@ -11,7 +11,7 @@ using NodaTime;
 using NodaTime.TimeZones;
 using SharpIrcBot.Commands;
 using SharpIrcBot.Events.Irc;
-using SharpIrcBot.Plugins.Time.GeoNames;
+using SharpIrcBot.Plugins.Libraries.GeoNames;
 
 namespace SharpIrcBot.Plugins.Time
 {

@@ -10,6 +10,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\SharpIrcBot\SharpIrcBot.csproj" />
+    <ProjectReference Include="..\Libraries\GeoNames\GeoNames.csproj" />
   </ItemGroup>
 
   <ItemGroup>

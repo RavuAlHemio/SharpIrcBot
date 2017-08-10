@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using Newtonsoft.Json;
 
-namespace SharpIrcBot.Plugins.Time.GeoNames
+namespace SharpIrcBot.Plugins.Libraries.GeoNames
 {
     [JsonObject]
     public class GeoSearchResult
