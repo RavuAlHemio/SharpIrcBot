@@ -1,5 +1,4 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
     <TargetFrameworks>netstandard1.6;net461</TargetFrameworks>
     <DebugType>portable</DebugType>
@@ -7,18 +6,17 @@
     <AssemblyName>SharpIrcBot.Plugins.TextCommands</AssemblyName>
     <PackageId>SharpIrcBot.Plugins.TextCommands</PackageId>
   </PropertyGroup>
-
   <ItemGroup>
     <ProjectReference Include="..\..\SharpIrcBot\SharpIrcBot.csproj" />
   </ItemGroup>
-
   <PropertyGroup Condition=" '$(TargetFramework)' == 'netstandard1.6' ">
     <DefineConstants>$(DefineConstants);NETCORE</DefineConstants>
   </PropertyGroup>
-
   <ItemGroup Condition=" '$(TargetFramework)' == 'net461' ">
     <Reference Include="System" />
     <Reference Include="Microsoft.CSharp" />
   </ItemGroup>
-
+  <ItemGroup>
+    <PackageReference Include="System.Diagnostics.Contracts" Version="4.3.0" />
+  </ItemGroup>
 </Project>

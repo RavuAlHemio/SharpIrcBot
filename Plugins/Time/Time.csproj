@@ -13,7 +13,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="NodaTime" Version="2.0.0-alpha20160729" />
+    <PackageReference Include="NodaTime" Version="2.2.0" />
   </ItemGroup>
 
   <PropertyGroup Condition=" '$(TargetFramework)' == 'netstandard1.6' ">
