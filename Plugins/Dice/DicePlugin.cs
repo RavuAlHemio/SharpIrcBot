@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
@@ -24,17 +25,25 @@ namespace SharpIrcBot.Plugins.Dice
         protected IConnectionManager ConnectionManager { get; set; }
         protected DiceConfig Config { get; set; }
         protected Random RNG { get; set; }
+        protected CryptoRandom CryptoRNG { get; set; }
 
         public DicePlugin(IConnectionManager connMgr, JObject config)
         {
             ConnectionManager = connMgr;
             Config = new DiceConfig(config);
             RNG = new Random();
+            CryptoRNG = new CryptoRandom();
+
+            ImmutableList<KeyValuePair<string, IArgumentTaker>> cryptoOption =
+                CommandUtil.MakeOptions(
+                    CommandUtil.MakeFlag("--crypto")
+                )
+            ;
 
             ConnectionManager.CommandManager.RegisterChannelMessageCommandHandler(
                 new Command(
                     CommandUtil.MakeNames("roll"),
-                    CommandUtil.NoOptions,
+                    cryptoOption,
                     CommandUtil.MakeArguments(new MultiMatchTaker(RollRegex, RollSeparatorRegex, 1)),
                     forbiddenFlags: MessageFlags.UserBanned
                 ),
@@ -43,7 +52,7 @@ namespace SharpIrcBot.Plugins.Dice
             ConnectionManager.CommandManager.RegisterChannelMessageCommandHandler(
                 new Command(
                     CommandUtil.MakeNames("yn"),
-                    CommandUtil.NoOptions,
+                    cryptoOption,
                     CommandUtil.MakeArguments(RestTaker.Instance),
                     forbiddenFlags: MessageFlags.UserBanned
                 ),
@@ -52,7 +61,7 @@ namespace SharpIrcBot.Plugins.Dice
             ConnectionManager.CommandManager.RegisterChannelMessageCommandHandler(
                 new Command(
                     CommandUtil.MakeNames("decide"),
-                    CommandUtil.NoOptions,
+                    cryptoOption,
                     CommandUtil.MakeArguments(RestTaker.Instance),
                     forbiddenFlags: MessageFlags.UserBanned
                 ),
@@ -121,6 +130,7 @@ namespace SharpIrcBot.Plugins.Dice
                 return;
             }
 
+            Random rng = ChosenRNG(cmd);
             var allRolls = new List<string>();
             foreach (var diceGroup in diceGroups)
             {
@@ -130,12 +140,12 @@ namespace SharpIrcBot.Plugins.Dice
                     if (diceGroup.SideCount == 1 && Config.ObstinateAnswers.Count > 0)
                     {
                         // special case: give an obstinate answer instead since a 1-sided toss has an obvious result
-                        string obstinateAnswer = Config.ObstinateAnswers[RNG.Next(Config.ObstinateAnswers.Count)];
+                        string obstinateAnswer = Config.ObstinateAnswers[rng.Next(Config.ObstinateAnswers.Count)];
                         theseRolls.Add(obstinateAnswer);
                     }
                     else
                     {
-                        long roll = RNG.Next(diceGroup.SideCount) + 1 + diceGroup.AddValue;
+                        long roll = rng.Next(diceGroup.SideCount) + 1 + diceGroup.AddValue;
                         theseRolls.Add(roll.ToString(CultureInfo.InvariantCulture));
                     }
                 }
@@ -149,7 +159,7 @@ namespace SharpIrcBot.Plugins.Dice
 
         protected virtual void HandleYesNoCommand(CommandMatch cmd, IChannelMessageEventArgs args)
         {
-            string yesNoAnswer = Config.YesNoAnswers[RNG.Next(Config.YesNoAnswers.Count)];
+            string yesNoAnswer = Config.YesNoAnswers[ChosenRNG(cmd).Next(Config.YesNoAnswers.Count)];
             ConnectionManager.SendChannelMessageFormat(args.Channel, "{0}: {1}", args.SenderNickname, yesNoAnswer);
         }
 
@@ -164,20 +174,21 @@ namespace SharpIrcBot.Plugins.Dice
                 return;
             }
 
+            Random rng = ChosenRNG(cmd);
             if (Config.SpecialDecisionAnswers.Count > 0)
             {
-                int percent = RNG.Next(100);
+                int percent = rng.Next(100);
                 if (percent < Config.SpecialDecisionAnswerPercent)
                 {
                     // special answer instead!
-                    var specialAnswer = Config.SpecialDecisionAnswers[RNG.Next(Config.SpecialDecisionAnswers.Count)];
+                    var specialAnswer = Config.SpecialDecisionAnswers[rng.Next(Config.SpecialDecisionAnswers.Count)];
                     ConnectionManager.SendChannelMessageFormat(args.Channel, "{0}: {1}", args.SenderNickname, specialAnswer);
                     return;
                 }
             }
 
             var options = decisionString.Split(new[] {splitter}, StringSplitOptions.None);
-            var chosenOption = options[RNG.Next(options.Length)];
+            var chosenOption = options[rng.Next(options.Length)];
             ConnectionManager.SendChannelMessageFormat(args.Channel, "{0}: {1}", args.SenderNickname, chosenOption);
         }
 
@@ -199,6 +210,14 @@ namespace SharpIrcBot.Plugins.Dice
             }
 
             return SharpIrcBotUtil.MaybeParseLong(grp.Value, NumberStyles.AllowLeadingSign);
+        }
+
+        protected virtual Random ChosenRNG(CommandMatch cmd)
+        {
+            return (cmd.Options.Any(o => o.Key == "--crypto"))
+                ? CryptoRNG
+                : RNG
+            ;
         }
     }
 }
