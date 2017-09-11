@@ -164,16 +164,25 @@ namespace SharpIrcBot.Plugins.Weather
             {
                 response = Client.GetWeatherForLocation(Config.WunderApiKey, location);
             }
-            catch (AggregateException ae) when (ae.InnerException.GetType() == typeof(TaskCanceledException))
+            catch (AggregateException ae)
             {
-                ConnectionManager.SendChannelMessage(channel, $"{nick}: Wunderground request timed out!");
-                return;
-            }
-            catch (HttpRequestException we)
-            {
-                Logger.LogWarning("error fetching Wunderground result: {Exception}", we);
-                ConnectionManager.SendChannelMessage(channel, $"{nick}: Error obtaining Wunderground response!");
-                return;
+                Type innerType = ae.InnerException.GetType();
+                if (innerType == typeof(TaskCanceledException))
+                {
+                    ConnectionManager.SendChannelMessage(channel, $"{nick}: Wunderground request timed out!");
+                    return;
+                }
+                else if (innerType == typeof(HttpRequestException))
+                {
+                    var we = (HttpRequestException)ae.InnerException;
+                    Logger.LogWarning("error fetching Wunderground result: {Exception}", we);
+                    ConnectionManager.SendChannelMessage(channel, $"{nick}: Error obtaining Wunderground response!");
+                    return;
+                }
+                else
+                {
+                    throw;
+                }
             }
 
             // register cooldown-relevant stuff
