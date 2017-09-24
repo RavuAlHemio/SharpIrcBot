@@ -148,14 +148,13 @@ namespace SharpIrcBot.Plugins.Weather
             if (!location.StartsWith("pws:") && !location.StartsWith("zmw:") && !LatLonRegex.IsMatch(location))
             {
                 var geoClient = new GeoNamesClient(Config.GeoNames);
-                GeoSearchResult found = geoClient.SearchForLocation(location).SyncWait();
-                if (!found.GeoNames.Any())
+                GeoName loc = geoClient.GetFirstGeoName(location).SyncWait();
+                if (loc == null)
                 {
                     ConnectionManager.SendChannelMessage(channel, $"{nick}: GeoNames cannot find that location!");
                     return;
                 }
-
-                location = Inv($"{found.GeoNames[0].Latitude},{found.GeoNames[0].Longitude}");
+                location = Inv($"{loc.Latitude},{loc.Longitude}");
             }
 
             // obtain weather info

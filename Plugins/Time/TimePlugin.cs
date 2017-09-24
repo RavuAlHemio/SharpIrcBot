@@ -80,15 +80,12 @@ namespace SharpIrcBot.Plugins.Time
 
             // obtain location
             var client = new GeoNamesClient(Config.GeoNames);
-            GeoSearchResult geoSearchResult = client.SearchForLocation(location).SyncWait();
-
-            if (!geoSearchResult.GeoNames.Any())
+            GeoName loc = client.GetFirstGeoName(location).SyncWait();
+            if (loc == null)
             {
                 ConnectionManager.SendChannelMessage(msg.Channel, $"{msg.SenderNickname}: GeoNames cannot find that location!");
                 return;
             }
-
-            GeoName loc = geoSearchResult.GeoNames[0];
 
             // obtain timezone
             GeoTimeZoneResult geoTimeZoneResult = client.GetTimezone(loc.Latitude, loc.Longitude).SyncWait();
@@ -108,7 +105,7 @@ namespace SharpIrcBot.Plugins.Time
                 msg.Channel,
                 lucky
                     ? $"{msg.SenderNickname}: The time there is {time:yyyy-MM-dd HH:mm:ss}."
-                    : $"{msg.SenderNickname}: The time in {geoSearchResult.GeoNames[0].Name} is {time:yyyy-MM-dd HH:mm:ss}."
+                    : $"{msg.SenderNickname}: The time in {loc.Name} is {time:yyyy-MM-dd HH:mm:ss}."
             );
         }
     }
