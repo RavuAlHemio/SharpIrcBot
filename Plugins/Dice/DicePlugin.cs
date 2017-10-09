@@ -185,7 +185,7 @@ namespace SharpIrcBot.Plugins.Dice
             {
                 cdState.CooldownTriggered = true;
                 string cdAnswer = Config.CooldownAnswers[ChosenRNG(cmd).Next(Config.CooldownAnswers.Count)];
-                ConnectionManager.SendChannelMessageFormat(args.Channel, "{0}: {1}", args.Channel, cdAnswer);
+                ConnectionManager.SendChannelMessageFormat(args.Channel, "{0}: {1}", args.SenderNickname, cdAnswer);
                 return true;
             }
 
