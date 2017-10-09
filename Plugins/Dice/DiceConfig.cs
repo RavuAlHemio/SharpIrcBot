@@ -17,6 +17,8 @@ namespace SharpIrcBot.Plugins.Dice
 
         public List<string> SpecialDecisionAnswers { get; set; }
 
+        public List<string> CooldownAnswers { get; set; }
+
         public int SpecialDecisionAnswerPercent { get; set; }
 
         public int MaxRollCount { get; set; }
@@ -25,6 +27,10 @@ namespace SharpIrcBot.Plugins.Dice
 
         public int MaxSideCount { get; set; }
 
+        public long CooldownPerCommandUsage { get; set; }
+
+        public long CooldownUpperBoundary { get; set; }
+
         public DiceConfig(JObject obj)
         {
             Channels = new HashSet<string>();
@@ -32,11 +38,15 @@ namespace SharpIrcBot.Plugins.Dice
             YesNoAnswers = new List<string>();
             DecisionSplitters = new List<string>();
             SpecialDecisionAnswers = new List<string>();
+            CooldownAnswers = new List<string>();
 
             SpecialDecisionAnswerPercent = 10;
             MaxRollCount = 16;
             MaxDiceCount = 1024;
             MaxSideCount = 1048576;
+
+            CooldownPerCommandUsage = 4;
+            CooldownUpperBoundary = 32;
 
             var ser = new JsonSerializer();
             ser.Populate(obj.CreateReader(), this);

@@ -26,6 +26,7 @@ namespace SharpIrcBot.Plugins.Dice
         protected DiceConfig Config { get; set; }
         protected Random RNG { get; set; }
         protected CryptoRandom CryptoRNG { get; set; }
+        protected Dictionary<string, CooldownState> ChannelToCooldown { get; set; }
 
         public DicePlugin(IConnectionManager connMgr, JObject config)
         {
@@ -33,6 +34,7 @@ namespace SharpIrcBot.Plugins.Dice
             Config = new DiceConfig(config);
             RNG = new Random();
             CryptoRNG = new CryptoRandom();
+            ChannelToCooldown = new Dictionary<string, CooldownState>();
 
             ImmutableList<KeyValuePair<string, IArgumentTaker>> cryptoOption =
                 CommandUtil.MakeOptions(
@@ -67,6 +69,7 @@ namespace SharpIrcBot.Plugins.Dice
                 ),
                 HandleDecideCommand
             );
+            ConnectionManager.ChannelMessage += HandleChannelMessage;
         }
 
         public virtual void ReloadConfiguration(JObject newConfig)
@@ -157,14 +160,56 @@ namespace SharpIrcBot.Plugins.Dice
             ConnectionManager.SendChannelMessageFormat(args.Channel, "{0}: {1}", args.SenderNickname, allRollsString);
         }
 
+        protected virtual bool CheckAndHandleCooldown(CommandMatch cmd, IChannelMessageEventArgs args)
+        {
+            if (Config.CooldownUpperBoundary < 0)
+            {
+                // the cooldown feature is not being used
+                return false;
+            }
+
+            CooldownState cdState;
+            if (!ChannelToCooldown.TryGetValue(args.Channel, out cdState))
+            {
+                cdState = new CooldownState();
+                ChannelToCooldown[args.Channel] = cdState;
+            }
+
+            cdState.CooldownValue += Config.CooldownPerCommandUsage;
+
+            bool coolingDown = (cdState.CooldownTriggered)
+                ? (cdState.CooldownValue > 0)
+                : (cdState.CooldownValue > Config.CooldownUpperBoundary);
+
+            if (coolingDown)
+            {
+                cdState.CooldownTriggered = true;
+                string cdAnswer = Config.CooldownAnswers[ChosenRNG(cmd).Next(Config.CooldownAnswers.Count)];
+                ConnectionManager.SendChannelMessageFormat(args.Channel, "{0}: {1}", args.Channel, cdAnswer);
+                return true;
+            }
+
+            return false;
+        }
+
         protected virtual void HandleYesNoCommand(CommandMatch cmd, IChannelMessageEventArgs args)
         {
+            if (CheckAndHandleCooldown(cmd, args))
+            {
+                return;
+            }
+
             string yesNoAnswer = Config.YesNoAnswers[ChosenRNG(cmd).Next(Config.YesNoAnswers.Count)];
             ConnectionManager.SendChannelMessageFormat(args.Channel, "{0}: {1}", args.SenderNickname, yesNoAnswer);
         }
 
         protected virtual void HandleDecideCommand(CommandMatch cmd, IChannelMessageEventArgs args)
         {
+            if (CheckAndHandleCooldown(cmd, args))
+            {
+                return;
+            }
+
             string decisionString = ((string)cmd.Arguments[0]).Trim();
 
             string splitter = Config.DecisionSplitters.FirstOrDefault(ds => decisionString.Contains(ds));
@@ -190,6 +235,31 @@ namespace SharpIrcBot.Plugins.Dice
             var options = decisionString.Split(new[] {splitter}, StringSplitOptions.None);
             var chosenOption = options[rng.Next(options.Length)];
             ConnectionManager.SendChannelMessageFormat(args.Channel, "{0}: {1}", args.SenderNickname, chosenOption);
+        }
+
+        protected virtual void HandleChannelMessage(object sender, IChannelMessageEventArgs args, MessageFlags flags)
+        {
+            if (Config.CooldownUpperBoundary < 0)
+            {
+                // the cooldown feature is not being used
+                return;
+            }
+
+            CooldownState cdState;
+            if (!ChannelToCooldown.TryGetValue(args.Channel, out cdState))
+            {
+                cdState = new CooldownState();
+                ChannelToCooldown[args.Channel] = cdState;
+            }
+
+            if (cdState.CooldownValue > 0)
+            {
+                --cdState.CooldownValue;
+                if (cdState.CooldownValue == 0)
+                {
+                    cdState.CooldownTriggered = false;
+                }
+            }
         }
 
         protected static int? MaybeParseIntGroup(Group grp, int? defaultValue = null)
