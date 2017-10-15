@@ -370,7 +370,7 @@ namespace SharpIrcBot.Plugins.LinkInfo
                 ? $"{ShortenLink(linkAndInfo.OriginalLink.AbsoluteUri)} -> "
                 : "";
 
-            post($"{redirectedString}{ShortenLink(linkString)} {(linkAndInfo.IsError ? ":!:" : "::")} {info}{domainAnnotationString}");
+            post($"{redirectedString}{ShortenLink(linkString)} {(linkAndInfo.IsError ? ":!:" : "::")} {ShortenInfo(info)}{domainAnnotationString}");
         }
 
         protected bool TryCreateUriHeuristically(string word, out Uri uri)
@@ -522,6 +522,30 @@ namespace SharpIrcBot.Plugins.LinkInfo
             // still not short enough; just forcefully shorten the link
             string joinedUp = string.Join("/", bits);
             return joinedUp.Substring(0, maxLength - 5) + "[...]";
+        }
+
+        protected static string ShortenInfo(string infoString, int maxLength = 512)
+        {
+            const string ellipsis = "[...]";
+
+            if (infoString.Length <= maxLength)
+            {
+                return infoString;
+            }
+
+            // cut at words
+            string[] words = infoString.Split(new[] {' '}, StringSplitOptions.None);
+            for (int i = words.Length - 2; i > 0; --i)
+            {
+                string joinedEllipsized = string.Join(" ", words.Take(i)) + " " + ellipsis;
+                if (joinedEllipsized.Length <= maxLength)
+                {
+                    return joinedEllipsized;
+                }
+            }
+
+            // make a hard cut
+            return infoString.Substring(0, maxLength - ellipsis.Length) + ellipsis;
         }
     }
 }
