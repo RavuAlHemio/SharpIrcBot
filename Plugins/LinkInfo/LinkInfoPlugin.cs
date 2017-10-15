@@ -462,8 +462,19 @@ namespace SharpIrcBot.Plugins.LinkInfo
             e.Chunks = SharpIrcBotUtil.SimplifyAdjacentTextChunks(newChunks);
         }
 
-        protected static string ShortenLink(string linkString, int maxLength = 256)
+        protected virtual string ShortenLink(string linkString)
         {
+            return ShortenLink(linkString, Config.MaxLinkLength);
+        }
+
+        protected static string ShortenLink(string linkString, int maxLength /* = 256 */)
+        {
+            if (maxLength <= 0)
+            {
+                // don't shorten
+                return linkString;
+            }
+
             if (linkString.Length <= maxLength)
             {
                 // good, good
@@ -524,9 +535,19 @@ namespace SharpIrcBot.Plugins.LinkInfo
             return joinedUp.Substring(0, maxLength - 5) + "[...]";
         }
 
-        protected static string ShortenInfo(string infoString, int maxLength = 512)
+        protected virtual string ShortenInfo(string infoString)
+        {
+            return ShortenInfo(infoString, Config.MaxInfoLength);
+        }
+
+        protected static string ShortenInfo(string infoString, int maxLength /* = 512 */)
         {
             const string ellipsis = "[...]";
+
+            if (maxLength <= 0)
+            {
+                return infoString;
+            }
 
             if (infoString.Length <= maxLength)
             {

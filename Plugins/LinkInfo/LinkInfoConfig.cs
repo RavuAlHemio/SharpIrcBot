@@ -16,6 +16,8 @@ namespace SharpIrcBot.Plugins.LinkInfo
         public Dictionary<string, string> FakeResponses { get; set; }
         public string TLDListFile { get; set; }
         public int MaxRedirects { get; set; }
+        public int MaxLinkLength { get; set; }
+        public int MaxInfoLength { get; set; }
         public Dictionary<string, string> DomainAnnotations { get; set; }
         public List<PluginConfig> LinkResolverPlugins { get; set; }
 
@@ -28,6 +30,8 @@ namespace SharpIrcBot.Plugins.LinkInfo
             FakeResponses = new Dictionary<string, string>();
             TLDListFile = null;
             MaxRedirects = 16;
+            MaxLinkLength = 256;
+            MaxInfoLength = 512;
             DomainAnnotations = new Dictionary<string, string>();
             LinkResolverPlugins = new List<PluginConfig>();
 
