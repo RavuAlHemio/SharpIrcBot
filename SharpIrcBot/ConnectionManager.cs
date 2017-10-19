@@ -170,6 +170,8 @@ namespace SharpIrcBot
                     }
                 }
 
+                Logger.LogInformation("reconnect cooldown: sleeping for {Seconds} seconds", cooldown.TotalSeconds);
+
                 Thread.Sleep(cooldown);
             }
         }
