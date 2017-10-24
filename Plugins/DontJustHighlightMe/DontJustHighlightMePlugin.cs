@@ -50,57 +50,74 @@ namespace SharpIrcBot.Plugins.DontJustHighlightMe
 
         protected void ProcessPotentialHighlight(IChannelMessageEventArgs args)
         {
-            var trimmedMessage = args.Message.Trim();
-            if (trimmedMessage.Contains(" "))
+            List<string> potentialNicks = Config.NonNicknameRegex
+                .Split(args.Message)
+                .Where(n => n.Length > 0)
+                .ToList();
+            if (potentialNicks.Count == 0)
             {
-                // more than one word => no highlight-only message
+                // nope
                 return;
             }
 
-            var trimmedLowerMessage = trimmedMessage.ToLowerInvariant();
-            string highlightee = null;
-
-            var lowercaseChannelUsernameEnumerable = ConnectionManager
-                .NicknamesInChannel(args.Channel)
-                .Select(nick => nick.ToLowerInvariant());
-            var lowercaseChannelUsernames = new HashSet<string>(lowercaseChannelUsernameEnumerable);
-
-            // is it a username of a user in the list?
-            if (lowercaseChannelUsernames.Contains(trimmedLowerMessage))
+            if (potentialNicks.Any(n => !ConnectionManager.IsValidNickname(n)))
             {
-                // found one!
-                Logger.LogDebug("{Message} is a highlight", trimmedLowerMessage);
-                highlightee = trimmedLowerMessage;
+                // one of those is not a nick; nevermind
+                return;
             }
 
-            if (highlightee == null)
+            var lowercaseChannelUsernames = new HashSet<string>(
+                ConnectionManager
+                    .NicknamesInChannel(args.Channel)
+                    .Select(nick => nick.ToLowerInvariant())
+            );
+
+            var lowercaseHighlights = new HashSet<string>();
+            foreach (string potentialNick in potentialNicks)
             {
-                // is it an alias of a user in the list?
-                if (Config.UserAliases.ContainsKey(trimmedLowerMessage))
+                string lowerPotentialNick = potentialNick.ToLowerInvariant();
+
+                // is it a nickname?
+                bool isHighlight = false;
+                if (lowercaseChannelUsernames.Contains(lowerPotentialNick))
                 {
                     // yes
+                    isHighlight = true;
+                }
+                else
+                {
+                    // is it an alias?
 
-                    var lowerBaseNick = Config.UserAliases[trimmedLowerMessage].ToLowerInvariant();
-
-                    // is that user currently in the channel?
-                    if (lowercaseChannelUsernames.Contains(lowerBaseNick))
+                    string alias;
+                    if (Config.UserAliases.TryGetValue(lowerPotentialNick, out alias))
                     {
-                        // yes
-                        Logger.LogDebug("{Message} highlights {Nickname}", trimmedLowerMessage, lowerBaseNick);
-                        highlightee = lowerBaseNick;
+                        // yes; is the user in the channel?
+                        if (lowercaseChannelUsernames.Contains(alias.ToLowerInvariant()))
+                        {
+                            // yes
+                            isHighlight = true;
+                        }
                     }
                 }
+
+                if (!isHighlight)
+                {
+                    // well nevermind then
+                    return;
+                }
+
+                lowercaseHighlights.Add(potentialNick);
             }
 
-            if (highlightee == null)
+            if (lowercaseHighlights.Count == 0)
             {
-                // user not found; never mind
+                // nobody being highlighted
                 return;
             }
 
-            if (highlightee == args.SenderNickname.ToLowerInvariant())
+            if (lowercaseHighlights.All(lch => lch == args.SenderNickname.ToLowerInvariant()))
             {
-                // user is naming themselves; never mind
+                // the user is only naming themselves; never mind
                 return;
             }
 
@@ -119,7 +136,7 @@ namespace SharpIrcBot.Plugins.DontJustHighlightMe
             int delay = RNG.Next(Config.DelayMinMessages, Config.DelayMaxMessages + 1);
 
             // add to list
-            NicknamesOnDelay.AddLast(new HighlightOccurrence(args.SenderNickname, highlightee, args.Channel, delay));
+            NicknamesOnDelay.AddLast(new HighlightOccurrence(args.SenderNickname, lowercaseHighlights.First(), args.Channel, delay));
         }
 
         protected void ProcessPendingRetributions()

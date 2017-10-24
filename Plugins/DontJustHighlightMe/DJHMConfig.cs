@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Text.RegularExpressions;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -10,6 +11,16 @@ namespace SharpIrcBot.Plugins.DontJustHighlightMe
         public HashSet<string> Channels { get; set; }
 
         public Dictionary<string, string> UserAliases { get; set; }
+
+        [JsonProperty("NonNicknameRegex")]
+        public string NonNicknameRegexString
+        {
+            get { return NonNicknameRegex.ToString(); }
+            set { NonNicknameRegex = new Regex(value, RegexOptions.Compiled); }
+        }
+
+        [JsonIgnore]
+        public Regex NonNicknameRegex { get; set; }
 
         public bool Kick { get; set; }
 
@@ -25,6 +36,7 @@ namespace SharpIrcBot.Plugins.DontJustHighlightMe
         {
             Channels = new HashSet<string>();
             UserAliases = new Dictionary<string, string>();
+            NonNicknameRegex = new Regex("[^a-zA-Z0-9_\\\\\\[\\]{}^`|-]+", RegexOptions.Compiled);
             Kick = false;
             KickMessage = "Don't just highlight someone, tell them what you want!";
             TriggerPercentage = null;
