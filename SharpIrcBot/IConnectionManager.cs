@@ -61,6 +61,7 @@ namespace SharpIrcBot
         [CanBeNull] IReadOnlyList<string> NicknamesInChannel([CanBeNull] string channel);
         ChannelUserLevel GetChannelLevelForUser([NotNull] string channel, [NotNull] string nick);
         List<IMessageChunk> SplitMessageToChunks(string message);
+        bool IsValidNickname(string nickname);
 
         void ReloadConfiguration();
     }

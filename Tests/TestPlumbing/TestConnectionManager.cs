@@ -161,6 +161,11 @@ namespace SharpIrcBot.Tests.TestPlumbing
             return eventArgs.Chunks;
         }
 
+        public virtual bool IsValidNickname(string nick)
+        {
+            throw new NotImplementedException();
+        }
+
         public void ReloadConfiguration()
         {
             throw new NotImplementedException();

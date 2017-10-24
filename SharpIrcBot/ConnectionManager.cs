@@ -582,5 +582,10 @@ namespace SharpIrcBot
 
             return ChannelUserLevel.Normal;
         }
+
+        public virtual bool IsValidNickname(string nick)
+        {
+            return Config.NicknameRegex.IsMatch(nick);
+        }
     }
 }

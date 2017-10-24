@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Text.RegularExpressions;
 using JetBrains.Annotations;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -44,6 +45,16 @@ namespace SharpIrcBot.Config
 
         public CommandConfig Commands { get; set; }
 
+        [JsonProperty("NicknameRegex")]
+        public string NicknameRegexString
+        {
+            get { return NicknameRegex.ToString(); }
+            set { NicknameRegex = new Regex(value, RegexOptions.Compiled); }
+        }
+
+        [JsonIgnore]
+        public Regex NicknameRegex { get; set; }
+
         public BotConfig(JObject obj)
         {
             ServerPort = 6669;
@@ -68,6 +79,8 @@ namespace SharpIrcBot.Config
             );
 
             Commands = new CommandConfig();
+
+            NicknameRegex = new Regex("^[a-zA-Z_\\\\\\[\\]{}^`|][a-zA-Z0-9_\\\\\\[\\]{}^`|-]*$", RegexOptions.Compiled);
 
             JsonSerializer.CreateDefault().Populate(obj.CreateReader(), this);
 
