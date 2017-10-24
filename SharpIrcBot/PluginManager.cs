@@ -42,12 +42,16 @@ namespace SharpIrcBot
 
         public void ReloadConfigurations([NotNull] List<PluginConfig> newPluginConfigs)
         {
-            if (Plugins.Count != newPluginConfigs.Count)
+            List<PluginConfig> newEnabledPluginConfigs = newPluginConfigs
+                .Where(pc => pc.Enabled)
+                .ToList();
+
+            if (Plugins.Count != newEnabledPluginConfigs.Count)
             {
-                throw new ArgumentException("number of plugins changed", nameof(newPluginConfigs));
+                throw new ArgumentException("number of enabled plugins changed", nameof(newPluginConfigs));
             }
 
-            foreach (var pluginPair in Enumerable.Zip(Plugins, newPluginConfigs, Tuple.Create))
+            foreach (var pluginPair in Enumerable.Zip(Plugins, newEnabledPluginConfigs, Tuple.Create))
             {
                 IPlugin plugin = pluginPair.Item1;
                 PluginConfig newConfig = pluginPair.Item2;
