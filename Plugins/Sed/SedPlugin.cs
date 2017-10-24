@@ -100,7 +100,15 @@ namespace SharpIrcBot.Plugins.Sed
                 if (replaced != lastBody)
                 {
                     // success!
-                    ConnectionManager.SendChannelMessage(e.Channel, replaced);
+                    if (Config.MaxResultLength >= 0 && replaced.Length > Config.MaxResultLength)
+                    {
+                        ConnectionManager.SendChannelMessage(e.Channel, Config.ResultTooLongMessage);
+                    }
+                    else
+                    {
+                        ConnectionManager.SendChannelMessage(e.Channel, replaced);
+                    }
+
                     foundAny = true;
                     break;
                 }
