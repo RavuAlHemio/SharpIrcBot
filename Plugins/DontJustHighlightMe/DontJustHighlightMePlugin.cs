@@ -50,6 +50,17 @@ namespace SharpIrcBot.Plugins.DontJustHighlightMe
 
         protected void ProcessPotentialHighlight(IChannelMessageEventArgs args)
         {
+            string nickLower = args.SenderNickname.ToLowerInvariant();
+            string unameLower = ConnectionManager.RegisteredNameForNick(args.SenderNickname)?.ToLowerInvariant();
+            if (Config.LowercaseImmuneNicksOrUsernames.Contains(nickLower))
+            {
+                return;
+            }
+            if (unameLower != null && Config.LowercaseImmuneNicksOrUsernames.Contains(unameLower))
+            {
+                return;
+            }
+
             List<string> potentialNicks = Config.NonNicknameRegex
                 .Split(args.Message)
                 .Where(n => n.Length > 0)
