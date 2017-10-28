@@ -117,6 +117,32 @@ namespace SharpIrcBot.Plugins.Demoderation
                 HandleDeleteImmunityCommand
             );
 
+            ConnectionManager.CommandManager.RegisterChannelMessageCommandHandler(
+                new Command(
+                    CommandUtil.MakeNames("dmpermaban"),
+                    CommandUtil.NoOptions,
+                    CommandUtil.MakeArguments(
+                        CommandUtil.NonzeroStringMatcherRequiredWordTaker, // nickname
+                        new RegexMatcher("(?:[#+&][^ ,:]+|GLOBAL)").ToRequiredWordTaker() // channel or "GLOBAL"
+                    ),
+                    forbiddenFlags: MessageFlags.UserBanned
+                ),
+                HandlePermabanCommand
+            );
+
+            ConnectionManager.CommandManager.RegisterChannelMessageCommandHandler(
+                new Command(
+                    CommandUtil.MakeNames("dmunpermaban"),
+                    CommandUtil.NoOptions,
+                    CommandUtil.MakeArguments(
+                        CommandUtil.NonzeroStringMatcherRequiredWordTaker, // nickname
+                        new RegexMatcher("(?:[#+&][^ ,:]+|GLOBAL)").ToRequiredWordTaker() // channel or "GLOBAL"
+                    ),
+                    forbiddenFlags: MessageFlags.UserBanned
+                ),
+                HandleUnPermabanCommand
+            );
+
             UpdateCommandCache();
         }
 
@@ -455,7 +481,98 @@ namespace SharpIrcBot.Plugins.Demoderation
                 );
             }
 
-            ConnectionManager.SendChannelMessage(message.Channel, $"{message.SenderNickname}: {nickname} is now immune.");
+            ConnectionManager.SendChannelMessage(message.Channel, $"{message.SenderNickname}: {nickname} is no longer immune.");
+        }
+
+        protected virtual void HandlePermabanCommand(CommandMatch cmd, IChannelMessageEventArgs message)
+        {
+            if (!EnsureOp(message))
+            {
+                return;
+            }
+
+            var nickname = (string)cmd.Arguments[0];
+            string channel = ((Match)cmd.Arguments[1]).Value;
+
+            if (channel == "GLOBAL")
+            {
+                channel = null;
+            }
+
+            using (DemoderationContext ctx = GetNewContext())
+            {
+                Permaban pban = ctx.Permabans
+                    .FirstOrDefault(pb =>
+                        pb.NicknameOrUsername.ToLowerInvariant() == nickname.ToLowerInvariant()
+                        && pb.Channel == channel
+                    );
+                if (pban != null)
+                {
+                    ConnectionManager.SendChannelMessage(message.Channel, $"{message.SenderNickname}: {nickname} is already permabanned.");
+                    return;
+                }
+
+                pban = new Permaban
+                {
+                    NicknameOrUsername = nickname,
+                    Channel = channel
+                };
+                ctx.Permabans.Add(pban);
+                ctx.SaveChanges();
+
+                Logger.LogDebug(
+                    "{OpNickname} adds permaban {ID} of {BannedNickname} in {Channel}",
+                    message.SenderNickname,
+                    pban.ID,
+                    pban.NicknameOrUsername,
+                    pban.Channel
+                );
+            }
+
+            ConnectionManager.SendChannelMessage(message.Channel, $"{message.SenderNickname}: {nickname} is now permabanned.");
+        }
+
+        protected virtual void HandleUnPermabanCommand(CommandMatch cmd, IChannelMessageEventArgs message)
+        {
+            if (!EnsureOp(message))
+            {
+                return;
+            }
+
+            var nickname = (string)cmd.Arguments[0];
+            string channel = ((Match)cmd.Arguments[1]).Value;
+
+            if (channel == "GLOBAL")
+            {
+                channel = null;
+            }
+
+            using (DemoderationContext ctx = GetNewContext())
+            {
+                Permaban pban = ctx.Permabans
+                    .FirstOrDefault(pb =>
+                        pb.NicknameOrUsername.ToLowerInvariant() == nickname.ToLowerInvariant()
+                        && pb.Channel == channel
+                    );
+                if (pban == null)
+                {
+                    ConnectionManager.SendChannelMessage(message.Channel, $"{message.SenderNickname}: {nickname} is not permabanned.");
+                    return;
+                }
+
+                ctx.Permabans.Remove(pban);
+                ctx.SaveChanges();
+
+                Logger.LogDebug(
+                    "{OpNickname} deletes permaban {ID} previously laid upon {BannedNickname} in {Channel}",
+                    message.SenderNickname,
+                    pban.ID,
+                    pban.NicknameOrUsername,
+                    pban.Channel
+                );
+            }
+
+            ConnectionManager.SendChannelMessage(message.Channel, $"{message.SenderNickname}: {nickname} is no longer permabanned.");
         }
 
         protected virtual bool EnsureOp(IChannelMessageEventArgs message)
@@ -552,6 +669,16 @@ namespace SharpIrcBot.Plugins.Demoderation
             Ban ban;
             using (DemoderationContext ctx = GetNewContext())
             {
+                // is the sender permabanned?
+                if (IsPermabanned(ctx, channel, senderNickname))
+                {
+                    ConnectionManager.SendChannelMessage(
+                        channel,
+                        $"{senderNickname}: You are banned from using this command."
+                    );
+                    return;
+                }
+
                 // obtain the criterion
                 crit = ctx.Criteria
                     .Where(c => c.Enabled && c.Channel == channel)
@@ -687,6 +814,26 @@ namespace SharpIrcBot.Plugins.Demoderation
                 && (
                     i.Channel == null
                     || i.Channel.ToLowerInvariant() == channel.ToLowerInvariant()
+                )
+            );
+        }
+
+        protected virtual bool IsPermabanned(DemoderationContext ctx, string channel, string nickname)
+        {
+            string usernameLower = ConnectionManager.RegisteredNameForNick(nickname)
+                ?.ToLowerInvariant();
+
+            return ctx.Permabans.Any(pb =>
+                (
+                    pb.NicknameOrUsername.ToLowerInvariant() == nickname.ToLowerInvariant()
+                    || (
+                        usernameLower != null
+                        && pb.NicknameOrUsername.ToLowerInvariant() == usernameLower
+                    )
+                )
+                && (
+                    pb.Channel == null
+                    || pb.Channel.ToLowerInvariant() == channel.ToLowerInvariant()
                 )
             );
         }

@@ -8,6 +8,7 @@ namespace SharpIrcBot.Plugins.Demoderation.ORM
         public DbSet<Ban> Bans { get; set; }
         public DbSet<Abuse> Abuses { get; set; }
         public DbSet<Immunity> Immunities { get; set; }
+        public DbSet<Permaban> Permabans { get; set; }
 
         public DemoderationContext(DbContextOptions<DemoderationContext> options)
             : base(options)
@@ -23,6 +24,8 @@ namespace SharpIrcBot.Plugins.Demoderation.ORM
             builder.ForNpgsqlHasSequence<long>("seq__abuses__id", schema: "demoderation")
                 .StartsAt(1);
             builder.ForNpgsqlHasSequence<long>("seq__immunities__id", schema: "demoderation")
+                .StartsAt(1);
+            builder.ForNpgsqlHasSequence<long>("seq__permabans__id", schema: "demoderation")
                 .StartsAt(1);
 
             builder.Entity<Criterion>(criterion =>
@@ -181,6 +184,28 @@ namespace SharpIrcBot.Plugins.Demoderation.ORM
                     .HasColumnName("nickname_or_username");
 
                 immunity.Property(i => i.Channel)
+                    .IsRequired(false)
+                    .HasMaxLength(255)
+                    .HasColumnName("channel");
+            });
+
+            builder.Entity<Permaban>(permaban =>
+            {
+                permaban.ToTable("permabans", schema: "demoderation");
+                permaban.HasKey(b => b.ID);
+
+                permaban.Property(b => b.ID)
+                    .IsRequired()
+                    .HasColumnName("id")
+                    .ValueGeneratedOnAdd()
+                    .ForNpgsqlHasDefaultValueSql("nextval('demoderation.seq__permabans__id')");
+
+                permaban.Property(b => b.NicknameOrUsername)
+                    .IsRequired()
+                    .HasMaxLength(255)
+                    .HasColumnName("nickname_or_username");
+
+                permaban.Property(b => b.Channel)
                     .IsRequired(false)
                     .HasMaxLength(255)
                     .HasColumnName("channel");
