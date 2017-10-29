@@ -61,6 +61,12 @@ namespace SharpIrcBot.Plugins.DontJustHighlightMe
                 return;
             }
 
+            if (Config.NotJustAHighlightRegex.IsMatch(args.Message))
+            {
+                // not a highlight-only message
+                return;
+            }
+
             List<string> potentialNicks = Config.NonNicknameRegex
                 .Split(args.Message)
                 .Where(n => n.Length > 0)
