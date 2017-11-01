@@ -18,6 +18,7 @@
     <ProjectReference Include="..\Plugins\AlsoKnownAs\AlsoKnownAs.csproj" />
     <ProjectReference Include="..\Plugins\Belch\Belch.csproj" />
     <ProjectReference Include="..\Plugins\CasinoBot\CasinoBot.csproj" />
+    <ProjectReference Include="..\Plugins\Counters\Counters.csproj" />
     <ProjectReference Include="..\Plugins\DasIstNenFehler\DasIstNenFehler.csproj" />
     <ProjectReference Include="..\Plugins\DatabaseNickMapping\DatabaseNickMapping.csproj" />
     <ProjectReference Include="..\Plugins\Demoderation\Demoderation.csproj" />
