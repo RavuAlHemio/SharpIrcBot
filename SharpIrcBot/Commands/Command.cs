@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
@@ -6,7 +7,7 @@ using SharpIrcBot.Config;
 
 namespace SharpIrcBot.Commands
 {
-    public class Command
+    public class Command : IEquatable<Command>
     {
         public ImmutableList<string> CommandNames { get; }
         public ImmutableList<KeyValuePair<string, IArgumentTaker>> Options { get; }
@@ -186,6 +187,87 @@ namespace SharpIrcBot.Commands
                 args.ToImmutable(),
                 messageFlags
             );
+        }
+
+        public bool Equals(Command other)
+        {
+            if (!this.CommandNames.SequenceEqual(other.CommandNames))
+            {
+                return false;
+            }
+
+            if (this.Options.Count != other.Options.Count)
+            {
+                return false;
+            }
+            for (int i = 0; i < this.Options.Count; ++i)
+            {
+                if (this.Options[i].Key != other.Options[i].Key)
+                {
+                    return false;
+                }
+
+                if (this.Options[i].Value != other.Options[i].Value)
+                {
+                    return false;
+                }
+            }
+
+            if (!this.Arguments.SequenceEqual(other.Arguments))
+            {
+                return false;
+            }
+
+            if (this.RequiredFlags != other.RequiredFlags)
+            {
+                return false;
+            }
+
+            if (this.ForbiddenFlags != other.ForbiddenFlags)
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (obj == null)
+            {
+                return false;
+            }
+
+            if (this.GetType() != obj.GetType())
+            {
+                return false;
+            }
+
+            return this.Equals((Command)obj);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                int hashCode = 0;
+                foreach (string commandName in CommandNames)
+                {
+                    hashCode = (hashCode * 397) ^ commandName.GetHashCode();
+                }
+                foreach (KeyValuePair<string, IArgumentTaker> option in Options)
+                {
+                    hashCode = (hashCode * 397) ^ option.Key.GetHashCode();
+                    hashCode = (hashCode * 397) ^ option.Value.GetHashCode();
+                }
+                foreach (IArgumentTaker argument in Arguments)
+                {
+                    hashCode = (hashCode * 397) ^ argument.GetHashCode();
+                }
+                hashCode = (hashCode * 397) ^ RequiredFlags.GetHashCode();
+                hashCode = (hashCode * 397) ^ ForbiddenFlags.GetHashCode();
+                return hashCode;
+            }
         }
     }
 }
