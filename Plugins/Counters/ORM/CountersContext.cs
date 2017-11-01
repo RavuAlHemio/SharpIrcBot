@@ -1,0 +1,73 @@
+using System.Linq;
+using Microsoft.EntityFrameworkCore;
+
+namespace SharpIrcBot.Plugins.Counters.ORM
+{
+    public class CountersContext : DbContext
+    {
+        public DbSet<CounterEntry> Entries { get; set; }
+
+        public CountersContext(DbContextOptions<CountersContext> options)
+            : base(options)
+        {
+        }
+
+        protected override void OnModelCreating(ModelBuilder builder)
+        {
+            builder.ForNpgsqlHasSequence<long>("seq__entries__id", schema: "counters")
+                .StartsAt(1);
+
+            builder.Entity<CounterEntry>(entBuilder =>
+            {
+                entBuilder.ToTable("entries", schema: "counters");
+                entBuilder.HasKey(ce => ce.ID);
+                entBuilder.HasIndex(ce => ce.Command)
+                    .ForNpgsqlHasName("idx__entries__command");
+
+                entBuilder.Property(ce => ce.ID)
+                    .IsRequired()
+                    .HasColumnName("id")
+                    .ValueGeneratedOnAdd()
+                    .ForNpgsqlHasDefaultValueSql("nextval('counters.seq__entries__id')");
+
+                entBuilder.Property(ce => ce.Command)
+                    .IsRequired()
+                    .HasMaxLength(255)
+                    .HasColumnName("command");
+
+                entBuilder.Property(ce => ce.Timestamp)
+                    .IsRequired()
+                    .HasColumnName("timestamp");
+
+                entBuilder.Property(ce => ce.Channel)
+                    .IsRequired()
+                    .HasMaxLength(255)
+                    .HasColumnName("channel");
+
+                entBuilder.Property(ce => ce.PerpNickname)
+                    .IsRequired()
+                    .HasMaxLength(255)
+                    .HasColumnName("perp_nickname");
+
+                entBuilder.Property(ce => ce.PerpUsername)
+                    .IsRequired(false)
+                    .HasMaxLength(255)
+                    .HasColumnName("perp_username");
+
+                entBuilder.Property(ce => ce.CounterNickname)
+                    .IsRequired()
+                    .HasMaxLength(255)
+                    .HasColumnName("counter_nickname");
+
+                entBuilder.Property(ce => ce.CounterUsername)
+                    .IsRequired(false)
+                    .HasMaxLength(255)
+                    .HasColumnName("counter_username");
+
+                entBuilder.Property(ce => ce.Message)
+                    .IsRequired(false)
+                    .HasColumnName("message");
+            });
+        }
+    }
+}
