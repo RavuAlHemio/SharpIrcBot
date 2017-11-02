@@ -2,6 +2,10 @@
 
   <PropertyGroup>
     <TargetFrameworks>netstandard1.6;net461</TargetFrameworks>
+    <DebugType>portable</DebugType>
+    <RootNamespace>SharpIrcBot.Plugins.Libraries.GeoNames</RootNamespace>
+    <AssemblyName>SharpIrcBot.Plugins.Libraries.GeoNames</AssemblyName>
+    <PackageId>SharpIrcBot.Plugins.Libraries.GeoNames</PackageId>
   </PropertyGroup>
 
   <ItemGroup>
