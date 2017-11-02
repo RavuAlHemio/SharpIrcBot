@@ -69,7 +69,7 @@ namespace SharpIrcBot.Plugins.Counters.ORM
                     .HasColumnName("counter_username");
 
                 entBuilder.Property(ce => ce.Message)
-                    .IsRequired(false)
+                    .IsRequired()
                     .HasColumnName("message");
             });
         }
