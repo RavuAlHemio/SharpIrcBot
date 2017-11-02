@@ -35,9 +35,13 @@ namespace SharpIrcBot.Plugins.Counters.ORM
                     .HasMaxLength(255)
                     .HasColumnName("command");
 
-                entBuilder.Property(ce => ce.Timestamp)
+                entBuilder.Property(ce => ce.HappenedTimestamp)
                     .IsRequired()
-                    .HasColumnName("timestamp");
+                    .HasColumnName("happened_timestamp");
+
+                entBuilder.Property(ce => ce.CountedTimestamp)
+                    .IsRequired()
+                    .HasColumnName("counted_timestamp");
 
                 entBuilder.Property(ce => ce.Channel)
                     .IsRequired()

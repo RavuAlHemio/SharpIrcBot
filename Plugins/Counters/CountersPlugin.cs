@@ -124,7 +124,8 @@ namespace SharpIrcBot.Plugins.Counters
                 ctx.Entries.Add(new CounterEntry
                 {
                     Command = commandMatch.CommandName,
-                    Timestamp = DateTimeOffset.Now,
+                    HappenedTimestamp = foundMessage.Timestamp,
+                    CountedTimestamp = DateTimeOffset.Now,
                     Channel = msg.Channel,
                     PerpNickname = foundMessage.Nickname,
                     PerpUsername = foundMessage.Username,
@@ -164,6 +165,7 @@ namespace SharpIrcBot.Plugins.Counters
                 Nickname = args.SenderNickname,
                 Username = ConnectionManager.RegisteredNameForNick(args.SenderNickname),
                 Body = args.Message,
+                Timestamp = DateTimeOffset.Now,
                 Counted = false
             });
         }

@@ -9,9 +9,11 @@ namespace SharpIrcBot.Plugins.Counters.ORM
 
         public string Command { get; set; }
 
-        public DateTimeOffset Timestamp { get; set; }
-
         public string Channel { get; set; }
+
+        public DateTimeOffset HappenedTimestamp { get; set; }
+
+        public DateTimeOffset CountedTimestamp { get; set; }
 
         public string PerpNickname { get; set; }
 
