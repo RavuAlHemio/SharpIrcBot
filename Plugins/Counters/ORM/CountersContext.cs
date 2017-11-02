@@ -71,6 +71,10 @@ namespace SharpIrcBot.Plugins.Counters.ORM
                 entBuilder.Property(ce => ce.Message)
                     .IsRequired()
                     .HasColumnName("message");
+
+                entBuilder.Property(ce => ce.Expunged)
+                    .IsRequired()
+                    .HasColumnName("expunged");
             });
         }
     }

@@ -131,7 +131,8 @@ namespace SharpIrcBot.Plugins.Counters
                     PerpUsername = foundMessage.Username,
                     CounterNickname = msg.SenderNickname,
                     CounterUsername = ConnectionManager.RegisteredNameForNick(msg.SenderNickname),
-                    Message = foundMessage.Body
+                    Message = foundMessage.Body,
+                    Expunged = false
                 });
                 ctx.SaveChanges();
             }

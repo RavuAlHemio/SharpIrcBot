@@ -26,5 +26,7 @@ namespace SharpIrcBot.Plugins.Counters.ORM
         public string CounterUsername { get; set; }
 
         public string Message { get; set; }
+
+        public bool Expunged { get; set; }
     }
 }
