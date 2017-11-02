@@ -134,6 +134,8 @@ namespace SharpIrcBot.Plugins.Counters
                 });
                 ctx.SaveChanges();
             }
+
+            foundMessage.Counted = true;
         }
 
         protected virtual void HandleChannelMessage(object sender, IChannelMessageEventArgs args, MessageFlags flags)
