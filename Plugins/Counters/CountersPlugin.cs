@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json.Linq;
 using SharpIrcBot.Collections;
 using SharpIrcBot.Commands;
@@ -173,7 +174,7 @@ namespace SharpIrcBot.Plugins.Counters
 
         private CountersContext GetNewContext()
         {
-            var opts = SharpIrcBotUtil.GetContextOptions<CountersContext>(Config);
+            DbContextOptions<CountersContext> opts = SharpIrcBotUtil.GetContextOptions<CountersContext>(Config);
             return new CountersContext(opts);
         }
 
