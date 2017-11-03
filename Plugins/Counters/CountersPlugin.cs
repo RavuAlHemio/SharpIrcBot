@@ -57,7 +57,7 @@ namespace SharpIrcBot.Plugins.Counters
                 var command = new Command(
                     CommandUtil.MakeNames(counter.CommandName),
                     CommandUtil.NoOptions,
-                    CommandUtil.NoArguments,
+                    CommandUtil.MakeArguments(RestTaker.Instance),
                     forbiddenFlags: MessageFlags.UserBanned
                 );
                 ConnectionManager.CommandManager.RegisterChannelMessageCommandHandler(
@@ -71,6 +71,13 @@ namespace SharpIrcBot.Plugins.Counters
         protected virtual void HandleCounterCommand(CommandMatch commandMatch, IChannelMessageEventArgs msg)
         {
             Counter counter = Config.Counters.FirstOrDefault(c => c.CommandName == commandMatch.CommandName);
+            if (counter == null)
+            {
+                // counter gone
+                return;
+            }
+
+            string findMe = ((string)commandMatch.Arguments[0]).Trim();
 
             // go back through time
             RingBuffer<ChannelMessage> messages;
@@ -84,6 +91,11 @@ namespace SharpIrcBot.Plugins.Counters
             ChannelMessage foundMessage = null;
             foreach (ChannelMessage message in messagesReversed)
             {
+                if (!message.Body.Contains(findMe))
+                {
+                    continue;
+                }
+
                 if (counter.MessageRegex != null && !counter.MessageRegex.IsMatch(message.Body))
                 {
                     continue;
