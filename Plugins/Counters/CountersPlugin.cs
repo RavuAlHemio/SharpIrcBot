@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json.Linq;
 using SharpIrcBot.Collections;
 using SharpIrcBot.Commands;
+using SharpIrcBot.Events;
 using SharpIrcBot.Events.Irc;
 using SharpIrcBot.Plugins.Counters.ORM;
 
@@ -27,6 +28,7 @@ namespace SharpIrcBot.Plugins.Counters
             ReregisterCommands();
 
             ConnectionManager.ChannelMessage += HandleChannelMessage;
+            ConnectionManager.BaseNickChanged += HandleBaseNickChanged;
         }
 
         public virtual void ReloadConfiguration(JObject newConfig)
@@ -182,6 +184,33 @@ namespace SharpIrcBot.Plugins.Counters
                 Timestamp = DateTimeOffset.Now,
                 Counted = false
             });
+        }
+
+        protected virtual void HandleBaseNickChanged(object sender, BaseNickChangedEventArgs e)
+        {
+            string oldBaseNick = e.OldBaseNick;
+            string newBaseNick = e.NewBaseNick;
+
+            using (var ctx = GetNewContext())
+            {
+                IQueryable<CounterEntry> matchedEntries;
+                
+                matchedEntries = ctx.Entries
+                    .Where(u => u.CounterUsername == oldBaseNick);
+                foreach (CounterEntry entry in matchedEntries)
+                {
+                    entry.CounterUsername = newBaseNick;
+                }
+                ctx.SaveChanges();
+
+                matchedEntries = ctx.Entries
+                    .Where(u => u.PerpUsername == oldBaseNick);
+                foreach (CounterEntry entry in matchedEntries)
+                {
+                    entry.PerpUsername = newBaseNick;
+                }
+                ctx.SaveChanges();
+            }
         }
 
         private CountersContext GetNewContext()
