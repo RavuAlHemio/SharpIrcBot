@@ -67,7 +67,7 @@ namespace SharpIrcBot.Plugins.DontJustHighlightMe
                 return;
             }
 
-            List<string> potentialNicks = Config.NonNicknameRegex
+            List<string> potentialNicks = Config.NickDelimiterRegex
                 .Split(args.Message)
                 .Where(n => n.Length > 0)
                 .ToList();
