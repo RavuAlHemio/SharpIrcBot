@@ -49,7 +49,7 @@ namespace SharpIrcBot.Plugins.DontJustHighlightMe
             Channels = new HashSet<string>();
             UserAliases = new Dictionary<string, string>();
             LowercaseImmuneNicksOrUsernames = new HashSet<string>();
-            NickDelimiterRegex = new Regex("[^\\p{L}\\p{D}_\\\\\\[\\]{}^`|-]+", RegexOptions.Compiled);
+            NickDelimiterRegex = new Regex("[^\\p{L}\\p{N}_\\\\\\[\\]{}^`|-]+", RegexOptions.Compiled);
             NotJustAHighlightRegex = new Regex("[:;]-?[()/\\\\$!|]|\\^\\^|:[a-z0-9^]+:", RegexOptions.Compiled);
             Kick = false;
             KickMessage = "Don't just highlight someone, tell them what you want!";
