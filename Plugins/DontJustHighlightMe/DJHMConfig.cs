@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -12,7 +13,7 @@ namespace SharpIrcBot.Plugins.DontJustHighlightMe
 
         public Dictionary<string, string> UserAliases { get; set; }
 
-        public HashSet<string> LowercaseImmuneNicksOrUsernames { get; set; }
+        public HashSet<string> ImmuneNicksOrUsernames { get; set; }
 
         [JsonProperty("NonNicknameRegex")]
         public string NonNicknameRegexString
@@ -58,7 +59,7 @@ namespace SharpIrcBot.Plugins.DontJustHighlightMe
         {
             Channels = new HashSet<string>();
             UserAliases = new Dictionary<string, string>();
-            LowercaseImmuneNicksOrUsernames = new HashSet<string>();
+            ImmuneNicksOrUsernames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             NickDelimiterRegex = new Regex("[^\\p{L}\\p{N}_\\\\\\[\\]{}^`|-]+", RegexOptions.Compiled);
             NotJustAHighlightRegex = new Regex("[:;]-?[()/\\\\$!|]|\\^\\^|:[a-z0-9^]+:", RegexOptions.Compiled);
             NickToIgnoreRegex = null;

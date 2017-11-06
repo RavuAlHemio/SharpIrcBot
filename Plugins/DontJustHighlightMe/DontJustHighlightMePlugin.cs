@@ -52,11 +52,11 @@ namespace SharpIrcBot.Plugins.DontJustHighlightMe
         {
             string nickLower = args.SenderNickname.ToLowerInvariant();
             string unameLower = ConnectionManager.RegisteredNameForNick(args.SenderNickname)?.ToLowerInvariant();
-            if (Config.LowercaseImmuneNicksOrUsernames.Contains(nickLower))
+            if (Config.ImmuneNicksOrUsernames.Contains(nickLower))
             {
                 return;
             }
-            if (unameLower != null && Config.LowercaseImmuneNicksOrUsernames.Contains(unameLower))
+            if (unameLower != null && Config.ImmuneNicksOrUsernames.Contains(unameLower))
             {
                 return;
             }
