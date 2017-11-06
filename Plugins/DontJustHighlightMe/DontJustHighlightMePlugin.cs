@@ -92,6 +92,12 @@ namespace SharpIrcBot.Plugins.DontJustHighlightMe
             var lowercaseHighlights = new HashSet<string>();
             foreach (string potentialNick in potentialNicks)
             {
+                if (Config.NickToIgnoreRegex != null && Config.NickToIgnoreRegex.IsMatch(potentialNick))
+                {
+                    // ignore this nick for purposes of highlight detection
+                    return;
+                }
+
                 string lowerPotentialNick = potentialNick.ToLowerInvariant();
 
                 // is it a nickname?

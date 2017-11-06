@@ -34,6 +34,16 @@ namespace SharpIrcBot.Plugins.DontJustHighlightMe
         [JsonIgnore]
         public Regex NotJustAHighlightRegex { get; set; }
 
+        [JsonProperty("NickToIgnoreRegex")]
+        public string NickToIgnoreRegexString
+        {
+            get { return NickToIgnoreRegex?.ToString(); }
+            set { NickToIgnoreRegex = (value == null) ? null : new Regex(value, RegexOptions.Compiled); }
+        }
+
+        [JsonIgnore]
+        public Regex NickToIgnoreRegex { get; set; }
+
         public bool Kick { get; set; }
 
         public string KickMessage { get; set; }
@@ -51,6 +61,7 @@ namespace SharpIrcBot.Plugins.DontJustHighlightMe
             LowercaseImmuneNicksOrUsernames = new HashSet<string>();
             NickDelimiterRegex = new Regex("[^\\p{L}\\p{N}_\\\\\\[\\]{}^`|-]+", RegexOptions.Compiled);
             NotJustAHighlightRegex = new Regex("[:;]-?[()/\\\\$!|]|\\^\\^|:[a-z0-9^]+:", RegexOptions.Compiled);
+            NickToIgnoreRegex = null;
             Kick = false;
             KickMessage = "Don't just highlight someone, tell them what you want!";
             TriggerPercentage = null;
