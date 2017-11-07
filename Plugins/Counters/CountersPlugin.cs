@@ -162,16 +162,6 @@ namespace SharpIrcBot.Plugins.Counters
                 return;
             }
 
-            if (args.Message.StartsWith(ConnectionManager.CommandManager.Config.CommandPrefix))
-            {
-                if (args.Message.TrimEnd().IndexOf(' ') == -1)
-                {
-                    // starts with a command character and has no spaces
-                    // do not consider this message relevant
-                    return;
-                }
-            }
-
             RingBuffer<ChannelMessage> messages = GetOrCreateValue(
                 ChannelsMessages, args.Channel, chan => new RingBuffer<ChannelMessage>(Config.BacklogSize)
             );
