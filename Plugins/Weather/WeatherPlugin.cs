@@ -300,6 +300,15 @@ namespace SharpIrcBot.Plugins.Weather
                 weather.Append(string.Join(", ", forecastBits));
             }
 
+            if (response.CurrentWeather != null && response.CurrentWeather.LastUpdateUnixTimestamp.HasValue)
+            {
+                DateTimeOffset lastUpdate =
+                    DateTimeOffset.FromUnixTimeSeconds(response.CurrentWeather.LastUpdateUnixTimestamp.Value);
+                DateTimeOffset now = DateTimeOffset.Now;
+                TimeSpan delta = lastUpdate - now;
+                weather.AppendFormat("; last updated {0}", FormatTimeSpan(delta));
+            }
+
             ConnectionManager.SendChannelMessage(channel, weather.ToString());
         }
 
@@ -313,6 +322,64 @@ namespace SharpIrcBot.Plugins.Weather
 
             GetWeatherForLocation(location, msg.Channel, msg.SenderNickname, cmd.CommandName[0] == 'l');
         }
+
+        protected virtual string FormatTimeSpan(TimeSpan span)
+        {
+            return FormatTimeSpanImpl(span);
+        }
+
+        internal static string FormatTimeSpanImpl(TimeSpan span)
+        {
+            bool ago = false;
+
+            if (span.TotalSeconds < 1.0)
+            {
+                return "now";
+            }
+
+            if (span.Ticks < 0)
+            {
+                span = span.Negate();
+                ago = true;
+            }
+
+            var oTemporaOMores = new List<Tuple<long, string>>
+            {
+                TT(span.Days, "day", "days"),
+                TT(span.Hours, "hour", "hours"),
+                TT(span.Minutes, "minute", "minutes"),
+                TT(span.Seconds, "second", "seconds")
+            };
+
+            // remove the empty large units
+            while (oTemporaOMores.Count > 0 && oTemporaOMores[0].Item1 == 0)
+            {
+                oTemporaOMores.RemoveAt(0);
+            }
+
+            // show two consecutive units at most
+            if (oTemporaOMores.Count > 2)
+            {
+                oTemporaOMores.RemoveRange(2, oTemporaOMores.Count - 2);
+            }
+
+            // delete the second unit if it is zero
+            if (oTemporaOMores.Count > 1 && oTemporaOMores[0].Item1 == 0)
+            {
+                oTemporaOMores.RemoveAt(1);
+            }
+
+            // fun!
+            string joint = string.Join(" ", oTemporaOMores.Select(t => t.Item2));
+            return ago
+                ? (joint + " ago")
+                : ("in " + joint)
+            ;
+        }
+
+        // "time tuple"
+        private static Tuple<long, string> TT(long time, string singular, string plural)
+            => Tuple.Create(time, string.Format("{0} {1}", time, (time == 1) ? singular : plural));
 
         private static string Inv(FormattableString formattable)
         {

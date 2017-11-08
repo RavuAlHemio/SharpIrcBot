@@ -20,5 +20,8 @@ namespace SharpIrcBot.Plugins.Weather.Wunderground
 
         [NotNull, JsonProperty("display_location")]
         public WundergroundLocation DisplayLocation { get; set; }
+
+        [CanBeNull, JsonProperty("observation_epoch")]
+        public long? LastUpdateUnixTimestamp { get; set; }
     }
 }
