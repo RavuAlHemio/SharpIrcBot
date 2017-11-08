@@ -332,15 +332,15 @@ namespace SharpIrcBot.Plugins.Weather
         {
             bool ago = false;
 
-            if (span.TotalSeconds < 1.0)
-            {
-                return "now";
-            }
-
             if (span.Ticks < 0)
             {
                 span = span.Negate();
                 ago = true;
+            }
+
+            if (span.TotalSeconds < 1.0)
+            {
+                return "now";
             }
 
             var oTemporaOMores = new List<Tuple<long, string>>
