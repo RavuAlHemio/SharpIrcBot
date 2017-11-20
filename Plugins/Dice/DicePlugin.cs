@@ -215,7 +215,7 @@ namespace SharpIrcBot.Plugins.Dice
             string splitter = Config.DecisionSplitters.FirstOrDefault(ds => decisionString.Contains(ds));
             if (splitter == null)
             {
-                ConnectionManager.SendChannelMessageFormat(args.Channel, "{0}: Uhh... that looks like only one option to decide from.", args.SenderNickname);
+                ConnectionManager.SendChannelMessageFormat(args.Channel, "{0}: Uhh... that looks like only one option to choose from.", args.SenderNickname);
                 return;
             }
 
