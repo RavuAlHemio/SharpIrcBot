@@ -2,9 +2,11 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp2.0</TargetFramework>
+    <DebugType>portable</DebugType>
     <RootNamespace>SharpIrcBot.Tests.LinkInfoTests</RootNamespace>
     <AssemblyName>SharpIrcBot.Tests.LinkInfoTests</AssemblyName>
     <PackageId>SharpIrcBot.Tests.LinkInfoTests</PackageId>
+    <IsPackable>false</IsPackable>
   </PropertyGroup>
 
   <ItemGroup>

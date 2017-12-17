@@ -2,9 +2,11 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp2.0</TargetFramework>
+    <DebugType>portable</DebugType>
     <RootNamespace>SharpIrcBot.Tests.CasinoBotTests</RootNamespace>
     <AssemblyName>SharpIrcBot.Tests.CasinoBotTests</AssemblyName>
     <PackageId>SharpIrcBot.Tests.CasinoBotTests</PackageId>
+    <IsPackable>false</IsPackable>
   </PropertyGroup>
 
   <ItemGroup>

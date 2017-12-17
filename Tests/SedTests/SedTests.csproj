@@ -6,8 +6,7 @@
     <RootNamespace>SharpIrcBot.Tests.SedTests</RootNamespace>
     <AssemblyName>SharpIrcBot.Tests.SedTests</AssemblyName>
     <PackageId>SharpIrcBot.Tests.SedTests</PackageId>
-    <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
-    <RuntimeFrameworkVersion>1.1.1</RuntimeFrameworkVersion>
+    <IsPackable>false</IsPackable>
   </PropertyGroup>
 
   <ItemGroup>
