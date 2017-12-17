@@ -38,6 +38,17 @@ namespace SharpIrcBot.Plugins.Counters
                 ),
                 HandleUncountCommand
             );
+            ConnectionManager.CommandManager.RegisterChannelMessageCommandHandler(
+                new Command(
+                    CommandUtil.MakeNames("counted"),
+                    CommandUtil.NoOptions,
+                    CommandUtil.MakeArguments(
+                        CommandUtil.NonzeroStringMatcherRequiredWordTaker // counter name
+                    ),
+                    forbiddenFlags: MessageFlags.UserBanned
+                ),
+                HandleCountedCommand
+            );
 
             ConnectionManager.ChannelMessage += HandleChannelMessage;
             ConnectionManager.BaseNickChanged += HandleBaseNickChanged;
@@ -212,6 +223,28 @@ namespace SharpIrcBot.Plugins.Counters
                     entry.PerpUsername = newBaseNick;
                 }
                 ctx.SaveChanges();
+            }
+        }
+
+        protected virtual void HandleCountedCommand(CommandMatch cmd, IChannelMessageEventArgs args)
+        {
+            var counter = (string)cmd.Arguments[0];
+            CounterEntry entry;
+            using (CountersContext ctx = GetNewContext())
+            {
+                entry = ctx.Entries
+                    .Where(e => e.Command == counter && e.Channel == args.Channel && !e.Expunged)
+                    .OrderByDescending(e => e.ID)
+                    .FirstOrDefault()
+                ;
+
+                if (entry == null)
+                {
+                    ConnectionManager.SendChannelMessage(args.Channel, $"{args.SenderNickname}: Found nothing for counter '{counter}' in {args.Channel}.");
+                    return;
+                }
+
+                ConnectionManager.SendChannelMessage(args.Channel, $"{args.SenderNickname}: <{entry.PerpNickname}> {args.Message}");
             }
         }
 
