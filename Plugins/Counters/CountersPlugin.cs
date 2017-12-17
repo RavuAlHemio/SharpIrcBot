@@ -27,6 +27,18 @@ namespace SharpIrcBot.Plugins.Counters
 
             ReregisterCommands();
 
+            ConnectionManager.CommandManager.RegisterChannelMessageCommandHandler(
+                new Command(
+                    CommandUtil.MakeNames("uncount"),
+                    CommandUtil.NoOptions,
+                    CommandUtil.MakeArguments(
+                        CommandUtil.NonzeroStringMatcherRequiredWordTaker // counter name
+                    ),
+                    forbiddenFlags: MessageFlags.UserBanned
+                ),
+                HandleUncountCommand
+            );
+
             ConnectionManager.ChannelMessage += HandleChannelMessage;
             ConnectionManager.BaseNickChanged += HandleBaseNickChanged;
         }
@@ -199,6 +211,44 @@ namespace SharpIrcBot.Plugins.Counters
                 {
                     entry.PerpUsername = newBaseNick;
                 }
+                ctx.SaveChanges();
+            }
+        }
+
+        protected virtual void HandleUncountCommand(CommandMatch cmd, IChannelMessageEventArgs args)
+        {
+            ChannelUserLevel level = ConnectionManager.GetChannelLevelForUser(args.Channel, args.SenderNickname);
+            if (level < ChannelUserLevel.HalfOp)
+            {
+                ConnectionManager.SendChannelMessage(args.Channel, $"{args.SenderNickname}: You need to be a channel operator.");
+                return;
+            }
+
+            var counter = (string)cmd.Arguments[0];
+            CounterEntry entry;
+            using (CountersContext ctx = GetNewContext())
+            {
+                entry = ctx.Entries
+                    .Where(e => e.Command == counter && e.Channel == args.Channel)
+                    .OrderByDescending(e => e.ID)
+                    .FirstOrDefault()
+                ;
+
+                if (entry == null)
+                {
+                    ConnectionManager.SendChannelMessage(args.Channel, $"{args.SenderNickname}: Found nothing for counter '{counter}' in {args.Channel}.");
+                    return;
+                }
+
+                if (entry.Expunged)
+                {
+                    ConnectionManager.SendChannelMessage(args.Channel, $"{args.SenderNickname}: Already expunged: <{entry.PerpNickname}> {args.Message}");
+                    return;
+                }
+
+                entry.Expunged = true;
+                ConnectionManager.SendChannelMessage(args.Channel, $"{args.SenderNickname}: Okay, expunged <{entry.PerpNickname}> {args.Message}");
+
                 ctx.SaveChanges();
             }
         }
