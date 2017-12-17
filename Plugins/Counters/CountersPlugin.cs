@@ -247,9 +247,9 @@ namespace SharpIrcBot.Plugins.Counters
                 }
 
                 entry.Expunged = true;
-                ConnectionManager.SendChannelMessage(args.Channel, $"{args.SenderNickname}: Okay, expunged <{entry.PerpNickname}> {args.Message}");
-
                 ctx.SaveChanges();
+
+                ConnectionManager.SendChannelMessage(args.Channel, $"{args.SenderNickname}: Okay, expunged <{entry.PerpNickname}> {args.Message}");
             }
         }
 
