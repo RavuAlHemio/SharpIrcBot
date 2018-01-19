@@ -109,9 +109,9 @@ namespace SharpIrcBot
         public static string LiteralString([NotNull] string str)
         {
             var ret = new StringBuilder("\"");
-            foreach (var pStr in StringToCodePointStrings(str))
+            foreach (string pStr in StringToCodePointStrings(str))
             {
-                var p = Char.ConvertToUtf32(pStr, 0);
+                int p = Char.ConvertToUtf32(pStr, 0);
                 switch (p)
                 {
                     case '\0':
