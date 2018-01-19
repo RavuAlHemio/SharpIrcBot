@@ -27,6 +27,15 @@ namespace SharpIrcBot.Plugins.Messenger
 
         public class LowerRecipientComparer : EqualityComparer<RecipientInfo>
         {
+            private static LowerRecipientComparer _instance = null;
+
+            public static LowerRecipientComparer Instance
+                => _instance ?? (_instance = new LowerRecipientComparer());
+
+            protected LowerRecipientComparer()
+            {
+            }
+
             public override bool Equals([NotNull] RecipientInfo x, [NotNull] RecipientInfo y)
             {
                 return x.LowerRecipient.Equals(y.LowerRecipient);

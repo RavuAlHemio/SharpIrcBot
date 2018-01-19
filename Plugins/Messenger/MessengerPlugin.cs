@@ -150,7 +150,7 @@ namespace SharpIrcBot.Plugins.Messenger
             IEnumerable<RecipientInfo> recipientEnumerable = rawRecipientNicks
                 .Select(SharpIrcBotUtil.RemoveControlCharactersAndTrim)
                 .Select(rn => new RecipientInfo(rn, ConnectionManager.RegisteredNameForNick(rn), exactNickname));
-            var recipients = new HashSet<RecipientInfo>(recipientEnumerable, new RecipientInfo.LowerRecipientComparer());
+            var recipients = new HashSet<RecipientInfo>(recipientEnumerable, RecipientInfo.LowerRecipientComparer.Instance);
 
             foreach (var recipient in recipients)
             {
@@ -163,6 +163,24 @@ namespace SharpIrcBot.Plugins.Messenger
                 {
                     ConnectionManager.SendChannelMessageFormat(message.Channel, "{0}: Sorry, I don\u2019t deliver to myself!", message.SenderNickname);
                     return;
+                }
+
+                // validate nickname
+                if (recipient.RecipientUser == null && !ConnectionManager.IsValidNickname(recipient.RecipientNick))
+                {
+                    Logger.LogDebug(
+                        "{SenderNickname} ({SenderUsername}) wants to send message {Message} to {RecipientNick}, but that's an invalid nickname and no alias was found",
+                        SharpIrcBotUtil.LiteralString(message.SenderNickname),
+                        SharpIrcBotUtil.LiteralString(senderUser),
+                        SharpIrcBotUtil.LiteralString(body),
+                        SharpIrcBotUtil.LiteralString(recipient.RecipientNick)
+                    );
+                    ConnectionManager.SendChannelMessageFormat(
+                        message.Channel,
+                        "{0}: Can\u2019t send a message to {1}\u2014that\u2019s neither a valid nickname nor a known alias.",
+                        message.SenderNickname,
+                        recipient.Recipient
+                    );
                 }
 
                 // check ignore list
@@ -750,7 +768,7 @@ namespace SharpIrcBot.Plugins.Messenger
             IEnumerable<RecipientInfo> recipientEnumerable = rawRecipientNicks
                 .Select(SharpIrcBotUtil.RemoveControlCharactersAndTrim)
                 .Select(rn => new RecipientInfo(rn, ConnectionManager.RegisteredNameForNick(rn), exactNickname));
-            var recipients = new HashSet<RecipientInfo>(recipientEnumerable, new RecipientInfo.LowerRecipientComparer());
+            var recipients = new HashSet<RecipientInfo>(recipientEnumerable, RecipientInfo.LowerRecipientComparer.Instance);
 
             foreach (var recipient in recipients)
             {
@@ -763,6 +781,23 @@ namespace SharpIrcBot.Plugins.Messenger
                 {
                     ConnectionManager.SendQueryMessage(message.SenderNickname, "Sorry, I don\u2019t deliver to myself!");
                     return;
+                }
+
+                // validate nickname
+                if (recipient.RecipientUser == null && !ConnectionManager.IsValidNickname(recipient.RecipientNick))
+                {
+                    Logger.LogDebug(
+                        "{SenderNickname} ({SenderUsername}) wants to send private message {Message} to {RecipientNick}, but that's an invalid nickname and no alias was found",
+                        SharpIrcBotUtil.LiteralString(message.SenderNickname),
+                        SharpIrcBotUtil.LiteralString(senderUser),
+                        SharpIrcBotUtil.LiteralString(body),
+                        SharpIrcBotUtil.LiteralString(recipient.RecipientNick)
+                    );
+                    ConnectionManager.SendQueryMessageFormat(
+                        message.SenderNickname,
+                        "Can\u2019t send a message to {0}\u2014that\u2019s neither a valid nickname nor a known alias.",
+                        recipient.Recipient
+                    );
                 }
 
                 // check ignore list
