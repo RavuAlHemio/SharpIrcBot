@@ -44,7 +44,7 @@ namespace SharpIrcBot
         public PluginManager PluginManager { get; set; }
         public CommandManager CommandManager { get; set; }
 
-        public int MaxMessageLength => 230;
+        public int MaxLineLength => 510;
 
         public ConnectionManager([CanBeNull] string configPath)
             : this(SharpIrcBotUtil.LoadConfig(configPath))
@@ -424,7 +424,7 @@ namespace SharpIrcBot
             message = message.Replace("\r\n", "\n").Replace("\r", "\n");
 
             var lines = new List<string>();
-            foreach (var origLine in message.Split('\n'))
+            foreach (string origLine in message.Split('\n'))
             {
                 if (Client.Encoding.GetBytes(origLine).Length < length || origLine.Length == 0)
                 {
@@ -433,10 +433,10 @@ namespace SharpIrcBot
                     continue;
                 }
 
-                var words = origLine.Split(' ').ToList();
+                List<string> words = origLine.Split(' ').ToList();
                 while (words.Count > 0)
                 {
-                    var line = GetLongestWordPrefix(words, length);
+                    string line = GetLongestWordPrefix(words, length);
                     lines.Add(line);
                 }
             }
@@ -445,55 +445,75 @@ namespace SharpIrcBot
 
         public void SendChannelMessage(string channel, string message)
         {
-            foreach (var line in SplitMessageToLength(message, MaxMessageLength))
+            string commonPrefix = $"PRIVMSG {channel} :";
+            int myMaxLineLength = MaxLineLength - commonPrefix.Length;
+
+            foreach (string line in SplitMessageToLength(message, myMaxLineLength))
             {
                 OnOutgoingChannelMessage(new OutgoingMessageEventArgs(channel, line));
-                Client.SendMessage(SendType.Message, channel, line);
+                Client.WriteLine(commonPrefix + line);
             }
         }
 
         public void SendChannelAction(string channel, string message)
         {
-            foreach (var line in SplitMessageToLength(message, MaxMessageLength))
+            string commonPrefix = $"PRIVMSG {channel} :\u0001ACTION ";
+            const string commonSuffix = "\u0001";
+            int myMaxLineLength = MaxLineLength - (commonPrefix.Length + commonSuffix.Length);
+
+            foreach (string line in SplitMessageToLength(message, myMaxLineLength))
             {
                 OnOutgoingChannelAction(new OutgoingMessageEventArgs(channel, line));
-                Client.SendMessage(SendType.Action, channel, line);
+                Client.WriteLine(commonPrefix + line + commonSuffix);
             }
         }
 
         public void SendChannelNotice(string channel, string message)
         {
-            foreach (var line in SplitMessageToLength(message, MaxMessageLength))
+            string commonPrefix = $"NOTICE {channel} :";
+            int myMaxLineLength = MaxLineLength - commonPrefix.Length;
+
+            foreach (string line in SplitMessageToLength(message, myMaxLineLength))
             {
                 OnOutgoingChannelNotice(new OutgoingMessageEventArgs(channel, line));
-                Client.SendMessage(SendType.Notice, channel, line);
+                Client.WriteLine(commonPrefix + line);
             }
         }
 
         public void SendQueryMessage(string nick, string message)
         {
-            foreach (var line in SplitMessageToLength(message, MaxMessageLength))
+            string commonPrefix = $"PRIVMSG {nick} :";
+            int myMaxLineLength = MaxLineLength - commonPrefix.Length;
+
+            foreach (var line in SplitMessageToLength(message, myMaxLineLength))
             {
                 OnOutgoingQueryMessage(new OutgoingMessageEventArgs(nick, line));
-                Client.SendMessage(SendType.Message, nick, line);
+                Client.WriteLine(commonPrefix + line);
             }
         }
 
         public void SendQueryAction(string nick, string message)
         {
-            foreach (var line in SplitMessageToLength(message, MaxMessageLength))
+            string commonPrefix = $"PRIVMSG {nick} :\u0001ACTION ";
+            const string commonSuffix = "\u0001";
+            int myMaxLineLength = MaxLineLength - (commonPrefix.Length + commonSuffix.Length);
+
+            foreach (string line in SplitMessageToLength(message, myMaxLineLength))
             {
                 OnOutgoingQueryAction(new OutgoingMessageEventArgs(nick, line));
-                Client.SendMessage(SendType.Action, nick, line);
+                Client.WriteLine(commonPrefix + line + commonSuffix);
             }
         }
 
         public void SendQueryNotice(string nick, string message)
         {
-            foreach (var line in SplitMessageToLength(message, MaxMessageLength))
+            string commonPrefix = $"NOTICE {nick} :";
+            int myMaxLineLength = MaxLineLength - commonPrefix.Length;
+
+            foreach (var line in SplitMessageToLength(message, myMaxLineLength))
             {
                 OnOutgoingQueryNotice(new OutgoingMessageEventArgs(nick, line));
-                Client.SendMessage(SendType.Notice, nick, line);
+                Client.WriteLine(commonPrefix + line);
             }
         }
 

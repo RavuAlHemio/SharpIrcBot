@@ -276,7 +276,7 @@ namespace SharpIrcBot.Plugins.UnoBot.GameMaster
             var message = evt.ToString(Formatting.None);
 
             // split into chunks
-            var maxLengthPerChunk = ConnectionManager.MaxMessageLength - 5;
+            var maxLengthPerChunk = ConnectionManager.MaxLineLength / 2;
             var messageChunks = new List<string>();
             while (message.Length > 0)
             {

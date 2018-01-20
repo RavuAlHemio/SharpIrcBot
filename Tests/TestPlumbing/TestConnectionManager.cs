@@ -40,7 +40,7 @@ namespace SharpIrcBot.Tests.TestPlumbing
 
         public string MyNickname => MyUsername;
         public string MyUsername => "TestBot";
-        public int MaxMessageLength => 230;
+        public int MaxLineLength => 510;
         public ITimerTrigger Timers { get; }
         public IReadOnlyList<string> AutoJoinChannels => new List<string>();
         public IReadOnlyList<string> JoinedChannels => ActuallyJoinedChannels;

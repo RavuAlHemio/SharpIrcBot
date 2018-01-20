@@ -80,7 +80,7 @@ namespace SharpIrcBot.Plugins.Belch
             {
                 int colorCode = SkittlesCodes[(i + colorCodeOffset) % SkittlesCodes.Length];
                 var thisCharacter = string.Format("\x03{0:D2},99{1}", colorCode, message[i]);
-                if (currentPiece.Length + thisCharacter.Length + formatReset.Length > ConnectionManager.MaxMessageLength)
+                if (currentPiece.Length + thisCharacter.Length + formatReset.Length > ConnectionManager.MaxLineLength / 2)
                 {
                     currentPiece.Append(formatReset);
                     skittledPieces.Add(currentPiece.ToString());

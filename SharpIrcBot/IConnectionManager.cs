@@ -36,7 +36,7 @@ namespace SharpIrcBot
 
         [NotNull] string MyNickname { get; }
         [NotNull] string MyUsername { get; }
-        int MaxMessageLength { get; }
+        int MaxLineLength { get; }
         [NotNull] ITimerTrigger Timers { get; }
         [NotNull, ItemNotNull] IReadOnlyList<string> AutoJoinChannels { get; }
         [NotNull] IReadOnlyList<string> JoinedChannels { get; }
