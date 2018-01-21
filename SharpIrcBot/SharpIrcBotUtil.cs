@@ -82,6 +82,13 @@ namespace SharpIrcBot
                     yield return new string(c, 1);
                 }
             }
+
+            if (awaitingTrailSurrogate)
+            {
+                // lead surrogate at the end of the string
+                // return it
+                yield return new string(precedingLeadSurrogate, 1);
+            }
         }
 
         [NotNull]
