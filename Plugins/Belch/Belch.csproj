@@ -1,5 +1,4 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
     <TargetFrameworks>netstandard1.6</TargetFrameworks>
     <DebugType>portable</DebugType>
@@ -7,13 +6,13 @@
     <AssemblyName>SharpIrcBot.Plugins.Belch</AssemblyName>
     <PackageId>SharpIrcBot.Plugins.Belch</PackageId>
   </PropertyGroup>
-
   <ItemGroup>
     <ProjectReference Include="..\..\SharpIrcBot\SharpIrcBot.csproj" />
   </ItemGroup>
-
+  <ItemGroup>
+    <PackageReference Include="System.ValueTuple" Version="4.4.0" />
+  </ItemGroup>
   <PropertyGroup Condition=" '$(TargetFramework)' == 'netstandard1.6' ">
     <DefineConstants>$(DefineConstants);NETCORE</DefineConstants>
   </PropertyGroup>
-
 </Project>

@@ -76,23 +76,35 @@ namespace SharpIrcBot.Plugins.Belch
             var skittledPieces = new List<string>();
             var colorCodeOffset = new Random().Next(SkittlesCodes.Length);
 
-            for (int i = 0; i < message.Length; ++i)
+            string fixedPrefix = $"PRIVMSG {args.Channel} :";
+            IEnumerable<(string, int)> charsAndIndexes = SharpIrcBotUtil.StringToCodePointStrings(message)
+                .Select((s, i) => (s, i));
+            foreach ((string s, int i) in charsAndIndexes)
             {
                 int colorCode = SkittlesCodes[(i + colorCodeOffset) % SkittlesCodes.Length];
-                var thisCharacter = string.Format("\x03{0:D2},99{1}", colorCode, message[i]);
-                if (currentPiece.Length + thisCharacter.Length + formatReset.Length > ConnectionManager.MaxLineLength / 2)
+                string thisCharacter = $"\u0003{colorCode:D2},99{s}";
+                int totalIRCLineLength =
+                    fixedPrefix.Length
+                    + currentPiece.Length
+                    + thisCharacter.Length
+                    + formatReset.Length;
+                if (totalIRCLineLength > ConnectionManager.MaxLineLength)
                 {
                     currentPiece.Append(formatReset);
                     skittledPieces.Add(currentPiece.ToString());
                     currentPiece.Clear();
                 }
-                currentPiece.AppendFormat("\x03{0:D2},99{1}", colorCode, message[i]);
+                currentPiece.Append(thisCharacter);
             }
-            // reset formatting
-            currentPiece.Append(formatReset);
-            skittledPieces.Add(currentPiece.ToString());
 
-            foreach (var piece in skittledPieces)
+            if (currentPiece.Length > 0)
+            {
+                // reset formatting
+                currentPiece.Append(formatReset);
+                skittledPieces.Add(currentPiece.ToString());
+            }
+
+            foreach (string piece in skittledPieces)
             {
                 ConnectionManager.SendChannelMessage(args.Channel, piece);
             }
