@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Net.Http.Headers;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -7,7 +8,6 @@ namespace SharpIrcBot.Plugins.LinkInfo
 {
     static class EncodingGuesser
     {
-        public static readonly Regex ContentTypeCharsetRegex = new Regex(";\\s*charset\\s*=\\s*(.*)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         public static readonly Regex MetaCharsetRegex = new Regex("<meta\\s+.*?charset\\s*=\\s*[\"]?\\s*([A-Za-z0-9_-]+)", RegexOptions.Compiled | RegexOptions.IgnoreCase | RegexOptions.Singleline);
 
         static string TryEncoding(byte[] data, string encName)
@@ -40,21 +40,17 @@ namespace SharpIrcBot.Plugins.LinkInfo
             }
         }
 
-        public static string GuessEncodingAndDecode(byte[] data, string contentTypeHeader)
+        public static string GuessEncodingAndDecode(byte[] data, MediaTypeHeaderValue contentTypeHeader)
         {
             string ret;
 
             // try scanning the header
-            if (!string.IsNullOrWhiteSpace(contentTypeHeader))
+            if (contentTypeHeader?.CharSet != null)
             {
-                var headerMatch = ContentTypeCharsetRegex.Match(contentTypeHeader);
-                if (headerMatch.Success)
+                ret = TryEncoding(data, contentTypeHeader.CharSet.Trim('\'', '"'));
+                if (ret != null)
                 {
-                    ret = TryEncoding(data, headerMatch.Groups[1].Value.Trim('\'', '"'));
-                    if (ret != null)
-                    {
-                        return ret;
-                    }
+                    return ret;
                 }
             }
 

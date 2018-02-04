@@ -19,7 +19,7 @@ namespace SharpIrcBot.Plugins.LinkInfo
 
         public LinkAndInfo ResolveLink(LinkToResolve link)
         {
-            if (link.ContentType != "text/html" && link.ContentType != "application/xhtml+xml")
+            if (link.ContentType.MediaType != "text/html" && link.ContentType.MediaType != "application/xhtml+xml")
             {
                 return null;
             }

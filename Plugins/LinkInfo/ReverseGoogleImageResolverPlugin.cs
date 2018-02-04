@@ -50,8 +50,13 @@ namespace SharpIrcBot.Plugins.LinkInfo
 
         public LinkAndInfo ResolveLink(LinkToResolve link)
         {
+            if (link.ContentType?.MediaType == null)
+            {
+                return null;
+            }
+
             string typeDescription;
-            if (!DetectedMimeTypes.TryGetValue(link.ContentType, out typeDescription))
+            if (!DetectedMimeTypes.TryGetValue(link.ContentType.MediaType, out typeDescription))
             {
                 // you're not my type
                 return null;

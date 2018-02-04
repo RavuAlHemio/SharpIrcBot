@@ -1,4 +1,5 @@
 using System;
+using System.Net.Http.Headers;
 using JetBrains.Annotations;
 
 namespace SharpIrcBot.Plugins.LinkInfo
@@ -18,10 +19,10 @@ namespace SharpIrcBot.Plugins.LinkInfo
         public byte[] ResponseBytes { get; set; }
 
         [NotNull]
-        public string ContentType { get; set; }
+        public MediaTypeHeaderValue ContentType { get; set; }
 
         public LinkToResolve([NotNull] Uri link, [CanBeNull] Uri originalLink, [NotNull] byte[] responseBytes,
-                [NotNull] string contentType)
+                [NotNull] MediaTypeHeaderValue contentType)
         {
             Link = link;
             OriginalLink = originalLink;

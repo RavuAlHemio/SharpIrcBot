@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Net.Sockets;
 using System.Reflection;
 using JetBrains.Annotations;
@@ -214,7 +215,7 @@ namespace SharpIrcBot.Plugins.LinkInfo
             using (var request = new HttpRequestMessage(HttpMethod.Get, linkBuilder.Uri))
             using (var respStore = new MemoryStream())
             {
-                var contentType = "application/octet-stream";
+                var contentType = new MediaTypeHeaderValue("application/octet-stream");
 
                 httpClient.Timeout = TimeSpan.FromSeconds(Config.TimeoutSeconds);
                 request.Headers.UserAgent.TryParseAdd(Config.FakeUserAgent);
@@ -242,7 +243,7 @@ namespace SharpIrcBot.Plugins.LinkInfo
                         }
 
                         // find the content-type
-                        contentType = resp.Content.Headers.ContentType.MediaType;
+                        contentType = resp.Content.Headers.ContentType ?? contentType;
 
                         // start timing
                         var readTimeout = TimeSpan.FromSeconds(Config.TimeoutSeconds);
@@ -298,7 +299,7 @@ namespace SharpIrcBot.Plugins.LinkInfo
                 }
 
                 // fallback
-                switch (contentType)
+                switch (contentType.MediaType)
                 {
                     case "application/octet-stream":
                         return new LinkAndInfo(link, "(can't figure out the content type, sorry)", FetchErrorLevel.LastingError, originalLink);
@@ -317,7 +318,7 @@ namespace SharpIrcBot.Plugins.LinkInfo
                     case "application/xml":
                         return new LinkAndInfo(link, "XML", FetchErrorLevel.Success, originalLink);
                     default:
-                        return new LinkAndInfo(link, $"file of type {contentType}", FetchErrorLevel.Success, originalLink);
+                        return new LinkAndInfo(link, $"file of type {contentType.MediaType}", FetchErrorLevel.Success, originalLink);
                 }
             }
         }
