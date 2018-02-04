@@ -17,16 +17,19 @@ namespace SharpIrcBot.Plugins.Demoderation.ORM
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
-            builder.ForNpgsqlHasSequence<long>("seq__criteria__id", schema: "demoderation")
-                .StartsAt(1);
-            builder.ForNpgsqlHasSequence<long>("seq__bans__id", schema: "demoderation")
-                .StartsAt(1);
-            builder.ForNpgsqlHasSequence<long>("seq__abuses__id", schema: "demoderation")
-                .StartsAt(1);
-            builder.ForNpgsqlHasSequence<long>("seq__immunities__id", schema: "demoderation")
-                .StartsAt(1);
-            builder.ForNpgsqlHasSequence<long>("seq__permabans__id", schema: "demoderation")
-                .StartsAt(1);
+            builder.IfNpgsql(Database, npb =>
+            {
+                npb.HasSequence<long>("seq__criteria__id", schema: "demoderation")
+                    .StartsAt(1);
+                npb.HasSequence<long>("seq__bans__id", schema: "demoderation")
+                    .StartsAt(1);
+                npb.HasSequence<long>("seq__abuses__id", schema: "demoderation")
+                    .StartsAt(1);
+                npb.HasSequence<long>("seq__immunities__id", schema: "demoderation")
+                    .StartsAt(1);
+                npb.HasSequence<long>("seq__permabans__id", schema: "demoderation")
+                    .StartsAt(1);
+            });
 
             builder.Entity<Criterion>(criterion =>
             {
@@ -37,7 +40,9 @@ namespace SharpIrcBot.Plugins.Demoderation.ORM
                     .IsRequired()
                     .HasColumnName("id")
                     .ValueGeneratedOnAdd()
-                    .ForNpgsqlHasDefaultValueSql("nextval('demoderation.seq__criteria__id')");
+                    .IfNpgsql(Database, npc =>
+                        npc.HasDefaultValueSql("nextval('demoderation.seq__criteria__id')")
+                    );
 
                 criterion.Property(c => c.Name)
                     .IsRequired()
@@ -69,7 +74,9 @@ namespace SharpIrcBot.Plugins.Demoderation.ORM
                     .IsRequired()
                     .HasColumnName("id")
                     .ValueGeneratedOnAdd()
-                    .ForNpgsqlHasDefaultValueSql("nextval('demoderation.seq__bans__id')");
+                    .IfNpgsql(Database, npb =>
+                        npb.HasDefaultValueSql("nextval('demoderation.seq__bans__id')")
+                    );
 
                 ban.Property(b => b.CriterionID)
                     .IsRequired()
@@ -99,12 +106,16 @@ namespace SharpIrcBot.Plugins.Demoderation.ORM
                 ban.Property(b => b.Timestamp)
                     .IsRequired()
                     .HasColumnName("timestamp")
-                    .ForNpgsqlHasColumnType("timestamp (0) with timezone");
+                    .IfNpgsql(Database, npb =>
+                        npb.HasColumnType("timestamp (0) with timezone")
+                    );
 
                 ban.Property(b => b.BanUntil)
                     .IsRequired()
                     .HasColumnName("ban_until")
-                    .ForNpgsqlHasColumnType("timestamp (0) with timezone");
+                    .IfNpgsql(Database, npb =>
+                        npb.HasColumnType("timestamp (0) with timezone")
+                    );
 
                 ban.Property(b => b.Lifted)
                     .IsRequired()
@@ -125,7 +136,9 @@ namespace SharpIrcBot.Plugins.Demoderation.ORM
                     .IsRequired()
                     .HasColumnName("id")
                     .ValueGeneratedOnAdd()
-                    .ForNpgsqlHasDefaultValueSql("nextval('demoderation.seq__abuses__id')");
+                    .IfNpgsql(Database, npa =>
+                        npa.HasDefaultValueSql("nextval('demoderation.seq__abuses__id')")
+                    );
 
                 abuse.Property(a => a.BanID)
                     .IsRequired()
@@ -145,17 +158,23 @@ namespace SharpIrcBot.Plugins.Demoderation.ORM
                 abuse.Property(a => a.Timestamp)
                     .IsRequired()
                     .HasColumnName("timestamp")
-                    .ForNpgsqlHasColumnType("timestamp (0) with timezone");
+                    .IfNpgsql(Database, npa =>
+                        npa.HasColumnType("timestamp (0) with timezone")
+                    );
 
                 abuse.Property(a => a.BanUntil)
                     .IsRequired()
                     .HasColumnName("ban_until")
-                    .ForNpgsqlHasColumnType("timestamp (0) with timezone");
+                    .IfNpgsql(Database, npa =>
+                        npa.HasColumnType("timestamp (0) with timezone")
+                    );
 
                 abuse.Property(a => a.LockUntil)
                     .IsRequired()
                     .HasColumnName("lock_until")
-                    .ForNpgsqlHasColumnType("timestamp (0) with timezone");
+                    .IfNpgsql(Database, npa =>
+                        npa.HasColumnType("timestamp (0) with timezone")
+                    );
 
                 abuse.Property(a => a.Lifted)
                     .IsRequired()
@@ -176,7 +195,9 @@ namespace SharpIrcBot.Plugins.Demoderation.ORM
                     .IsRequired()
                     .HasColumnName("id")
                     .ValueGeneratedOnAdd()
-                    .ForNpgsqlHasDefaultValueSql("nextval('demoderation.seq__immunities__id')");
+                    .IfNpgsql(Database, npi =>
+                        npi.HasDefaultValueSql("nextval('demoderation.seq__immunities__id')")
+                    );
 
                 immunity.Property(i => i.NicknameOrUsername)
                     .IsRequired()
@@ -198,7 +219,9 @@ namespace SharpIrcBot.Plugins.Demoderation.ORM
                     .IsRequired()
                     .HasColumnName("id")
                     .ValueGeneratedOnAdd()
-                    .ForNpgsqlHasDefaultValueSql("nextval('demoderation.seq__permabans__id')");
+                    .IfNpgsql(Database, npb =>
+                        npb.HasDefaultValueSql("nextval('demoderation.seq__permabans__id')")
+                    );
 
                 permaban.Property(b => b.NicknameOrUsername)
                     .IsRequired()

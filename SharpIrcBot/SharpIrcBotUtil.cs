@@ -9,6 +9,7 @@ using System.Text;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Console;
 using Newtonsoft.Json.Linq;
@@ -386,6 +387,17 @@ namespace SharpIrcBot
                 dateTime = DateTime.SpecifyKind(dateTime, DateTimeKind.Utc);
             }
             return dateTime.ToLocalTime();
+        }
+
+        public static TBuilder IfNpgsql<TBuilder>(
+            this TBuilder builder, DatabaseFacade database, Action<TBuilder> confAction
+        )
+        {
+            if (database.IsNpgsql())
+            {
+                confAction.Invoke(builder);
+            }
+            return builder;
         }
 
         public static DbContextOptions<T> GetContextOptions<T>(IDatabaseModuleConfig config)

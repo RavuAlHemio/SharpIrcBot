@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard1.6</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0</TargetFrameworks>
     <DebugType>portable</DebugType>
     <RootNamespace>SharpIrcBot.Plugins.UnoBot</RootNamespace>
     <AssemblyName>SharpIrcBot.Plugins.UnoBot</AssemblyName>
@@ -12,7 +12,7 @@
     <ProjectReference Include="..\..\SharpIrcBot\SharpIrcBot.csproj" />
   </ItemGroup>
 
-  <PropertyGroup Condition=" '$(TargetFramework)' == 'netstandard1.6' ">
+  <PropertyGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
     <DefineConstants>$(DefineConstants);NETCORE</DefineConstants>
   </PropertyGroup>
 

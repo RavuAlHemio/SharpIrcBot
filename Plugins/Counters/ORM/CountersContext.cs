@@ -14,21 +14,28 @@ namespace SharpIrcBot.Plugins.Counters.ORM
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
-            builder.ForNpgsqlHasSequence<long>("seq__entries__id", schema: "counters")
-                .StartsAt(1);
+            builder.IfNpgsql(Database, b =>
+            {
+                b.HasSequence("seq__entries__id", schema: "counters")
+                    .StartsAt(1);
+            });
 
             builder.Entity<CounterEntry>(entBuilder =>
             {
                 entBuilder.ToTable("entries", schema: "counters");
                 entBuilder.HasKey(ce => ce.ID);
                 entBuilder.HasIndex(ce => ce.Command)
-                    .ForNpgsqlHasName("idx__entries__command");
+                    .IfNpgsql(Database, b =>
+                        b.HasName("idx__entries__command")
+                    );
 
                 entBuilder.Property(ce => ce.ID)
                     .IsRequired()
                     .HasColumnName("id")
                     .ValueGeneratedOnAdd()
-                    .ForNpgsqlHasDefaultValueSql("nextval('counters.seq__entries__id')");
+                    .IfNpgsql(Database, b =>
+                        b.HasDefaultValueSql("nextval('counters.seq__entries__id')")
+                    );
 
                 entBuilder.Property(ce => ce.Command)
                     .IsRequired()

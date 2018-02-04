@@ -20,28 +20,37 @@ namespace SharpIrcBot.Plugins.DasIstNenFehler.ORM
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
-            builder.ForNpgsqlHasSequence<long>("seq__words__word_id", schema: "german_words")
-                .StartsAt(1);
-            builder.ForNpgsqlHasSequence<long>("seq__nouns__noun_id", schema: "german_words")
-                .StartsAt(1);
-            builder.ForNpgsqlHasSequence<long>("seq__adjectives__adj_id", schema: "german_words")
-                .StartsAt(1);
+            builder.IfNpgsql(Database, b =>
+            {
+                b.HasSequence<long>("seq__words__word_id", schema: "german_words")
+                    .StartsAt(1);
+                b.HasSequence<long>("seq__nouns__noun_id", schema: "german_words")
+                    .StartsAt(1);
+                b.HasSequence<long>("seq__adjectives__adj_id", schema: "german_words")
+                    .StartsAt(1);
+            });
 
             builder.Entity<Adjective>(entBuilder =>
             {
                 entBuilder.ToTable("adjectives", schema: "german_words");
                 entBuilder.HasKey(a => a.ID);
                 entBuilder.HasIndex(a => a.WordID)
-                    .ForNpgsqlHasName("idx__adjectives__word");
+                    .IfNpgsql(Database, npa =>
+                        npa.HasName("idx__adjectives__word")
+                    );
                 entBuilder.HasIndex(a => new {a.WordID, a.BaseWordID, a.Case, a.Number, a.Gender, a.Comparison})
-                    .ForNpgsqlHasName("uq__adjectives__all")
-                    .IsUnique();
+                    .IsUnique()
+                    .IfNpgsql(Database, npa =>
+                        npa.HasName("uq__adjectives__all")
+                    );
 
                 entBuilder.Property(a => a.ID)
                     .IsRequired()
                     .HasColumnName("adj_id")
                     .ValueGeneratedOnAdd()
-                    .ForNpgsqlHasDefaultValueSql("nextval('german_words.seq__adjectives__adj_id')");
+                    .IfNpgsql(Database, npa =>
+                        npa.HasDefaultValueSql("nextval('german_words.seq__adjectives__adj_id')")
+                    );
 
                 entBuilder.Property(a => a.WordID)
                     .IsRequired()
@@ -81,16 +90,22 @@ namespace SharpIrcBot.Plugins.DasIstNenFehler.ORM
                 entBuilder.ToTable("nouns", schema: "german_words");
                 entBuilder.HasKey(n => n.ID);
                 entBuilder.HasIndex(n => n.WordID)
-                    .ForNpgsqlHasName("idx__nouns__word");
+                    .IfNpgsql(Database, npn =>
+                        npn.HasName("idx__nouns__word")
+                    );
                 entBuilder.HasIndex(n => new {n.WordID, n.BaseWordID, n.Case, n.Number, n.Gender})
-                    .ForNpgsqlHasName("uq__nouns__all")
-                    .IsUnique();
+                    .IsUnique()
+                    .IfNpgsql(Database, npn =>
+                        npn.HasName("uq__nouns__all")
+                    );
 
                 entBuilder.Property(n => n.ID)
                     .IsRequired()
                     .HasColumnName("noun_id")
                     .ValueGeneratedOnAdd()
-                    .ForNpgsqlHasDefaultValueSql("nextval('german_words.seq__nouns__noun_id')");
+                    .IfNpgsql(Database, npn =>
+                        npn.HasDefaultValueSql("nextval('german_words.seq__nouns__noun_id')")
+                    );
 
                 entBuilder.Property(n => n.WordID)
                     .IsRequired()
@@ -126,8 +141,10 @@ namespace SharpIrcBot.Plugins.DasIstNenFehler.ORM
                 entBuilder.ToTable("words", schema: "german_words");
                 entBuilder.HasKey(w => w.ID);
                 entBuilder.HasIndex(w => w.WordString)
-                    .ForNpgsqlHasName("uq__words__word")
-                    .IsUnique();
+                    .IsUnique()
+                    .IfNpgsql(Database, npn =>
+                        npn.HasName("uq__words__word")
+                    );
                 /*
                 entBuilder.HasIndex(w => w.WordString.ToLowerInvariant())
                     .ForNpgsqlHasName("idx__words__word_lower");
@@ -137,7 +154,9 @@ namespace SharpIrcBot.Plugins.DasIstNenFehler.ORM
                     .IsRequired()
                     .HasColumnName("word_id")
                     .ValueGeneratedOnAdd()
-                    .ForNpgsqlHasDefaultValueSql("nextval('german_words.seq__words__word_id')");
+                    .IfNpgsql(Database, npn =>
+                        npn.HasDefaultValueSql("nextval('german_words.seq__words__word_id')")
+                    );
 
                 entBuilder.Property(n => n.WordString)
                     .IsRequired()
