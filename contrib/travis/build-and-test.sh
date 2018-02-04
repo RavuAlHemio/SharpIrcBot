@@ -9,14 +9,14 @@ cd "$topdir/Libraries/SmartIrc4net"
 dotnet build "SmartIrc4net.csproj" -f "netstandard1.3"
 
 cd "$topdir/SharpIrcBot"
-dotnet build "SharpIrcBot.csproj" -f "netstandard1.6"
+dotnet build "SharpIrcBot.csproj" -f "netstandard2.0"
 
 for plugindir in "$topdir/Plugins"/*
 do
     cd "$plugindir"
     if [ -f *.csproj ]
     then
-        dotnet build -f "netstandard1.6"
+        dotnet build -f "netstandard2.0"
     fi
 done
 
@@ -25,7 +25,7 @@ do
     cd "$plugindir"
     if [ -f *.csproj ]
     then
-        dotnet build -f "netstandard1.6"
+        dotnet build -f "netstandard2.0"
     fi
 done
 
