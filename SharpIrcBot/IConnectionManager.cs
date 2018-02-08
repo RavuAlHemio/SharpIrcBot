@@ -34,8 +34,8 @@ namespace SharpIrcBot
         event EventHandler<IUserInvitedToChannelEventArgs> Invited;
         event EventHandler<MessageChunkingEventArgs> SplitToChunks;
 
-        [NotNull] string MyNickname { get; }
-        [NotNull] string MyUsername { get; }
+        [CanBeNull] string MyNickname { get; }
+        [CanBeNull] string MyUsername { get; }
         int MaxLineLength { get; }
         [NotNull] ITimerTrigger Timers { get; }
         [NotNull, ItemNotNull] IReadOnlyList<string> AutoJoinChannels { get; }

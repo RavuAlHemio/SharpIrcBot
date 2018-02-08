@@ -23,14 +23,15 @@ namespace SharpIrcBot
         private bool ConfigFilePathKnown { get; set; }
         public string ConfigPath { get; }
         public BotConfig Config { get; set; }
-        public IrcClient Client { get; }
+        public IrcClient Client { get; protected set; }
         protected TimerTrigger ActualTimers { get; }
 
-        public string MyNickname => Client.Nickname;
-        public string MyUsername => Client.Username;
+        public string MyNickname => Client?.Nickname;
+        public string MyUsername => Client?.Username;
         public ITimerTrigger Timers => ActualTimers;
         public IReadOnlyList<string> AutoJoinChannels => Config.AutoJoinChannels.ToImmutableList();
-        public IReadOnlyList<string> JoinedChannels => Client.JoinedChannels.OfType<string>().ToImmutableList();
+        public IReadOnlyList<string> JoinedChannels =>
+            Client?.JoinedChannels.OfType<string>().ToImmutableList() ?? ImmutableList<string>.Empty;
 
         [CanBeNull]
         protected Thread IrcThread { get; set; }
@@ -58,7 +59,17 @@ namespace SharpIrcBot
             SyncedChannels = new HashSet<string>();
 
             Config = config;
-            Client = new IrcClient
+            ActualTimers = new TimerTrigger();
+            Canceller = new CancellationTokenSource();
+            CommandManager = new CommandManager(Config.Commands, this);
+
+            ConfigFilePathKnown = false;
+            ConfigPath = null;
+        }
+
+        protected virtual IrcClient GetNewIrcClient()
+        {
+            var client = new IrcClient
             {
                 UseSsl = Config.UseTls,
                 ValidateServerCertificate = Config.VerifyTlsCertificate,
@@ -70,29 +81,26 @@ namespace SharpIrcBot
                 SupportNonRfc = true,
                 ActiveChannelSyncing = true
             };
-            Client.OnCtcpRequest += HandleCtcpRequest;
-            Client.OnChannelMessage += HandleChannelMessage;
-            Client.OnChannelAction += HandleChannelAction;
-            Client.OnChannelNotice += HandleChannelNotice;
-            Client.OnChannelActiveSynced += HandleChannelSynced;
-            Client.OnRawMessage += HandleRawMessage;
-            Client.OnNames += HandleNames;
-            Client.OnJoin += HandleJoin;
-            Client.OnNickChange += HandleNickChange;
-            Client.OnQueryMessage += HandleQueryMessage;
-            Client.OnQueryAction += HandleQueryAction;
-            Client.OnQueryNotice += HandleQueryNotice;
-            Client.OnRegistered += HandleRegistered;
-            Client.OnPart += HandlePart;
-            Client.OnQuit += HandleQuit;
-            Client.OnInvite += HandleInvite;
-            ActualTimers = new TimerTrigger();
-            Canceller = new CancellationTokenSource();
-            CommandManager = new CommandManager(Config.Commands, this);
 
-            ConfigFilePathKnown = false;
-            ConfigPath = null;
-        }
+            client.OnCtcpRequest += HandleCtcpRequest;
+            client.OnChannelMessage += HandleChannelMessage;
+            client.OnChannelAction += HandleChannelAction;
+            client.OnChannelNotice += HandleChannelNotice;
+            client.OnChannelActiveSynced += HandleChannelSynced;
+            client.OnRawMessage += HandleRawMessage;
+            client.OnNames += HandleNames;
+            client.OnJoin += HandleJoin;
+            client.OnNickChange += HandleNickChange;
+            client.OnQueryMessage += HandleQueryMessage;
+            client.OnQueryAction += HandleQueryAction;
+            client.OnQueryNotice += HandleQueryNotice;
+            client.OnRegistered += HandleRegistered;
+            client.OnPart += HandlePart;
+            client.OnQuit += HandleQuit;
+            client.OnInvite += HandleInvite;
+
+            return client;
+        } 
 
         public void Start()
         {
@@ -118,7 +126,7 @@ namespace SharpIrcBot
         {
             try
             {
-                Client.Disconnect();
+                Client?.Disconnect();
             }
             catch (NotConnectedException)
             {
@@ -179,6 +187,9 @@ namespace SharpIrcBot
         protected virtual void Proc()
         {
             SyncedChannels.Clear();
+
+            // renew the client
+            Client = GetNewIrcClient();
 
             Client.Connect(Config.ServerHostname, Config.ServerPort);
 
