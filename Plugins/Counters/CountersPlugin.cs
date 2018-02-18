@@ -309,10 +309,12 @@ namespace SharpIrcBot.Plugins.Counters
                 List<KeyValuePair<string, int>> usersCounts = relevantEntries
                     .GroupBy(e => e.PerpUsername ?? e.PerpNickname, (key, es) => new KeyValuePair<string, int>(key, es.Count()))
                     .OrderByDescending(uc => uc.Value)
+                    .Take(Config.TopCount + 1)
                     .ToList();
 
                 string tops = usersCounts
                     .Select(uc => $"{uc.Key}: {uc.Value}")
+                    .Take(Config.TopCount)
                     .StringJoin(", ");
 
                 string topText;
