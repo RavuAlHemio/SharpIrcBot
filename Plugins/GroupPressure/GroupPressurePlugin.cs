@@ -113,7 +113,7 @@ namespace SharpIrcBot.Plugins.GroupPressure
 
                 Logger.LogDebug(
                     "bowing to the group pressure of ({Senders}) sending {Message}",
-                    string.Join(", ", senders.Select(s => SharpIrcBotUtil.LiteralString(s))),
+                    senders.Select(s => SharpIrcBotUtil.LiteralString(s)).StringJoin(", "),
                     SharpIrcBotUtil.LiteralString(msg)
                 );
 

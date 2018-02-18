@@ -249,7 +249,7 @@ namespace SharpIrcBot.Plugins.CasinoBot.Player
                 {
                     CardCounter.CardDealt(c);
                 }
-                DispatchStratDebugMessage($"seen hand {string.Join(" ", hand.Select(c => c.ToUnicodeString()))} -> {CardCounter}");
+                DispatchStratDebugMessage($"seen hand {hand.Select(c => c.ToUnicodeString()).StringJoin(" ")} -> {CardCounter}");
             }
             else if (hand.Count == 2 && player == "Dealer")
             {
@@ -463,7 +463,7 @@ namespace SharpIrcBot.Plugins.CasinoBot.Player
                         ? "IS SPLITTABLE and "
                         : "";
 
-                    handMessage = $"casino assistance: {playerIdentifier}'s hand {splitChunk}amounts to {string.Join(" or ", handValues)}";
+                    handMessage = $"casino assistance: {playerIdentifier}'s hand {splitChunk}amounts to {handValues.StringJoin(" or ")}";
                 }
 
                 ConnectionManager.SendQueryNotice(casinoNick, handMessage);

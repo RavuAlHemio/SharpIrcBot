@@ -237,7 +237,7 @@ namespace SharpIrcBot.Plugins.Thanks
                 statsString = string.Format(
                     " (Most grateful{0}: {1})",
                     countString,
-                    string.Join(", ", mostGratefulStrings.Take(Config.MostGratefulCount))
+                    mostGratefulStrings.Take(Config.MostGratefulCount).StringJoin(", ")
                 );
             }
 
@@ -309,7 +309,7 @@ namespace SharpIrcBot.Plugins.Thanks
                 statsString = string.Format(
                     " (Most thanked{0}: {1})",
                     countString,
-                    string.Join(", ", mostThankedStrings.Take(Config.MostGratefulCount))
+                    mostThankedStrings.Take(Config.MostGratefulCount).StringJoin(", ")
                 );
             }
 
@@ -345,7 +345,7 @@ namespace SharpIrcBot.Plugins.Thanks
                 msg.Channel,
                 "{0}: {1}",
                 msg.SenderNickname,
-                string.Join(", ", top.Select(NicknameAndCountString))
+                top.Select(NicknameAndCountString).StringJoin(", ")
             );
         }
 
@@ -371,7 +371,7 @@ namespace SharpIrcBot.Plugins.Thanks
                 msg.Channel,
                 "{0}: {1}",
                 msg.SenderNickname,
-                string.Join(", ", top.Select(NicknameAndCountString))
+                top.Select(NicknameAndCountString).StringJoin(", ")
             );
         }
 

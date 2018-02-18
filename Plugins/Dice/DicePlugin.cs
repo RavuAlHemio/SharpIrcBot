@@ -152,12 +152,10 @@ namespace SharpIrcBot.Plugins.Dice
                         theseRolls.Add(roll.ToString(CultureInfo.InvariantCulture));
                     }
                 }
-                var theseRollsString = string.Join(" ", theseRolls);
-                allRolls.Add(theseRollsString);
+                allRolls.Add(theseRolls.StringJoin(" "));
             }
-            var allRollsString = string.Join("; ", allRolls);
 
-            ConnectionManager.SendChannelMessageFormat(args.Channel, "{0}: {1}", args.SenderNickname, allRollsString);
+            ConnectionManager.SendChannelMessageFormat(args.Channel, "{0}: {1}", args.SenderNickname, allRolls.StringJoin("; "));
         }
 
         protected virtual bool CheckAndHandleCooldown(CommandMatch cmd, IChannelMessageEventArgs args)

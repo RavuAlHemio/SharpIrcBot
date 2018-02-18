@@ -261,7 +261,7 @@ namespace SharpIrcBot.Plugins.Weather
                 pieces.Add("current weather unknown");
             }
 
-            weather.Append(string.Join(", ", pieces));
+            weather.Append(pieces.StringJoin(", "));
 
             if (response.Forecast?.Simple?.Days != null && response.Forecast.Simple.Days.Count > 0)
             {
@@ -297,7 +297,7 @@ namespace SharpIrcBot.Plugins.Weather
                         forecastBits.Add(bit.ToString());
                     }
                 }
-                weather.Append(string.Join(", ", forecastBits));
+                weather.Append(forecastBits.StringJoin(", "));
             }
 
             if (response.CurrentWeather != null && response.CurrentWeather.LastUpdateUnixTimestamp.HasValue)
@@ -370,7 +370,7 @@ namespace SharpIrcBot.Plugins.Weather
             }
 
             // fun!
-            string joint = string.Join(" ", oTemporaOMores.Select(t => t.Item2));
+            string joint = oTemporaOMores.Select(t => t.Item2).StringJoin(" ");
             return ago
                 ? (joint + " ago")
                 : ("in " + joint)

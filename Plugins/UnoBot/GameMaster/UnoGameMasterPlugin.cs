@@ -442,7 +442,7 @@ namespace SharpIrcBot.Plugins.UnoBot.GameMaster
             ConnectionManager.SendQueryNoticeFormat(
                 player.Nick,
                 "[{0}]",
-                string.Join(", ", player.Hand.Select(c => c.ToFullPlayString()))
+                player.Hand.Select(c => c.ToFullPlayString()).StringJoin(", ")
             );
         }
 
@@ -1014,8 +1014,8 @@ namespace SharpIrcBot.Plugins.UnoBot.GameMaster
                 .Select(p => (p.Nick == CurrentPlayer.Nick)
                     ? string.Format("[ {0}: {1} ]", p.Nick, p.Hand.Count)
                     : string.Format("{0}: {1}", EscapeHighlight(p.Nick), p.Hand.Count));
-            var playerListString = string.Join(PlayerOrderReversed ? " <-- " : " --> ", playerListPieces);
-                ConnectionManager.SendChannelMessageFormat(Config.UnoChannel, "{0} || {1}", TopCard.ToFullPlayString(), playerListString);
+            var playerListString = playerListPieces.StringJoin(PlayerOrderReversed ? " <-- " : " --> ");
+            ConnectionManager.SendChannelMessageFormat(Config.UnoChannel, "{0} || {1}", TopCard.ToFullPlayString(), playerListString);
 
             SendPlayerHandNotice(CurrentPlayer);
 

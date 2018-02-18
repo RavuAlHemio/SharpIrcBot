@@ -217,7 +217,7 @@ namespace SharpIrcBot.Plugins.Messenger
                 SharpIrcBotUtil.LiteralString(message.SenderNickname),
                 SharpIrcBotUtil.LiteralString(senderUser),
                 SharpIrcBotUtil.LiteralString(body),
-                string.Join(", ", recipients.Select(r => SharpIrcBotUtil.LiteralString(r.Recipient)))
+                recipients.Select(r => SharpIrcBotUtil.LiteralString(r.Recipient)).StringJoin(", ")
             );
 
             DateTimeOffset? quiescenceEnd = null;
@@ -833,7 +833,7 @@ namespace SharpIrcBot.Plugins.Messenger
                 SharpIrcBotUtil.LiteralString(message.SenderNickname),
                 SharpIrcBotUtil.LiteralString(senderUser),
                 SharpIrcBotUtil.LiteralString(body),
-                string.Join(", ", recipients.Select(r => SharpIrcBotUtil.LiteralString(r.Recipient)))
+                recipients.Select(r => SharpIrcBotUtil.LiteralString(r.Recipient)).StringJoin(", ")
             );
 
             using (var ctx = GetNewContext())

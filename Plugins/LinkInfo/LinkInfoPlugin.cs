@@ -348,7 +348,7 @@ namespace SharpIrcBot.Plugins.LinkInfo
             string[] hostNamePieces = linkAndInfo.Link.Host.ToLowerInvariant().Split('.');
             for (int i = 0; i < hostNamePieces.Length - 1; ++i)
             {
-                string domainPiece = string.Join(".", hostNamePieces.Skip(i));
+                string domainPiece = hostNamePieces.Skip(i).StringJoin(".");
 
                 if (Config.DomainAnnotations.TryGetValue(domainPiece, out domainAnnotation))
                 {
@@ -496,7 +496,7 @@ namespace SharpIrcBot.Plugins.LinkInfo
                 shortenedBits.Add("[...]");
                 shortenedBits.AddRange(bits.Skip(bits.Length - 2));
 
-                string skipBitsPath = string.Join("/", shortenedBits);
+                string skipBitsPath = shortenedBits.StringJoin("/");
                 if (skipBitsPath.Length <= maxLength)
                 {
                     return skipBitsPath;
@@ -522,7 +522,7 @@ namespace SharpIrcBot.Plugins.LinkInfo
                 bits[longIndex] = shortenedString;
 
                 // calculate final length
-                string shortenedBitsPath = string.Join("/", bits);
+                string shortenedBitsPath = bits.StringJoin("/");
                 if (shortenedBitsPath.Length <= maxLength)
                 {
                     return shortenedBitsPath;
@@ -532,7 +532,7 @@ namespace SharpIrcBot.Plugins.LinkInfo
             }
 
             // still not short enough; just forcefully shorten the link
-            string joinedUp = string.Join("/", bits);
+            string joinedUp = bits.StringJoin("/");
             return joinedUp.Substring(0, maxLength - 5) + "[...]";
         }
 
@@ -559,7 +559,7 @@ namespace SharpIrcBot.Plugins.LinkInfo
             string[] words = infoString.Split(new[] {' '}, StringSplitOptions.None);
             for (int i = words.Length - 2; i > 0; --i)
             {
-                string joinedEllipsized = string.Join(" ", words.Take(i)) + " " + ellipsis;
+                string joinedEllipsized = words.Take(i).StringJoin(" ") + " " + ellipsis;
                 if (joinedEllipsized.Length <= maxLength)
                 {
                     return joinedEllipsized;

@@ -616,6 +616,11 @@ namespace SharpIrcBot
             return enumer.Current;
         }
 
+        public static string StringJoin<T>(this IEnumerable<T> pieces, string glue)
+        {
+            return string.Join<T>(glue, pieces);
+        }
+
         /// <summary>
         /// Attempts to parse an integer in the invariant culture <see cref="CultureInfo.InvariantCulture"/>.
         /// </summary>

@@ -563,7 +563,7 @@ namespace SharpIrcBot.Plugins.UnoBot
 
             if (possibleCards.Count > 0)
             {
-                StrategyLogger.LogDebug("we have at least one evil card for the next player ({Cards})", string.Join(", ", possibleCards));
+                StrategyLogger.LogDebug("we have at least one evil card for the next player ({Cards})", possibleCards.StringJoin(", "));
 
                 // don't add the next pick
                 return StrategyContinuation.SkipAllOtherStrategiesUnlessFilteredEmpty;
@@ -834,7 +834,7 @@ namespace SharpIrcBot.Plugins.UnoBot
             var strategies = AssembleStrategies();
             var filters = AssembleFilters();
 
-            StrategyLogger.LogDebug("current hand: [{HandCards}]", string.Join(", ", CurrentHand.Select(c => c.Color + " " + c.Value)));
+            StrategyLogger.LogDebug("current hand: [{HandCards}]", CurrentHand.Select(c => c.Color + " " + c.Value).StringJoin(", "));
 
             if (Config.DrawAllTheTime && !DrewLast)
             {

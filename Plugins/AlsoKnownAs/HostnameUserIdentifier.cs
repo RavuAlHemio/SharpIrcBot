@@ -47,7 +47,9 @@ namespace SharpIrcBot.Plugins.AlsoKnownAs
 
         public override string ToString()
         {
-            return string.Join(".", HostnameParts.Reverse());
+            return HostnameParts
+                .Reverse()
+                .StringJoin(".");
         }
 
         public override ImmutableList<string> Parts => HostnameParts;

@@ -198,7 +198,7 @@ namespace SharpIrcBot.Plugins.Allograph
                     CooldownsPerChannel[channel].Clear();
                     CooldownsPerChannel[channel].AddRange(newCooldowns);
 
-                    Logger.LogDebug("cooldowns are now: {Cooldowns}", string.Join(", ", newCooldowns.Select(c => c.ToString())));
+                    Logger.LogDebug("cooldowns are now: {Cooldowns}", newCooldowns.Select(c => c.ToString()).StringJoin(", "));
                 }
 
                 if (fullReplacement)

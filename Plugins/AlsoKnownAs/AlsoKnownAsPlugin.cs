@@ -115,16 +115,16 @@ namespace SharpIrcBot.Plugins.AlsoKnownAs
             {
                 if (fuzzyOtherNicks != null && fuzzyOtherNicks.Count > 0)
                 {
-                    respond($"{identifier}: {string.Join(", ", otherNicks)}; fuzzy match ({fuzzyMatchDepth}/{identifierParts.Count}) also: {string.Join(", ", fuzzyOtherNicks)}");
+                    respond($"{identifier}: {otherNicks.StringJoin(", ")}; fuzzy match ({fuzzyMatchDepth}/{identifierParts.Count}) also: {fuzzyOtherNicks.StringJoin(", ")}");
                 }
                 else
                 {
-                    respond($"{identifier}: {string.Join(", ", otherNicks)}");
+                    respond($"{identifier}: {otherNicks.StringJoin(", ")}");
                 }
             }
             else
             {
-                respond($"{identifier} fuzzy match ({matchDepth}/{identifierParts.Count}): {string.Join(", ", otherNicks)}");
+                respond($"{identifier} fuzzy match ({matchDepth}/{identifierParts.Count}): {otherNicks.StringJoin(", ")}");
             }
         }
 

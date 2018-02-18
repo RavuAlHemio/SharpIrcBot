@@ -47,7 +47,9 @@ namespace SharpIrcBot.Plugins.AlsoKnownAs
 
         public override string ToString()
         {
-            return string.Join(".", CloakedAddressParts.Reverse());
+            return CloakedAddressParts
+                .Reverse()
+                .StringJoin(".");
         }
 
         public override ImmutableList<string> Parts => CloakedAddressParts;

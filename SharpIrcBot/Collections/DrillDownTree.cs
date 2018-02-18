@@ -83,7 +83,7 @@ namespace SharpIrcBot.Collections
         {
             finalDepth = currentDepth;
 
-            Debug($"root: {root.GetType()}, keyList: [{string.Join(", ", keyList)}], currentDepth: {currentDepth}");
+            Debug($"root: {root.GetType()}, keyList: [{keyList.StringJoin(", ")}], currentDepth: {currentDepth}");
 
             if (keyList.Count == 0)
             {

@@ -139,7 +139,7 @@ namespace SharpIrcBot.Plugins.WhoisLoginNickMapping
 
         protected virtual void CheckRegistrationsOn(IReadOnlyList<string> nicknames)
         {
-            Logger.LogDebug("performing reg check on: {Nicknames}", string.Join(" ", nicknames));
+            Logger.LogDebug("performing reg check on: {Nicknames}", nicknames.StringJoin(" "));
 
             // send WHOIS for every user to get their registered name
             // do this in packages to reduce traffic
