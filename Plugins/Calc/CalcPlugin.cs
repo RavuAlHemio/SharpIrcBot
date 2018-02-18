@@ -40,6 +40,10 @@ namespace SharpIrcBot.Plugins.Calc
             {
                 result = "Overflow.";
             }
+            catch (DivideByZeroException)
+            {
+                result = "Division by zero.";
+            }
             catch (SimplificationException ex)
             {
                 result = ex.Message;
