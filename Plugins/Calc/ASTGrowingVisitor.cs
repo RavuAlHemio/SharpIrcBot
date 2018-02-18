@@ -36,6 +36,15 @@ namespace SharpIrcBot.Plugins.Calc
             );
         }
 
+        public override Expression VisitRem([NotNull] CalcLangParser.RemContext context)
+        {
+            return new BinaryOperationExpression(
+                Visit(context.expression(0)),
+                Operation.Remainder,
+                Visit(context.expression(1))
+            );
+        }
+
         public override Expression VisitPow([NotNull] CalcLangParser.PowContext context)
         {
             return new BinaryOperationExpression(

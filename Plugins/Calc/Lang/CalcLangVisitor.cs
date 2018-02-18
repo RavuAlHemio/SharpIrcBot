@@ -103,6 +103,13 @@ public interface ICalcLangVisitor<Result> : IParseTreeVisitor<Result> {
 	/// <return>The visitor result.</return>
 	Result VisitPow([NotNull] CalcLangParser.PowContext context);
 	/// <summary>
+	/// Visit a parse tree produced by the <c>Rem</c>
+	/// labeled alternative in <see cref="CalcLangParser.expression"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitRem([NotNull] CalcLangParser.RemContext context);
+	/// <summary>
 	/// Visit a parse tree produced by the <c>Int</c>
 	/// labeled alternative in <see cref="CalcLangParser.expression"/>.
 	/// </summary>

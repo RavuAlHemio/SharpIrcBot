@@ -176,6 +176,20 @@ public partial class CalcLangBaseListener : ICalcLangListener {
 	/// <param name="context">The parse tree.</param>
 	public virtual void ExitPow([NotNull] CalcLangParser.PowContext context) { }
 	/// <summary>
+	/// Enter a parse tree produced by the <c>Rem</c>
+	/// labeled alternative in <see cref="CalcLangParser.expression"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void EnterRem([NotNull] CalcLangParser.RemContext context) { }
+	/// <summary>
+	/// Exit a parse tree produced by the <c>Rem</c>
+	/// labeled alternative in <see cref="CalcLangParser.expression"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void ExitRem([NotNull] CalcLangParser.RemContext context) { }
+	/// <summary>
 	/// Enter a parse tree produced by the <c>Int</c>
 	/// labeled alternative in <see cref="CalcLangParser.expression"/>.
 	/// <para>The default implementation does nothing.</para>

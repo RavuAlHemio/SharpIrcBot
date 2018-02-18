@@ -33,6 +33,7 @@ expression
     | expression '**' expression # Pow
     | expression '*' expression # Mul
     | expression '/' expression # Div
+    | expression '%' expression # Rem
     | expression '+' expression # Add
     | expression '-' expression # Sub
     | Identifier # Cst
