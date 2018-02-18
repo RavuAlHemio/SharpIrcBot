@@ -36,6 +36,18 @@ using ParserRuleContext = Antlr4.Runtime.ParserRuleContext;
 [System.CLSCompliant(false)]
 public partial class CalcLangBaseListener : ICalcLangListener {
 	/// <summary>
+	/// Enter a parse tree produced by <see cref="CalcLangParser.fullExpression"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void EnterFullExpression([NotNull] CalcLangParser.FullExpressionContext context) { }
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="CalcLangParser.fullExpression"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void ExitFullExpression([NotNull] CalcLangParser.FullExpressionContext context) { }
+	/// <summary>
 	/// Enter a parse tree produced by the <c>Div</c>
 	/// labeled alternative in <see cref="CalcLangParser.expression"/>.
 	/// <para>The default implementation does nothing.</para>

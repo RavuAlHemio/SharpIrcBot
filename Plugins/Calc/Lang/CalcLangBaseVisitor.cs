@@ -35,6 +35,16 @@ using ParserRuleContext = Antlr4.Runtime.ParserRuleContext;
 [System.CLSCompliant(false)]
 public partial class CalcLangBaseVisitor<Result> : AbstractParseTreeVisitor<Result>, ICalcLangVisitor<Result> {
 	/// <summary>
+	/// Visit a parse tree produced by <see cref="CalcLangParser.fullExpression"/>.
+	/// <para>
+	/// The default implementation returns the result of calling <see cref="AbstractParseTreeVisitor{Result}.VisitChildren(IRuleNode)"/>
+	/// on <paramref name="context"/>.
+	/// </para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	public virtual Result VisitFullExpression([NotNull] CalcLangParser.FullExpressionContext context) { return VisitChildren(context); }
+	/// <summary>
 	/// Visit a parse tree produced by the <c>Div</c>
 	/// labeled alternative in <see cref="CalcLangParser.expression"/>.
 	/// <para>

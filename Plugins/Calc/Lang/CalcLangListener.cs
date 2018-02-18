@@ -32,6 +32,16 @@ using IToken = Antlr4.Runtime.IToken;
 [System.CLSCompliant(false)]
 public interface ICalcLangListener : IParseTreeListener {
 	/// <summary>
+	/// Enter a parse tree produced by <see cref="CalcLangParser.fullExpression"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void EnterFullExpression([NotNull] CalcLangParser.FullExpressionContext context);
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="CalcLangParser.fullExpression"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void ExitFullExpression([NotNull] CalcLangParser.FullExpressionContext context);
+	/// <summary>
 	/// Enter a parse tree produced by the <c>Div</c>
 	/// labeled alternative in <see cref="CalcLangParser.expression"/>.
 	/// </summary>

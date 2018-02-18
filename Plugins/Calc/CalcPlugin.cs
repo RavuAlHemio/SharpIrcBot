@@ -70,7 +70,7 @@ namespace SharpIrcBot.Plugins.Calc
             parser.RemoveErrorListeners();
             parser.AddErrorListener(PanicErrorListener.Instance);
 
-            CalcLangParser.ExpressionContext exprContext = parser.expression();
+            CalcLangParser.ExpressionContext exprContext = parser.fullExpression().expression();
             var visitor = new ASTGrowingVisitor();
             Expression topExpression = visitor.Visit(exprContext);
 

@@ -26,6 +26,8 @@ fragment Whitespace
     | '\u000B' // Vertical Tab
     ;
 
+fullExpression: expression EOF;
+
 expression
     : '(' expression ')' # Parens
     | Identifier '(' arglist? ')' # Func
