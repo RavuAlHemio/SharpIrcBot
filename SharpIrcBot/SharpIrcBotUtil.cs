@@ -606,6 +606,16 @@ namespace SharpIrcBot
             return list;
         }
 
+        public static T? TryTake<T>(this IEnumerator<T> enumer)
+            where T : struct
+        {
+            if (!enumer.MoveNext())
+            {
+                return null;
+            }
+            return enumer.Current;
+        }
+
         /// <summary>
         /// Attempts to parse an integer in the invariant culture <see cref="CultureInfo.InvariantCulture"/>.
         /// </summary>
