@@ -15,6 +15,11 @@ namespace SharpIrcBot.Plugins.Calc
 
         public static decimal Sqrt(decimal radicand)
         {
+            if (radicand < 0.0m)
+            {
+                throw new FunctionDomainException();
+            }
+
             const int maxIterations = 64;
 
             decimal result = 1.0m;
