@@ -14,11 +14,15 @@ namespace SharpIrcBot.Plugins.Counters
 
         public int BacklogSize { get; set; }
         public List<Counter> Counters { get; set; }
+        public int TopCount { get; set; }
+        public string TopCountText { get; set; }
 
         public CountersConfig(JObject obj)
         {
             BacklogSize = 50;
             Counters = new List<Counter>();
+            TopCount = 5;
+            TopCountText = "five";
 
             var ser = new JsonSerializer();
             ser.Populate(obj.CreateReader(), this);

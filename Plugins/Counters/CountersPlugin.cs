@@ -49,6 +49,17 @@ namespace SharpIrcBot.Plugins.Counters
                 ),
                 HandleCountedCommand
             );
+            ConnectionManager.CommandManager.RegisterChannelMessageCommandHandler(
+                new Command(
+                    CommandUtil.MakeNames("counterstats"),
+                    CommandUtil.NoOptions,
+                    CommandUtil.MakeArguments(
+                        CommandUtil.NonzeroStringMatcherRequiredWordTaker // counter name
+                    ),
+                    forbiddenFlags: MessageFlags.UserBanned
+                ),
+                HandleCounterStatsCommand
+            );
 
             ConnectionManager.ChannelMessage += HandleChannelMessage;
             ConnectionManager.BaseNickChanged += HandleBaseNickChanged;
@@ -283,6 +294,35 @@ namespace SharpIrcBot.Plugins.Counters
                 ctx.SaveChanges();
 
                 ConnectionManager.SendChannelMessage(args.Channel, $"{args.SenderNickname}: Okay, expunged <{entry.PerpNickname}> {args.Message}");
+            }
+        }
+
+        protected virtual void HandleCounterStatsCommand(CommandMatch cmd, IChannelMessageEventArgs args)
+        {
+            var counter = (string)cmd.Arguments[0];
+            using (CountersContext ctx = GetNewContext())
+            {
+                IQueryable<CounterEntry> relevantEntries = ctx.Entries
+                    .Where(e => e.Command == counter && e.Channel == args.Channel && !e.Expunged);
+
+                int entryCount = relevantEntries.Count();
+                List<KeyValuePair<string, int>> usersCounts = relevantEntries
+                    .GroupBy(e => e.PerpUsername ?? e.PerpNickname, (key, es) => new KeyValuePair<string, int>(key, es.Count()))
+                    .OrderByDescending(uc => uc.Value)
+                    .ToList();
+
+                string tops = usersCounts
+                    .Select(uc => $"{uc.Key}: {uc.Value}")
+                    .StringJoin(", ");
+
+                string topText = (usersCounts.Count <= Config.TopCount)
+                    ? ""
+                    : (" " + Config.TopCountText);
+
+                ConnectionManager.SendChannelMessage(
+                    args.Channel,
+                    $"{args.SenderNickname}: '{counter}': {entryCount} (top{topText}: {tops})"
+                );
             }
         }
 
