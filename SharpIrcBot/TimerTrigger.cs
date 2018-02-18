@@ -157,7 +157,15 @@ namespace SharpIrcBot
 
                 if (!maybeFirst.HasValue)
                 {
-                    SleepUntilInterrupt(token);
+                    try
+                    {
+                        SleepUntilInterrupt(token);
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        return;
+                    }
+
                     continue;
                 }
 
