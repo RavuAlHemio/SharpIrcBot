@@ -315,13 +315,23 @@ namespace SharpIrcBot.Plugins.Counters
                     .Select(uc => $"{uc.Key}: {uc.Value}")
                     .StringJoin(", ");
 
-                string topText = (usersCounts.Count <= Config.TopCount)
-                    ? ""
-                    : (" " + Config.TopCountText);
+                string topText;
+                if (usersCounts.Count == 0)
+                {
+                    topText = "";
+                }
+                else if (usersCounts.Count <= Config.TopCount)
+                {
+                    topText = $" (top: {tops})";
+                }
+                else
+                {
+                    topText = $" (top {Config.TopCountText}: {tops})";
+                }
 
                 ConnectionManager.SendChannelMessage(
                     args.Channel,
-                    $"{args.SenderNickname}: '{counter}': {entryCount} (top{topText}: {tops})"
+                    $"{args.SenderNickname}: '{counter}': {entryCount}{topText}"
                 );
             }
         }
