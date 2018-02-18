@@ -44,6 +44,10 @@ namespace SharpIrcBot.Plugins.Calc
             {
                 result = "Division by zero.";
             }
+            catch (FunctionDomainException)
+            {
+                result = "Undefined value.";
+            }
             catch (SimplificationException ex)
             {
                 result = ex.Message;

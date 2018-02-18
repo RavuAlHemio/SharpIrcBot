@@ -72,11 +72,11 @@ namespace SharpIrcBot.Plugins.Calc
             return new CalcFunction(
                 name,
                 1,
-                (args) => new PrimitiveExpression(
-                    (decimal)innerFunc(
+                (args) => new PrimitiveExpression(DoubleToDecimal(
+                    innerFunc(
                         args[0].IsDecimal ? (double)args[0].DecimalValue : (double)args[0].LongValue
                     )
-                )
+                ))
             );
         }
 
@@ -98,13 +98,26 @@ namespace SharpIrcBot.Plugins.Calc
             return new CalcFunction(
                 name,
                 2,
-                (args) => new PrimitiveExpression(
-                    (decimal)innerFunc(
+                (args) => new PrimitiveExpression(DoubleToDecimal(
+                    innerFunc(
                         args[0].IsDecimal ? (double)args[0].DecimalValue : (double)args[0].LongValue,
                         args[1].IsDecimal ? (double)args[1].DecimalValue : (double)args[1].LongValue
                     )
-                )
+                ))
             );
+        }
+
+        protected static decimal DoubleToDecimal(double d)
+        {
+            if (double.IsInfinity(d))
+            {
+                throw new OverflowException();
+            }
+            if (double.IsNaN(d))
+            {
+                throw new FunctionDomainException();
+            }
+            return (decimal)d;
         }
     }
 }
