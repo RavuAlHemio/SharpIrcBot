@@ -81,9 +81,16 @@ namespace SharpIrcBot.Plugins.Calc.AST
 
         public static PrimitiveExpression Pow(long baseLong, long exponentLong)
         {
-            if (baseLong == 0 && exponentLong == 0)
+            if (baseLong == 0)
             {
-                throw new SimplificationException("0**0 is undefined.");
+                if (exponentLong == 0)
+                {
+                    throw new SimplificationException("0**0 is undefined.");
+                }
+                else if (exponentLong < 0)
+                {
+                    throw new DivideByZeroException();
+                }
             }
 
             if (baseLong == 1)
