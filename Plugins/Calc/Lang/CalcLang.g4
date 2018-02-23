@@ -38,6 +38,9 @@ expression
     | expression '%' expression # Rem
     | expression '+' expression # Add
     | expression '-' expression # Sub
+    | expression '&' expression # BAnd
+    | expression '^' expression # BXor
+    | expression '|' expression # BOr
     | Identifier # Cst
     | Integer # Int
     | Decimal # Dec

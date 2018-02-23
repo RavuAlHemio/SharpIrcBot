@@ -1,5 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 using Antlr4.Runtime;
+using Antlr4.Runtime.Misc;
 using Newtonsoft.Json.Linq;
 using SharpIrcBot.Commands;
 using SharpIrcBot.Events.Irc;
@@ -10,11 +14,15 @@ namespace SharpIrcBot.Plugins.Calc
 {
     public class CalcPlugin : IPlugin
     {
-        protected IConnectionManager ConnectionManager;
+        protected IConnectionManager ConnectionManager { get; }
+        protected CalcConfig Config { get; set; }
+        protected Dictionary<string, (string exprLine, string squiggleLine)> ChannelToLastFailure { get; set; }
 
         public CalcPlugin(IConnectionManager connMgr, JObject config)
         {
             ConnectionManager = connMgr;
+            Config = new CalcConfig(config);
+            ChannelToLastFailure = new Dictionary<string, (string exprLine, string squiggleLine)>();
 
             ConnectionManager.CommandManager.RegisterChannelMessageCommandHandler(
                 new Command(
@@ -25,6 +33,15 @@ namespace SharpIrcBot.Plugins.Calc
                 ),
                 HandleCalcCommand
             );
+            ConnectionManager.CommandManager.RegisterChannelMessageCommandHandler(
+                new Command(
+                    CommandUtil.MakeNames("calcwhere"),
+                    CommandUtil.NoOptions,
+                    CommandUtil.NoArguments,
+                    forbiddenFlags: MessageFlags.UserBanned
+                ),
+                HandleCalcWhereCommand
+            );
         }
 
         protected virtual void HandleCalcCommand(CommandMatch cmd, IChannelMessageEventArgs args)
@@ -32,28 +49,46 @@ namespace SharpIrcBot.Plugins.Calc
             var expression = (string)(cmd.Arguments[0]);
             string result;
 
+            int position = -1;
+            int length = -1;
             try
             {
                 result = Calculate(expression);
             }
-            catch (OverflowException)
-            {
-                result = "Overflow.";
-            }
-            catch (DivideByZeroException)
-            {
-                result = "Division by zero.";
-            }
-            catch (FunctionDomainException)
-            {
-                result = "Undefined value.";
-            }
             catch (SimplificationException ex)
             {
                 result = ex.Message;
+                position = ex.Expression?.Index ?? -1;
+                length = ex.Expression?.Length ?? -1;
+            }
+
+            if (Config.MaxResultStringLength > 0 && result.Length > Config.MaxResultStringLength)
+            {
+                result = "The result is too long to display.";
             }
 
             ConnectionManager.SendChannelMessage(args.Channel, $"{args.SenderNickname}: {result}");
+            if (position != -1 && length != -1)
+            {
+                // squiggly-underline the problematic section
+                var underline = new StringBuilder();
+                underline.Append(' ', position);
+                underline.Append('~', length);
+
+                ChannelToLastFailure[args.Channel] = (expression, underline.ToString());
+            }
+        }
+
+        protected virtual void HandleCalcWhereCommand(CommandMatch cmd, IChannelMessageEventArgs args)
+        {
+            (string exprLine, string squiggleLine) linePair;
+            if (!ChannelToLastFailure.TryGetValue(args.Channel, out linePair))
+            {
+                ConnectionManager.SendChannelMessage(args.Channel, $"{args.SenderNickname}: Cannot remember a last error.");
+            }
+
+            ConnectionManager.SendChannelMessage(args.Channel, $"{args.SenderNickname}: {linePair.exprLine}");
+            ConnectionManager.SendChannelMessage(args.Channel, $"{args.SenderNickname}: {linePair.squiggleLine}");
         }
 
         protected virtual string Calculate(string expression)
@@ -71,12 +106,14 @@ namespace SharpIrcBot.Plugins.Calc
             parser.AddErrorListener(PanicErrorListener.Instance);
 
             CalcLangParser.ExpressionContext exprContext = parser.fullExpression().expression();
-            var visitor = new ASTGrowingVisitor();
+            var visitor = new ASTGrowingVisitor(tokenStream);
             Expression topExpression = visitor.Visit(exprContext);
 
             Grimoire grimoire = Grimoire.CanonicalGrimoire;
 
-            PrimitiveExpression simplifiedTop = topExpression.Simplified(grimoire);
+            var timer = new CalcTimer(TimeSpan.FromSeconds(Config.TimeoutSeconds));
+            timer.Start();
+            PrimitiveExpression simplifiedTop = topExpression.Simplified(grimoire, timer);
 
             return simplifiedTop.ToString();
         }

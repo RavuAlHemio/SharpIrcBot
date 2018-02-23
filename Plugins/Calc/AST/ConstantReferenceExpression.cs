@@ -7,7 +7,8 @@ namespace SharpIrcBot.Plugins.Calc.AST
     {
         public string Name { get; }
 
-        public ConstantReferenceExpression(string name)
+        public ConstantReferenceExpression(int index, int length, string name)
+            : base(index, length)
         {
             Name = name;
         }
@@ -17,16 +18,20 @@ namespace SharpIrcBot.Plugins.Calc.AST
             return Name;
         }
 
-        public override PrimitiveExpression Simplified(Grimoire grimoire)
+        public override PrimitiveExpression Simplified(Grimoire grimoire, CalcTimer timer)
         {
+            timer.ThrowIfTimedOut();
+
             PrimitiveExpression ret;
             if (!grimoire.Constants.TryGetValue(Name, out ret))
             {
                 throw new SimplificationException(
-                    $"Unknown constant '{Name}'."
+                    $"Unknown constant '{Name}'.",
+                    this
                 );
             }
-            return ret;
+
+            return ret.Repositioned(Index, Length);
         }
     }
 }

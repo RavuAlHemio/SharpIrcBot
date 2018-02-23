@@ -8,6 +8,9 @@ namespace SharpIrcBot.Plugins.Calc.AST
         Multiply = 4,
         Divide = 5,
         Remainder = 6,
-        Power = 7
+        Power = 7,
+        BinaryAnd = 8,
+        BinaryXor = 9,
+        BinaryOr = 10,
     }
 }

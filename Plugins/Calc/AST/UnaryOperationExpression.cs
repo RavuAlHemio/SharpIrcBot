@@ -7,7 +7,8 @@ namespace SharpIrcBot.Plugins.Calc.AST
         public Operation Operation { get; }
         public Expression Operand { get; }
 
-        public UnaryOperationExpression(Operation op, Expression operand)
+        public UnaryOperationExpression(int index, int length, Operation op, Expression operand)
+            : base(index, length)
         {
             Operation = op;
             Operand = operand;
@@ -23,20 +24,33 @@ namespace SharpIrcBot.Plugins.Calc.AST
             return ret.ToString();
         }
 
-        public override PrimitiveExpression Simplified(Grimoire grimoire)
+        public override PrimitiveExpression Simplified(Grimoire grimoire, CalcTimer timer)
         {
-            PrimitiveExpression primOperand = Operand.Simplified(grimoire);
+            timer.ThrowIfTimedOut();
+
+            PrimitiveExpression primOperand = Operand.Simplified(grimoire, timer);
 
             switch (Operation)
             {
                 case Operation.Negate:
-                    return (primOperand.IsDecimal)
-                        ? new PrimitiveExpression(-primOperand.DecimalValue)
-                        : new PrimitiveExpression(-primOperand.LongValue)
-                    ;
+                    if (primOperand.Type == PrimitiveType.IntegerLong)
+                    {
+                        return new PrimitiveExpression(Index, Length, -primOperand.LongValue);
+                    }
+                    else if (primOperand.Type == PrimitiveType.IntegerBig)
+                    {
+                        return new PrimitiveExpression(Index, Length, -primOperand.BigIntegerValue);
+                    }
+                    else if (primOperand.Type == PrimitiveType.Decimal)
+                    {
+                        return new PrimitiveExpression(Index, Length, -primOperand.DecimalValue);
+                    }
+                    break;
                 default:
-                    throw new SimplificationException($"Cannot handle unary operator {Operation}");
+                    break;
             }
+
+            throw new SimplificationException($"Cannot handle unary operator {Operation}.", this);
         }
     }
 }

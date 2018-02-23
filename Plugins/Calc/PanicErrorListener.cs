@@ -16,12 +16,12 @@ namespace SharpIrcBot.Plugins.Calc
 
         public void SyntaxError(TextWriter output, IRecognizer recognizer, int offendingSymbol, int line, int charPositionInLine, string msg, RecognitionException e)
         {
-            throw new SimplificationException("Syntax error.");
+            throw new SimplificationException("Syntax error.", null);
         }
 
         public void SyntaxError(TextWriter output, IRecognizer recognizer, IToken offendingSymbol, int line, int charPositionInLine, string msg, RecognitionException e)
         {
-            throw new SimplificationException("Syntax error.");
+            throw new SimplificationException("Syntax error.", null);
         }
     }
 }

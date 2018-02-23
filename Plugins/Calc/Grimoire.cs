@@ -35,11 +35,11 @@ namespace SharpIrcBot.Plugins.Calc
             ImmutableDictionary<string, CalcFunction>.Builder fBuilder
                 = ImmutableDictionary.CreateBuilder<string, CalcFunction>();
 
-            cBuilder.Add("pi", new PrimitiveExpression(MathFuncs.Pi));
-            cBuilder.Add("e", new PrimitiveExpression(MathFuncs.E));
-            cBuilder.Add("goldenRatio", new PrimitiveExpression(MathFuncs.GoldenRatio));
-            cBuilder.Add("theAnswerToLifeTheUniverseAndEverything", new PrimitiveExpression(42));
-            cBuilder.Add("numberOfHornsOnAUnicorn", new PrimitiveExpression(1));
+            cBuilder.Add("pi", new PrimitiveExpression(-1, -1, MathFuncs.Pi));
+            cBuilder.Add("e", new PrimitiveExpression(-1, -1, MathFuncs.E));
+            cBuilder.Add("goldenRatio", new PrimitiveExpression(-1, -1, MathFuncs.GoldenRatio));
+            cBuilder.Add("theAnswerToLifeTheUniverseAndEverything", new PrimitiveExpression(-1, -1, 42));
+            cBuilder.Add("numberOfHornsOnAUnicorn", new PrimitiveExpression(-1, -1, 1));
 
             fBuilder.Add("sqrt", PrimitiveDecimalDecimalFunc("sqrt", MathFuncs.Sqrt));
 
@@ -72,10 +72,8 @@ namespace SharpIrcBot.Plugins.Calc
             return new CalcFunction(
                 name,
                 1,
-                (args) => new PrimitiveExpression(DoubleToDecimal(
-                    innerFunc(
-                        args[0].IsDecimal ? (double)args[0].DecimalValue : (double)args[0].LongValue
-                    )
+                (args) => new PrimitiveExpression(-1, -1, DoubleToDecimal(
+                    innerFunc(args[0].ToDouble())
                 ))
             );
         }
@@ -86,9 +84,8 @@ namespace SharpIrcBot.Plugins.Calc
                 name,
                 1,
                 (args) => new PrimitiveExpression(
-                    innerFunc(
-                        args[0].IsDecimal ? args[0].DecimalValue : (decimal)args[0].LongValue
-                    )
+                    -1, -1,
+                    innerFunc(args[0].ToDecimal())
                 )
             );
         }
@@ -98,11 +95,8 @@ namespace SharpIrcBot.Plugins.Calc
             return new CalcFunction(
                 name,
                 2,
-                (args) => new PrimitiveExpression(DoubleToDecimal(
-                    innerFunc(
-                        args[0].IsDecimal ? (double)args[0].DecimalValue : (double)args[0].LongValue,
-                        args[1].IsDecimal ? (double)args[1].DecimalValue : (double)args[1].LongValue
-                    )
+                (args) => new PrimitiveExpression(-1, -1, DoubleToDecimal(
+                    innerFunc(args[0].ToDouble(), args[1].ToDouble())
                 ))
             );
         }

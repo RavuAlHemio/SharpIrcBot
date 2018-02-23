@@ -42,18 +42,6 @@ public interface ICalcLangListener : IParseTreeListener {
 	/// <param name="context">The parse tree.</param>
 	void ExitFullExpression([NotNull] CalcLangParser.FullExpressionContext context);
 	/// <summary>
-	/// Enter a parse tree produced by the <c>Div</c>
-	/// labeled alternative in <see cref="CalcLangParser.expression"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	void EnterDiv([NotNull] CalcLangParser.DivContext context);
-	/// <summary>
-	/// Exit a parse tree produced by the <c>Div</c>
-	/// labeled alternative in <see cref="CalcLangParser.expression"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	void ExitDiv([NotNull] CalcLangParser.DivContext context);
-	/// <summary>
 	/// Enter a parse tree produced by the <c>Add</c>
 	/// labeled alternative in <see cref="CalcLangParser.expression"/>.
 	/// </summary>
@@ -65,18 +53,6 @@ public interface ICalcLangListener : IParseTreeListener {
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	void ExitAdd([NotNull] CalcLangParser.AddContext context);
-	/// <summary>
-	/// Enter a parse tree produced by the <c>Neg</c>
-	/// labeled alternative in <see cref="CalcLangParser.expression"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	void EnterNeg([NotNull] CalcLangParser.NegContext context);
-	/// <summary>
-	/// Exit a parse tree produced by the <c>Neg</c>
-	/// labeled alternative in <see cref="CalcLangParser.expression"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	void ExitNeg([NotNull] CalcLangParser.NegContext context);
 	/// <summary>
 	/// Enter a parse tree produced by the <c>Sub</c>
 	/// labeled alternative in <see cref="CalcLangParser.expression"/>.
@@ -101,6 +77,18 @@ public interface ICalcLangListener : IParseTreeListener {
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	void ExitDec([NotNull] CalcLangParser.DecContext context);
+	/// <summary>
+	/// Enter a parse tree produced by the <c>BOr</c>
+	/// labeled alternative in <see cref="CalcLangParser.expression"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void EnterBOr([NotNull] CalcLangParser.BOrContext context);
+	/// <summary>
+	/// Exit a parse tree produced by the <c>BOr</c>
+	/// labeled alternative in <see cref="CalcLangParser.expression"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void ExitBOr([NotNull] CalcLangParser.BOrContext context);
 	/// <summary>
 	/// Enter a parse tree produced by the <c>Func</c>
 	/// labeled alternative in <see cref="CalcLangParser.expression"/>.
@@ -150,6 +138,66 @@ public interface ICalcLangListener : IParseTreeListener {
 	/// <param name="context">The parse tree.</param>
 	void ExitParens([NotNull] CalcLangParser.ParensContext context);
 	/// <summary>
+	/// Enter a parse tree produced by the <c>BXor</c>
+	/// labeled alternative in <see cref="CalcLangParser.expression"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void EnterBXor([NotNull] CalcLangParser.BXorContext context);
+	/// <summary>
+	/// Exit a parse tree produced by the <c>BXor</c>
+	/// labeled alternative in <see cref="CalcLangParser.expression"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void ExitBXor([NotNull] CalcLangParser.BXorContext context);
+	/// <summary>
+	/// Enter a parse tree produced by the <c>BAnd</c>
+	/// labeled alternative in <see cref="CalcLangParser.expression"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void EnterBAnd([NotNull] CalcLangParser.BAndContext context);
+	/// <summary>
+	/// Exit a parse tree produced by the <c>BAnd</c>
+	/// labeled alternative in <see cref="CalcLangParser.expression"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void ExitBAnd([NotNull] CalcLangParser.BAndContext context);
+	/// <summary>
+	/// Enter a parse tree produced by the <c>Int</c>
+	/// labeled alternative in <see cref="CalcLangParser.expression"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void EnterInt([NotNull] CalcLangParser.IntContext context);
+	/// <summary>
+	/// Exit a parse tree produced by the <c>Int</c>
+	/// labeled alternative in <see cref="CalcLangParser.expression"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void ExitInt([NotNull] CalcLangParser.IntContext context);
+	/// <summary>
+	/// Enter a parse tree produced by the <c>Div</c>
+	/// labeled alternative in <see cref="CalcLangParser.expression"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void EnterDiv([NotNull] CalcLangParser.DivContext context);
+	/// <summary>
+	/// Exit a parse tree produced by the <c>Div</c>
+	/// labeled alternative in <see cref="CalcLangParser.expression"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void ExitDiv([NotNull] CalcLangParser.DivContext context);
+	/// <summary>
+	/// Enter a parse tree produced by the <c>Neg</c>
+	/// labeled alternative in <see cref="CalcLangParser.expression"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void EnterNeg([NotNull] CalcLangParser.NegContext context);
+	/// <summary>
+	/// Exit a parse tree produced by the <c>Neg</c>
+	/// labeled alternative in <see cref="CalcLangParser.expression"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void ExitNeg([NotNull] CalcLangParser.NegContext context);
+	/// <summary>
 	/// Enter a parse tree produced by the <c>Pow</c>
 	/// labeled alternative in <see cref="CalcLangParser.expression"/>.
 	/// </summary>
@@ -173,18 +221,6 @@ public interface ICalcLangListener : IParseTreeListener {
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	void ExitRem([NotNull] CalcLangParser.RemContext context);
-	/// <summary>
-	/// Enter a parse tree produced by the <c>Int</c>
-	/// labeled alternative in <see cref="CalcLangParser.expression"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	void EnterInt([NotNull] CalcLangParser.IntContext context);
-	/// <summary>
-	/// Exit a parse tree produced by the <c>Int</c>
-	/// labeled alternative in <see cref="CalcLangParser.expression"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	void ExitInt([NotNull] CalcLangParser.IntContext context);
 	/// <summary>
 	/// Enter a parse tree produced by <see cref="CalcLangParser.arglist"/>.
 	/// </summary>

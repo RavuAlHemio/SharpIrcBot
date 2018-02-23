@@ -48,20 +48,6 @@ public partial class CalcLangBaseListener : ICalcLangListener {
 	/// <param name="context">The parse tree.</param>
 	public virtual void ExitFullExpression([NotNull] CalcLangParser.FullExpressionContext context) { }
 	/// <summary>
-	/// Enter a parse tree produced by the <c>Div</c>
-	/// labeled alternative in <see cref="CalcLangParser.expression"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void EnterDiv([NotNull] CalcLangParser.DivContext context) { }
-	/// <summary>
-	/// Exit a parse tree produced by the <c>Div</c>
-	/// labeled alternative in <see cref="CalcLangParser.expression"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void ExitDiv([NotNull] CalcLangParser.DivContext context) { }
-	/// <summary>
 	/// Enter a parse tree produced by the <c>Add</c>
 	/// labeled alternative in <see cref="CalcLangParser.expression"/>.
 	/// <para>The default implementation does nothing.</para>
@@ -75,20 +61,6 @@ public partial class CalcLangBaseListener : ICalcLangListener {
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	public virtual void ExitAdd([NotNull] CalcLangParser.AddContext context) { }
-	/// <summary>
-	/// Enter a parse tree produced by the <c>Neg</c>
-	/// labeled alternative in <see cref="CalcLangParser.expression"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void EnterNeg([NotNull] CalcLangParser.NegContext context) { }
-	/// <summary>
-	/// Exit a parse tree produced by the <c>Neg</c>
-	/// labeled alternative in <see cref="CalcLangParser.expression"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void ExitNeg([NotNull] CalcLangParser.NegContext context) { }
 	/// <summary>
 	/// Enter a parse tree produced by the <c>Sub</c>
 	/// labeled alternative in <see cref="CalcLangParser.expression"/>.
@@ -117,6 +89,20 @@ public partial class CalcLangBaseListener : ICalcLangListener {
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	public virtual void ExitDec([NotNull] CalcLangParser.DecContext context) { }
+	/// <summary>
+	/// Enter a parse tree produced by the <c>BOr</c>
+	/// labeled alternative in <see cref="CalcLangParser.expression"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void EnterBOr([NotNull] CalcLangParser.BOrContext context) { }
+	/// <summary>
+	/// Exit a parse tree produced by the <c>BOr</c>
+	/// labeled alternative in <see cref="CalcLangParser.expression"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void ExitBOr([NotNull] CalcLangParser.BOrContext context) { }
 	/// <summary>
 	/// Enter a parse tree produced by the <c>Func</c>
 	/// labeled alternative in <see cref="CalcLangParser.expression"/>.
@@ -174,6 +160,76 @@ public partial class CalcLangBaseListener : ICalcLangListener {
 	/// <param name="context">The parse tree.</param>
 	public virtual void ExitParens([NotNull] CalcLangParser.ParensContext context) { }
 	/// <summary>
+	/// Enter a parse tree produced by the <c>BXor</c>
+	/// labeled alternative in <see cref="CalcLangParser.expression"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void EnterBXor([NotNull] CalcLangParser.BXorContext context) { }
+	/// <summary>
+	/// Exit a parse tree produced by the <c>BXor</c>
+	/// labeled alternative in <see cref="CalcLangParser.expression"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void ExitBXor([NotNull] CalcLangParser.BXorContext context) { }
+	/// <summary>
+	/// Enter a parse tree produced by the <c>BAnd</c>
+	/// labeled alternative in <see cref="CalcLangParser.expression"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void EnterBAnd([NotNull] CalcLangParser.BAndContext context) { }
+	/// <summary>
+	/// Exit a parse tree produced by the <c>BAnd</c>
+	/// labeled alternative in <see cref="CalcLangParser.expression"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void ExitBAnd([NotNull] CalcLangParser.BAndContext context) { }
+	/// <summary>
+	/// Enter a parse tree produced by the <c>Int</c>
+	/// labeled alternative in <see cref="CalcLangParser.expression"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void EnterInt([NotNull] CalcLangParser.IntContext context) { }
+	/// <summary>
+	/// Exit a parse tree produced by the <c>Int</c>
+	/// labeled alternative in <see cref="CalcLangParser.expression"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void ExitInt([NotNull] CalcLangParser.IntContext context) { }
+	/// <summary>
+	/// Enter a parse tree produced by the <c>Div</c>
+	/// labeled alternative in <see cref="CalcLangParser.expression"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void EnterDiv([NotNull] CalcLangParser.DivContext context) { }
+	/// <summary>
+	/// Exit a parse tree produced by the <c>Div</c>
+	/// labeled alternative in <see cref="CalcLangParser.expression"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void ExitDiv([NotNull] CalcLangParser.DivContext context) { }
+	/// <summary>
+	/// Enter a parse tree produced by the <c>Neg</c>
+	/// labeled alternative in <see cref="CalcLangParser.expression"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void EnterNeg([NotNull] CalcLangParser.NegContext context) { }
+	/// <summary>
+	/// Exit a parse tree produced by the <c>Neg</c>
+	/// labeled alternative in <see cref="CalcLangParser.expression"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void ExitNeg([NotNull] CalcLangParser.NegContext context) { }
+	/// <summary>
 	/// Enter a parse tree produced by the <c>Pow</c>
 	/// labeled alternative in <see cref="CalcLangParser.expression"/>.
 	/// <para>The default implementation does nothing.</para>
@@ -201,20 +257,6 @@ public partial class CalcLangBaseListener : ICalcLangListener {
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	public virtual void ExitRem([NotNull] CalcLangParser.RemContext context) { }
-	/// <summary>
-	/// Enter a parse tree produced by the <c>Int</c>
-	/// labeled alternative in <see cref="CalcLangParser.expression"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void EnterInt([NotNull] CalcLangParser.IntContext context) { }
-	/// <summary>
-	/// Exit a parse tree produced by the <c>Int</c>
-	/// labeled alternative in <see cref="CalcLangParser.expression"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void ExitInt([NotNull] CalcLangParser.IntContext context) { }
 	/// <summary>
 	/// Enter a parse tree produced by <see cref="CalcLangParser.arglist"/>.
 	/// <para>The default implementation does nothing.</para>
