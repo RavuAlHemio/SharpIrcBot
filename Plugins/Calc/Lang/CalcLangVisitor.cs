@@ -130,6 +130,13 @@ public interface ICalcLangVisitor<Result> : IParseTreeVisitor<Result> {
 	/// <return>The visitor result.</return>
 	Result VisitNeg([NotNull] CalcLangParser.NegContext context);
 	/// <summary>
+	/// Visit a parse tree produced by the <c>IntDiv</c>
+	/// labeled alternative in <see cref="CalcLangParser.expression"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitIntDiv([NotNull] CalcLangParser.IntDivContext context);
+	/// <summary>
 	/// Visit a parse tree produced by the <c>Pow</c>
 	/// labeled alternative in <see cref="CalcLangParser.expression"/>.
 	/// </summary>

@@ -230,6 +230,20 @@ public partial class CalcLangBaseListener : ICalcLangListener {
 	/// <param name="context">The parse tree.</param>
 	public virtual void ExitNeg([NotNull] CalcLangParser.NegContext context) { }
 	/// <summary>
+	/// Enter a parse tree produced by the <c>IntDiv</c>
+	/// labeled alternative in <see cref="CalcLangParser.expression"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void EnterIntDiv([NotNull] CalcLangParser.IntDivContext context) { }
+	/// <summary>
+	/// Exit a parse tree produced by the <c>IntDiv</c>
+	/// labeled alternative in <see cref="CalcLangParser.expression"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void ExitIntDiv([NotNull] CalcLangParser.IntDivContext context) { }
+	/// <summary>
 	/// Enter a parse tree produced by the <c>Pow</c>
 	/// labeled alternative in <see cref="CalcLangParser.expression"/>.
 	/// <para>The default implementation does nothing.</para>

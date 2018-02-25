@@ -198,6 +198,18 @@ public interface ICalcLangListener : IParseTreeListener {
 	/// <param name="context">The parse tree.</param>
 	void ExitNeg([NotNull] CalcLangParser.NegContext context);
 	/// <summary>
+	/// Enter a parse tree produced by the <c>IntDiv</c>
+	/// labeled alternative in <see cref="CalcLangParser.expression"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void EnterIntDiv([NotNull] CalcLangParser.IntDivContext context);
+	/// <summary>
+	/// Exit a parse tree produced by the <c>IntDiv</c>
+	/// labeled alternative in <see cref="CalcLangParser.expression"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void ExitIntDiv([NotNull] CalcLangParser.IntDivContext context);
+	/// <summary>
 	/// Enter a parse tree produced by the <c>Pow</c>
 	/// labeled alternative in <see cref="CalcLangParser.expression"/>.
 	/// </summary>

@@ -34,6 +34,7 @@ expression
     | '-' expression # Neg
     | expression '**' expression # Pow
     | expression '*' expression # Mul
+    | expression '//' expression # IntDiv
     | expression '/' expression # Div
     | expression '%' expression # Rem
     | expression '+' expression # Add

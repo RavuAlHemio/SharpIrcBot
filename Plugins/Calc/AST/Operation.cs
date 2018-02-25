@@ -12,5 +12,6 @@ namespace SharpIrcBot.Plugins.Calc.AST
         BinaryAnd = 8,
         BinaryXor = 9,
         BinaryOr = 10,
+        IntegralDivide = 11,
     }
 }

@@ -42,6 +42,18 @@ namespace SharpIrcBot.Plugins.Calc
             );
         }
 
+        public override Expression VisitIntDiv([NotNull] CalcLangParser.IntDivContext context)
+        {
+            (int index, int length) = ExpressionIndexAndLength(context.SourceInterval);
+
+            return new BinaryOperationExpression(
+                index, length,
+                Visit(context.expression(0)),
+                Operation.IntegralDivide,
+                Visit(context.expression(1))
+            );
+        }
+
         public override Expression VisitMul([NotNull] CalcLangParser.MulContext context)
         {
             (int index, int length) = ExpressionIndexAndLength(context.SourceInterval);

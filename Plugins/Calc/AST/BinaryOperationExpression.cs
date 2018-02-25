@@ -136,11 +136,16 @@ namespace SharpIrcBot.Plugins.Calc.AST
                             (a, b) => checked(a + b)
                         );
                     case Operation.Divide:
+                        return new PrimitiveExpression(
+                            newIndex, newLength,
+                            checked(primLeft.ToDecimal() / primRight.ToDecimal())
+                        );
+                    case Operation.IntegralDivide:
                         return BinaryOp(
                             newIndex, newLength, primLeft, primRight,
                             (a, b) => checked(a / b),
                             (a, b) => checked(a / b),
-                            (a, b) => checked(a / b)
+                            (a, b) => Math.Truncate(checked(a / b))
                         );
                     case Operation.Multiply:
                         return BinaryOp(
