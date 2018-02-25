@@ -91,7 +91,7 @@ namespace SharpIrcBot.Plugins.Calc.AST
                     if (primRight.Type == PrimitiveType.IntegerLong)
                     {
                         // Decimal > IntegerLong
-                        primRight = new PrimitiveExpression(primRight.Index, primRight.Length, (decimal)primRight.DecimalValue);
+                        primRight = new PrimitiveExpression(primRight.Index, primRight.Length, (decimal)primRight.LongValue);
                     }
                     else if (primRight.Type == PrimitiveType.IntegerBig)
                     {
