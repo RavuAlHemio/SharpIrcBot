@@ -78,33 +78,39 @@ namespace SharpIrcBot.Plugins.Calc.AST
 
         public decimal ToDecimal()
         {
-            switch (Type)
+            checked
             {
-                case PrimitiveType.IntegerLong:
-                    return (decimal)LongValue;
-                case PrimitiveType.IntegerBig:
-                    return (decimal)BigIntegerValue;
-                case PrimitiveType.Decimal:
-                    return DecimalValue;
-                default:
-                    Debug.Fail($"Cannot convert primitive type {Type} to decimal.");
-                    return decimal.Zero;
+                switch (Type)
+                {
+                    case PrimitiveType.IntegerLong:
+                        return (decimal)LongValue;
+                    case PrimitiveType.IntegerBig:
+                        return (decimal)BigIntegerValue;
+                    case PrimitiveType.Decimal:
+                        return DecimalValue;
+                    default:
+                        Debug.Fail($"Cannot convert primitive type {Type} to decimal.");
+                        return decimal.Zero;
+                }
             }
         }
 
         public double ToDouble()
         {
-            switch (Type)
+            checked
             {
-                case PrimitiveType.IntegerLong:
-                    return (double)LongValue;
-                case PrimitiveType.IntegerBig:
-                    return (double)BigIntegerValue;
-                case PrimitiveType.Decimal:
-                    return (double)DecimalValue;
-                default:
-                    Debug.Fail($"Cannot convert primitive type {Type} to double.");
-                    return double.NaN;
+                switch (Type)
+                {
+                    case PrimitiveType.IntegerLong:
+                        return (double)LongValue;
+                    case PrimitiveType.IntegerBig:
+                        return (double)BigIntegerValue;
+                    case PrimitiveType.Decimal:
+                        return (double)DecimalValue;
+                    default:
+                        Debug.Fail($"Cannot convert primitive type {Type} to double.");
+                        return double.NaN;
+                }
             }
         }
     }

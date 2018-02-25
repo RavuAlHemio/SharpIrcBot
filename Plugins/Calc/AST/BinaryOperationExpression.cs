@@ -129,83 +129,26 @@ namespace SharpIrcBot.Plugins.Calc.AST
                 switch (Operation)
                 {
                     case Operation.Add:
-                        if (primLeft.Type == PrimitiveType.IntegerLong)
-                        {
-                            return new PrimitiveExpression(
-                                newIndex,
-                                newLength,
-                                primLeft.LongValue + primRight.LongValue
-                            );
-                        }
-                        else if (primLeft.Type == PrimitiveType.IntegerBig)
-                        {
-                            return new PrimitiveExpression(
-                                newIndex,
-                                newLength,
-                                primLeft.BigIntegerValue + primRight.BigIntegerValue
-                            );
-                        }
-                        else if (primLeft.Type == PrimitiveType.Decimal)
-                        {
-                            return new PrimitiveExpression(
-                                newIndex,
-                                newLength,
-                                primLeft.DecimalValue + primRight.DecimalValue
-                            );
-                        }
-                        break;
+                        return BinaryOp(
+                            newIndex, newLength, primLeft, primRight,
+                            (a, b) => checked(a + b),
+                            (a, b) => checked(a + b),
+                            (a, b) => checked(a + b)
+                        );
                     case Operation.Divide:
-                        if (primLeft.Type == PrimitiveType.IntegerLong)
-                        {
-                            return new PrimitiveExpression(
-                                newIndex,
-                                newLength,
-                                primLeft.LongValue / primRight.LongValue
-                            );
-                        }
-                        else if (primLeft.Type == PrimitiveType.IntegerBig)
-                        {
-                            return new PrimitiveExpression(
-                                newIndex,
-                                newLength,
-                                primLeft.BigIntegerValue / primRight.BigIntegerValue
-                            );
-                        }
-                        else if (primLeft.Type == PrimitiveType.Decimal)
-                        {
-                            return new PrimitiveExpression(
-                                newIndex,
-                                newLength,
-                                primLeft.DecimalValue / primRight.DecimalValue
-                            );
-                        }
-                        break;
+                        return BinaryOp(
+                            newIndex, newLength, primLeft, primRight,
+                            (a, b) => checked(a / b),
+                            (a, b) => checked(a / b),
+                            (a, b) => checked(a / b)
+                        );
                     case Operation.Multiply:
-                        if (primLeft.Type == PrimitiveType.IntegerLong)
-                        {
-                            return new PrimitiveExpression(
-                                newIndex,
-                                newLength,
-                                primLeft.LongValue * primRight.LongValue
-                            );
-                        }
-                        else if (primLeft.Type == PrimitiveType.IntegerBig)
-                        {
-                            return new PrimitiveExpression(
-                                newIndex,
-                                newLength,
-                                primLeft.BigIntegerValue * primRight.BigIntegerValue
-                            );
-                        }
-                        else if (primLeft.Type == PrimitiveType.Decimal)
-                        {
-                            return new PrimitiveExpression(
-                                newIndex,
-                                newLength,
-                                primLeft.DecimalValue * primRight.DecimalValue
-                            );
-                        }
-                        break;
+                        return BinaryOp(
+                            newIndex, newLength, primLeft, primRight,
+                            (a, b) => checked(a * b),
+                            (a, b) => checked(a * b),
+                            (a, b) => checked(a * b)
+                        );
                     case Operation.Power:
                         if (primLeft.Type == PrimitiveType.IntegerLong)
                         {
@@ -221,111 +164,40 @@ namespace SharpIrcBot.Plugins.Calc.AST
                         }
                         break;
                     case Operation.Remainder:
-                        if (primLeft.Type == PrimitiveType.IntegerLong)
-                        {
-                            return new PrimitiveExpression(
-                                newIndex,
-                                newLength,
-                                primLeft.LongValue % primRight.LongValue
-                            );
-                        }
-                        else if (primLeft.Type == PrimitiveType.IntegerBig)
-                        {
-                            return new PrimitiveExpression(
-                                newIndex,
-                                newLength,
-                                primLeft.BigIntegerValue % primRight.BigIntegerValue
-                            );
-                        }
-                        else if (primLeft.Type == PrimitiveType.Decimal)
-                        {
-                            return new PrimitiveExpression(
-                                newIndex,
-                                newLength,
-                                primLeft.DecimalValue % primRight.DecimalValue
-                            );
-                        }
-                        break;
+                        return BinaryOp(
+                            newIndex, newLength, primLeft, primRight,
+                            (a, b) => checked(a % b),
+                            (a, b) => checked(a % b),
+                            (a, b) => checked(a % b)
+                        );
                     case Operation.Subtract:
-                        if (primLeft.Type == PrimitiveType.IntegerLong)
-                        {
-                            return new PrimitiveExpression(
-                                newIndex,
-                                newLength,
-                                primLeft.LongValue - primRight.LongValue
-                            );
-                        }
-                        else if (primLeft.Type == PrimitiveType.IntegerBig)
-                        {
-                            return new PrimitiveExpression(
-                                newIndex,
-                                newLength,
-                                primLeft.BigIntegerValue - primRight.BigIntegerValue
-                            );
-                        }
-                        else if (primLeft.Type == PrimitiveType.Decimal)
-                        {
-                            return new PrimitiveExpression(
-                                newIndex,
-                                newLength,
-                                primLeft.DecimalValue - primRight.DecimalValue
-                            );
-                        }
-                        break;
+                        return BinaryOp(
+                            newIndex, newLength, primLeft, primRight,
+                            (a, b) => checked(a - b),
+                            (a, b) => checked(a - b),
+                            (a, b) => checked(a - b)
+                        );
                     case Operation.BinaryAnd:
-                        if (primLeft.Type == PrimitiveType.IntegerLong)
-                        {
-                            return new PrimitiveExpression(
-                                newIndex,
-                                newLength,
-                                primLeft.LongValue & primRight.LongValue
-                            );
-                        }
-                        else if (primLeft.Type == PrimitiveType.IntegerBig)
-                        {
-                            return new PrimitiveExpression(
-                                newIndex,
-                                newLength,
-                                primLeft.BigIntegerValue & primRight.BigIntegerValue
-                            );
-                        }
-                        break;
+                        return BinaryOp(
+                            newIndex, newLength, primLeft, primRight,
+                            (a, b) => checked(a & b),
+                            (a, b) => checked(a & b),
+                            null
+                        );
                     case Operation.BinaryOr:
-                        if (primLeft.Type == PrimitiveType.IntegerLong)
-                        {
-                            return new PrimitiveExpression(
-                                newIndex,
-                                newLength,
-                                primLeft.LongValue | primRight.LongValue
-                            );
-                        }
-                        else if (primLeft.Type == PrimitiveType.IntegerBig)
-                        {
-                            return new PrimitiveExpression(
-                                newIndex,
-                                newLength,
-                                primLeft.BigIntegerValue | primRight.BigIntegerValue
-                            );
-                        }
-                        break;
+                        return BinaryOp(
+                            newIndex, newLength, primLeft, primRight,
+                            (a, b) => checked(a | b),
+                            (a, b) => checked(a | b),
+                            null
+                        );
                     case Operation.BinaryXor:
-                        if (primLeft.Type == PrimitiveType.IntegerLong)
-                        {
-                            return new PrimitiveExpression(
-                                newIndex,
-                                newLength,
-                                primLeft.LongValue ^ primRight.LongValue
-                            );
-                        }
-                        else if (primLeft.Type == PrimitiveType.IntegerBig)
-                        {
-                            return new PrimitiveExpression(
-                                newIndex,
-                                newLength,
-                                primLeft.BigIntegerValue ^ primRight.BigIntegerValue
-                            );
-                        }
-                        break;
+                        return BinaryOp(
+                            newIndex, newLength, primLeft, primRight,
+                            (a, b) => checked(a ^ b),
+                            (a, b) => checked(a ^ b),
+                            null
+                        );
                 }
             }
             catch (OverflowException ex)
@@ -346,6 +218,72 @@ namespace SharpIrcBot.Plugins.Calc.AST
             }
 
             throw new SimplificationException($"Cannot handle binary operator {Operation}.", this);
+        }
+
+        protected static PrimitiveExpression BinaryOp(
+            int index, int length, PrimitiveExpression leftOperand, PrimitiveExpression rightOperand,
+            Func<long, long, long> longOperation, Func<BigInteger, BigInteger, BigInteger> bigOperation,
+            Func<decimal, decimal, decimal> decimalOperation
+        )
+        {
+            Debug.Assert(leftOperand.Type == rightOperand.Type);
+
+            if (leftOperand.Type == PrimitiveType.IntegerLong)
+            {
+                // try natively long
+                try
+                {
+                    return new PrimitiveExpression(
+                        index, length, longOperation(leftOperand.LongValue, rightOperand.LongValue)
+                    );
+                }
+                catch (OverflowException)
+                {
+                }
+
+                // try promoting to BigInteger
+                try
+                {
+                    return new PrimitiveExpression(
+                        index, length, bigOperation(leftOperand.LongValue, rightOperand.LongValue)
+                    );
+                }
+                catch (OverflowException)
+                {
+                }
+
+                // last attempt: decimal
+                return new PrimitiveExpression(
+                    index, length, decimalOperation(leftOperand.LongValue, rightOperand.LongValue)
+                );
+            }
+            else if (rightOperand.Type == PrimitiveType.IntegerBig)
+            {
+                // try natively BigInteger
+                try
+                {
+                    return new PrimitiveExpression(
+                        index, length, bigOperation(leftOperand.BigIntegerValue, rightOperand.BigIntegerValue)
+                    );
+                }
+                catch (OverflowException)
+                {
+                }
+
+                // last attempt: decimal
+                return new PrimitiveExpression(
+                    index, length,
+                    decimalOperation(
+                        checked((decimal)leftOperand.BigIntegerValue),
+                        checked((decimal)rightOperand.BigIntegerValue)
+                    )
+                );
+            }
+            else
+            {
+                Debug.Fail($"Unexpected primitive expression type '{leftOperand.Type}'.");
+                return new PrimitiveExpression(index, length, (long)0);
+            }
         }
 
         public static PrimitiveExpression Pow(int index, int length, decimal baseDec, decimal exponentDec, CalcTimer timer)
