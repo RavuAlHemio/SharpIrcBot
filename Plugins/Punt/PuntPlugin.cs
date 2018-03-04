@@ -44,7 +44,7 @@ namespace SharpIrcBot.Plugins.Punt
 
         protected virtual void RebuildRegexCache()
         {
-            RegexCache.Clear();
+            var newRegexCache = new Dictionary<string, Regex>();
 
             IEnumerable<PuntPattern> allChannelPatterns = Config.ChannelsPatterns.Values
                 .Where(channelPattern => channelPattern != null)
@@ -60,8 +60,27 @@ namespace SharpIrcBot.Plugins.Punt
 
                 foreach (string regex in allRegexes)
                 {
-                    RegexCache[regex] = new Regex(regex, RegexOptions.Compiled);
+                    if (newRegexCache.ContainsKey(regex))
+                    {
+                        continue;
+                    }
+
+                    Regex existingRegex;
+                    if (RegexCache.TryGetValue(regex, out existingRegex))
+                    {
+                        newRegexCache[regex] = existingRegex;
+                    }
+                    else
+                    {
+                        newRegexCache[regex] = new Regex(regex, RegexOptions.Compiled);
+                    }
                 }
+            }
+
+            RegexCache.Clear();
+            foreach (KeyValuePair<string, Regex> newPair in newRegexCache)
+            {
+                RegexCache[newPair.Key] = newPair.Value;
             }
         }
 
@@ -82,7 +101,7 @@ namespace SharpIrcBot.Plugins.Punt
             }
 
             string normalizedNick = ConnectionManager.RegisteredNameForNick(e.SenderNickname) ?? e.SenderNickname;
-            foreach (var pattern in relevantPatterns)
+            foreach (PuntPattern pattern in relevantPatterns)
             {
                 if (!AnyMatch(normalizedNick, pattern.NickPatterns))
                 {
@@ -98,7 +117,7 @@ namespace SharpIrcBot.Plugins.Punt
 
                 if (pattern.ChancePercent.HasValue)
                 {
-                    var val = Randomizer.Next(100);
+                    int val = Randomizer.Next(100);
                     if (val >= pattern.ChancePercent.Value)
                     {
                         // luck is on their side
