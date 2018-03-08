@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Numerics;
 using SharpIrcBot.Plugins.Calc.AST;
 
 namespace SharpIrcBot.Plugins.Calc
@@ -59,10 +60,10 @@ namespace SharpIrcBot.Plugins.Calc
             fBuilder.Add("log10", PrimitiveDoubleDoubleFunc("log10", Math.Log10));
             fBuilder.Add("log", PrimitiveDouble2DoubleFunc("log", Math.Log));
 
-            fBuilder.Add("ceil", PrimitiveDecimalDecimalFunc("ceil", Math.Ceiling));
-            fBuilder.Add("floor", PrimitiveDecimalDecimalFunc("floor", Math.Floor));
-            fBuilder.Add("round", PrimitiveDecimalDecimalFunc("round", Math.Round));
-            fBuilder.Add("trunc", PrimitiveDecimalDecimalFunc("trunc", Math.Truncate));
+            fBuilder.Add("ceil", PrimitiveDecimalDecimalToBigIntFunc("ceil", Math.Ceiling));
+            fBuilder.Add("floor", PrimitiveDecimalDecimalToBigIntFunc("floor", Math.Floor));
+            fBuilder.Add("round", PrimitiveDecimalDecimalToBigIntFunc("round", Math.Round));
+            fBuilder.Add("trunc", PrimitiveDecimalDecimalToBigIntFunc("trunc", Math.Truncate));
 
             return new Grimoire(cBuilder.ToImmutable(), fBuilder.ToImmutable());
         }
@@ -86,6 +87,18 @@ namespace SharpIrcBot.Plugins.Calc
                 (args) => new PrimitiveExpression(
                     -1, -1,
                     innerFunc(args[0].ToDecimal())
+                )
+            );
+        }
+
+        protected static CalcFunction PrimitiveDecimalDecimalToBigIntFunc(string name, Func<decimal, decimal> innerFunc)
+        {
+            return new CalcFunction(
+                name,
+                1,
+                (args) => new PrimitiveExpression(
+                    -1, -1,
+                    (BigInteger)innerFunc(args[0].ToDecimal())
                 )
             );
         }
