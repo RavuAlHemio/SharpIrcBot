@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Numerics;
 using SharpIrcBot.Plugins.Calc.AST;
 
 namespace SharpIrcBot.Plugins.Calc
@@ -148,6 +149,24 @@ namespace SharpIrcBot.Plugins.Calc
             }
 
             return sum;
+        }
+
+        public static BigInteger Factorial(BigInteger arg, CalcTimer timer)
+        {
+            if (arg < BigInteger.Zero)
+            {
+                throw new FunctionDomainException("Factorials are not defined on negative numbers.");
+            }
+
+            // 0! == 1! == 1
+            BigInteger ret = BigInteger.One;
+            for (BigInteger i = 2; i <= arg; ++i)
+            {
+                timer.ThrowIfTimedOut();
+                ret *= i;
+            }
+
+            return ret;
         }
     }
 }

@@ -1,3 +1,4 @@
+using System;
 using System.Numerics;
 using System.Text;
 
@@ -31,59 +32,60 @@ namespace SharpIrcBot.Plugins.Calc.AST
 
             PrimitiveExpression primOperand = Operand.Simplified(grimoire, timer);
 
-            switch (Operation)
+            try
             {
-                case Operation.Negate:
-                    if (primOperand.Type == PrimitiveType.IntegerLong)
-                    {
-                        return new PrimitiveExpression(Index, Length, -primOperand.LongValue);
-                    }
-                    else if (primOperand.Type == PrimitiveType.IntegerBig)
-                    {
-                        return new PrimitiveExpression(Index, Length, -primOperand.BigIntegerValue);
-                    }
-                    else if (primOperand.Type == PrimitiveType.Decimal)
-                    {
-                        return new PrimitiveExpression(Index, Length, -primOperand.DecimalValue);
-                    }
-                    break;
-                case Operation.Factorial:
-                    if (primOperand.Type == PrimitiveType.IntegerLong)
-                    {
-                        return new PrimitiveExpression(Index, Length, Factorial(primOperand.LongValue, timer));
-                    }
-                    else if (primOperand.Type == PrimitiveType.IntegerBig)
-                    {
-                        return new PrimitiveExpression(Index, Length, Factorial(primOperand.BigIntegerValue, timer));
-                    }
-                    else if (primOperand.Type == PrimitiveType.Decimal)
-                    {
-                        throw new SimplificationException("Factorials are not defined on fractional numbers.", this);
-                    }
-                    break;
-                default:
-                    break;
+                switch (Operation)
+                {
+                    case Operation.Negate:
+                        if (primOperand.Type == PrimitiveType.IntegerLong)
+                        {
+                            return new PrimitiveExpression(Index, Length, -primOperand.LongValue);
+                        }
+                        else if (primOperand.Type == PrimitiveType.IntegerBig)
+                        {
+                            return new PrimitiveExpression(Index, Length, -primOperand.BigIntegerValue);
+                        }
+                        else if (primOperand.Type == PrimitiveType.Decimal)
+                        {
+                            return new PrimitiveExpression(Index, Length, -primOperand.DecimalValue);
+                        }
+                        break;
+                    case Operation.Factorial:
+                        if (primOperand.Type == PrimitiveType.IntegerLong)
+                        {
+                            return new PrimitiveExpression(Index, Length, MathFuncs.Factorial(primOperand.LongValue, timer));
+                        }
+                        else if (primOperand.Type == PrimitiveType.IntegerBig)
+                        {
+                            return new PrimitiveExpression(Index, Length, MathFuncs.Factorial(primOperand.BigIntegerValue, timer));
+                        }
+                        else if (primOperand.Type == PrimitiveType.Decimal)
+                        {
+                            throw new FunctionDomainException("Factorials are not defined on fractional numbers.");
+                        }
+                        break;
+                    default:
+                        break;
+                }
+            }
+            catch (OverflowException ex)
+            {
+                throw new SimplificationException(this, ex);
+            }
+            catch (DivideByZeroException ex)
+            {
+                throw new SimplificationException(this, ex);
+            }
+            catch (FunctionDomainException ex)
+            {
+                throw new SimplificationException(this, ex);
+            }
+            catch (TimeoutException ex)
+            {
+                throw new SimplificationException(this, ex);
             }
 
             throw new SimplificationException($"Cannot handle unary operator {Operation}.", this);
-        }
-
-        protected BigInteger Factorial(BigInteger arg, CalcTimer timer)
-        {
-            if (arg < BigInteger.Zero)
-            {
-                throw new SimplificationException("Factorials are not defined on negative numbers.", this);
-            }
-
-            // 0! == 1! == 1
-            BigInteger ret = BigInteger.One;
-            for (BigInteger i = 2; i <= arg; ++i)
-            {
-                timer.ThrowIfTimedOut();
-                ret *= i;
-            }
-
-            return ret;
         }
     }
 }
