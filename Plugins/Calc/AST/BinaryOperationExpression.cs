@@ -262,7 +262,7 @@ namespace SharpIrcBot.Plugins.Calc.AST
                     index, length, decimalOperation(leftOperand.LongValue, rightOperand.LongValue)
                 );
             }
-            else if (rightOperand.Type == PrimitiveType.IntegerBig)
+            else if (leftOperand.Type == PrimitiveType.IntegerBig)
             {
                 // try natively BigInteger
                 try
@@ -282,6 +282,14 @@ namespace SharpIrcBot.Plugins.Calc.AST
                         checked((decimal)leftOperand.BigIntegerValue),
                         checked((decimal)rightOperand.BigIntegerValue)
                     )
+                );
+            }
+            else if (leftOperand.Type == PrimitiveType.Decimal)
+            {
+                // just go decimal
+                return new PrimitiveExpression(
+                    index, length,
+                    decimalOperation(leftOperand.DecimalValue, rightOperand.DecimalValue)
                 );
             }
             else
