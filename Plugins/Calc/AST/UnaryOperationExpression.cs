@@ -58,7 +58,7 @@ namespace SharpIrcBot.Plugins.Calc.AST
                     }
                     else if (primOperand.Type == PrimitiveType.Decimal)
                     {
-                        throw new SimplificationException("factorials are not defined on fractional numbers", this);
+                        throw new SimplificationException("Factorials are not defined on fractional numbers.", this);
                     }
                     break;
                 default:
@@ -72,7 +72,7 @@ namespace SharpIrcBot.Plugins.Calc.AST
         {
             if (arg < BigInteger.Zero)
             {
-                throw new SimplificationException("factorials are not defined on negative numbers", this);
+                throw new SimplificationException("Factorials are not defined on negative numbers.", this);
             }
 
             // 0! == 1! == 1
