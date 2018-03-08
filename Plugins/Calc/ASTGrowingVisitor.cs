@@ -138,6 +138,17 @@ namespace SharpIrcBot.Plugins.Calc
             );
         }
 
+        public override Expression VisitFac([NotNull] CalcLangParser.FacContext context)
+        {
+            (int index, int length) = ExpressionIndexAndLength(context.SourceInterval);
+
+            return new UnaryOperationExpression(
+                index, length,
+                Operation.Factorial,
+                Visit(context.expression())
+            );
+        }
+
         public override Expression VisitNeg([NotNull] CalcLangParser.NegContext context)
         {
             (int index, int length) = ExpressionIndexAndLength(context.SourceInterval);

@@ -102,6 +102,13 @@ public interface ICalcLangVisitor<Result> : IParseTreeVisitor<Result> {
 	/// <return>The visitor result.</return>
 	Result VisitBXor([NotNull] CalcLangParser.BXorContext context);
 	/// <summary>
+	/// Visit a parse tree produced by the <c>Fac</c>
+	/// labeled alternative in <see cref="CalcLangParser.expression"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitFac([NotNull] CalcLangParser.FacContext context);
+	/// <summary>
 	/// Visit a parse tree produced by the <c>BAnd</c>
 	/// labeled alternative in <see cref="CalcLangParser.expression"/>.
 	/// </summary>

@@ -13,5 +13,6 @@ namespace SharpIrcBot.Plugins.Calc.AST
         BinaryXor = 9,
         BinaryOr = 10,
         IntegralDivide = 11,
+        Factorial = 12,
     }
 }

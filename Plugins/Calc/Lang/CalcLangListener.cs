@@ -150,6 +150,18 @@ public interface ICalcLangListener : IParseTreeListener {
 	/// <param name="context">The parse tree.</param>
 	void ExitBXor([NotNull] CalcLangParser.BXorContext context);
 	/// <summary>
+	/// Enter a parse tree produced by the <c>Fac</c>
+	/// labeled alternative in <see cref="CalcLangParser.expression"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void EnterFac([NotNull] CalcLangParser.FacContext context);
+	/// <summary>
+	/// Exit a parse tree produced by the <c>Fac</c>
+	/// labeled alternative in <see cref="CalcLangParser.expression"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void ExitFac([NotNull] CalcLangParser.FacContext context);
+	/// <summary>
 	/// Enter a parse tree produced by the <c>BAnd</c>
 	/// labeled alternative in <see cref="CalcLangParser.expression"/>.
 	/// </summary>

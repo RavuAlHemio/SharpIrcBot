@@ -31,6 +31,7 @@ fullExpression: expression EOF;
 expression
     : '(' expression ')' # Parens
     | Identifier '(' arglist? ')' # Func
+    | expression '!' # Fac
     | '-' expression # Neg
     | expression '**' expression # Pow
     | expression '*' expression # Mul

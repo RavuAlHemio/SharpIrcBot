@@ -1,3 +1,4 @@
+using System.Numerics;
 using System.Text;
 
 namespace SharpIrcBot.Plugins.Calc.AST
@@ -46,11 +47,43 @@ namespace SharpIrcBot.Plugins.Calc.AST
                         return new PrimitiveExpression(Index, Length, -primOperand.DecimalValue);
                     }
                     break;
+                case Operation.Factorial:
+                    if (primOperand.Type == PrimitiveType.IntegerLong)
+                    {
+                        return new PrimitiveExpression(Index, Length, Factorial(primOperand.LongValue, timer));
+                    }
+                    else if (primOperand.Type == PrimitiveType.IntegerBig)
+                    {
+                        return new PrimitiveExpression(Index, Length, Factorial(primOperand.BigIntegerValue, timer));
+                    }
+                    else if (primOperand.Type == PrimitiveType.Decimal)
+                    {
+                        throw new SimplificationException("factorials are not defined on fractional numbers", this);
+                    }
+                    break;
                 default:
                     break;
             }
 
             throw new SimplificationException($"Cannot handle unary operator {Operation}.", this);
+        }
+
+        protected BigInteger Factorial(BigInteger arg, CalcTimer timer)
+        {
+            if (arg < BigInteger.Zero)
+            {
+                throw new SimplificationException("factorials are not defined on negative numbers", this);
+            }
+
+            // 0! == 1! == 1
+            BigInteger ret = BigInteger.One;
+            for (BigInteger i = 2; i <= arg; ++i)
+            {
+                timer.ThrowIfTimedOut();
+                ret *= i;
+            }
+
+            return ret;
         }
     }
 }
