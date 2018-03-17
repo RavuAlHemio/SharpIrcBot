@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
+using SharpIrcBot.Collections;
 using SharpIrcBot.Events.Irc;
 
 namespace SharpIrcBot.Plugins.Punt
@@ -15,14 +16,14 @@ namespace SharpIrcBot.Plugins.Punt
         protected IConnectionManager ConnectionManager { get; }
         protected PuntConfig Config { get; set; }
         protected Random Randomizer { get; }
-        protected Dictionary<string, Regex> RegexCache { get; }
+        protected RegexCache RegexCache { get; }
 
         public PuntPlugin(IConnectionManager connMgr, JObject config)
         {
             ConnectionManager = connMgr;
             Config = new PuntConfig(config);
             Randomizer = new Random();
-            RegexCache = new Dictionary<string, Regex>();
+            RegexCache = new RegexCache();
 
             ConnectionManager.ChannelAction += HandleAnyChannelMessage;
             ConnectionManager.ChannelMessage += HandleAnyChannelMessage;
@@ -44,7 +45,7 @@ namespace SharpIrcBot.Plugins.Punt
 
         protected virtual void RebuildRegexCache()
         {
-            var newRegexCache = new Dictionary<string, Regex>();
+            var newPatterns = new HashSet<string>();
 
             IEnumerable<PuntPattern> allChannelPatterns = Config.ChannelsPatterns.Values
                 .Where(channelPattern => channelPattern != null)
@@ -60,28 +61,11 @@ namespace SharpIrcBot.Plugins.Punt
 
                 foreach (string regex in allRegexes)
                 {
-                    if (newRegexCache.ContainsKey(regex))
-                    {
-                        continue;
-                    }
-
-                    Regex existingRegex;
-                    if (RegexCache.TryGetValue(regex, out existingRegex))
-                    {
-                        newRegexCache[regex] = existingRegex;
-                    }
-                    else
-                    {
-                        newRegexCache[regex] = new Regex(regex, RegexOptions.Compiled);
-                    }
+                    newPatterns.Add(regex);
                 }
             }
 
-            RegexCache.Clear();
-            foreach (KeyValuePair<string, Regex> newPair in newRegexCache)
-            {
-                RegexCache[newPair.Key] = newPair.Value;
-            }
+            RegexCache.ReplaceAllWith(newPatterns);
         }
 
         protected virtual void HandleAnyChannelMessage(object sender, IChannelMessageEventArgs e, MessageFlags flags)

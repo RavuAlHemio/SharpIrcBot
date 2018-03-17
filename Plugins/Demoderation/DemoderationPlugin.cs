@@ -26,7 +26,7 @@ namespace SharpIrcBot.Plugins.Demoderation
 
         protected Dictionary<string, RingBuffer<ChannelMessage>> ChannelsMessages { get; set; }
         protected Dictionary<string, Dictionary<string, long>> ChannelCriterionCommandCache { get; set; }
-        protected Dictionary<string, Regex> RegexCache { get; set; }
+        protected RegexCache RegexCache { get; set; }
         protected Timer CleanupTimer { get; set; }
 
         public DemoderationPlugin(IConnectionManager connMgr, JObject config)
@@ -161,7 +161,7 @@ namespace SharpIrcBot.Plugins.Demoderation
         protected void UpdateCommandCache()
         {
             ChannelCriterionCommandCache = new Dictionary<string, Dictionary<string, long>>();
-            RegexCache = new Dictionary<string, Regex>();
+            var newRegexes = new HashSet<string>();
             using (DemoderationContext ctx = GetNewContext())
             {
                 foreach (Criterion crit in ctx.Criteria.Where(c => c.Enabled))
@@ -169,9 +169,10 @@ namespace SharpIrcBot.Plugins.Demoderation
                     Dictionary<string, long> commandCacheForChannel = ObtainCommandCacheForChannel(crit.Channel);
                     commandCacheForChannel[crit.Name] = crit.ID;
 
-                    RegexCache[crit.DetectionRegex] = new Regex(crit.DetectionRegex, RegexOptions.Compiled);
+                    newRegexes.Add(crit.DetectionRegex);
                 }
             }
+            RegexCache.ReplaceAllWith(newRegexes);
         }
 
         protected virtual void HandleAbuseCommand(CommandMatch cmd, IChannelMessageEventArgs message)
@@ -266,7 +267,7 @@ namespace SharpIrcBot.Plugins.Demoderation
 
             try
             {
-                ObtainRegex(detectionRegexString);
+                RegexCache.GetOrAdd(detectionRegexString);
             }
             catch (ArgumentException)
             {
@@ -713,7 +714,7 @@ namespace SharpIrcBot.Plugins.Demoderation
                 }
 
                 // find the last match in the channel
-                Regex critRegex = ObtainRegex(crit.DetectionRegex);
+                Regex critRegex = RegexCache[crit.DetectionRegex];
                 RingBuffer<ChannelMessage> messages;
                 if (ChannelsMessages.TryGetValue(channel, out messages))
                 {
@@ -841,11 +842,6 @@ namespace SharpIrcBot.Plugins.Demoderation
         protected Dictionary<string, long> ObtainCommandCacheForChannel(string channel)
         {
             return GetOrCreateValue(ChannelCriterionCommandCache, channel, c => new Dictionary<string, long>());
-        }
-
-        protected Regex ObtainRegex(string regexText)
-        {
-            return GetOrCreateValue(RegexCache, regexText, k => new Regex(k, RegexOptions.Compiled));
         }
 
         static TValue GetOrCreateValue<TKey, TValue>(IDictionary<TKey, TValue> dict, TKey key,
