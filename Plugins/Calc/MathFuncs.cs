@@ -168,5 +168,12 @@ namespace SharpIrcBot.Plugins.Calc
 
             return ret;
         }
+
+        public static decimal Deg2Rad(decimal d) => d * Pi / 180.0m;
+        public static decimal Deg2Gon(decimal d) => d * 10.0m / 9.0m;
+        public static decimal Rad2Deg(decimal r) => r * 180.0m / Pi;
+        public static decimal Rad2Gon(decimal r) => r * 200.0m / Pi;
+        public static decimal Gon2Deg(decimal g) => g * 9.0m / 10.0m;
+        public static decimal Gon2Rad(decimal g) => g * Pi / 200.0m;
     }
 }

@@ -48,6 +48,12 @@ namespace SharpIrcBot.Plugins.Calc
             fBuilder.Add("cos", PrimitiveDecimalDecimalFunc("cos", MathFuncs.Cos));
             fBuilder.Add("tan", PrimitiveDecimalDecimalFunc("tan", MathFuncs.Tan));
             fBuilder.Add("exp", PrimitiveDecimalDecimalFunc("exp", MathFuncs.Exp));
+            fBuilder.Add("deg2rad", PrimitiveDecimalDecimalFunc("deg2rad", MathFuncs.Deg2Rad));
+            fBuilder.Add("deg2gon", PrimitiveDecimalDecimalFunc("deg2gon", MathFuncs.Deg2Gon));
+            fBuilder.Add("rad2deg", PrimitiveDecimalDecimalFunc("rad2deg", MathFuncs.Rad2Deg));
+            fBuilder.Add("rad2gon", PrimitiveDecimalDecimalFunc("rad2gon", MathFuncs.Rad2Gon));
+            fBuilder.Add("gon2deg", PrimitiveDecimalDecimalFunc("gon2deg", MathFuncs.Gon2Deg));
+            fBuilder.Add("gon2rad", PrimitiveDecimalDecimalFunc("gon2rad", MathFuncs.Gon2Rad));
 
             fBuilder.Add("asin", PrimitiveDoubleDoubleFunc("asin", Math.Asin));
             fBuilder.Add("acos", PrimitiveDoubleDoubleFunc("acos", Math.Acos));
