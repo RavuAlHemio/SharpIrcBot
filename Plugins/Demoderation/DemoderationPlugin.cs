@@ -35,6 +35,7 @@ namespace SharpIrcBot.Plugins.Demoderation
             Config = new DemoderationConfig(config);
 
             ChannelsMessages = new Dictionary<string, RingBuffer<ChannelMessage>>();
+            RegexCache = new RegexCache();
 
             ConnectionManager.ChannelMessage += HandleChannelMessage;
             CleanupTimer = new Timer(
