@@ -621,6 +621,35 @@ namespace SharpIrcBot
             return string.Join<T>(glue, pieces);
         }
 
+        public static bool IsSorted<T>(this IEnumerable<T> enumerable)
+            where T : IComparable<T>
+            => enumerable.IsSorted((a, b) => a.CompareTo(b));
+
+        public static bool IsSorted<T>(this IEnumerable<T> enumerable, Func<T, T, int> comparator)
+        {
+            using (IEnumerator<T> numer = enumerable.GetEnumerator())
+            {
+                if (!numer.MoveNext())
+                {
+                    // zero elements => vacuous truth
+                    return true;
+                }
+
+                T elem = numer.Current;
+
+                while (numer.MoveNext())
+                {
+                    if (comparator(elem, numer.Current) > 0)
+                    {
+                        return false;
+                    }
+                    elem = numer.Current;
+                }
+            }
+
+            return true;
+        }
+
         /// <summary>
         /// Attempts to parse an integer in the invariant culture <see cref="CultureInfo.InvariantCulture"/>.
         /// </summary>
