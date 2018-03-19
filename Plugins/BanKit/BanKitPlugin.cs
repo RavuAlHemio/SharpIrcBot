@@ -8,12 +8,22 @@ namespace SharpIrcBot.Plugins.BanKit
 {
     public class BanKitPlugin : IPlugin
     {
-        public static readonly Regex TimeSpanRegex = new Regex("^(?<days>[1-9][0-9]*d)?(?<hours>[1-9][0-9]*h)?(?<minutes>[1-9][0-9]*m)?(?<seconds>[1-9][0-9]*s)?$", RegexOptions.Compiled);
+        public static readonly Regex TimeSpanRegex = new Regex(
+            "^"
+            + "(?:(?<days>[1-9][0-9]*)d)?"
+            + "(?:(?<hours>[1-9][0-9]*)h)?"
+            + "(?:(?<minutes>[1-9][0-9]*)m)?"
+            + "(?:(?<seconds>[1-9][0-9]*)s)?"
+            + "$",
+            RegexOptions.Compiled
+        );
 
         protected IConnectionManager ConnectionManager { get; }
 
         public BanKitPlugin(IConnectionManager connMgr, JObject config)
         {
+            ConnectionManager = connMgr;
+
             ConnectionManager.CommandManager.RegisterChannelMessageCommandHandler(
                 new Command(
                     CommandUtil.MakeNames("tb", "timeban", "timedban", "tkb"),
