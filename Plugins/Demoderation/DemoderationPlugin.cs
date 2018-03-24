@@ -156,7 +156,7 @@ namespace SharpIrcBot.Plugins.Demoderation
 
         protected virtual void PostConfigReload()
         {
-            CleanupTimer.Change(TimeSpan.Zero, TimeSpan.FromMilliseconds(Config.CleanupPeriodMinutes));
+            CleanupTimer.Change(TimeSpan.Zero, TimeSpan.FromMinutes(Config.CleanupPeriodMinutes));
             UpdateCommandCache();
         }
 
