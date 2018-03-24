@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
+using System.Text.RegularExpressions;
 using JetBrains.Annotations;
 
 namespace SharpIrcBot.Util
@@ -374,6 +375,13 @@ namespace SharpIrcBot.Util
                 return ret;
             }
             return null;
+        }
+
+        public static int? MaybeIntFromMatchGroup(Group grp)
+        {
+            return grp.Success
+                ? int.Parse(grp.Value)
+                : (int?)null;
         }
     }
 }

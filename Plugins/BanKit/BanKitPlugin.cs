@@ -9,16 +9,6 @@ namespace SharpIrcBot.Plugins.BanKit
 {
     public class BanKitPlugin : IPlugin
     {
-        public static readonly Regex TimeSpanRegex = new Regex(
-            "^"
-            + "(?:(?<days>[1-9][0-9]*)d)?"
-            + "(?:(?<hours>[1-9][0-9]*)h)?"
-            + "(?:(?<minutes>[1-9][0-9]*)m)?"
-            + "(?:(?<seconds>[1-9][0-9]*)s)?"
-            + "$",
-            RegexOptions.Compiled
-        );
-
         protected IConnectionManager ConnectionManager { get; }
 
         public BanKitPlugin(IConnectionManager connMgr, JObject config)
@@ -61,8 +51,8 @@ namespace SharpIrcBot.Plugins.BanKit
                 mask += "!*@*";
             }
 
-            TimeSpan? timeSpan = TimeSpanFromString(timeSpanString);
-            if (!timeSpan.HasValue)
+            TimeSpan? timeSpan = TimeUtil.TimeSpanFromString(timeSpanString);
+            if (!timeSpan.HasValue || timeSpan.Value == TimeSpan.Zero)
             {
                 return;
             }
@@ -83,69 +73,6 @@ namespace SharpIrcBot.Plugins.BanKit
             {
                 ConnectionManager.KickChannelUser(msg.Channel, nick, message);
             }
-        }
-
-        public static TimeSpan? TimeSpanFromString(string timeSpan)
-        {
-            Match m = TimeSpanRegex.Match(timeSpan);
-            if (!m.Success)
-            {
-                return null;
-            }
-
-            int? days = MaybeIntFromMatchGroup(m.Groups["days"]);
-            int? hours = MaybeIntFromMatchGroup(m.Groups["hours"]);
-            int? minutes = MaybeIntFromMatchGroup(m.Groups["minutes"]);
-            int? seconds = MaybeIntFromMatchGroup(m.Groups["seconds"]);
-
-            // don't allow overflow into a higher segment
-            if (days.HasValue)
-            {
-                if (hours > 24 || minutes > 60 || seconds > 60)
-                {
-                    return null;
-                }
-            }
-            if (hours.HasValue)
-            {
-                if (minutes > 60 || seconds > 60)
-                {
-                    return null;
-                }
-            }
-            if (minutes.HasValue)
-            {
-                if (seconds > 60)
-                {
-                    return null;
-                }
-            }
-
-            TimeSpan ret = TimeSpan.Zero;
-            if (days.HasValue)
-            {
-                ret = ret.Add(TimeSpan.FromDays(days.Value));
-            }
-            if (hours.HasValue)
-            {
-                ret = ret.Add(TimeSpan.FromHours(hours.Value));
-            }
-            if (minutes.HasValue)
-            {
-                ret = ret.Add(TimeSpan.FromMinutes(minutes.Value));
-            }
-            if (seconds.HasValue)
-            {
-                ret = ret.Add(TimeSpan.FromSeconds(seconds.Value));
-            }
-            return ret;
-        }
-
-        static int? MaybeIntFromMatchGroup(Group grp)
-        {
-            return grp.Success
-                ? int.Parse(grp.Value)
-                : (int?)null;
         }
     }
 }
