@@ -56,7 +56,24 @@ namespace SharpIrcBot.Plugins.LinkInfo
 
             if (!queryValues.TryGetValue(SemesterVariable, out values))
             {
-                return null;
+                // make a best guess according to the current date:
+                // * until mid-February, it's the previous year's winter semester (ends with January, next starts in March)
+                // * until mid-August, it's the current year's summer semester (ends with July, next starts in October)
+                // * otherwise, it's the current year's winter semester (starts in October, ends with January of next year)
+
+                DateTimeOffset now = DateTimeOffset.Now;
+                if (now.Month < 2 || (now.Month == 2 && now.Day < 15))
+                {
+                    values = $"{now.Year-1}W";
+                }
+                else if (now.Month < 8 || (now.Month == 8 && now.Day < 15))
+                {
+                    values = $"{now.Year}S";
+                }
+                else
+                {
+                    values = $"{now.Year}W";
+                }
             }
             if (values.Count == 0)
             {
