@@ -297,7 +297,7 @@ namespace SharpIrcBot.Plugins.Demoderation
                     Timestamp = DateTimeOffset.Now,
                     BanUntil = DateTimeOffset.Now.Add(banTime.Value),
                     LockUntil = DateTimeOffset.Now.Add(cooldownTime.Value),
-                    Lifted = false
+                    Lifted = (banTime.Value.Ticks == 0)
                 };
                 ctx.Abuses.Add(abuse);
                 ctx.SaveChanges();
