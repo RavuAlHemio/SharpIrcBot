@@ -46,7 +46,12 @@ namespace SharpIrcBot.Plugins.Demoderation
             ConnectionManager.CommandManager.RegisterChannelMessageCommandHandler(
                 new Command(
                     CommandUtil.MakeNames("dmabuse"),
-                    CommandUtil.NoOptions,
+                    CommandUtil.MakeOptions(
+                        CommandUtil.MakeOption("-b", CommandUtil.NonzeroStringMatcherRequiredWordTaker),
+                        CommandUtil.MakeOption("--ban-time", CommandUtil.NonzeroStringMatcherRequiredWordTaker),
+                        CommandUtil.MakeOption("-c", CommandUtil.NonzeroStringMatcherRequiredWordTaker),
+                        CommandUtil.MakeOption("--cooldown-time", CommandUtil.NonzeroStringMatcherRequiredWordTaker)
+                    ),
                     CommandUtil.MakeArguments(
                         CommandUtil.NonzeroStringMatcherRequiredWordTaker, // nickname
                         CommandUtil.NonzeroStringMatcherRequiredWordTaker // criterion name
@@ -184,6 +189,63 @@ namespace SharpIrcBot.Plugins.Demoderation
                 return;
             }
 
+            TimeSpan? banTime = null;
+            TimeSpan? cooldownTime = null;
+            foreach (KeyValuePair<string, object> option in cmd.Options)
+            {
+                if (option.Key == "-b" || option.Key == "--ban-time")
+                {
+                    if (banTime.HasValue)
+                    {
+                        ConnectionManager.SendChannelMessage(
+                            message.Channel,
+                            $"{message.SenderNickname}: -b/--ban-time may not be specified more than once (in total)."
+                        );
+                        return;
+                    }
+
+                    banTime = TimeUtil.TimeSpanFromString((string)option.Value);
+                    if (!banTime.HasValue)
+                    {
+                        ConnectionManager.SendChannelMessage(
+                            message.Channel,
+                            $"{message.SenderNickname}: Invalid time span specified for {option.Key}."
+                        );
+                        return;
+                    }
+                }
+                else if (option.Key == "-c" || option.Key == "--cooldown-time")
+                {
+                    if (cooldownTime.HasValue)
+                    {
+                        ConnectionManager.SendChannelMessage(
+                            message.Channel,
+                            $"{message.SenderNickname}: -c/--cooldown-time may not be specified more than once (in total)."
+                        );
+                        return;
+                    }
+
+                    cooldownTime = TimeUtil.TimeSpanFromString((string)option.Value);
+                    if (!cooldownTime.HasValue)
+                    {
+                        ConnectionManager.SendChannelMessage(
+                            message.Channel,
+                            $"{message.SenderNickname}: Invalid time span specified for {option.Key}."
+                        );
+                        return;
+                    }
+                }
+            }
+
+            if (!banTime.HasValue)
+            {
+                banTime = TimeSpan.FromMinutes(Config.AbuseBanMinutes);
+            }
+            if (!cooldownTime.HasValue)
+            {
+                cooldownTime = TimeSpan.FromMinutes(Config.AbuseLockMinutes);
+            }
+
             var bannerNickname = (string)cmd.Arguments[0];
             var criterionName = (string)cmd.Arguments[1];
 
@@ -233,8 +295,8 @@ namespace SharpIrcBot.Plugins.Demoderation
                     OpNickname = message.SenderNickname,
                     OpUsername = ConnectionManager.RegisteredNameForNick(message.SenderNickname),
                     Timestamp = DateTimeOffset.Now,
-                    BanUntil = DateTimeOffset.Now.AddMinutes(Config.AbuseBanMinutes),
-                    LockUntil = DateTimeOffset.Now.AddMinutes(Config.AbuseLockMinutes),
+                    BanUntil = DateTimeOffset.Now.Add(banTime.Value),
+                    LockUntil = DateTimeOffset.Now.Add(cooldownTime.Value),
                     Lifted = false
                 };
                 ctx.Abuses.Add(abuse);
@@ -249,12 +311,15 @@ namespace SharpIrcBot.Plugins.Demoderation
             );
 
             ConnectionManager.ChangeChannelMode(message.Channel, $"-b {ban.OffenderNickname}!*@*");
-            ConnectionManager.ChangeChannelMode(message.Channel, $"+b {ban.BannerNickname}!*@*");
-            ConnectionManager.KickChannelUser(
-                message.Channel,
-                ban.BannerNickname,
-                $"demoderation abuse sanctioned by {message.SenderNickname}"
-            );
+            if (banTime.Value.Ticks > 0)
+            {
+                ConnectionManager.ChangeChannelMode(message.Channel, $"+b {ban.BannerNickname}!*@*");
+                ConnectionManager.KickChannelUser(
+                    message.Channel,
+                    ban.BannerNickname,
+                    $"demoderation abuse sanctioned by {message.SenderNickname}"
+                );
+            }
         }
 
         protected virtual void HandleNewCommand(CommandMatch cmd, IChannelMessageEventArgs message)
