@@ -8,6 +8,7 @@ using System.Text.RegularExpressions;
 using Newtonsoft.Json.Linq;
 using SharpIrcBot.Commands;
 using SharpIrcBot.Events.Irc;
+using SharpIrcBot.Util;
 
 namespace SharpIrcBot.Plugins.Dice
 {
@@ -85,7 +86,7 @@ namespace SharpIrcBot.Plugins.Dice
         protected DiceGroup ObtainDiceGroup(Match rollMatch, string channel, string senderNick)
         {
             int? dice = MaybeParseIntGroup(rollMatch.Groups["dice"], defaultValue: 1);
-            int? sides = SharpIrcBotUtil.MaybeParseInt(rollMatch.Groups["sides"].Value);
+            int? sides = StringUtil.MaybeParseInt(rollMatch.Groups["sides"].Value);
             long? addValue = MaybeParseLongGroup(rollMatch.Groups["addValue"], defaultValue: 0);
             if (!dice.HasValue || dice.Value > Config.MaxDiceCount)
             {
@@ -267,7 +268,7 @@ namespace SharpIrcBot.Plugins.Dice
                 return defaultValue;
             }
 
-            return SharpIrcBotUtil.MaybeParseInt(grp.Value, NumberStyles.AllowLeadingSign);
+            return StringUtil.MaybeParseInt(grp.Value, NumberStyles.AllowLeadingSign);
         }
 
         protected static long? MaybeParseLongGroup(Group grp, long? defaultValue = null)
@@ -277,7 +278,7 @@ namespace SharpIrcBot.Plugins.Dice
                 return defaultValue;
             }
 
-            return SharpIrcBotUtil.MaybeParseLong(grp.Value, NumberStyles.AllowLeadingSign);
+            return StringUtil.MaybeParseLong(grp.Value, NumberStyles.AllowLeadingSign);
         }
 
         protected virtual Random ChosenRNG(CommandMatch cmd)

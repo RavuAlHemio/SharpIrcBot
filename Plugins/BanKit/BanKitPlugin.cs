@@ -3,6 +3,7 @@ using System.Text.RegularExpressions;
 using Newtonsoft.Json.Linq;
 using SharpIrcBot.Commands;
 using SharpIrcBot.Events.Irc;
+using SharpIrcBot.Util;
 
 namespace SharpIrcBot.Plugins.BanKit
 {

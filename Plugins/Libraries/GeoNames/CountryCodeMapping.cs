@@ -3,6 +3,7 @@ using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 using Newtonsoft.Json;
+using SharpIrcBot.Util;
 
 namespace SharpIrcBot.Plugins.Libraries.GeoNames
 {
@@ -30,7 +31,7 @@ namespace SharpIrcBot.Plugins.Libraries.GeoNames
 
             string filePath = Path.Combine(SharpIrcBotUtil.AppDirectory, "CountryCodes.json");
             using (var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete))
-            using (var reader = new StreamReader(stream, SharpIrcBotUtil.Utf8NoBom, detectEncodingFromByteOrderMarks: true))
+            using (var reader = new StreamReader(stream, StringUtil.Utf8NoBom, detectEncodingFromByteOrderMarks: true))
             {
                 JsonSerializer.Create().Populate(reader, countryCodes);
             }

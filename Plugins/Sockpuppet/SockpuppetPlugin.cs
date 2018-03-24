@@ -2,12 +2,13 @@
 using Newtonsoft.Json.Linq;
 using SharpIrcBot.Commands;
 using SharpIrcBot.Events.Irc;
+using SharpIrcBot.Util;
 
 namespace SharpIrcBot.Plugins.Sockpuppet
 {
     public class SockpuppetPlugin : IPlugin, IReloadableConfiguration
     {
-        private static readonly ILogger Logger = SharpIrcBotUtil.LoggerFactory.CreateLogger<SockpuppetPlugin>();
+        private static readonly ILogger Logger = LogUtil.LoggerFactory.CreateLogger<SockpuppetPlugin>();
 
         protected IConnectionManager ConnectionManager { get; }
         protected SockpuppetConfig Config { get; set; }
@@ -71,7 +72,7 @@ namespace SharpIrcBot.Plugins.Sockpuppet
 
         protected void PerformSockpuppet(string username, string nick, string command)
         {
-            var unescapedCommand = SharpIrcBotUtil.UnescapeString(command);
+            var unescapedCommand = StringUtil.UnescapeString(command);
             if (unescapedCommand == null)
             {
                 Logger.LogInformation("{Username} bollocksed up their escapes; ignoring", username);

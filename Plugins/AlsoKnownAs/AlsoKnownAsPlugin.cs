@@ -8,6 +8,7 @@ using Newtonsoft.Json.Linq;
 using SharpIrcBot.Collections;
 using SharpIrcBot.Commands;
 using SharpIrcBot.Events.Irc;
+using SharpIrcBot.Util;
 
 namespace SharpIrcBot.Plugins.AlsoKnownAs
 {

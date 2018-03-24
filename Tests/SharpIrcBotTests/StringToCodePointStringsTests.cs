@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using SharpIrcBot.Util;
 using Xunit;
 
 namespace SharpIrcBot.Tests.SharpIrcBotTests
@@ -9,7 +10,7 @@ namespace SharpIrcBot.Tests.SharpIrcBotTests
         {
             Assert.Equal(
                 (IEnumerable<string>)codePoints,
-                (IEnumerable<string>)SharpIrcBotUtil.StringToCodePointStrings(str)
+                (IEnumerable<string>)StringUtil.StringToCodePointStrings(str)
             );
         }
 

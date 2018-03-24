@@ -3,6 +3,7 @@ using System.Net;
 using System.Net.Http;
 using Newtonsoft.Json;
 using SharpIrcBot.Plugins.Weather.Wunderground;
+using SharpIrcBot.Util;
 
 namespace SharpIrcBot.Plugins.Weather
 {

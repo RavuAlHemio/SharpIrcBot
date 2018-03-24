@@ -4,12 +4,13 @@ using System.Linq;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 using SharpIrcBot.Events.Irc;
+using SharpIrcBot.Util;
 
 namespace SharpIrcBot.Plugins.DontJustHighlightMe
 {
     public class DontJustHighlightMePlugin : IPlugin, IReloadableConfiguration
     {
-        private static readonly ILogger Logger = SharpIrcBotUtil.LoggerFactory.CreateLogger<DontJustHighlightMePlugin>();
+        private static readonly ILogger Logger = LogUtil.LoggerFactory.CreateLogger<DontJustHighlightMePlugin>();
 
         protected IConnectionManager ConnectionManager { get; set; }
         protected DJHMConfig Config { get; set; }

@@ -17,12 +17,13 @@ using SharpIrcBot.Commands;
 using SharpIrcBot.Config;
 using SharpIrcBot.Events;
 using SharpIrcBot.Events.Irc;
+using SharpIrcBot.Util;
 
 namespace SharpIrcBot.Plugins.LinkInfo
 {
     public class LinkInfoPlugin : IPlugin, IReloadableConfiguration
     {
-        private static readonly ILogger Logger = SharpIrcBotUtil.LoggerFactory.CreateLogger<LinkInfoPlugin>();
+        private static readonly ILogger Logger = LogUtil.LoggerFactory.CreateLogger<LinkInfoPlugin>();
 
         public const int DownloadBufferSize = 4 * 1024 * 1024;
 
@@ -392,7 +393,7 @@ namespace SharpIrcBot.Plugins.LinkInfo
 
                 var tlds = new HashSet<string>();
                 using (var readStream = File.Open(tldListFilePath, FileMode.Open, FileAccess.Read, FileShare.Read))
-                using (var reader = new StreamReader(readStream, SharpIrcBotUtil.Utf8NoBom))
+                using (var reader = new StreamReader(readStream, StringUtil.Utf8NoBom))
                 {
                     string line;
                     while ((line = reader.ReadLine()?.Trim()) != null)

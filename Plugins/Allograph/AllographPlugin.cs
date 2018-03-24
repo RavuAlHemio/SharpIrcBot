@@ -9,12 +9,13 @@ using SharpIrcBot.Chunks;
 using SharpIrcBot.Commands;
 using SharpIrcBot.Events.Irc;
 using SharpIrcBot.Plugins.Allograph.RegularExpressions;
+using SharpIrcBot.Util;
 
 namespace SharpIrcBot.Plugins.Allograph
 {
     public class AllographPlugin : IPlugin, IReloadableConfiguration
     {
-        private static readonly ILogger Logger = SharpIrcBotUtil.LoggerFactory.CreateLogger<AllographPlugin>();
+        private static readonly ILogger Logger = LogUtil.LoggerFactory.CreateLogger<AllographPlugin>();
 
         protected AllographConfig Config { get; set; }
         protected Random Random { get; }

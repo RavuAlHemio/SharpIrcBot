@@ -6,6 +6,7 @@ using System.Threading;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using SharpIrcBot;
+using SharpIrcBot.Util;
 
 namespace SharpIrcBotCLI
 {
@@ -20,12 +21,12 @@ namespace SharpIrcBotCLI
             if (File.Exists(logFilterFileName))
             {
                 using (var stream = File.Open(logFilterFileName, FileMode.Open, FileAccess.Read, FileShare.Read))
-                using (var reader = new StreamReader(stream, SharpIrcBotUtil.Utf8NoBom))
+                using (var reader = new StreamReader(stream, StringUtil.Utf8NoBom))
                 {
                     JsonSerializer.Create().Populate(reader, logFilter);
                 }
             }
-            SharpIrcBotUtil.SetupConsoleLogging(logFilter: logFilter);
+            LogUtil.SetupConsoleLogging(logFilter: logFilter);
 
             var connMgr = new ConnectionManager(args.Length > 0 ? args[0] : null);
             var pluginMgr = new PluginManager(connMgr.Config);

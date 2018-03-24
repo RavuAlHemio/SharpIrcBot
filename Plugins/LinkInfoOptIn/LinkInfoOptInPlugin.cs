@@ -9,12 +9,13 @@ using SharpIrcBot.Events;
 using SharpIrcBot.Events.Irc;
 using SharpIrcBot.Plugins.LinkInfo;
 using SharpIrcBot.Plugins.LinkInfoOptIn.ORM;
+using SharpIrcBot.Util;
 
 namespace SharpIrcBot.Plugins.LinkInfoOptIn
 {
     public class LinkInfoOptInPlugin : LinkInfoPlugin
     {
-        private static readonly ILogger Logger = SharpIrcBotUtil.LoggerFactory.CreateLogger<LinkInfoOptInPlugin>();
+        private static readonly ILogger Logger = LogUtil.LoggerFactory.CreateLogger<LinkInfoOptInPlugin>();
 
         public Uri LastBroadcastLink { get; set; }
 
@@ -177,7 +178,7 @@ namespace SharpIrcBot.Plugins.LinkInfoOptIn
 
         private LinkInfoOptInContext GetNewContext()
         {
-            var opts = SharpIrcBotUtil.GetContextOptions<LinkInfoOptInContext>(OptInConfig);
+            var opts = DatabaseUtil.GetContextOptions<LinkInfoOptInContext>(OptInConfig);
             return new LinkInfoOptInContext(opts);
         }
 

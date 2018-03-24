@@ -10,6 +10,7 @@ using SharpIrcBot.Commands;
 using SharpIrcBot.Events;
 using SharpIrcBot.Events.Irc;
 using SharpIrcBot.Plugins.Trivia.ORM;
+using SharpIrcBot.Util;
 
 namespace SharpIrcBot.Plugins.Trivia
 {
@@ -419,7 +420,7 @@ namespace SharpIrcBot.Plugins.Trivia
 
         protected TriviaContext GetNewContext()
         {
-            var opts = SharpIrcBotUtil.GetContextOptions<TriviaContext>(Config);
+            var opts = DatabaseUtil.GetContextOptions<TriviaContext>(Config);
             return new TriviaContext(opts);
         }
     }

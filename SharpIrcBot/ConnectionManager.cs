@@ -13,12 +13,13 @@ using SharpIrcBot.Config;
 using SharpIrcBot.Events;
 using SharpIrcBot.Events.Irc;
 using SharpIrcBot.Events.Irc.Specific;
+using SharpIrcBot.Util;
 
 namespace SharpIrcBot
 {
     public partial class ConnectionManager : IConnectionManager
     {
-        private static readonly ILogger Logger = SharpIrcBotUtil.LoggerFactory.CreateLogger<ConnectionManager>();
+        private static readonly ILogger Logger = LogUtil.LoggerFactory.CreateLogger<ConnectionManager>();
 
         private bool ConfigFilePathKnown { get; set; }
         public string ConfigPath { get; }

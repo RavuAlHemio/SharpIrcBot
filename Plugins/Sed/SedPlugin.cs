@@ -3,12 +3,13 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 using SharpIrcBot.Events.Irc;
 using SharpIrcBot.Plugins.Sed.Parsing;
+using SharpIrcBot.Util;
 
 namespace SharpIrcBot.Plugins.Sed
 {
     public class SedPlugin : IPlugin, IReloadableConfiguration
     {
-        private static readonly ILogger Logger = SharpIrcBotUtil.LoggerFactory.CreateLogger<SedPlugin>();
+        private static readonly ILogger Logger = LogUtil.LoggerFactory.CreateLogger<SedPlugin>();
 
         protected IConnectionManager ConnectionManager { get; }
         protected SedConfig Config { get; set; }

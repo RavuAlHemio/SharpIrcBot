@@ -4,12 +4,13 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using Microsoft.Extensions.Logging;
+using SharpIrcBot.Util;
 
 namespace SharpIrcBot.Plugins.Sed.Parsing
 {
     public class SedParser
     {
-        private static readonly ILogger Logger = SharpIrcBotUtil.LoggerFactory.CreateLogger<SedParser>();
+        private static readonly ILogger Logger = LogUtil.LoggerFactory.CreateLogger<SedParser>();
 
         protected readonly HashSet<char> Splitters = new HashSet<char>("!\"#$%&'*+,-./:;=?^_`|~");
         protected readonly Dictionary<string, IReplacementFactory> CommandsToFactories

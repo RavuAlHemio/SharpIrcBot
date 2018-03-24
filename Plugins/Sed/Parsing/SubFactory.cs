@@ -3,12 +3,13 @@ using System.Globalization;
 using System.Text;
 using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
+using SharpIrcBot.Util;
 
 namespace SharpIrcBot.Plugins.Sed.Parsing
 {
     public class SubFactory : IReplacementFactory
     {
-        private static readonly ILogger Logger = SharpIrcBotUtil.LoggerFactory.CreateLogger<SubFactory>();
+        private static readonly ILogger Logger = LogUtil.LoggerFactory.CreateLogger<SubFactory>();
 
         protected class SubFlags
         {

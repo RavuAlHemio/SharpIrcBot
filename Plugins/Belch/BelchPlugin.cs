@@ -5,6 +5,7 @@ using System.Text;
 using Newtonsoft.Json.Linq;
 using SharpIrcBot.Commands;
 using SharpIrcBot.Events.Irc;
+using SharpIrcBot.Util;
 
 namespace SharpIrcBot.Plugins.Belch
 {
@@ -77,7 +78,7 @@ namespace SharpIrcBot.Plugins.Belch
             var colorCodeOffset = new Random().Next(SkittlesCodes.Length);
 
             string fixedPrefix = $"PRIVMSG {args.Channel} :";
-            IEnumerable<(string, int)> charsAndIndexes = SharpIrcBotUtil.StringToCodePointStrings(message)
+            IEnumerable<(string, int)> charsAndIndexes = StringUtil.StringToCodePointStrings(message)
                 .Select((s, i) => (s, i));
             foreach ((string s, int i) in charsAndIndexes)
             {

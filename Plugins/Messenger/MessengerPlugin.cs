@@ -10,6 +10,7 @@ using SharpIrcBot.Commands;
 using SharpIrcBot.Events;
 using SharpIrcBot.Events.Irc;
 using SharpIrcBot.Plugins.Messenger.ORM;
+using SharpIrcBot.Util;
 
 namespace SharpIrcBot.Plugins.Messenger
 {
@@ -18,7 +19,7 @@ namespace SharpIrcBot.Plugins.Messenger
     /// </summary>
     public class MessengerPlugin : IPlugin, IReloadableConfiguration
     {
-        private static readonly ILogger Logger = SharpIrcBotUtil.LoggerFactory.CreateLogger<MessengerPlugin>();
+        private static readonly ILogger Logger = LogUtil.LoggerFactory.CreateLogger<MessengerPlugin>();
 
         protected MessengerConfig Config { get; set; }
         protected IConnectionManager ConnectionManager { get; set; }
@@ -136,7 +137,7 @@ namespace SharpIrcBot.Plugins.Messenger
 
             bool exactNickname = cmd.Options.Any(o => o.Key == "-x" || o.Key == "--exact-nickname");
             var rawBody = (string)cmd.Arguments[1];
-            var body = SharpIrcBotUtil.RemoveControlCharactersAndTrim(rawBody);
+            var body = StringUtil.RemoveControlCharactersAndTrim(rawBody);
 
             string senderUser = ConnectionManager.RegisteredNameForNick(message.SenderNickname) ?? message.SenderNickname;
             string lowerSenderUser = senderUser.ToLowerInvariant();
@@ -148,7 +149,7 @@ namespace SharpIrcBot.Plugins.Messenger
             }
 
             IEnumerable<RecipientInfo> recipientEnumerable = rawRecipientNicks
-                .Select(SharpIrcBotUtil.RemoveControlCharactersAndTrim)
+                .Select(StringUtil.RemoveControlCharactersAndTrim)
                 .Select(rn => new RecipientInfo(rn, ConnectionManager.RegisteredNameForNick(rn), exactNickname));
             var recipients = new HashSet<RecipientInfo>(recipientEnumerable, RecipientInfo.LowerRecipientComparer.Instance);
 
@@ -170,10 +171,10 @@ namespace SharpIrcBot.Plugins.Messenger
                 {
                     Logger.LogDebug(
                         "{SenderNickname} ({SenderUsername}) wants to send message {Message} to {RecipientNick}, but that's an invalid nickname and no alias was found",
-                        SharpIrcBotUtil.LiteralString(message.SenderNickname),
-                        SharpIrcBotUtil.LiteralString(senderUser),
-                        SharpIrcBotUtil.LiteralString(body),
-                        SharpIrcBotUtil.LiteralString(recipient.RecipientNick)
+                        StringUtil.LiteralString(message.SenderNickname),
+                        StringUtil.LiteralString(senderUser),
+                        StringUtil.LiteralString(body),
+                        StringUtil.LiteralString(recipient.RecipientNick)
                     );
                     ConnectionManager.SendChannelMessageFormat(
                         message.Channel,
@@ -197,10 +198,10 @@ namespace SharpIrcBot.Plugins.Messenger
                 {
                     Logger.LogDebug(
                         "{SenderNickname} ({SenderUsername}) wants to send message {Message} to {Recipient}, but the recipient is ignoring the sender",
-                        SharpIrcBotUtil.LiteralString(message.SenderNickname),
-                        SharpIrcBotUtil.LiteralString(senderUser),
-                        SharpIrcBotUtil.LiteralString(body),
-                        SharpIrcBotUtil.LiteralString(recipient.Recipient)
+                        StringUtil.LiteralString(message.SenderNickname),
+                        StringUtil.LiteralString(senderUser),
+                        StringUtil.LiteralString(body),
+                        StringUtil.LiteralString(recipient.Recipient)
                     );
                     ConnectionManager.SendChannelMessageFormat(
                         message.Channel,
@@ -214,10 +215,10 @@ namespace SharpIrcBot.Plugins.Messenger
 
             Logger.LogDebug(
                 "{SenderNickname} ({SenderUsername}) sending message {Message} to {Recipients}",
-                SharpIrcBotUtil.LiteralString(message.SenderNickname),
-                SharpIrcBotUtil.LiteralString(senderUser),
-                SharpIrcBotUtil.LiteralString(body),
-                recipients.Select(r => SharpIrcBotUtil.LiteralString(r.Recipient)).StringJoin(", ")
+                StringUtil.LiteralString(message.SenderNickname),
+                StringUtil.LiteralString(senderUser),
+                StringUtil.LiteralString(body),
+                recipients.Select(r => StringUtil.LiteralString(r.Recipient)).StringJoin(", ")
             );
 
             DateTimeOffset? quiescenceEnd = null;
@@ -364,9 +365,9 @@ namespace SharpIrcBot.Plugins.Messenger
                 {
                     Logger.LogDebug(
                         "delivering {Sender}'s retained message {Message} to {Recipient} as part of a chunk",
-                        SharpIrcBotUtil.LiteralString(msg.SenderOriginal),
-                        SharpIrcBotUtil.LiteralString(msg.Body),
-                        SharpIrcBotUtil.LiteralString(message.SenderNickname)
+                        StringUtil.LiteralString(msg.SenderOriginal),
+                        StringUtil.LiteralString(msg.Body),
+                        StringUtil.LiteralString(message.SenderNickname)
                     );
                     ConnectionManager.SendChannelMessageFormat(
                         message.Channel,
@@ -469,7 +470,7 @@ namespace SharpIrcBot.Plugins.Messenger
             }
             if (messages.Count == 1)
             {
-                Logger.LogDebug("replaying a message for {Recipient}", SharpIrcBotUtil.LiteralString(message.SenderNickname));
+                Logger.LogDebug("replaying a message for {Recipient}", StringUtil.LiteralString(message.SenderNickname));
                 ConnectionManager.SendChannelMessageFormat(
                     message.Channel,
                     "Replaying message for {0}! {1} <{2}> {3}",
@@ -490,7 +491,7 @@ namespace SharpIrcBot.Plugins.Messenger
             Logger.LogDebug(
                 "replaying {Count} messages for {Recipient}",
                 messages.Count,
-                SharpIrcBotUtil.LiteralString(message.SenderNickname)
+                StringUtil.LiteralString(message.SenderNickname)
             );
             foreach (var msg in messages)
             {
@@ -550,9 +551,9 @@ namespace SharpIrcBot.Plugins.Messenger
                 }
                 Logger.LogDebug(
                     "{BlockingRecipientNickname} ({BlockingRecipientUsername}) is now ignoring {BlockedSender}",
-                    SharpIrcBotUtil.LiteralString(message.SenderNickname),
-                    SharpIrcBotUtil.LiteralString(blockRecipient),
-                    SharpIrcBotUtil.LiteralString(blockSender)
+                    StringUtil.LiteralString(message.SenderNickname),
+                    StringUtil.LiteralString(blockRecipient),
+                    StringUtil.LiteralString(blockSender)
                 );
 
                 ConnectionManager.SendChannelMessageFormat(
@@ -584,9 +585,9 @@ namespace SharpIrcBot.Plugins.Messenger
                 }
                 Logger.LogDebug(
                     "{BlockingRecipientNickname} ({BlockingRecipientUsername}) is not ignoring {BlockedSender} anymore",
-                    SharpIrcBotUtil.LiteralString(message.SenderNickname),
-                    SharpIrcBotUtil.LiteralString(blockRecipient),
-                    SharpIrcBotUtil.LiteralString(blockSender)
+                    StringUtil.LiteralString(message.SenderNickname),
+                    StringUtil.LiteralString(blockRecipient),
+                    StringUtil.LiteralString(blockSender)
                 );
 
                 ConnectionManager.SendChannelMessageFormat(
@@ -754,7 +755,7 @@ namespace SharpIrcBot.Plugins.Messenger
 
             bool exactNickname = cmd.Options.Any(o => o.Key == "-x" || o.Key == "--exact-nickname");
             var rawBody = (string)cmd.Arguments[1];
-            var body = SharpIrcBotUtil.RemoveControlCharactersAndTrim(rawBody);
+            var body = StringUtil.RemoveControlCharactersAndTrim(rawBody);
 
             string senderUser = ConnectionManager.RegisteredNameForNick(message.SenderNickname) ?? message.SenderNickname;
             string lowerSenderUser = senderUser.ToLowerInvariant();
@@ -766,7 +767,7 @@ namespace SharpIrcBot.Plugins.Messenger
             }
 
             IEnumerable<RecipientInfo> recipientEnumerable = rawRecipientNicks
-                .Select(SharpIrcBotUtil.RemoveControlCharactersAndTrim)
+                .Select(StringUtil.RemoveControlCharactersAndTrim)
                 .Select(rn => new RecipientInfo(rn, ConnectionManager.RegisteredNameForNick(rn), exactNickname));
             var recipients = new HashSet<RecipientInfo>(recipientEnumerable, RecipientInfo.LowerRecipientComparer.Instance);
 
@@ -788,10 +789,10 @@ namespace SharpIrcBot.Plugins.Messenger
                 {
                     Logger.LogDebug(
                         "{SenderNickname} ({SenderUsername}) wants to send private message {Message} to {RecipientNick}, but that's an invalid nickname and no alias was found",
-                        SharpIrcBotUtil.LiteralString(message.SenderNickname),
-                        SharpIrcBotUtil.LiteralString(senderUser),
-                        SharpIrcBotUtil.LiteralString(body),
-                        SharpIrcBotUtil.LiteralString(recipient.RecipientNick)
+                        StringUtil.LiteralString(message.SenderNickname),
+                        StringUtil.LiteralString(senderUser),
+                        StringUtil.LiteralString(body),
+                        StringUtil.LiteralString(recipient.RecipientNick)
                     );
                     ConnectionManager.SendQueryMessageFormat(
                         message.SenderNickname,
@@ -814,10 +815,10 @@ namespace SharpIrcBot.Plugins.Messenger
                 {
                     Logger.LogDebug(
                         "{SenderNickname} ({SenderUsername}) wants to send private message {Message} to {Recipient}, but the recipient is ignoring the sender",
-                        SharpIrcBotUtil.LiteralString(message.SenderNickname),
-                        SharpIrcBotUtil.LiteralString(senderUser),
-                        SharpIrcBotUtil.LiteralString(body),
-                        SharpIrcBotUtil.LiteralString(recipient.Recipient)
+                        StringUtil.LiteralString(message.SenderNickname),
+                        StringUtil.LiteralString(senderUser),
+                        StringUtil.LiteralString(body),
+                        StringUtil.LiteralString(recipient.Recipient)
                     );
                     ConnectionManager.SendQueryMessageFormat(
                         message.SenderNickname,
@@ -830,10 +831,10 @@ namespace SharpIrcBot.Plugins.Messenger
 
             Logger.LogDebug(
                 "{SenderNickname} ({SenderUsername}) sending private message {Message} to {Recipients}",
-                SharpIrcBotUtil.LiteralString(message.SenderNickname),
-                SharpIrcBotUtil.LiteralString(senderUser),
-                SharpIrcBotUtil.LiteralString(body),
-                recipients.Select(r => SharpIrcBotUtil.LiteralString(r.Recipient)).StringJoin(", ")
+                StringUtil.LiteralString(message.SenderNickname),
+                StringUtil.LiteralString(senderUser),
+                StringUtil.LiteralString(body),
+                recipients.Select(r => StringUtil.LiteralString(r.Recipient)).StringJoin(", ")
             );
 
             using (var ctx = GetNewContext())
@@ -882,7 +883,7 @@ namespace SharpIrcBot.Plugins.Messenger
 
         private MessengerContext GetNewContext()
         {
-            var opts = SharpIrcBotUtil.GetContextOptions<MessengerContext>(Config);
+            var opts = DatabaseUtil.GetContextOptions<MessengerContext>(Config);
             return new MessengerContext(opts);
         }
 
@@ -970,9 +971,9 @@ namespace SharpIrcBot.Plugins.Messenger
                     // one message
                     Logger.LogDebug(
                         "delivering {Sender}'s message {Message} to {Recipient}",
-                        SharpIrcBotUtil.LiteralString(messages[0].SenderOriginal),
-                        SharpIrcBotUtil.LiteralString(messages[0].Body),
-                        SharpIrcBotUtil.LiteralString(args.SenderNickname)
+                        StringUtil.LiteralString(messages[0].SenderOriginal),
+                        StringUtil.LiteralString(messages[0].Body),
+                        StringUtil.LiteralString(args.SenderNickname)
                     );
                     ConnectionManager.SendChannelMessageFormat(
                         args.Channel,
@@ -989,7 +990,7 @@ namespace SharpIrcBot.Plugins.Messenger
                     // use messages instead of messagesToDisplay to put all of them on retainer
                     Logger.LogDebug(
                         "{Recipient} got {Count} messages; putting on retainer",
-                        SharpIrcBotUtil.LiteralString(args.SenderNickname),
+                        StringUtil.LiteralString(args.SenderNickname),
                         messages.Count
                     );
                     ConnectionManager.SendChannelMessageFormat(
@@ -1022,9 +1023,9 @@ namespace SharpIrcBot.Plugins.Messenger
                     {
                         Logger.LogDebug(
                             "delivering {Sender}'s message {Message} to {Recipient} as part of a chunk",
-                            SharpIrcBotUtil.LiteralString(msg.SenderOriginal),
-                            SharpIrcBotUtil.LiteralString(msg.Body),
-                            SharpIrcBotUtil.LiteralString(args.SenderNickname)
+                            StringUtil.LiteralString(msg.SenderOriginal),
+                            StringUtil.LiteralString(msg.Body),
+                            StringUtil.LiteralString(args.SenderNickname)
                         );
                         ConnectionManager.SendChannelMessageFormat(
                             args.Channel,
@@ -1098,9 +1099,9 @@ namespace SharpIrcBot.Plugins.Messenger
                     // one message
                     Logger.LogDebug(
                         "delivering {Sender}'s private message {Message} to {Recipient}",
-                        SharpIrcBotUtil.LiteralString(privateMessages[0].SenderOriginal),
-                        SharpIrcBotUtil.LiteralString(privateMessages[0].Body),
-                        SharpIrcBotUtil.LiteralString(args.SenderNickname)
+                        StringUtil.LiteralString(privateMessages[0].SenderOriginal),
+                        StringUtil.LiteralString(privateMessages[0].Body),
+                        StringUtil.LiteralString(args.SenderNickname)
                     );
                     ConnectionManager.SendQueryMessageFormat(
                         args.SenderNickname,
@@ -1122,9 +1123,9 @@ namespace SharpIrcBot.Plugins.Messenger
                     {
                         Logger.LogDebug(
                             "delivering {Sender}'s private message {Message} to {Recipient} as part of a chunk",
-                            SharpIrcBotUtil.LiteralString(msg.SenderOriginal),
-                            SharpIrcBotUtil.LiteralString(msg.Body),
-                            SharpIrcBotUtil.LiteralString(args.SenderNickname)
+                            StringUtil.LiteralString(msg.SenderOriginal),
+                            StringUtil.LiteralString(msg.Body),
+                            StringUtil.LiteralString(args.SenderNickname)
                         );
                         ConnectionManager.SendQueryMessageFormat(
                             args.SenderNickname,

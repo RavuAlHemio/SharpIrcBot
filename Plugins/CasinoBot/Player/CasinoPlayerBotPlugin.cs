@@ -13,6 +13,7 @@ using SharpIrcBot.Collections;
 using SharpIrcBot.Commands;
 using SharpIrcBot.Events.Irc;
 using SharpIrcBot.Plugins.CasinoBot.Cards;
+using SharpIrcBot.Util;
 
 namespace SharpIrcBot.Plugins.CasinoBot.Player
 {

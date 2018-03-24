@@ -8,12 +8,13 @@ using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Primitives;
 using Newtonsoft.Json.Linq;
+using SharpIrcBot.Util;
 
 namespace SharpIrcBot.Plugins.LinkInfo
 {
     public class TissCourseResolverPlugin : ILinkResolverPlugin
     {
-        private static readonly ILogger Logger = SharpIrcBotUtil.LoggerFactory.CreateLogger<TissCourseResolverPlugin>();
+        private static readonly ILogger Logger = LogUtil.LoggerFactory.CreateLogger<TissCourseResolverPlugin>();
 
         public const string TissHostname = "tiss.tuwien.ac.at";
         public const string EducationDetailsPath = "/course/educationDetails.xhtml";

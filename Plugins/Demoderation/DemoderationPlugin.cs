@@ -11,6 +11,7 @@ using SharpIrcBot.Collections;
 using SharpIrcBot.Commands;
 using SharpIrcBot.Events.Irc;
 using SharpIrcBot.Plugins.Demoderation.ORM;
+using SharpIrcBot.Util;
 
 namespace SharpIrcBot.Plugins.Demoderation
 {
@@ -19,7 +20,7 @@ namespace SharpIrcBot.Plugins.Demoderation
     /// </summary>
     public class DemoderationPlugin : IPlugin, IReloadableConfiguration
     {
-        private static readonly ILogger Logger = SharpIrcBotUtil.LoggerFactory.CreateLogger<DemoderationPlugin>();
+        private static readonly ILogger Logger = LogUtil.LoggerFactory.CreateLogger<DemoderationPlugin>();
 
         protected DemoderationConfig Config { get; set; }
         protected IConnectionManager ConnectionManager { get; set; }
@@ -591,7 +592,7 @@ namespace SharpIrcBot.Plugins.Demoderation
 
         protected DemoderationContext GetNewContext()
         {
-            var opts = SharpIrcBotUtil.GetContextOptions<DemoderationContext>(Config);
+            var opts = DatabaseUtil.GetContextOptions<DemoderationContext>(Config);
             return new DemoderationContext(opts);
         }
 

@@ -2,6 +2,7 @@
 using System.Collections.Immutable;
 using System.Linq;
 using JetBrains.Annotations;
+using SharpIrcBot.Util;
 
 namespace SharpIrcBot.Plugins.AlsoKnownAs
 {

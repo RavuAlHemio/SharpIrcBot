@@ -6,12 +6,13 @@ using SharpIrcBot.Commands;
 using SharpIrcBot.Events;
 using SharpIrcBot.Events.Irc;
 using SharpIrcBot.Plugins.DatabaseNickMapping.ORM;
+using SharpIrcBot.Util;
 
 namespace SharpIrcBot.Plugins.DatabaseNickMapping
 {
     public class DatabaseNickMappingPlugin : IPlugin, IReloadableConfiguration
     {
-        private static readonly ILogger Logger = SharpIrcBotUtil.LoggerFactory.CreateLogger<DatabaseNickMappingPlugin>();
+        private static readonly ILogger Logger = LogUtil.LoggerFactory.CreateLogger<DatabaseNickMappingPlugin>();
 
         protected IConnectionManager ConnectionManager;
         protected DatabaseNickMappingConfig Config;
@@ -344,7 +345,7 @@ namespace SharpIrcBot.Plugins.DatabaseNickMapping
 
         private NickMappingContext GetNewContext()
         {
-            var opts = SharpIrcBotUtil.GetContextOptions<NickMappingContext>(Config);
+            var opts = DatabaseUtil.GetContextOptions<NickMappingContext>(Config);
             return new NickMappingContext(opts);
         }
     }

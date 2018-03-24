@@ -2,12 +2,13 @@ using System.Text.RegularExpressions;
 using HtmlAgilityPack;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
+using SharpIrcBot.Util;
 
 namespace SharpIrcBot.Plugins.LinkInfo
 {
     public class HtmlResolverPlugin : ILinkResolverPlugin
     {
-        private static readonly ILogger Logger = SharpIrcBotUtil.LoggerFactory.CreateLogger<HtmlResolverPlugin>();
+        private static readonly ILogger Logger = LogUtil.LoggerFactory.CreateLogger<HtmlResolverPlugin>();
         public static readonly Regex WhiteSpaceRegex = new Regex("\\s+", RegexOptions.Compiled);
 
         public LinkInfoConfig LinkInfoConfig { get; set; }

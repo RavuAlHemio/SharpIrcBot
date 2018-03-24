@@ -10,13 +10,14 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using SharpIrcBot.Commands;
 using SharpIrcBot.Events.Irc;
+using SharpIrcBot.Util;
 using Timer = System.Threading.Timer;
 
 namespace SharpIrcBot.Plugins.UnoBot.GameMaster
 {
     public class UnoGameMasterPlugin : IPlugin
     {
-        private static readonly ILogger Logger = SharpIrcBotUtil.LoggerFactory.CreateLogger<UnoGameMasterPlugin>();
+        private static readonly ILogger Logger = LogUtil.LoggerFactory.CreateLogger<UnoGameMasterPlugin>();
 
         protected static readonly CardColor[] RegularColors = { CardColor.Red, CardColor.Green, CardColor.Blue, CardColor.Yellow };
 

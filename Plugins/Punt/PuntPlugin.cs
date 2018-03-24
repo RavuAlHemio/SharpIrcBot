@@ -6,12 +6,13 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 using SharpIrcBot.Collections;
 using SharpIrcBot.Events.Irc;
+using SharpIrcBot.Util;
 
 namespace SharpIrcBot.Plugins.Punt
 {
     public class PuntPlugin : IPlugin, IReloadableConfiguration
     {
-        private static readonly ILogger Logger = SharpIrcBotUtil.LoggerFactory.CreateLogger<PuntPlugin>();
+        private static readonly ILogger Logger = LogUtil.LoggerFactory.CreateLogger<PuntPlugin>();
 
         protected IConnectionManager ConnectionManager { get; }
         protected PuntConfig Config { get; set; }

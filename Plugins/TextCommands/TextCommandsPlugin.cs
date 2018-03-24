@@ -5,12 +5,13 @@ using System.Linq;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 using SharpIrcBot.Events.Irc;
+using SharpIrcBot.Util;
 
 namespace SharpIrcBot.Plugins.TextCommands
 {
     public class TextCommandsPlugin : IPlugin, IReloadableConfiguration
     {
-        private static readonly ILogger Logger = SharpIrcBotUtil.LoggerFactory.CreateLogger<TextCommandsPlugin>();
+        private static readonly ILogger Logger = LogUtil.LoggerFactory.CreateLogger<TextCommandsPlugin>();
 
         protected IConnectionManager ConnectionManager { get; }
         protected TextCommandsConfig Config { get; set; }

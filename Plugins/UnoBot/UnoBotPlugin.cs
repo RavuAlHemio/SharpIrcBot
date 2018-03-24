@@ -7,13 +7,14 @@ using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
 using SharpIrcBot.Events.Irc;
 using SharpIrcBot.Plugins.UnoBot.RuntimeTweaking;
+using SharpIrcBot.Util;
 
 namespace SharpIrcBot.Plugins.UnoBot
 {
     public class UnoBotPlugin : IPlugin, IReloadableConfiguration
     {
-        private static readonly ILogger CommunicationLogger = SharpIrcBotUtil.LoggerFactory.CreateLogger(typeof(UnoBotPlugin).FullName + ".Communication");
-        private static readonly ILogger StrategyLogger = SharpIrcBotUtil.LoggerFactory.CreateLogger(typeof(UnoBotPlugin).FullName + ".Strategy");
+        private static readonly ILogger CommunicationLogger = LogUtil.LoggerFactory.CreateLogger(typeof(UnoBotPlugin).FullName + ".Communication");
+        private static readonly ILogger StrategyLogger = LogUtil.LoggerFactory.CreateLogger(typeof(UnoBotPlugin).FullName + ".Strategy");
 
         protected delegate StrategyContinuation StrategyFunction(List<Card> possibleCards);
         protected delegate void FilterFunction(List<Card> possibleCards);

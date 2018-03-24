@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.Linq;
+using SharpIrcBot.Util;
 
 namespace SharpIrcBot.Plugins.TextCommands
 {

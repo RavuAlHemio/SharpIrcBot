@@ -5,6 +5,7 @@ using System.Text.RegularExpressions;
 using Newtonsoft.Json.Linq;
 using SharpIrcBot.Events.Irc;
 using SharpIrcBot.Plugins.DasIstNenFehler.ORM;
+using SharpIrcBot.Util;
 
 namespace SharpIrcBot.Plugins.DasIstNenFehler
 {
@@ -269,7 +270,7 @@ namespace SharpIrcBot.Plugins.DasIstNenFehler
 
         private GermanWordsContext GetNewContext()
         {
-            var opts = SharpIrcBotUtil.GetContextOptions<GermanWordsContext>(Config);
+            var opts = DatabaseUtil.GetContextOptions<GermanWordsContext>(Config);
             return new GermanWordsContext(opts);
         }
 

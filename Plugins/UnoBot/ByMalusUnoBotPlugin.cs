@@ -2,12 +2,13 @@
 using System.Linq;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
+using SharpIrcBot.Util;
 
 namespace SharpIrcBot.Plugins.UnoBot
 {
     public class ByMalusUnoBotPlugin : UnoBotPlugin
     {
-        private static readonly ILogger StrategyLogger = SharpIrcBotUtil.LoggerFactory.CreateLogger(typeof(ByMalusUnoBotPlugin).FullName + ".Strategy");
+        private static readonly ILogger StrategyLogger = LogUtil.LoggerFactory.CreateLogger(typeof(ByMalusUnoBotPlugin).FullName + ".Strategy");
 
         public ByMalusUnoBotPlugin(IConnectionManager connMgr, JObject config)
             : base(connMgr, config)

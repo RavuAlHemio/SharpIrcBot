@@ -12,6 +12,7 @@ using SharpIrcBot.Commands;
 using SharpIrcBot.Events.Irc;
 using SharpIrcBot.Plugins.Libraries.GeoNames;
 using SharpIrcBot.Plugins.Weather.Wunderground;
+using SharpIrcBot.Util;
 
 namespace SharpIrcBot.Plugins.Weather
 {
@@ -19,7 +20,7 @@ namespace SharpIrcBot.Plugins.Weather
     {
         protected static readonly Regex LatLonRegex = new Regex("^\\s*[0-9]+(?:[.][0-9]*)?,\\s*[0-9]+(?:[.][0-9]*)?\\s*$");
 
-        private static readonly ILogger Logger = SharpIrcBotUtil.LoggerFactory.CreateLogger<WeatherPlugin>();
+        private static readonly ILogger Logger = LogUtil.LoggerFactory.CreateLogger<WeatherPlugin>();
 
         protected IConnectionManager ConnectionManager { get; }
         protected WeatherConfig Config { get; set; }

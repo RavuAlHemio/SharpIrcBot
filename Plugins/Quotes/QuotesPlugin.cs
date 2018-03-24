@@ -9,6 +9,7 @@ using SharpIrcBot.Commands;
 using SharpIrcBot.Events;
 using SharpIrcBot.Events.Irc;
 using SharpIrcBot.Plugins.Quotes.ORM;
+using SharpIrcBot.Util;
 
 namespace SharpIrcBot.Plugins.Quotes
 {
@@ -710,7 +711,7 @@ namespace SharpIrcBot.Plugins.Quotes
 
         private QuotesContext GetNewContext()
         {
-            var opts = SharpIrcBotUtil.GetContextOptions<QuotesContext>(Config);
+            var opts = DatabaseUtil.GetContextOptions<QuotesContext>(Config);
             return new QuotesContext(opts);
         }
     }

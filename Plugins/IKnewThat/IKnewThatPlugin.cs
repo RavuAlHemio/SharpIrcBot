@@ -6,12 +6,13 @@ using Newtonsoft.Json.Linq;
 using SharpIrcBot.Commands;
 using SharpIrcBot.Events.Irc;
 using SharpIrcBot.Plugins.IKnewThat.ORM;
+using SharpIrcBot.Util;
 
 namespace SharpIrcBot.Plugins.IKnewThat
 {
     public class IKnewThatPlugin : IPlugin
     {
-        private static readonly ILogger Logger = SharpIrcBotUtil.LoggerFactory.CreateLogger<IKnewThatPlugin>();
+        private static readonly ILogger Logger = LogUtil.LoggerFactory.CreateLogger<IKnewThatPlugin>();
 
         protected IKnewThatConfig Config { get; set; }
         protected IConnectionManager ConnectionManager;
@@ -126,7 +127,7 @@ namespace SharpIrcBot.Plugins.IKnewThat
 
         private IKnewThatContext GetNewContext()
         {
-            var opts = SharpIrcBotUtil.GetContextOptions<IKnewThatContext>(Config);
+            var opts = DatabaseUtil.GetContextOptions<IKnewThatContext>(Config);
             return new IKnewThatContext(opts);
         }
     }

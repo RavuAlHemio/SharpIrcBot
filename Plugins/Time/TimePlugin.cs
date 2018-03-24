@@ -12,12 +12,13 @@ using NodaTime.TimeZones;
 using SharpIrcBot.Commands;
 using SharpIrcBot.Events.Irc;
 using SharpIrcBot.Plugins.Libraries.GeoNames;
+using SharpIrcBot.Util;
 
 namespace SharpIrcBot.Plugins.Time
 {
     public class TimePlugin : IPlugin, IReloadableConfiguration
     {
-        private static readonly ILogger Logger = SharpIrcBotUtil.LoggerFactory.CreateLogger<TimePlugin>();
+        private static readonly ILogger Logger = LogUtil.LoggerFactory.CreateLogger<TimePlugin>();
 
         protected IConnectionManager ConnectionManager { get; }
         protected TimeConfig Config { get; set; }

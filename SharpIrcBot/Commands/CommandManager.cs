@@ -3,12 +3,13 @@ using System.Collections.Generic;
 using Microsoft.Extensions.Logging;
 using SharpIrcBot.Config;
 using SharpIrcBot.Events.Irc;
+using SharpIrcBot.Util;
 
 namespace SharpIrcBot.Commands
 {
     public class CommandManager
     {
-        private static readonly ILogger Logger = SharpIrcBotUtil.LoggerFactory.CreateLogger<CommandManager>();
+        private static readonly ILogger Logger = LogUtil.LoggerFactory.CreateLogger<CommandManager>();
 
         public delegate void ChannelCommandHandler(CommandMatch commandMatch, IChannelMessageEventArgs msg);
         public delegate void PrivateMessageCommandHandler(CommandMatch commandMatch, IPrivateMessageEventArgs msg);

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 
@@ -6,56 +7,39 @@ namespace SharpIrcBot.Commands
     public static class CommandUtil
     {
         public static ImmutableList<KeyValuePair<string, IArgumentTaker>> NoOptions
-                => ImmutableList<KeyValuePair<string, IArgumentTaker>>.Empty;
+            => ImmutableList<KeyValuePair<string, IArgumentTaker>>.Empty;
         public static ImmutableList<IArgumentTaker> NoArguments => ImmutableList<IArgumentTaker>.Empty;
 
         public static ImmutableList<string> MakeNames(params string[] names)
-        {
-            return ImmutableList.Create(names);
-        }
+            => ImmutableList.Create(names);
 
         public static KeyValuePair<string, IArgumentTaker> MakeOption(string optionName, IArgumentTaker argTaker)
-        {
-            return new KeyValuePair<string, IArgumentTaker>(optionName, argTaker);
-        }
+            => new KeyValuePair<string, IArgumentTaker>(optionName, argTaker);
 
         public static ImmutableList<KeyValuePair<string, IArgumentTaker>> MakeOptions(
                 params KeyValuePair<string, IArgumentTaker>[] options)
-        {
-            return ImmutableList.Create(options);
-        }
+            => ImmutableList.Create(options);
 
         public static ImmutableList<IArgumentTaker> MakeArguments(params IArgumentTaker[] arguments)
-        {
-            return ImmutableList.Create(arguments);
-        }
+            => ImmutableList.Create(arguments);
 
         public static WordMatchTaker ToOptionalWordTaker(this IArgumentMatcher matcher)
-        {
-            return new WordMatchTaker(matcher, required: false);
-        }
+            => new WordMatchTaker(matcher, required: false);
 
         public static WordMatchTaker ToRequiredWordTaker(this IArgumentMatcher matcher)
-        {
-            return new WordMatchTaker(matcher, required: true);
-        }
+            => new WordMatchTaker(matcher, required: true);
 
         public static KeyValuePair<string, IArgumentTaker> MakeFlag(string flagString)
-        {
-            return new KeyValuePair<string, IArgumentTaker>(flagString, NothingTaker.Instance);
-        }
+            => new KeyValuePair<string, IArgumentTaker>(flagString, NothingTaker.Instance);
 
-        private static WordMatchTaker _nonzeroStringMatcherRequiredWordTaker = null;
+        private static Lazy<WordMatchTaker> _nonzeroStringMatcherRequiredWordTaker
+            = new Lazy<WordMatchTaker>(() => new WordMatchTaker(NonzeroStringMatcher.Instance, required: true));
         public static WordMatchTaker NonzeroStringMatcherRequiredWordTaker
-        {
-            get
-            {
-                if (_nonzeroStringMatcherRequiredWordTaker == null)
-                {
-                    _nonzeroStringMatcherRequiredWordTaker = new WordMatchTaker(NonzeroStringMatcher.Instance, true);
-                }
-                return _nonzeroStringMatcherRequiredWordTaker;
-            }
-        }
+            => _nonzeroStringMatcherRequiredWordTaker.Value;
+
+        private static Lazy<WordMatchTaker> _nonzeroStringMatcherOptionalWordTaker
+            = new Lazy<WordMatchTaker>(() => new WordMatchTaker(NonzeroStringMatcher.Instance, required: false));
+        public static WordMatchTaker NonzeroStringMatcherOptionalWordTaker
+            => _nonzeroStringMatcherOptionalWordTaker.Value;
     }
 }

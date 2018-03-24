@@ -8,12 +8,13 @@ using SharpIrcBot.Commands;
 using SharpIrcBot.Events;
 using SharpIrcBot.Events.Irc;
 using SharpIrcBot.Plugins.Thanks.ORM;
+using SharpIrcBot.Util;
 
 namespace SharpIrcBot.Plugins.Thanks
 {
     public class ThanksPlugin : IPlugin, IReloadableConfiguration
     {
-        private static readonly ILogger Logger = SharpIrcBotUtil.LoggerFactory.CreateLogger<ThanksPlugin>();
+        private static readonly ILogger Logger = LogUtil.LoggerFactory.CreateLogger<ThanksPlugin>();
 
         protected IConnectionManager ConnectionManager { get; }
         protected ThanksConfig Config { get; set; }
@@ -426,7 +427,7 @@ namespace SharpIrcBot.Plugins.Thanks
 
         protected ThanksContext GetNewContext()
         {
-            var opts = SharpIrcBotUtil.GetContextOptions<ThanksContext>(Config);
+            var opts = DatabaseUtil.GetContextOptions<ThanksContext>(Config);
             return new ThanksContext(opts);
         }
     }

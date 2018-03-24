@@ -8,12 +8,13 @@ using System.Text.RegularExpressions;
 using HtmlAgilityPack;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
+using SharpIrcBot.Util;
 
 namespace SharpIrcBot.Plugins.LinkInfo
 {
     public class Z0rResolverPlugin : ILinkResolverPlugin
     {
-        private static readonly ILogger Logger = SharpIrcBotUtil.LoggerFactory.CreateLogger<Z0rResolverPlugin>();
+        private static readonly ILogger Logger = LogUtil.LoggerFactory.CreateLogger<Z0rResolverPlugin>();
 
         public static readonly Regex Z0rUrlPattern = new Regex("^http://z0r.de/(?<id>[0-9]+)$", RegexOptions.Compiled);
         public static readonly Regex PageHrefPattern = new Regex("^\\./Seite(?<page>[0-9]+)\\.html$", RegexOptions.Compiled);

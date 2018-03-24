@@ -8,6 +8,7 @@ using SharpIrcBot.Commands;
 using SharpIrcBot.Events;
 using SharpIrcBot.Events.Irc;
 using SharpIrcBot.Plugins.Counters.ORM;
+using SharpIrcBot.Util;
 
 namespace SharpIrcBot.Plugins.Counters
 {
@@ -340,7 +341,7 @@ namespace SharpIrcBot.Plugins.Counters
 
         private CountersContext GetNewContext()
         {
-            DbContextOptions<CountersContext> opts = SharpIrcBotUtil.GetContextOptions<CountersContext>(Config);
+            DbContextOptions<CountersContext> opts = DatabaseUtil.GetContextOptions<CountersContext>(Config);
             return new CountersContext(opts);
         }
 

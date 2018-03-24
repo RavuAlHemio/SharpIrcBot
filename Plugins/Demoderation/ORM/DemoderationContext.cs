@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using SharpIrcBot.Util;
 
 namespace SharpIrcBot.Plugins.Demoderation.ORM
 {

@@ -4,12 +4,13 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using Microsoft.Extensions.Logging;
+using SharpIrcBot.Util;
 
 namespace SharpIrcBot
 {
     public class TimerTrigger : ITimerTrigger
     {
-        private static readonly ILogger Logger = SharpIrcBotUtil.LoggerFactory.CreateLogger<TimerTrigger>();
+        private static readonly ILogger Logger = LogUtil.LoggerFactory.CreateLogger<TimerTrigger>();
 
         private readonly SortedDictionary<DateTimeOffset, List<Action>> _whenWhat;
         private Thread _performThread;
