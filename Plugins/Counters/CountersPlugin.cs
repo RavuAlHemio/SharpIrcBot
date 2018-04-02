@@ -256,7 +256,7 @@ namespace SharpIrcBot.Plugins.Counters
                     return;
                 }
 
-                ConnectionManager.SendChannelMessage(args.Channel, $"{args.SenderNickname}: <{entry.PerpNickname}> {args.Message}");
+                ConnectionManager.SendChannelMessage(args.Channel, $"{args.SenderNickname}: <{entry.PerpNickname}> {entry.Message}");
             }
         }
 
@@ -287,14 +287,14 @@ namespace SharpIrcBot.Plugins.Counters
 
                 if (entry.Expunged)
                 {
-                    ConnectionManager.SendChannelMessage(args.Channel, $"{args.SenderNickname}: Already expunged: <{entry.PerpNickname}> {args.Message}");
+                    ConnectionManager.SendChannelMessage(args.Channel, $"{args.SenderNickname}: Already expunged: <{entry.PerpNickname}> {entry.Message}");
                     return;
                 }
 
                 entry.Expunged = true;
                 ctx.SaveChanges();
 
-                ConnectionManager.SendChannelMessage(args.Channel, $"{args.SenderNickname}: Okay, expunged <{entry.PerpNickname}> {args.Message}");
+                ConnectionManager.SendChannelMessage(args.Channel, $"{args.SenderNickname}: Okay, expunged <{entry.PerpNickname}> {entry.Message}");
             }
         }
 
