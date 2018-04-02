@@ -89,9 +89,22 @@ namespace SharpIrcBot.Commands
 
             for (;;)
             {
+                bool optionMatched = false;
                 if (keepTakingOptions)
                 {
                     string startTrimmedToGo = argumentsToGo.TrimStart();
+
+                    // forced end of options?
+                    if (startTrimmedToGo.StartsWith("--"))
+                    {
+                        if (startTrimmedToGo.Length == 2 || char.IsWhiteSpace(startTrimmedToGo, 2))
+                        {
+                            // lone "--" option; stop taking options
+                            keepTakingOptions = false;
+                            argumentsToGo = startTrimmedToGo.Substring(2);
+                            continue;
+                        }
+                    }
 
                     // options
                     foreach (KeyValuePair<string, IArgumentTaker> option in Options)
@@ -135,20 +148,14 @@ namespace SharpIrcBot.Commands
                         // matched!
                         seenOptions.Add(new KeyValuePair<string, object>(option.Key, optValue));
                         argumentsToGo = optRest;
-                        continue;
+                        optionMatched = true;
+                        break;
                     }
+                }
 
-                    // forced end of options?
-                    if (startTrimmedToGo.StartsWith("--"))
-                    {
-                        if (startTrimmedToGo.Length == 2 || char.IsWhiteSpace(startTrimmedToGo, 2))
-                        {
-                            // lone "--" option; stop taking options
-                            keepTakingOptions = false;
-                            argumentsToGo = startTrimmedToGo.Substring(2);
-                            continue;
-                        }
-                    }
+                if (optionMatched)
+                {
+                    continue;
                 }
 
                 // argument?
