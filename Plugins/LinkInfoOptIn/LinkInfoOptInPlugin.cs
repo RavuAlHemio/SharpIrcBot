@@ -84,7 +84,12 @@ namespace SharpIrcBot.Plugins.LinkInfoOptIn
                         string username = user.Value;
                         if (ctx.OptedInUsers.Any(u => u.UserName == username))
                         {
+                            Logger.LogTrace("nick {Nickname} user {Username} is opted in; adding", user.Key, user.Value);
                             optedInNicks.Add(user.Key);
+                        }
+                        else
+                        {
+                            Logger.LogTrace("nick {Nickname} user {Username} is not opted in");
                         }
                     }
                 }
@@ -107,6 +112,7 @@ namespace SharpIrcBot.Plugins.LinkInfoOptIn
                 {
                     foreach (var nick in optedInNicks)
                     {
+                        Logger.LogTrace("posting link info to {Nickname}", nick);
                         PostLinkInfo(linkAndInfo, message => ConnectionManager.SendQueryNotice(nick, message));
                     }
                     LastBroadcastLink = linkAndInfo.Link;
