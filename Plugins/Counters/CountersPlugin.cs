@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json.Linq;
 using SharpIrcBot.Collections;
@@ -38,6 +39,19 @@ namespace SharpIrcBot.Plugins.Counters
                     forbiddenFlags: MessageFlags.UserBanned
                 ),
                 HandleUncountCommand
+            );
+            ConnectionManager.CommandManager.RegisterChannelMessageCommandHandler(
+                new Command(
+                    CommandUtil.MakeNames("regexcount"),
+                    CommandUtil.NoOptions,
+                    CommandUtil.MakeArguments(
+                        CommandUtil.NonzeroStringMatcherRequiredWordTaker, // counter name
+                        CommandUtil.NonzeroStringMatcherRequiredWordTaker, // nickname
+                        RestTaker.Instance // regex
+                    ),
+                    forbiddenFlags: MessageFlags.UserBanned
+                ),
+                HandleRegexCountCommand
             );
             ConnectionManager.CommandManager.RegisterChannelMessageCommandHandler(
                 new Command(
@@ -115,10 +129,15 @@ namespace SharpIrcBot.Plugins.Counters
             }
 
             string findMe = ((string)commandMatch.Arguments[0]).Trim();
+            TryToMatch(counter, msg.Channel, msg.SenderNickname, messageSubstring: findMe, messageRegex: null);
+        }
 
+        protected virtual void TryToMatch(Counter counter, string channel, string senderNickname,
+                string messageSubstring = null, Regex messageRegex = null)
+        {
             // go back through time
             RingBuffer<ChannelMessage> messages;
-            if (!ChannelsMessages.TryGetValue(msg.Channel, out messages))
+            if (!ChannelsMessages.TryGetValue(channel, out messages))
             {
                 return;
             }
@@ -128,9 +147,19 @@ namespace SharpIrcBot.Plugins.Counters
             ChannelMessage foundMessage = null;
             foreach (ChannelMessage message in messagesReversed)
             {
-                if (!message.Body.Contains(findMe))
+                if (messageSubstring != null)
                 {
-                    continue;
+                    if (!message.Body.Contains(messageSubstring))
+                    {
+                        continue;
+                    }
+                }
+                if (messageRegex != null)
+                {
+                    if (!messageRegex.IsMatch(message.Body))
+                    {
+                        continue;
+                    }
                 }
 
                 if (counter.MessageRegex != null && !counter.MessageRegex.IsMatch(message.Body))
@@ -154,8 +183,8 @@ namespace SharpIrcBot.Plugins.Counters
             if (foundMessage == null)
             {
                 ConnectionManager.SendChannelMessage(
-                    msg.Channel,
-                    $"{msg.SenderNickname}: Nothing to count."
+                    channel,
+                    $"{senderNickname}: Nothing to count."
                 );
                 return;
             }
@@ -163,8 +192,8 @@ namespace SharpIrcBot.Plugins.Counters
             if (foundMessage.Counted)
             {
                 ConnectionManager.SendChannelMessage(
-                    msg.Channel,
-                    $"{msg.SenderNickname}: That's been counted already."
+                    channel,
+                    $"{senderNickname}: That's been counted already."
                 );
                 return;
             }
@@ -173,14 +202,14 @@ namespace SharpIrcBot.Plugins.Counters
             {
                 ctx.Entries.Add(new CounterEntry
                 {
-                    Command = commandMatch.CommandName,
+                    Command = counter.CommandName,
                     HappenedTimestamp = foundMessage.Timestamp,
                     CountedTimestamp = DateTimeOffset.Now,
-                    Channel = msg.Channel,
+                    Channel = channel,
                     PerpNickname = foundMessage.Nickname,
                     PerpUsername = foundMessage.Username,
-                    CounterNickname = msg.SenderNickname,
-                    CounterUsername = ConnectionManager.RegisteredNameForNick(msg.SenderNickname),
+                    CounterNickname = senderNickname,
+                    CounterUsername = ConnectionManager.RegisteredNameForNick(senderNickname),
                     Message = foundMessage.Body,
                     Expunged = false
                 });
@@ -296,6 +325,33 @@ namespace SharpIrcBot.Plugins.Counters
 
                 ConnectionManager.SendChannelMessage(args.Channel, $"{args.SenderNickname}: Okay, expunged <{entry.PerpNickname}> {entry.Message}");
             }
+        }
+
+        protected virtual void HandleRegexCountCommand(CommandMatch cmd, IChannelMessageEventArgs msg)
+        {
+            var counterName = (string)cmd.Arguments[0];
+            var nick = (string)cmd.Arguments[1];
+            string regexString = ((string)cmd.Arguments[2]).Trim();
+
+            Counter counter = Config.Counters.FirstOrDefault(c => c.CommandName == counterName);
+            if (counter == null)
+            {
+                ConnectionManager.SendChannelMessage(msg.Channel, $"{msg.SenderNickname}: Unknown counter '{counterName}'");
+                return;
+            }
+
+            Regex regex;
+            try
+            {
+                regex = new Regex(regexString, RegexOptions.Compiled);
+            }
+            catch (ArgumentException ae)
+            {
+                ConnectionManager.SendChannelMessage(msg.Channel, $"{msg.SenderNickname}: Invalid regex: {ae.Message}");
+                return;
+            }
+
+            TryToMatch(counter, msg.Channel, msg.SenderNickname, messageSubstring: null, messageRegex: regex);
         }
 
         protected virtual void HandleCounterStatsCommand(CommandMatch cmd, IChannelMessageEventArgs args)
