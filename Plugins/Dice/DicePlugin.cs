@@ -70,6 +70,15 @@ namespace SharpIrcBot.Plugins.Dice
                 ),
                 HandleDecideCommand
             );
+            ConnectionManager.CommandManager.RegisterChannelMessageCommandHandler(
+                new Command(
+                    CommandUtil.MakeNames("shuffle"),
+                    cryptoOption,
+                    CommandUtil.MakeArguments(RestTaker.Instance),
+                    forbiddenFlags: MessageFlags.UserBanned
+                ),
+                HandleShuffleCommand
+            );
             ConnectionManager.ChannelMessage += HandleChannelMessage;
         }
 
@@ -234,6 +243,24 @@ namespace SharpIrcBot.Plugins.Dice
             var options = decisionString.Split(new[] {splitter}, StringSplitOptions.None);
             var chosenOption = options[rng.Next(options.Length)];
             ConnectionManager.SendChannelMessageFormat(args.Channel, "{0}: {1}", args.SenderNickname, chosenOption);
+        }
+
+        protected virtual void HandleShuffleCommand(CommandMatch cmd, IChannelMessageEventArgs args)
+        {
+            string decisionString = ((string)cmd.Arguments[0]).Trim();
+
+            string splitter = Config.DecisionSplitters.FirstOrDefault(ds => decisionString.Contains(ds));
+            if (splitter == null)
+            {
+                ConnectionManager.SendChannelMessageFormat(args.Channel, "{0}: Uhh... that looks like only one option to shuffle.", args.SenderNickname);
+                return;
+            }
+
+            Random rng = ChosenRNG(cmd);
+            var options = decisionString.Split(new[] {splitter}, StringSplitOptions.None);
+            options.Shuffle(rng);
+            string newString = string.Join(splitter, options);
+            ConnectionManager.SendChannelMessageFormat(args.Channel, "{0}: {1}", args.SenderNickname, newString);
         }
 
         protected virtual void HandleChannelMessage(object sender, IChannelMessageEventArgs args, MessageFlags flags)
