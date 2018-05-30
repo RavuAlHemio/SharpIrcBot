@@ -14,7 +14,7 @@ namespace SharpIrcBot.Plugins.Sed
         protected IConnectionManager ConnectionManager { get; }
         protected SedConfig Config { get; set; }
 
-        protected Dictionary<string, List<string>> ChannelToLastBodies { get; set; }
+        protected Dictionary<string, List<LastMessage>> ChannelToLastMessages { get; set; }
         protected SedParser Parser { get; set; }
 
         public SedPlugin(IConnectionManager connMgr, JObject config)
@@ -22,10 +22,11 @@ namespace SharpIrcBot.Plugins.Sed
             ConnectionManager = connMgr;
             Config = new SedConfig(config);
 
-            ChannelToLastBodies = new Dictionary<string, List<string>>();
+            ChannelToLastMessages = new Dictionary<string, List<LastMessage>>();
             Parser = new SedParser();
 
             ConnectionManager.ChannelMessage += HandleChannelMessage;
+            ConnectionManager.ChannelAction += HandleChannelAction;
         }
 
         public virtual void ReloadConfiguration(JObject newConfig)
@@ -50,18 +51,33 @@ namespace SharpIrcBot.Plugins.Sed
                 return;
             }
 
-            // remember?
-            List<string> lastBodies;
-            if (!ChannelToLastBodies.TryGetValue(e.Channel, out lastBodies))
+            RememberMessage(e.Channel, new LastMessage(LastMessageType.ChannelMessage, e.SenderNickname, e.Message));
+        }
+
+        protected virtual void HandleChannelAction(object sender, IChannelMessageEventArgs e, MessageFlags flags)
+        {
+            if (flags.HasFlag(MessageFlags.UserBanned))
             {
-                lastBodies = new List<string>();
-                ChannelToLastBodies[e.Channel] = lastBodies;
+                return;
             }
 
-            lastBodies.Insert(0, e.Message);
-            while (lastBodies.Count > Config.RememberLastMessages && lastBodies.Count > 0)
+            // remember
+            RememberMessage(e.Channel, new LastMessage(LastMessageType.ChannelAction, e.SenderNickname, e.Message));
+        }
+
+        protected virtual void RememberMessage(string channel, LastMessage message)
+        {
+            List<LastMessage> lastMessages;
+            if (!ChannelToLastMessages.TryGetValue(channel, out lastMessages))
             {
-                lastBodies.RemoveAt(lastBodies.Count - 1);
+                lastMessages = new List<LastMessage>();
+                ChannelToLastMessages[channel] = lastMessages;
+            }
+
+            lastMessages.Insert(0, message);
+            while (lastMessages.Count > Config.RememberLastMessages && lastMessages.Count > 0)
+            {
+                lastMessages.RemoveAt(lastMessages.Count - 1);
             }
         }
 
@@ -81,33 +97,38 @@ namespace SharpIrcBot.Plugins.Sed
             }
 
             // find the message to perform a replacement in
-            List<string> lastBodies;
-            if (!ChannelToLastBodies.TryGetValue(e.Channel, out lastBodies))
+            List<LastMessage> lastMessages;
+            if (!ChannelToLastMessages.TryGetValue(e.Channel, out lastMessages))
             {
                 // no last bodies for this channel; never mind
                 return true;
             }
 
             bool foundAny = false;
-            foreach (string lastBody in lastBodies)
+            foreach (LastMessage lastMessage in lastMessages)
             {
-                string replaced = lastBody;
+                string replaced = lastMessage.Body;
 
                 foreach (ITransformCommand transformation in transformations)
                 {
                     replaced = transformation.Transform(replaced);
                 }
 
-                if (replaced != lastBody)
+                if (replaced != lastMessage.Body)
                 {
                     // success!
                     if (Config.MaxResultLength >= 0 && replaced.Length > Config.MaxResultLength)
                     {
-                        ConnectionManager.SendChannelMessage(e.Channel, Config.ResultTooLongMessage);
+                        replaced = Config.ResultTooLongMessage;
                     }
-                    else
+
+                    if (lastMessage.Type == LastMessageType.ChannelMessage)
                     {
                         ConnectionManager.SendChannelMessage(e.Channel, replaced);
+                    }
+                    else if (lastMessage.Type == LastMessageType.ChannelAction)
+                    {
+                        ConnectionManager.SendQueryAction(e.Channel, replaced);
                     }
 
                     foundAny = true;
