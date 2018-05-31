@@ -30,10 +30,10 @@ do
 done
 
 cd "$topdir/SharpIrcBotCLI"
-dotnet build "SharpIrcBotCLI.csproj" -f "netcoreapp2.0"
+dotnet build "SharpIrcBotCLI.csproj" -f "netcoreapp2.1"
 
 for testdir in "$topdir/Tests"/*Tests
 do
     cd "$testdir"
-    dotnet test -f "netcoreapp2.0"
+    dotnet test -f "netcoreapp2.1"
 done
