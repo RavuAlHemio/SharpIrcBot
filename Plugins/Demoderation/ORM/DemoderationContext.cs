@@ -106,17 +106,11 @@ namespace SharpIrcBot.Plugins.Demoderation.ORM
 
                 ban.Property(b => b.Timestamp)
                     .IsRequired()
-                    .HasColumnName("timestamp")
-                    .IfNpgsql(Database, npb =>
-                        npb.HasColumnType("timestamp (0) with timezone")
-                    );
+                    .HasColumnName("timestamp");
 
                 ban.Property(b => b.BanUntil)
                     .IsRequired()
-                    .HasColumnName("ban_until")
-                    .IfNpgsql(Database, npb =>
-                        npb.HasColumnType("timestamp (0) with timezone")
-                    );
+                    .HasColumnName("ban_until");
 
                 ban.Property(b => b.Lifted)
                     .IsRequired()
@@ -158,24 +152,15 @@ namespace SharpIrcBot.Plugins.Demoderation.ORM
 
                 abuse.Property(a => a.Timestamp)
                     .IsRequired()
-                    .HasColumnName("timestamp")
-                    .IfNpgsql(Database, npa =>
-                        npa.HasColumnType("timestamp (0) with timezone")
-                    );
+                    .HasColumnName("timestamp");
 
                 abuse.Property(a => a.BanUntil)
                     .IsRequired()
-                    .HasColumnName("ban_until")
-                    .IfNpgsql(Database, npa =>
-                        npa.HasColumnType("timestamp (0) with timezone")
-                    );
+                    .HasColumnName("ban_until");
 
                 abuse.Property(a => a.LockUntil)
                     .IsRequired()
-                    .HasColumnName("lock_until")
-                    .IfNpgsql(Database, npa =>
-                        npa.HasColumnType("timestamp (0) with timezone")
-                    );
+                    .HasColumnName("lock_until");
 
                 abuse.Property(a => a.Lifted)
                     .IsRequired()
