@@ -192,7 +192,7 @@ namespace SharpIrcBot.Plugins.Debounce
         protected virtual void HandleChannelMessageOrAction(object sender, IChannelMessageEventArgs e, MessageFlags flags)
         {
             BounceCriterion crit = InterestingCriterion(e.SenderNickname, channel: null);
-            if (crit?.ForgetOnChannelMessage)
+            if (crit != null && crit.ForgetOnChannelMessage)
             {
                 RelevantJoins.RemoveAll(j => j.Nickname == e.SenderNickname);
             }
