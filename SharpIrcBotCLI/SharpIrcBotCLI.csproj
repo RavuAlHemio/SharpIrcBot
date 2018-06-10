@@ -22,6 +22,7 @@
     <ProjectReference Include="..\Plugins\Demoderation\Demoderation.csproj" />
     <ProjectReference Include="..\Plugins\Dice\Dice.csproj" />
     <ProjectReference Include="..\Plugins\DontJustHighlightMe\DontJustHighlightMe.csproj" />
+    <ProjectReference Include="..\Plugins\FunCommandLimiter\FunCommandLimiter.csproj" />
     <ProjectReference Include="..\Plugins\GroupPressure\GroupPressure.csproj" />
     <ProjectReference Include="..\Plugins\IdentityNickMapping\IdentityNickMapping.csproj" />
     <ProjectReference Include="..\Plugins\IKnewThat\IKnewThat.csproj" />
