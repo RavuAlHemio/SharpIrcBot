@@ -13,6 +13,7 @@ namespace SharpIrcBot.Commands
 
         public delegate void ChannelCommandHandler(CommandMatch commandMatch, IChannelMessageEventArgs msg);
         public delegate void PrivateMessageCommandHandler(CommandMatch commandMatch, IPrivateMessageEventArgs msg);
+        public delegate bool GlobalCommandCallback(CommandMatch commandMatch, IUserMessageEventArgs msg);
 
         public CommandConfig Config { get; set; }
 
@@ -22,6 +23,7 @@ namespace SharpIrcBot.Commands
         protected Dictionary<Command, List<PrivateMessageCommandHandler>> QueryActionHandlers { get; set; }
         protected Dictionary<Command, List<PrivateMessageCommandHandler>> QueryMessageHandlers { get; set; }
         protected Dictionary<Command, List<PrivateMessageCommandHandler>> QueryNoticeHandlers { get; set; }
+        protected List<GlobalCommandCallback> GlobalCommandCallbacks { get; set; }
 
         public CommandManager(CommandConfig config, IConnectionManager connMgr)
         {
@@ -33,6 +35,7 @@ namespace SharpIrcBot.Commands
             QueryActionHandlers = new Dictionary<Command, List<PrivateMessageCommandHandler>>();
             QueryMessageHandlers = new Dictionary<Command, List<PrivateMessageCommandHandler>>();
             QueryNoticeHandlers = new Dictionary<Command, List<PrivateMessageCommandHandler>>();
+            GlobalCommandCallbacks = new List<GlobalCommandCallback>();
 
             connMgr.ChannelAction += HandleChannelAction;
             connMgr.ChannelMessage += HandleChannelMessage;
@@ -72,6 +75,29 @@ namespace SharpIrcBot.Commands
             HandleQueryEntry(QueryNoticeHandlers, sender, msg, flags);
         }
 
+        protected virtual bool ApplyGlobalCallbacks(CommandMatch match, IUserMessageEventArgs msg)
+        {
+            bool callbackSaidNo = false;
+            foreach (GlobalCommandCallback callback in GlobalCommandCallbacks)
+            {
+                try
+                {
+                    if (!callback.Invoke(match, msg))
+                    {
+                        callbackSaidNo = true;
+                    }
+                }
+                catch (Exception exc)
+                {
+                    Logger.LogError(
+                        "error when global callback {GlobalCommandCallback} was processing command {Command}: {Exception}",
+                        callback, match.CommandName, exc
+                    );
+                }
+            }
+            return !callbackSaidNo;
+        }
+
         protected virtual void HandleChannelEntry(Dictionary<Command, List<ChannelCommandHandler>> commandsHandlers,
                 object sender, IChannelMessageEventArgs msg, MessageFlags flags)
         {
@@ -92,6 +118,12 @@ namespace SharpIrcBot.Commands
                 // attempt to parse this command
                 CommandMatch match = commandHandler.Key.Match(Config, commandAndArgs, flags);
                 if (match == null)
+                {
+                    continue;
+                }
+
+                // check result of global callbacks
+                if (!ApplyGlobalCallbacks(match, msg))
                 {
                     continue;
                 }
@@ -135,6 +167,12 @@ namespace SharpIrcBot.Commands
                 // attempt to parse this command
                 CommandMatch match = commandHandler.Key.Match(Config, commandAndArgs, flags);
                 if (match == null)
+                {
+                    continue;
+                }
+
+                // check result of global callbacks
+                if (!ApplyGlobalCallbacks(match, msg))
                 {
                     continue;
                 }
@@ -241,6 +279,16 @@ namespace SharpIrcBot.Commands
                 return false;
             }
             return handlerList.Remove(handler);
+        }
+
+        public void RegisterGlobalCommandCallback(GlobalCommandCallback callback)
+        {
+            GlobalCommandCallbacks.Add(callback);
+        }
+
+        public bool UnregisterGlobalCommandCallback(GlobalCommandCallback callback)
+        {
+            return GlobalCommandCallbacks.Remove(callback);
         }
     }
 }
