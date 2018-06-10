@@ -23,6 +23,9 @@ namespace SharpIrcBot.Commands
         public static ImmutableList<IArgumentTaker> MakeArguments(params IArgumentTaker[] arguments)
             => ImmutableList.Create(arguments);
 
+        public static ImmutableHashSet<string> MakeTags(params string[] tags)
+            => ImmutableHashSet.Create(tags);
+
         public static WordMatchTaker ToOptionalWordTaker(this IArgumentMatcher matcher)
             => new WordMatchTaker(matcher, required: false);
 

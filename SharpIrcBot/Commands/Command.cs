@@ -12,6 +12,7 @@ namespace SharpIrcBot.Commands
         public ImmutableList<string> CommandNames { get; }
         public ImmutableList<KeyValuePair<string, IArgumentTaker>> Options { get; }
         public ImmutableList<IArgumentTaker> Arguments { get; }
+        public ImmutableHashSet<string> Tags { get; }
         public MessageFlags RequiredFlags { get; }
         public MessageFlags ForbiddenFlags { get; }
 
@@ -19,6 +20,7 @@ namespace SharpIrcBot.Commands
             IEnumerable<string> commandNames = null,
             IEnumerable<KeyValuePair<string, IArgumentTaker>> options = null,
             IEnumerable<IArgumentTaker> arguments = null,
+            IEnumerable<string> tags = null,
             MessageFlags requiredFlags = MessageFlags.None,
             MessageFlags forbiddenFlags = MessageFlags.None
         )
@@ -32,6 +34,9 @@ namespace SharpIrcBot.Commands
             Arguments = (arguments == null)
                 ? ImmutableList.Create<IArgumentTaker>()
                 : ImmutableList.ToImmutableList(arguments);
+            Tags = (tags == null)
+                ? ImmutableHashSet.Create<string>()
+                : ImmutableHashSet.CreateRange(tags);
             RequiredFlags = requiredFlags;
             ForbiddenFlags = forbiddenFlags;
         }
@@ -270,6 +275,10 @@ namespace SharpIrcBot.Commands
                 foreach (IArgumentTaker argument in Arguments)
                 {
                     hashCode = (hashCode * 397) ^ argument.GetHashCode();
+                }
+                foreach (string tag in Tags)
+                {
+                    hashCode = (hashCode * 397) ^ tag.GetHashCode();
                 }
                 hashCode = (hashCode * 397) ^ RequiredFlags.GetHashCode();
                 hashCode = (hashCode * 397) ^ ForbiddenFlags.GetHashCode();
