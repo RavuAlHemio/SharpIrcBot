@@ -15,12 +15,23 @@ namespace SharpIrcBot.Plugins.Smileys
             ConnectionManager = connMgr;
             Config = new SmileysConfig(config);
 
-            var smileysCommand = new Command(
-                CommandUtil.MakeNames("smileys", "smilies"),
-                forbiddenFlags: MessageFlags.UserBanned
+            // it's a fun command in a channel and a useful command in private message
+            ConnectionManager.CommandManager.RegisterChannelMessageCommandHandler(
+                new Command(
+                    CommandUtil.MakeNames("smileys", "smilies"),
+                    tags: CommandUtil.MakeTags("fun"),
+                    forbiddenFlags: MessageFlags.UserBanned
+                ),
+                HandleSmileysCommand
             );
-            ConnectionManager.CommandManager.RegisterChannelMessageCommandHandler(smileysCommand, HandleSmileysCommand);
-            ConnectionManager.CommandManager.RegisterQueryMessageCommandHandler(smileysCommand, HandleSmileysCommand);
+            ConnectionManager.CommandManager.RegisterQueryMessageCommandHandler(
+                new Command(
+                    CommandUtil.MakeNames("smileys", "smilies"),
+                    tags: CommandUtil.NoTags,
+                    forbiddenFlags: MessageFlags.UserBanned
+                ),
+                HandleSmileysCommand
+            );
         }
 
         public virtual void ReloadConfiguration(JObject newConfig)

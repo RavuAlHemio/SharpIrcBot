@@ -54,6 +54,7 @@ namespace SharpIrcBot.Plugins.DatabaseNickMapping
                     CommandUtil.MakeArguments(
                         CommandUtil.NonzeroStringMatcherRequiredWordTaker // nick
                     ),
+                    CommandUtil.MakeTags("fun"),
                     forbiddenFlags: MessageFlags.UserBanned
                 ),
                 HandleBaseNickCommand

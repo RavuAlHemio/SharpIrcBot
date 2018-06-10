@@ -29,6 +29,7 @@ namespace SharpIrcBot.Plugins.IKnewThat
                     CommandUtil.MakeArguments(
                         CommandUtil.NonzeroStringMatcherRequiredWordTaker // keyword
                     ),
+                    CommandUtil.MakeTags("fun"),
                     forbiddenFlags: MessageFlags.UserBanned
                 ),
                 HandleIKnewThatChannelCommand
@@ -41,6 +42,7 @@ namespace SharpIrcBot.Plugins.IKnewThat
                         CommandUtil.NonzeroStringMatcherRequiredWordTaker, // keyword
                         RestTaker.Instance // description
                     ),
+                    CommandUtil.MakeTags("fun"),
                     forbiddenFlags: MessageFlags.UserBanned
                 ),
                 HandleIKnowThatQueryCommand

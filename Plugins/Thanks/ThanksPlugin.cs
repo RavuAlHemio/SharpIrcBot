@@ -49,6 +49,7 @@ namespace SharpIrcBot.Plugins.Thanks
                     CommandUtil.MakeArguments(
                         CommandUtil.NonzeroStringMatcherRequiredWordTaker // target
                     ),
+                    CommandUtil.MakeTags("fun"),
                     forbiddenFlags: MessageFlags.UserBanned
                 ),
                 HandleThankedCommand
@@ -62,6 +63,7 @@ namespace SharpIrcBot.Plugins.Thanks
                     CommandUtil.MakeArguments(
                         CommandUtil.NonzeroStringMatcherRequiredWordTaker // target
                     ),
+                    CommandUtil.MakeTags("fun"),
                     forbiddenFlags: MessageFlags.UserBanned
                 ),
                 HandleGratefulCommand
@@ -69,6 +71,7 @@ namespace SharpIrcBot.Plugins.Thanks
             ConnectionManager.CommandManager.RegisterChannelMessageCommandHandler(
                 new Command(
                     CommandUtil.MakeNames("topthanked"),
+                    tags: CommandUtil.MakeTags("fun"),
                     forbiddenFlags: MessageFlags.UserBanned
                 ),
                 HandleTopThankedCommand
@@ -76,6 +79,7 @@ namespace SharpIrcBot.Plugins.Thanks
             ConnectionManager.CommandManager.RegisterChannelMessageCommandHandler(
                 new Command(
                     CommandUtil.MakeNames("topgrateful"),
+                    tags: CommandUtil.MakeTags("fun"),
                     forbiddenFlags: MessageFlags.UserBanned
                 ),
                 HandleTopGratefulCommand

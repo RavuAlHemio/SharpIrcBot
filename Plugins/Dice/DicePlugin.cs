@@ -48,6 +48,7 @@ namespace SharpIrcBot.Plugins.Dice
                     CommandUtil.MakeNames("roll"),
                     cryptoOption,
                     CommandUtil.MakeArguments(new MultiMatchTaker(RollRegex, RollSeparatorRegex, 1)),
+                    CommandUtil.MakeTags("fun"),
                     forbiddenFlags: MessageFlags.UserBanned
                 ),
                 HandleRollCommand
@@ -57,6 +58,7 @@ namespace SharpIrcBot.Plugins.Dice
                     CommandUtil.MakeNames("yn"),
                     cryptoOption,
                     CommandUtil.MakeArguments(RestTaker.Instance),
+                    CommandUtil.MakeTags("fun"),
                     forbiddenFlags: MessageFlags.UserBanned
                 ),
                 HandleYesNoCommand
@@ -66,6 +68,7 @@ namespace SharpIrcBot.Plugins.Dice
                     CommandUtil.MakeNames("decide"),
                     cryptoOption,
                     CommandUtil.MakeArguments(RestTaker.Instance),
+                    CommandUtil.MakeTags("fun"),
                     forbiddenFlags: MessageFlags.UserBanned
                 ),
                 HandleDecideCommand
@@ -75,6 +78,7 @@ namespace SharpIrcBot.Plugins.Dice
                     CommandUtil.MakeNames("shuffle"),
                     cryptoOption,
                     CommandUtil.MakeArguments(RestTaker.Instance),
+                    CommandUtil.MakeTags("fun"),
                     forbiddenFlags: MessageFlags.UserBanned
                 ),
                 HandleShuffleCommand

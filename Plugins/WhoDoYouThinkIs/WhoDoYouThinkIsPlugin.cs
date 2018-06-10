@@ -22,8 +22,31 @@ namespace SharpIrcBot.Plugins.WhoDoYouThinkIs
                 ),
                 forbiddenFlags: MessageFlags.UserBanned
             );
-            ConnectionManager.CommandManager.RegisterChannelMessageCommandHandler(wdytiCommand, HandleWDYTICommandInChannel);
-            ConnectionManager.CommandManager.RegisterQueryMessageCommandHandler(wdytiCommand, HandleWDYTICommandInQuery);
+
+            // it's a fun command in a channel and a useful command in private message
+            ConnectionManager.CommandManager.RegisterChannelMessageCommandHandler(
+                new Command(
+                    CommandUtil.MakeNames("wdyti"),
+                    CommandUtil.NoOptions,
+                    CommandUtil.MakeArguments(
+                        CommandUtil.NonzeroStringMatcherRequiredWordTaker // nickname
+                    ),
+                    forbiddenFlags: MessageFlags.UserBanned
+                ),
+                HandleWDYTICommandInChannel
+            );
+            ConnectionManager.CommandManager.RegisterQueryMessageCommandHandler(
+                new Command(
+                    CommandUtil.MakeNames("wdyti"),
+                    CommandUtil.NoOptions,
+                    CommandUtil.MakeArguments(
+                        CommandUtil.NonzeroStringMatcherRequiredWordTaker // nickname
+                    ),
+                    CommandUtil.MakeTags("fun"),
+                    forbiddenFlags: MessageFlags.UserBanned
+                ),
+                HandleWDYTICommandInQuery
+            );
         }
 
         private void HandleWDYTICommandInQuery(CommandMatch cmd, IPrivateMessageEventArgs msg)

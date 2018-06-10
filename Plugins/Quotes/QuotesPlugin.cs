@@ -47,6 +47,7 @@ namespace SharpIrcBot.Plugins.Quotes
                     CommandUtil.MakeArguments(
                         RestTaker.Instance // quote body
                     ),
+                    CommandUtil.MakeTags("fun"),
                     forbiddenFlags: MessageFlags.UserBanned
                 ),
                 HandleAddQuoteCommand
@@ -59,6 +60,7 @@ namespace SharpIrcBot.Plugins.Quotes
                         CommandUtil.NonzeroStringMatcherRequiredWordTaker, // quote author
                         RestTaker.Instance // search string
                     ),
+                    CommandUtil.MakeTags("fun"),
                     forbiddenFlags: MessageFlags.UserBanned
                 ),
                 HandleRememberCommand
@@ -75,6 +77,7 @@ namespace SharpIrcBot.Plugins.Quotes
                     CommandUtil.MakeArguments(
                         RestTaker.Instance // search string (optional)
                     ),
+                    CommandUtil.MakeTags("fun"),
                     forbiddenFlags: MessageFlags.UserBanned
                 );
                 ConnectionManager.CommandManager.RegisterChannelMessageCommandHandler(quoteCommand, HandleQuoteCommand);
@@ -92,6 +95,7 @@ namespace SharpIrcBot.Plugins.Quotes
                     CommandUtil.MakeArguments(
                         CommandUtil.NonzeroStringMatcherRequiredWordTaker // nickname
                     ),
+                    CommandUtil.MakeTags("fun"),
                     forbiddenFlags: MessageFlags.UserBanned
                 );
                 ConnectionManager.CommandManager.RegisterChannelMessageCommandHandler(
@@ -111,6 +115,7 @@ namespace SharpIrcBot.Plugins.Quotes
                         CommandUtil.MakeFlag("-r")
                     ),
                     CommandUtil.NoArguments,
+                    CommandUtil.MakeTags("fun"),
                     forbiddenFlags: MessageFlags.UserBanned
                 );
                 ConnectionManager.CommandManager.RegisterChannelMessageCommandHandler(

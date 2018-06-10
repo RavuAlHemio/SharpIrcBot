@@ -29,6 +29,7 @@ namespace SharpIrcBot.Plugins.Calc
                     CommandUtil.MakeNames("calc"),
                     CommandUtil.NoOptions,
                     CommandUtil.MakeArguments(RestTaker.Instance),
+                    CommandUtil.MakeTags("fun"),
                     forbiddenFlags: MessageFlags.UserBanned
                 ),
                 HandleCalcCommand
@@ -38,6 +39,7 @@ namespace SharpIrcBot.Plugins.Calc
                     CommandUtil.MakeNames("calcwhere"),
                     CommandUtil.NoOptions,
                     CommandUtil.NoArguments,
+                    CommandUtil.MakeTags("fun"),
                     forbiddenFlags: MessageFlags.UserBanned
                 ),
                 HandleCalcWhereCommand

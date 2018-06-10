@@ -56,6 +56,9 @@ namespace SharpIrcBot.Plugins.LinkInfo
             ConnectionManager.CommandManager.RegisterChannelMessageCommandHandler(
                 new Command(
                     CommandUtil.MakeNames("ll", "lastlink"),
+                    CommandUtil.NoOptions,
+                    CommandUtil.NoArguments,
+                    CommandUtil.MakeTags("fun"),
                     forbiddenFlags: MessageFlags.UserBanned
                 ),
                 HandleLastLinkCommand

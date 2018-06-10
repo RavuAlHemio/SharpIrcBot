@@ -9,6 +9,7 @@ namespace SharpIrcBot.Commands
         public static ImmutableList<KeyValuePair<string, IArgumentTaker>> NoOptions
             => ImmutableList<KeyValuePair<string, IArgumentTaker>>.Empty;
         public static ImmutableList<IArgumentTaker> NoArguments => ImmutableList<IArgumentTaker>.Empty;
+        public static ImmutableHashSet<string> NoTags => ImmutableHashSet<string>.Empty;
 
         public static ImmutableList<string> MakeNames(params string[] names)
             => ImmutableList.Create(names);

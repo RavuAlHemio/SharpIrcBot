@@ -39,6 +39,7 @@ namespace SharpIrcBot.Plugins.Time
                     CommandUtil.MakeArguments(
                         RestTaker.Instance // location
                     ),
+                    CommandUtil.MakeTags("fun"),
                     forbiddenFlags: MessageFlags.UserBanned
                 ),
                 HandleTimeCommand

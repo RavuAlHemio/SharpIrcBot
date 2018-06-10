@@ -35,6 +35,7 @@ namespace SharpIrcBot.Plugins.Belch
                     CommandUtil.MakeNames("belch"),
                     CommandUtil.NoOptions,
                     CommandUtil.NoArguments,
+                    CommandUtil.MakeTags("fun"),
                     forbiddenFlags: MessageFlags.UserBanned
                 ),
                 HandleBelchCommand
@@ -44,6 +45,7 @@ namespace SharpIrcBot.Plugins.Belch
                     CommandUtil.MakeNames("skittles"),
                     CommandUtil.NoOptions,
                     CommandUtil.MakeArguments(RestTaker.Instance),
+                    CommandUtil.MakeTags("fun"),
                     forbiddenFlags: MessageFlags.UserBanned
                 ),
                 HandleSkittlesCommand
@@ -53,6 +55,7 @@ namespace SharpIrcBot.Plugins.Belch
                     CommandUtil.MakeNames("tel"),
                     CommandUtil.NoOptions,
                     CommandUtil.MakeArguments(RestTaker.Instance),
+                    CommandUtil.MakeTags("fun"),
                     forbiddenFlags: MessageFlags.UserBanned
                 ),
                 HandleTelCommand

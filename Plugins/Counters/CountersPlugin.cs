@@ -60,6 +60,7 @@ namespace SharpIrcBot.Plugins.Counters
                     CommandUtil.MakeArguments(
                         CommandUtil.NonzeroStringMatcherRequiredWordTaker // counter name
                     ),
+                    CommandUtil.MakeTags("fun"),
                     forbiddenFlags: MessageFlags.UserBanned
                 ),
                 HandleCountedCommand
@@ -71,6 +72,7 @@ namespace SharpIrcBot.Plugins.Counters
                     CommandUtil.MakeArguments(
                         CommandUtil.NonzeroStringMatcherRequiredWordTaker // counter name
                     ),
+                    CommandUtil.MakeTags("fun"),
                     forbiddenFlags: MessageFlags.UserBanned
                 ),
                 HandleCounterStatsCommand
