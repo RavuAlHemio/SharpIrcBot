@@ -185,6 +185,7 @@ namespace SharpIrcBot.Plugins.LinkInfo
             }
 
             var linkBuilder = new UriBuilder(link);
+            linkBuilder.Fragment = "";
 
             // check URL blacklist
             IPAddress[] addresses;
