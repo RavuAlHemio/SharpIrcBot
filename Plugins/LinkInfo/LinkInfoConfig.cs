@@ -12,6 +12,7 @@ namespace SharpIrcBot.Plugins.LinkInfo
         public long MaxDownloadSizeBytes { get; set; }
         public double TimeoutSeconds { get; set; }
         public string FakeUserAgent { get; set; }
+        public string AcceptLanguage { get; set; }
         public string GoogleDomain { get; set; }
         public Dictionary<string, string> FakeResponses { get; set; }
         public string TLDListFile { get; set; }
@@ -26,6 +27,7 @@ namespace SharpIrcBot.Plugins.LinkInfo
             MaxDownloadSizeBytes = 10 * 1024 * 1024;
             TimeoutSeconds = 5.0;
             FakeUserAgent = "Mozilla/5.0 (Windows NT 6.3; WOW64; rv:40.0) Gecko/20100101 Firefox/40.0";
+            AcceptLanguage = "en-US, en;q=0.9";
             GoogleDomain = "www.google.at";
             FakeResponses = new Dictionary<string, string>();
             TLDListFile = null;

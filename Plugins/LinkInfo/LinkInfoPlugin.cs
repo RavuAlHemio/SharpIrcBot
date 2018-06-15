@@ -224,6 +224,7 @@ namespace SharpIrcBot.Plugins.LinkInfo
 
                 httpClient.Timeout = TimeSpan.FromSeconds(Config.TimeoutSeconds);
                 request.Headers.UserAgent.TryParseAdd(Config.FakeUserAgent);
+                request.Headers.AcceptLanguage.TryParseAdd(Config.AcceptLanguage);
 
                 using (var resp = httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead).SyncWait())
                 {
