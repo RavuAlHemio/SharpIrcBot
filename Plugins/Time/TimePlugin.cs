@@ -176,7 +176,7 @@ namespace SharpIrcBot.Plugins.Time
 
                 messageBuilder.Append(" and ");
                 messageBuilder.Append(pieces.Last());
-                messageBuilder.Append(diff.Negative ? "remaining." : "ago.");
+                messageBuilder.Append(diff.Negative ? " remaining." : " ago.");
 
                 message = messageBuilder.ToString();
             }
