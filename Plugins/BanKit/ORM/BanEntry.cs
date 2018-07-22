@@ -18,6 +18,8 @@ namespace SharpIrcBot.Plugins.BanKit.ORM
 
         public DateTimeOffset TimestampBanEnd { get; set; }
 
+        public string Reason { get; set; }
+
         public bool Lifted { get; set; }
     }
 }

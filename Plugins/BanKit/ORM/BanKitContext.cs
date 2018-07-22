@@ -54,6 +54,9 @@ namespace SharpIrcBot.Plugins.BanKit.ORM
                 entBuilder.Property(be => be.TimestampBanEnd)
                     .IsRequired()
                     .HasColumnName("timestamp_ban_end");
+                entBuilder.Property(be => be.Reason)
+                    .IsRequired(false)
+                    .HasColumnName("reason");
                 entBuilder.Property(be => be.Lifted)
                     .IsRequired()
                     .HasColumnName("lifted");

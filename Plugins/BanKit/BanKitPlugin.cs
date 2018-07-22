@@ -85,7 +85,12 @@ namespace SharpIrcBot.Plugins.BanKit
 
             var mask = (string)commandMatch.Arguments[0];
             var timeSpanString = (string)commandMatch.Arguments[1];
-            string message = ((string)commandMatch.Arguments[2]).Trim();
+            string reason = ((string)commandMatch.Arguments[2]).Trim();
+
+            if (reason.Length == 0)
+            {
+                reason = null;
+            }
 
             string nick = null;
             if (!mask.Contains("!") && !mask.Contains("@"))
@@ -101,9 +106,9 @@ namespace SharpIrcBot.Plugins.BanKit
                 return;
             }
 
-            message = (message.Length == 0)
+            string message = (reason == null)
                 ? $"{msg.SenderNickname}"
-                : $"{msg.SenderNickname}: {message}"
+                : $"{msg.SenderNickname}: {reason}"
             ;
 
             DateTimeOffset banStartTime = DateTimeOffset.Now;
@@ -131,6 +136,7 @@ namespace SharpIrcBot.Plugins.BanKit
                         Channel = msg.Channel,
                         TimestampBanStart = banStartTime,
                         TimestampBanEnd = banEndTime,
+                        Reason = reason,
                         Lifted = false,
                     };
                     ctx.BanEntries.Add(ban);
