@@ -171,10 +171,14 @@ namespace SharpIrcBot.Plugins.Time
             {
                 var messageBuilder = new StringBuilder();
 
-                // 1 year, 2 months, 3 days[ and 4 hours]
-                messageBuilder.Append(string.Join(", ", pieces.Take(pieces.Count - 1)));
+                if (pieces.Count > 1)
+                {
+                    messageBuilder.Append(string.Join(", ", pieces.Take(pieces.Count - 1)));
+                    // 1 year, 2 months, 3 days[ and 4 hours]
 
-                messageBuilder.Append(" and ");
+                    messageBuilder.Append(" and ");
+                    // 1 year, 2 months, 3 days and [4 hours]
+                }
                 messageBuilder.Append(pieces.Last());
                 messageBuilder.Append(diff.Negative ? " ago." : " remaining.");
 
