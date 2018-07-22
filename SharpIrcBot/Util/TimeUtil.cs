@@ -22,6 +22,7 @@ namespace SharpIrcBot.Util
 
         [NotNull]
         public static readonly Regex DateTimeRegex = new Regex(
+            "^" +
             "\\s*" +
             "(?:" +
                 // "2018-04-08", "04-08", "2018-4-8", ...
@@ -85,7 +86,8 @@ namespace SharpIrcBot.Util
                     ")" +
                 ")" +
             ")?" +
-            "\\s*",
+            "\\s*" +
+            "$",
             RegexOptions.Compiled
         );
 
@@ -165,7 +167,7 @@ namespace SharpIrcBot.Util
             return ret;
         }
 
-        public static DateTime? DateTimeFromString(string dateTimeString)
+        public static DateTime? DateTimeFromString(string dateTimeString, DateTime? customNow = null)
         {
             Match m = DateTimeRegex.Match(dateTimeString);
             if (!m.Success)
@@ -252,9 +254,10 @@ namespace SharpIrcBot.Util
             if (!year.HasValue)
             {
                 // assume the future
-                year = DateTime.Now.Year;
+                DateTime now = customNow ?? DateTime.Now;
+                year = now.Year;
                 DateTime ret = new DateTime(year.Value, month, day, hour, minute, second);
-                if (DateTime.Now > ret)
+                if (now > ret)
                 {
                     ret = new DateTime(year.Value + 1, month, day, hour, minute, second);
                 }
