@@ -112,5 +112,31 @@ namespace SharpIrcBot.Tests.TimeTests
             AssertIntervalEqualTo(startingPoint, euro2020, years: 1, months: 10, days: 21, hours: 19, minutes: 54, seconds: 19);
             AssertIntervalEqualTo(startingPoint, fifa2022, years: 4, months: 3, days: 29, hours: 22, minutes: 54, seconds: 19);
         }
+
+        [Fact]
+        public void FebruaryIsJustPlainObscene()
+        {
+            var jan31 = new DateTime(2018, 1, 31, 0, 0, 0, DateTimeKind.Utc);
+            var feb28 = new DateTime(2018, 2, 28, 0, 0, 0, DateTimeKind.Utc);
+            var mar1 = new DateTime(2018, 3, 1, 0, 0, 0, DateTimeKind.Utc);
+            var mar2 = new DateTime(2018, 3, 2, 0, 0, 0, DateTimeKind.Utc);
+            var mar3 = new DateTime(2018, 3, 3, 0, 0, 0, DateTimeKind.Utc);
+            var mar30 = new DateTime(2018, 3, 30, 0, 0, 0, DateTimeKind.Utc);
+            var mar31 = new DateTime(2018, 3, 31, 0, 0, 0, DateTimeKind.Utc);
+            var apr1 = new DateTime(2018, 4, 1, 0, 0, 0, DateTimeKind.Utc);
+
+            AssertIntervalEqualTo(jan31, feb28, days: 28);
+            AssertIntervalEqualTo(jan31, mar1, days: 29);
+            AssertIntervalEqualTo(jan31, mar2, days: 30);
+            AssertIntervalEqualTo(jan31, mar3, months: 1);
+
+            AssertIntervalEqualTo(jan31, mar31, months: 2);
+            AssertIntervalEqualTo(jan31, apr1, months: 2, days: 1);
+
+            AssertIntervalEqualTo(feb28, mar1, days: 1);
+            AssertIntervalEqualTo(feb28, mar30, months: 1, days: 2);
+            AssertIntervalEqualTo(feb28, mar31, months: 1, days: 3);
+            AssertIntervalEqualTo(feb28, apr1, months: 1, days: 4);
+        }
     }
 }
