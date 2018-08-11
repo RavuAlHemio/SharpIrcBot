@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>netstandard2.0</TargetFrameworks>
+    <DebugType>portable</DebugType>
+    <RootNamespace>SharpIrcBot.Plugins.Libraries.RegularExpressionReplacement</RootNamespace>
+    <AssemblyName>SharpIrcBot.Plugins.Libraries.RegularExpressionReplacement</AssemblyName>
+    <PackageId>SharpIrcBot.Plugins.Libraries.RegularExpressionReplacement</PackageId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\SharpIrcBot\SharpIrcBot.csproj" />
+  </ItemGroup>
+
+</Project>

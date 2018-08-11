@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using SharpIrcBot.Plugins.Allograph.RegularExpressions;
+using SharpIrcBot.Plugins.Libraries.RegularExpressionReplacement;
 using Xunit;
 
 namespace SharpIrcBot.Tests.AllographTests

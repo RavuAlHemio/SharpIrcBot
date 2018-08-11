@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 
-namespace SharpIrcBot.Plugins.Allograph.RegularExpressions.Internal
+namespace SharpIrcBot.Plugins.Libraries.RegularExpressionReplacement.Internal
 {
     public class ReplacementState
     {

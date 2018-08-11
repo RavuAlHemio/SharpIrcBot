@@ -1,7 +1,7 @@
 using System.Diagnostics;
 using System.Text;
 
-namespace SharpIrcBot.Plugins.Allograph.RegularExpressions.Internal
+namespace SharpIrcBot.Plugins.Libraries.RegularExpressionReplacement.Internal
 {
     public class CaseStringPlaceholder : IPlaceholder
     {

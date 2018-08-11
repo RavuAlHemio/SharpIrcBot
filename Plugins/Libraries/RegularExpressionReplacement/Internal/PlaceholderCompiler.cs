@@ -4,7 +4,7 @@ using System.Globalization;
 using System.Text;
 using System.Text.RegularExpressions;
 
-namespace SharpIrcBot.Plugins.Allograph.RegularExpressions.Internal
+namespace SharpIrcBot.Plugins.Libraries.RegularExpressionReplacement.Internal
 {
     public static class PlaceholderCompiler
     {

@@ -1,6 +1,6 @@
 using System;
 
-namespace SharpIrcBot.Plugins.Allograph.RegularExpressions.Internal
+namespace SharpIrcBot.Plugins.Libraries.RegularExpressionReplacement.Internal
 {
     public class MatchGroupPlaceholder : IPlaceholder
     {

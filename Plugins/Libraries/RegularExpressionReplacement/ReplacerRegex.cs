@@ -1,9 +1,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
-using SharpIrcBot.Plugins.Allograph.RegularExpressions.Internal;
+using SharpIrcBot.Plugins.Libraries.RegularExpressionReplacement.Internal;
 
-namespace SharpIrcBot.Plugins.Allograph.RegularExpressions
+namespace SharpIrcBot.Plugins.Libraries.RegularExpressionReplacement
 {
     public class ReplacerRegex
     {

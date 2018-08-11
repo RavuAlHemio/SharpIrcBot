@@ -1,4 +1,4 @@
-namespace SharpIrcBot.Plugins.Allograph.RegularExpressions.Internal
+namespace SharpIrcBot.Plugins.Libraries.RegularExpressionReplacement.Internal
 {
     public class ConstantStringPlaceholder : IPlaceholder
     {

@@ -8,7 +8,7 @@ using Newtonsoft.Json.Linq;
 using SharpIrcBot.Chunks;
 using SharpIrcBot.Commands;
 using SharpIrcBot.Events.Irc;
-using SharpIrcBot.Plugins.Allograph.RegularExpressions;
+using SharpIrcBot.Plugins.Libraries.RegularExpressionReplacement;
 using SharpIrcBot.Util;
 
 namespace SharpIrcBot.Plugins.Allograph
