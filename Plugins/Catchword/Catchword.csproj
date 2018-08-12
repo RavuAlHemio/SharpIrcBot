@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>netstandard2.0</TargetFrameworks>
+    <DebugType>portable</DebugType>
+    <RootNamespace>SharpIrcBot.Plugins.Catchword</RootNamespace>
+    <AssemblyName>SharpIrcBot.Plugins.Catchword</AssemblyName>
+    <PackageId>SharpIrcBot.Plugins.Catchword</PackageId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\SharpIrcBot\SharpIrcBot.csproj" />
+    <ProjectReference Include="..\Libraries\RegularExpressionReplacement\RegularExpressionReplacement.csproj" />
+  </ItemGroup>
+
+</Project>
