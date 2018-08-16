@@ -67,7 +67,17 @@ namespace SharpIrcBot.Plugins.Sed.Parsing
 
             foreach (char c in flags)
             {
-                if (c >= '0' && c <= '9')
+                if (c == '-')
+                {
+                    if (firstMatchBuilder.Length > 0)
+                    {
+                        // minus midway through a number => invalid
+                        return null;
+                    }
+                    readingNumber = true;
+                    firstMatchBuilder.Append(c);
+                }
+                else if (c >= '0' && c <= '9')
                 {
                     if (!readingNumber && firstMatchBuilder.Length > 0)
                     {
@@ -105,7 +115,8 @@ namespace SharpIrcBot.Plugins.Sed.Parsing
             if (firstMatchBuilder.Length > 0)
             {
                 if (!int.TryParse(
-                    firstMatchBuilder.ToString(), NumberStyles.None, CultureInfo.InvariantCulture, out firstMatch
+                    firstMatchBuilder.ToString(), NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture,
+                    out firstMatch
                 ))
                 {
                     // invalid count

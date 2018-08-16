@@ -220,6 +220,72 @@ namespace SharpIrcBot.Tests.SedTests
         }
 
         [Fact]
+        public void TestReplaceLastE()
+        {
+            TestConnectionManager mgr = TestCommon.ObtainConnectionManager();
+
+            mgr.InjectChannelMessage(
+                TestChannelName,
+                "OneUser",
+                "whether 'tis nobler in the mind to suffer the slings and arrows of outrageous fortune"
+            );
+            mgr.InjectChannelMessage(TestChannelName, "YetAnotherUser", "s/e/3/-1");
+
+            Assert.Equal(1, mgr.EventLog.Count);
+            TestMessage sentMessage = Assert.IsType<TestMessage>(mgr.EventLog[0]);
+            Assert.Equal(MessageType.Message, sentMessage.Type);
+            Assert.Equal(TestChannelName, sentMessage.Target);
+            Assert.Equal(
+                "whether 'tis nobler in the mind to suffer the slings and arrows of outrageous fortun3",
+                sentMessage.Body
+            );
+        }
+
+        [Fact]
+        public void TestReplaceLastButThreeE()
+        {
+            TestConnectionManager mgr = TestCommon.ObtainConnectionManager();
+
+            mgr.InjectChannelMessage(
+                TestChannelName,
+                "OneUser",
+                "whether 'tis nobler in the mind to suffer the slings and arrows of outrageous fortune"
+            );
+            mgr.InjectChannelMessage(TestChannelName, "YetAnotherUser", "s/e/3/-4");
+
+            Assert.Equal(1, mgr.EventLog.Count);
+            TestMessage sentMessage = Assert.IsType<TestMessage>(mgr.EventLog[0]);
+            Assert.Equal(MessageType.Message, sentMessage.Type);
+            Assert.Equal(TestChannelName, sentMessage.Target);
+            Assert.Equal(
+                "whether 'tis nobler in the mind to suff3r the slings and arrows of outrageous fortune",
+                sentMessage.Body
+            );
+        }
+
+        [Fact]
+        public void TestReplaceLastButThreeAndLaterE()
+        {
+            TestConnectionManager mgr = TestCommon.ObtainConnectionManager();
+
+            mgr.InjectChannelMessage(
+                TestChannelName,
+                "OneUser",
+                "whether 'tis nobler in the mind to suffer the slings and arrows of outrageous fortune"
+            );
+            mgr.InjectChannelMessage(TestChannelName, "YetAnotherUser", "s/e/3/-4g");
+
+            Assert.Equal(1, mgr.EventLog.Count);
+            TestMessage sentMessage = Assert.IsType<TestMessage>(mgr.EventLog[0]);
+            Assert.Equal(MessageType.Message, sentMessage.Type);
+            Assert.Equal(TestChannelName, sentMessage.Target);
+            Assert.Equal(
+                "whether 'tis nobler in the mind to suff3r th3 slings and arrows of outrag3ous fortun3",
+                sentMessage.Body
+            );
+        }
+
+        [Fact]
         public void TestMultiplePatterns()
         {
             TestConnectionManager mgr = TestCommon.ObtainConnectionManager();
@@ -301,6 +367,50 @@ namespace SharpIrcBot.Tests.SedTests
 
             mgr.InjectChannelMessage(TestChannelName, "OneUser", "the quick brown fox jumps over the lazy dog");
             mgr.InjectChannelMessage(TestChannelName, "AnotherUser", "s_the_a_g_");
+
+            Assert.Equal(0, mgr.EventLog.Count);
+        }
+
+        [Fact]
+        public void TestMixedFlagsDigits()
+        {
+            TestConnectionManager mgr = TestCommon.ObtainConnectionManager();
+
+            mgr.InjectChannelMessage(TestChannelName, "OneUser", "the quick brown fox jumps over the lazy dog");
+            mgr.InjectChannelMessage(TestChannelName, "AnotherUser", "s_the_a_0g1");
+
+            Assert.Equal(0, mgr.EventLog.Count);
+        }
+
+        [Fact]
+        public void TestInterspersedMinusFlag()
+        {
+            TestConnectionManager mgr = TestCommon.ObtainConnectionManager();
+
+            mgr.InjectChannelMessage(TestChannelName, "OneUser", "the quick brown fox jumps over the lazy dog");
+            mgr.InjectChannelMessage(TestChannelName, "AnotherUser", "s_the_a_0-1");
+
+            Assert.Equal(0, mgr.EventLog.Count);
+        }
+
+        [Fact]
+        public void TestIndexTooFar()
+        {
+            TestConnectionManager mgr = TestCommon.ObtainConnectionManager();
+
+            mgr.InjectChannelMessage(TestChannelName, "OneUser", "the quick brown fox jumps over the lazy dog");
+            mgr.InjectChannelMessage(TestChannelName, "AnotherUser", "s_the_a_15");
+
+            Assert.Equal(0, mgr.EventLog.Count);
+        }
+
+        [Fact]
+        public void TestIndexTooEarly()
+        {
+            TestConnectionManager mgr = TestCommon.ObtainConnectionManager();
+
+            mgr.InjectChannelMessage(TestChannelName, "OneUser", "the quick brown fox jumps over the lazy dog");
+            mgr.InjectChannelMessage(TestChannelName, "AnotherUser", "s_the_a_-15");
 
             Assert.Equal(0, mgr.EventLog.Count);
         }

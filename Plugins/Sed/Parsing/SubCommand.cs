@@ -19,6 +19,13 @@ namespace SharpIrcBot.Plugins.Sed.Parsing
 
         public string Transform(string text)
         {
+            if (FirstMatch < 0)
+            {
+                // match from end => we must count the matches first
+                int matchCount = Pattern.Matches(text).Count;
+                FirstMatch = matchCount + FirstMatch;
+            }
+
             int matchIndex = -1;
             return Pattern.Replace(text, match =>
             {
