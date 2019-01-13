@@ -46,6 +46,7 @@
     <ProjectReference Include="..\Plugins\WhoisLoginNickMapping\WhoisLoginNickMapping.csproj" />
     <ProjectReference Include="..\Plugins\BanKit\BanKit.csproj" />
     <ProjectReference Include="..\Plugins\Catchword\Catchword.csproj" />
+    <ProjectReference Include="..\Plugins\Vitals\Vitals.csproj" />
   </ItemGroup>
 
   <ItemGroup>
