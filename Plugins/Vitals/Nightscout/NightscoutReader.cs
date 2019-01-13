@@ -44,7 +44,7 @@ namespace SharpIrcBot.Plugins.Vitals.Nightscout
             // FIXME: always mg/dl?
             decimal mmolL = newest.SGV * VitalsConstants.MmolLInMgDlGlucose;
 
-            return $"{newest.SGV} mg/dL ({mmolL:0.00} mmol/L) at {newest.Timestamp:yyyy-MM-dd HH:mm:ss}";
+            return $"{newest.SGV} mg/dL ({mmolL:0.00} mmol/L) at {newest.Timestamp.ToLocalTime():yyyy-MM-dd HH:mm:ss}";
         }
     }
 }
