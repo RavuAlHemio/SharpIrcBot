@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
-using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 using SharpIrcBot.Events;
 using SharpIrcBot.Events.Irc;
@@ -12,7 +11,7 @@ namespace SharpIrcBot.Plugins.WhoisLoginNickMapping
 {
     public class WhoisLoginPlugin : IPlugin, IReloadableConfiguration
     {
-        private static readonly ILogger Logger = LogUtil.LoggerFactory.CreateLogger<WhoisLoginPlugin>();
+        private static readonly LoggerWrapper Logger = LoggerWrapper.Create<WhoisLoginPlugin>();
 
         protected IConnectionManager ConnectionManager { get; }
         protected WhoisLoginConfig Config { get; set; }

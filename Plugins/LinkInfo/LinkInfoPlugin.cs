@@ -10,7 +10,6 @@ using System.Net.Http.Headers;
 using System.Net.Sockets;
 using System.Reflection;
 using JetBrains.Annotations;
-using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 using SharpIrcBot.Chunks;
 using SharpIrcBot.Commands;
@@ -23,7 +22,7 @@ namespace SharpIrcBot.Plugins.LinkInfo
 {
     public class LinkInfoPlugin : IPlugin, IReloadableConfiguration
     {
-        private static readonly ILogger Logger = LogUtil.LoggerFactory.CreateLogger<LinkInfoPlugin>();
+        private static readonly LoggerWrapper Logger = LoggerWrapper.Create<LinkInfoPlugin>();
 
         public const int DownloadBufferSize = 4 * 1024 * 1024;
 

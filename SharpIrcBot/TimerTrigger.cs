@@ -3,14 +3,13 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
-using Microsoft.Extensions.Logging;
 using SharpIrcBot.Util;
 
 namespace SharpIrcBot
 {
     public class TimerTrigger : ITimerTrigger
     {
-        private static readonly ILogger Logger = LogUtil.LoggerFactory.CreateLogger<TimerTrigger>();
+        private static readonly LoggerWrapper Logger = LoggerWrapper.Create<TimerTrigger>();
 
         private readonly SortedDictionary<DateTimeOffset, List<Action>> _whenWhat;
         private Thread _performThread;

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using JetBrains.Annotations;
-using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 using SharpIrcBot.Config;
 using SharpIrcBot.Util;
@@ -12,7 +11,7 @@ namespace SharpIrcBot
 {
     public class PluginManager
     {
-        private static readonly ILogger Logger = LogUtil.LoggerFactory.CreateLogger<PluginManager>();
+        private static readonly LoggerWrapper Logger = LoggerWrapper.Create<PluginManager>();
 
         [NotNull]
         protected BotConfig Config;

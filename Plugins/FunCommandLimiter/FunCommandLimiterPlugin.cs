@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 using SharpIrcBot;
 using SharpIrcBot.Commands;
@@ -15,7 +14,7 @@ namespace SharpIrcBot.Plugins.FunCommandLimiter
     /// </summary>
     public class FunCommandLimiterPlugin : IPlugin, IReloadableConfiguration
     {
-        private static readonly ILogger Logger = LogUtil.LoggerFactory.CreateLogger<FunCommandLimiterPlugin>();
+        private static readonly LoggerWrapper Logger = LoggerWrapper.Create<FunCommandLimiterPlugin>();
         
         public const string GlobalChannelKey = "\r\nGLOBAL";
         public const string PrivateMessageChannelKey = "\r\nQUERY";

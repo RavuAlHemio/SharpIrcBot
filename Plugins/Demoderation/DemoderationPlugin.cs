@@ -5,7 +5,6 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 using SharpIrcBot.Collections;
 using SharpIrcBot.Commands;
@@ -20,7 +19,7 @@ namespace SharpIrcBot.Plugins.Demoderation
     /// </summary>
     public class DemoderationPlugin : IPlugin, IReloadableConfiguration
     {
-        private static readonly ILogger Logger = LogUtil.LoggerFactory.CreateLogger<DemoderationPlugin>();
+        private static readonly LoggerWrapper Logger = LoggerWrapper.Create<DemoderationPlugin>();
 
         protected DemoderationConfig Config { get; set; }
         protected IConnectionManager ConnectionManager { get; set; }

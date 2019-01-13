@@ -1,5 +1,4 @@
-﻿using Microsoft.Extensions.Logging;
-using Newtonsoft.Json.Linq;
+﻿using Newtonsoft.Json.Linq;
 using SharpIrcBot.Commands;
 using SharpIrcBot.Events.Irc;
 using SharpIrcBot.Util;
@@ -8,7 +7,7 @@ namespace SharpIrcBot.Plugins.Sockpuppet
 {
     public class SockpuppetPlugin : IPlugin, IReloadableConfiguration
     {
-        private static readonly ILogger Logger = LogUtil.LoggerFactory.CreateLogger<SockpuppetPlugin>();
+        private static readonly LoggerWrapper Logger = LoggerWrapper.Create<SockpuppetPlugin>();
 
         protected IConnectionManager ConnectionManager { get; }
         protected SockpuppetConfig Config { get; set; }

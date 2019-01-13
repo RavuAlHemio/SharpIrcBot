@@ -6,7 +6,6 @@ using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Text.RegularExpressions;
-using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NodaTime;
@@ -20,7 +19,7 @@ namespace SharpIrcBot.Plugins.Time
 {
     public class TimePlugin : IPlugin, IReloadableConfiguration
     {
-        private static readonly ILogger Logger = LogUtil.LoggerFactory.CreateLogger<TimePlugin>();
+        private static readonly LoggerWrapper Logger = LoggerWrapper.Create<TimePlugin>();
 
         public const long TicksPerSecond = 10_000_000;
 

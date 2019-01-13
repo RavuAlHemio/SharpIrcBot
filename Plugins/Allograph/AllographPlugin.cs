@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 using SharpIrcBot.Chunks;
 using SharpIrcBot.Commands;
@@ -15,7 +14,7 @@ namespace SharpIrcBot.Plugins.Allograph
 {
     public class AllographPlugin : IPlugin, IReloadableConfiguration
     {
-        private static readonly ILogger Logger = LogUtil.LoggerFactory.CreateLogger<AllographPlugin>();
+        private static readonly LoggerWrapper Logger = LoggerWrapper.Create<AllographPlugin>();
 
         protected AllographConfig Config { get; set; }
         protected Random Random { get; }

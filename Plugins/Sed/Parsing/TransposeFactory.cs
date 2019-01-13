@@ -1,14 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using Microsoft.Extensions.Logging;
 using SharpIrcBot.Util;
 
 namespace SharpIrcBot.Plugins.Sed.Parsing
 {
     public class TransposeFactory : IReplacementFactory
     {
-        private static readonly ILogger Logger = LogUtil.LoggerFactory.CreateLogger<TransposeFactory>();
+        private static readonly LoggerWrapper Logger = LoggerWrapper.Create<TransposeFactory>();
 
         protected enum TranspositionMode
         {

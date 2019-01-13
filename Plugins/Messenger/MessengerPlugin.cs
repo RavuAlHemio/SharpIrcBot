@@ -4,7 +4,6 @@ using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Text.RegularExpressions;
-using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 using SharpIrcBot.Commands;
 using SharpIrcBot.Events;
@@ -19,7 +18,7 @@ namespace SharpIrcBot.Plugins.Messenger
     /// </summary>
     public class MessengerPlugin : IPlugin, IReloadableConfiguration
     {
-        private static readonly ILogger Logger = LogUtil.LoggerFactory.CreateLogger<MessengerPlugin>();
+        private static readonly LoggerWrapper Logger = LoggerWrapper.Create<MessengerPlugin>();
 
         protected MessengerConfig Config { get; set; }
         protected IConnectionManager ConnectionManager { get; set; }

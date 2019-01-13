@@ -5,7 +5,6 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using SharpIrcBot.Commands;
@@ -17,7 +16,7 @@ namespace SharpIrcBot.Plugins.UnoBot.GameMaster
 {
     public class UnoGameMasterPlugin : IPlugin
     {
-        private static readonly ILogger Logger = LogUtil.LoggerFactory.CreateLogger<UnoGameMasterPlugin>();
+        private static readonly LoggerWrapper Logger = LoggerWrapper.Create<UnoGameMasterPlugin>();
 
         protected static readonly CardColor[] RegularColors = { CardColor.Red, CardColor.Green, CardColor.Blue, CardColor.Yellow };
 

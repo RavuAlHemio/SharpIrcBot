@@ -6,7 +6,6 @@ using System.Net.Http;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 using SharpIrcBot.Commands;
 using SharpIrcBot.Events.Irc;
@@ -20,7 +19,7 @@ namespace SharpIrcBot.Plugins.Weather
     {
         protected static readonly Regex LatLonRegex = new Regex("^\\s*[0-9]+(?:[.][0-9]*)?,\\s*[0-9]+(?:[.][0-9]*)?\\s*$");
 
-        private static readonly ILogger Logger = LogUtil.LoggerFactory.CreateLogger<WeatherPlugin>();
+        private static readonly LoggerWrapper Logger = LoggerWrapper.Create<WeatherPlugin>();
 
         protected IConnectionManager ConnectionManager { get; }
         protected WeatherConfig Config { get; set; }

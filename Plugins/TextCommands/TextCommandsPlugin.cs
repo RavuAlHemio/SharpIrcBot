@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 using SharpIrcBot.Events.Irc;
 using SharpIrcBot.Util;
@@ -11,7 +10,7 @@ namespace SharpIrcBot.Plugins.TextCommands
 {
     public class TextCommandsPlugin : IPlugin, IReloadableConfiguration
     {
-        private static readonly ILogger Logger = LogUtil.LoggerFactory.CreateLogger<TextCommandsPlugin>();
+        private static readonly LoggerWrapper Logger = LoggerWrapper.Create<TextCommandsPlugin>();
 
         protected IConnectionManager ConnectionManager { get; }
         protected TextCommandsConfig Config { get; set; }

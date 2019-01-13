@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Linq;
 using System.Text.RegularExpressions;
-using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 using SharpIrcBot.Commands;
 using SharpIrcBot.Events.Irc;
@@ -12,7 +11,7 @@ namespace SharpIrcBot.Plugins.IKnewThat
 {
     public class IKnewThatPlugin : IPlugin
     {
-        private static readonly ILogger Logger = LogUtil.LoggerFactory.CreateLogger<IKnewThatPlugin>();
+        private static readonly LoggerWrapper Logger = LoggerWrapper.Create<IKnewThatPlugin>();
 
         protected IKnewThatConfig Config { get; set; }
         protected IConnectionManager ConnectionManager;

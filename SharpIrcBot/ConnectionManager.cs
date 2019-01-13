@@ -6,7 +6,6 @@ using System.Text;
 using System.Threading;
 using JetBrains.Annotations;
 using Meebey.SmartIrc4net;
-using Microsoft.Extensions.Logging;
 using SharpIrcBot.Chunks;
 using SharpIrcBot.Commands;
 using SharpIrcBot.Config;
@@ -19,7 +18,7 @@ namespace SharpIrcBot
 {
     public partial class ConnectionManager : IConnectionManager
     {
-        private static readonly ILogger Logger = LogUtil.LoggerFactory.CreateLogger<ConnectionManager>();
+        private static readonly LoggerWrapper Logger = LoggerWrapper.Create<ConnectionManager>();
 
         private bool ConfigFilePathKnown { get; set; }
         public string ConfigPath { get; }

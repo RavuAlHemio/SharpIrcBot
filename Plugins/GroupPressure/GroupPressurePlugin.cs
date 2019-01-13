@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 using SharpIrcBot.Events.Irc;
 using SharpIrcBot.Util;
@@ -13,7 +12,7 @@ namespace SharpIrcBot.Plugins.GroupPressure
     /// </summary>
     public class GroupPressurePlugin : IPlugin, IReloadableConfiguration
     {
-        private static readonly ILogger Logger = LogUtil.LoggerFactory.CreateLogger<GroupPressurePlugin>();
+        private static readonly LoggerWrapper Logger = LoggerWrapper.Create<GroupPressurePlugin>();
 
         protected Queue<BacklogMessage> Backlog;
         protected PressureConfig Config;

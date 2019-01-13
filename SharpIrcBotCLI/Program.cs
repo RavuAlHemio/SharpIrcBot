@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Threading;
-using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using Serilog.Events;
 using SharpIrcBot;
 using SharpIrcBot.Util;
 
@@ -16,7 +16,7 @@ namespace SharpIrcBotCLI
         {
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 
-            var logFilter = new Dictionary<string, LogLevel>();
+            var logFilter = new Dictionary<string, LogEventLevel>();
             string logFilterFileName = Path.Combine(SharpIrcBotUtil.AppDirectory, "LogFilter.json");
             if (File.Exists(logFilterFileName))
             {

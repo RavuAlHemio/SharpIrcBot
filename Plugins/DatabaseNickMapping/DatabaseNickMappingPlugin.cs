@@ -1,6 +1,5 @@
 ﻿using System.Linq;
 using System.Text.RegularExpressions;
-using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 using SharpIrcBot.Commands;
 using SharpIrcBot.Events;
@@ -12,7 +11,7 @@ namespace SharpIrcBot.Plugins.DatabaseNickMapping
 {
     public class DatabaseNickMappingPlugin : IPlugin, IReloadableConfiguration
     {
-        private static readonly ILogger Logger = LogUtil.LoggerFactory.CreateLogger<DatabaseNickMappingPlugin>();
+        private static readonly LoggerWrapper Logger = LoggerWrapper.Create<DatabaseNickMappingPlugin>();
 
         protected IConnectionManager ConnectionManager;
         protected DatabaseNickMappingConfig Config;

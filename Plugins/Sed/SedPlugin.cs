@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 using SharpIrcBot.Events.Irc;
 using SharpIrcBot.Plugins.Sed.Parsing;
@@ -9,7 +8,7 @@ namespace SharpIrcBot.Plugins.Sed
 {
     public class SedPlugin : IPlugin, IReloadableConfiguration
     {
-        private static readonly ILogger Logger = LogUtil.LoggerFactory.CreateLogger<SedPlugin>();
+        private static readonly LoggerWrapper Logger = LoggerWrapper.Create<SedPlugin>();
 
         protected IConnectionManager ConnectionManager { get; }
         protected SedConfig Config { get; set; }

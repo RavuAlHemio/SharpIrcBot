@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
-using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 using SharpIrcBot.Commands;
 using SharpIrcBot.Events;
@@ -15,7 +14,7 @@ namespace SharpIrcBot.Plugins.LinkInfoOptIn
 {
     public class LinkInfoOptInPlugin : LinkInfoPlugin
     {
-        private static readonly ILogger Logger = LogUtil.LoggerFactory.CreateLogger<LinkInfoOptInPlugin>();
+        private static readonly LoggerWrapper Logger = LoggerWrapper.Create<LinkInfoOptInPlugin>();
 
         public Uri LastBroadcastLink { get; set; }
 

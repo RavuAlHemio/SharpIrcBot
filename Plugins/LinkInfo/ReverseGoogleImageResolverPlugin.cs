@@ -7,7 +7,6 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using HtmlAgilityPack;
 using JetBrains.Annotations;
-using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using SharpIrcBot.Util;
@@ -16,7 +15,7 @@ namespace SharpIrcBot.Plugins.LinkInfo
 {
     public class ReverseGoogleImageResolverPlugin : ILinkResolverPlugin
     {
-        private static readonly ILogger Logger = LogUtil.LoggerFactory.CreateLogger<ReverseGoogleImageResolverPlugin>();
+        private static readonly LoggerWrapper Logger = LoggerWrapper.Create<ReverseGoogleImageResolverPlugin>();
 
         [JsonObject(MemberSerialization.OptOut)]
         public class RGIRPConfig

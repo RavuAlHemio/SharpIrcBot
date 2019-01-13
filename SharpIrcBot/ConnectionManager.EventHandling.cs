@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using SharpIrcBot.Events;
 using SharpIrcBot.Events.Irc;
-using Microsoft.Extensions.Logging;
 
 namespace SharpIrcBot
 {

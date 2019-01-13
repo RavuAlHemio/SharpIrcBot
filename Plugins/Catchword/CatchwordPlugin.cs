@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 using SharpIrcBot;
 using SharpIrcBot.Collections;
@@ -16,7 +15,7 @@ namespace SharpIrcBot.Plugins.Catchword
 {
     public class CatchwordPlugin : IPlugin, IReloadableConfiguration
     {
-        private static readonly ILogger Logger = LogUtil.LoggerFactory.CreateLogger<CatchwordPlugin>();
+        private static readonly LoggerWrapper Logger = LoggerWrapper.Create<CatchwordPlugin>();
 
         protected CatchwordConfig Config { get; set; }
         protected Random Random { get; }

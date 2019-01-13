@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
-using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 using SharpIrcBot.Commands;
 using SharpIrcBot.Events;
@@ -14,7 +13,7 @@ namespace SharpIrcBot.Plugins.Thanks
 {
     public class ThanksPlugin : IPlugin, IReloadableConfiguration
     {
-        private static readonly ILogger Logger = LogUtil.LoggerFactory.CreateLogger<ThanksPlugin>();
+        private static readonly LoggerWrapper Logger = LoggerWrapper.Create<ThanksPlugin>();
 
         protected IConnectionManager ConnectionManager { get; }
         protected ThanksConfig Config { get; set; }
