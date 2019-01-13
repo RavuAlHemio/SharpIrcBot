@@ -11,6 +11,6 @@
     <ProjectReference Include="..\..\SharpIrcBot\SharpIrcBot.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Antlr4.Runtime.Standard" Version="4.7.1.1" />
+    <PackageReference Include="Antlr4.Runtime.Standard" Version="4.7.2" />
   </ItemGroup>
 </Project>
