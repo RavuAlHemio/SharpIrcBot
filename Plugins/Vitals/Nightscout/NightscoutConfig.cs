@@ -7,7 +7,8 @@ namespace SharpIrcBot.Plugins.Vitals.Nightscout
     [JsonObject(MemberSerialization.OptOut)]
     public class NightscoutConfig
     {
-        public string Uri { get; set; }
+        public string SGVUri { get; set; }
+        public string MBGUri { get; set; }
 
         public NightscoutConfig(JObject obj)
         {

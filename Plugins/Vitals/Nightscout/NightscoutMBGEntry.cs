@@ -5,10 +5,10 @@ using Newtonsoft.Json;
 namespace SharpIrcBot.Plugins.Vitals.Nightscout
 {
     /// <remarks>
-    /// SGV = Sensor Glucose Value
+    /// MBG = Mean Blood Glucose
     /// </remarks>
     [JsonObject(MemberSerialization.OptIn)]
-    public class NightscoutSGVEntry
+    public class NightscoutMBGEntry
     {
         [JsonProperty("_id")]
         public string ID { get; set; }
@@ -25,33 +25,8 @@ namespace SharpIrcBot.Plugins.Vitals.Nightscout
 
         public DateTimeOffset Timestamp { get; set; }
 
-        [JsonProperty("sgv")]
-        public int SGV { get; set; }
-
-        [JsonProperty("delta")]
-        public decimal Delta { get; set; }
-
-        [JsonProperty("direction")]
-        public string Direction { get; set; }
-
-        [JsonProperty("type")]
-        public string Type { get; set; }
-
-        [JsonProperty("filtered")]
-        public long Filtered { get; set; }
-
-        [JsonProperty("unfiltered")]
-        public long Unfiltered { get; set; }
-
-        /// <remarks>
-        /// RSSI = Received Signal Strength Indication
-        /// </remarks>
-        [JsonProperty("rssi")]
-        public int RSSI { get; set; }
-
-        [JsonProperty("noise")]
-        public int Noise { get; set; }
-
+        [JsonProperty("mbg")]
+        public int MBG { get; set; }
         
         [JsonProperty("sysTime")]
         public string SystemTimeString
