@@ -43,7 +43,7 @@ namespace SharpIrcBot.Plugins.Vitals.Nightscout
 
             if (newest == null)
             {
-                return "No entry found!";
+                return "no sensor entry found";
             }
 
             // FIXME: always mg/dl?
@@ -74,7 +74,7 @@ namespace SharpIrcBot.Plugins.Vitals.Nightscout
 
             if (newest == null)
             {
-                return "No entry found!";
+                return "no poke entry found";
             }
 
             // FIXME: always mg/dl?
