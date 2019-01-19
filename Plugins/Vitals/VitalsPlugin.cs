@@ -89,6 +89,7 @@ namespace SharpIrcBot.Plugins.Vitals
             if (!NameToReader.TryGetValue(name.ToLowerInvariant(), out reader))
             {
                 ConnectionManager.SendChannelMessage(msg.Channel, $"{msg.SenderNickname}: Unknown vital '{name}'.");
+                return;
             }
 
             string vital = reader.Read();
