@@ -32,14 +32,17 @@ namespace SharpIrcBot.Util
             if (logFilter != null)
             {
                 LogEventLevel minimumLoggerLevel;
-                LogEventPropertyValue loggerName;
-                if (!evt.Properties.TryGetValue("LoggerName", out loggerName))
+                LogEventPropertyValue loggerNameValue;
+                if (!evt.Properties.TryGetValue("LoggerName", out loggerNameValue))
                 {
                     // event does not have a logger name; assume output is wanted
                     return true;
                 }
 
-                if (logFilter.TryGetValue(loggerName.ToString(), out minimumLoggerLevel))
+                var loggerNameScalar = (ScalarValue)loggerNameValue;
+                var loggerName = (string)loggerNameScalar.Value;
+
+                if (logFilter.TryGetValue(loggerName, out minimumLoggerLevel))
                 {
                     if (evt.Level < minimumLoggerLevel)
                     {
