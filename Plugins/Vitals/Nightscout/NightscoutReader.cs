@@ -49,7 +49,7 @@ namespace SharpIrcBot.Plugins.Vitals.Nightscout
             // FIXME: always mg/dl?
             decimal mmolL = newest.SGV * VitalsConstants.MmolLInMgDlGlucose;
 
-            return $"sensor: {newest.SGV} mg/dL ({mmolL:0.00} mmol/L) at {newest.Timestamp.ToLocalTime():yyyy-MM-dd HH:mm:ss}";
+            return $"sensor: {newest.SGV:0} mg/dL ({mmolL:0.00} mmol/L) at {newest.Timestamp.ToLocalTime():yyyy-MM-dd HH:mm:ss}";
         }
 
         protected virtual string GetMBG()
@@ -80,7 +80,7 @@ namespace SharpIrcBot.Plugins.Vitals.Nightscout
             // FIXME: always mg/dl?
             decimal mmolL = newest.MBG * VitalsConstants.MmolLInMgDlGlucose;
 
-            return $"last poke: {newest.MBG} mg/dL ({mmolL:0.00} mmol/L) at {newest.Timestamp.ToLocalTime():yyyy-MM-dd HH:mm:ss}";
+            return $"last poke: {newest.MBG:0} mg/dL ({mmolL:0.00} mmol/L) at {newest.Timestamp.ToLocalTime():yyyy-MM-dd HH:mm:ss}";
         }
 
         public string Read()

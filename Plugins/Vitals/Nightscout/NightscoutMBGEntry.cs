@@ -26,7 +26,7 @@ namespace SharpIrcBot.Plugins.Vitals.Nightscout
         public DateTimeOffset Timestamp { get; set; }
 
         [JsonProperty("mbg")]
-        public int MBG { get; set; }
+        public decimal MBG { get; set; }
         
         [JsonProperty("sysTime")]
         public string SystemTimeString

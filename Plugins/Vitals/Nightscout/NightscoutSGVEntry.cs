@@ -26,7 +26,7 @@ namespace SharpIrcBot.Plugins.Vitals.Nightscout
         public DateTimeOffset Timestamp { get; set; }
 
         [JsonProperty("sgv")]
-        public int SGV { get; set; }
+        public decimal SGV { get; set; }
 
         [JsonProperty("delta")]
         public decimal Delta { get; set; }
