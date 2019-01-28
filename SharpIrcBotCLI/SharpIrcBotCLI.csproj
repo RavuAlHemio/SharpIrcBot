@@ -47,6 +47,7 @@
     <ProjectReference Include="..\Plugins\BanKit\BanKit.csproj" />
     <ProjectReference Include="..\Plugins\Catchword\Catchword.csproj" />
     <ProjectReference Include="..\Plugins\Vitals\Vitals.csproj" />
+    <ProjectReference Include="..\Plugins\Proverb\Proverb.csproj" />
   </ItemGroup>
 
   <ItemGroup>
