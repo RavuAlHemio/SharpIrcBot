@@ -211,6 +211,10 @@ namespace SharpIrcBot.Plugins.Weather
                 {
                     ConnectionManager.SendChannelMessage(channel, $"{nick}: Wunderground cannot find that location.");
                 }
+                else if (response.Metadata.Error.Type == "Station:OFFLINE")
+                {
+                    ConnectionManager.SendChannelMessage(channel, $"{nick}: That station is offline. :(");
+                }
                 else
                 {
                     ConnectionManager.SendChannelMessage(channel, $"{nick}: Something went wrong!");
