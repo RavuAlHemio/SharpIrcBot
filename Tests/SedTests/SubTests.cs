@@ -414,5 +414,17 @@ namespace SharpIrcBot.Tests.SedTests
 
             Assert.Equal(0, mgr.EventLog.Count);
         }
+
+        [Fact]
+        public void TestSkipTextAfterSpace()
+        {
+            TestConnectionManager mgr = TestCommon.ObtainConnectionManager();
+
+            mgr.InjectChannelMessage(TestChannelName, "OneUser", "the quick brown box jumps over the lazy dog");
+            mgr.InjectChannelMessage(TestChannelName, "AnotherUser", "s/box/fox/ dude duude");
+            mgr.InjectChannelMessage(TestChannelName, "AnotherUser", "s/box/fox/ dude");
+
+            Assert.Equal(0, mgr.EventLog.Count);
+        }
     }
 }

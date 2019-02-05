@@ -222,6 +222,11 @@ namespace SharpIrcBot.Plugins.Sed.Parsing
             if (command == null || pattern == null)
             {
                 // incomplete command!
+                if (builder.Length > 0)
+                {
+                    // bare word
+                    invalidCommand = true;
+                }
                 rest = fullCommand;
                 return null;
             }
