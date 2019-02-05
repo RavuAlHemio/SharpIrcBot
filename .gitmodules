@@ -1,6 +1,3 @@
 [submodule "Libraries/SmartIrc4net"]
 	path = Libraries/SmartIrc4net
 	url = https://github.com/RavuAlHemio/SmartIrc4net.git
-[submodule "Libraries/HtmlAgilityPack"]
-	path = Libraries/HtmlAgilityPack
-	url = https://github.com/RavuAlHemio/HtmlAgilityPack.git
