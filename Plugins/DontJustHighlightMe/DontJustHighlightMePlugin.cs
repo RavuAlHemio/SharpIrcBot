@@ -129,7 +129,7 @@ namespace SharpIrcBot.Plugins.DontJustHighlightMe
                     return;
                 }
 
-                lowercaseHighlights.Add(potentialNick);
+                lowercaseHighlights.Add(lowerPotentialNick);
             }
 
             if (lowercaseHighlights.Count == 0)
