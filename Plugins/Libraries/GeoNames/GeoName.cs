@@ -49,5 +49,8 @@ namespace SharpIrcBot.Plugins.Libraries.GeoNames
 
         [JsonProperty("toponymName")]
         public string ToponymName { get; set; }
+
+        [JsonIgnore]
+        public string NameAndCountryName => $"{Name}, {CountryName}";
     }
 }

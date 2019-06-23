@@ -54,6 +54,19 @@ namespace SharpIrcBot.Plugins.Libraries.GeoNames
             return geoTimeZoneResult;
         }
 
+        public async Task<GeoSearchResult> ReverseGeocode(decimal latitude, decimal longitude)
+        {
+            var geoSearchResult = new GeoSearchResult();
+            using (var client = new HttpClient())
+            {
+                var revGeoUri = new Uri(Inv($"http://api.geonames.org/findNearbyJSON?lat={latitude}&lng={longitude}&fclass=P&fcode=PPLA&fcode=PPL&fcode=PPLC&username={WebUtility.UrlEncode(Config.Username)}"));
+                string revGeoResponse = await client.GetStringAsync(revGeoUri);
+
+                PopulateWithJsonString(geoSearchResult, revGeoResponse);
+            }
+            return geoSearchResult;
+        }
+
         public async Task<PostCodeSearchResult> SearchForPostCode(string postCodeString)
         {
             Match postCodeMatch = PostCodeRegex.Match(postCodeString);
@@ -104,6 +117,19 @@ namespace SharpIrcBot.Plugins.Libraries.GeoNames
 
             return result.GeoNames.Any()
                 ? result.GeoNames[0]
+                : null;
+        }
+
+        public async Task<string> GetFirstReverseGeo(decimal latitude, decimal longitude)
+        {
+            GeoSearchResult result = await ReverseGeocode(latitude, longitude);
+            if (result == null)
+            {
+                return null;
+            }
+
+            return result.GeoNames.Any()
+                ? result.GeoNames[0].NameAndCountryName
                 : null;
         }
 
