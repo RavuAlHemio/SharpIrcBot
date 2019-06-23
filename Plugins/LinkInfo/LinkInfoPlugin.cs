@@ -90,7 +90,7 @@ namespace SharpIrcBot.Plugins.LinkInfo
                 Type type = ass.GetType(config.Class);
                 if (!typeof(ILinkResolverPlugin).GetTypeInfo().IsAssignableFrom(type))
                 {
-                    throw new ArgumentException("class is not a link resolver plugin");
+                    throw new ArgumentException($"class {type.FullName} is not a link resolver plugin");
                 }
                 ConstructorInfo ctor = type.GetTypeInfo().GetConstructor(new [] {typeof(JObject), typeof(LinkInfoConfig)});
                 var pluginObject = (ILinkResolverPlugin)ctor.Invoke(new object[] {config.Config, this.Config});
