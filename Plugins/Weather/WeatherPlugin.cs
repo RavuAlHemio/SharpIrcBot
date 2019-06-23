@@ -40,7 +40,7 @@ namespace SharpIrcBot.Plugins.Weather
 
             ConnectionManager.CommandManager.RegisterChannelMessageCommandHandler(
                 new Command(
-                    CommandUtil.MakeNames("weather"),
+                    CommandUtil.MakeNames("weather", "lweather"),
                     CommandUtil.NoOptions,
                     CommandUtil.MakeArguments(
                         RestTaker.Instance // location
@@ -83,7 +83,7 @@ namespace SharpIrcBot.Plugins.Weather
             }
         }
 
-        protected virtual void GetWeatherForLocation(string location, string channel, string nick, bool lookupAlias = true)
+        protected virtual void GetWeatherForLocation(string location, string channel, string nick, bool lookupAlias = true, bool showLocName = true)
         {
             if (lookupAlias)
             {
@@ -94,18 +94,24 @@ namespace SharpIrcBot.Plugins.Weather
                 }
             }
 
+            var geoClient = new GeoNamesClient(Config.GeoNames);
+
             Match latLonMatch = LatLonRegex.Match(location);
             decimal latitude, longitude;
+            string locName = null;
             if (latLonMatch.Success)
             {
                 latitude = ParseDecimalInv(latLonMatch.Groups["Latitude"].Value);
                 longitude = ParseDecimalInv(latLonMatch.Groups["Longitude"].Value);
+                if (showLocName)
+                {
+                    locName = geoClient.GetFirstReverseGeo(latitude, longitude).Result;
+                }
             }
             else
             {
                 // find the location using GeoNames (Wunderground's geocoding is really bad)
-                var geoClient = new GeoNamesClient(Config.GeoNames);
-                GeoName loc = geoClient.GetFirstGeoName(location).SyncWait();
+                GeoName loc = geoClient.GetFirstGeoName(location).Result;
                 if (loc == null)
                 {
                     ConnectionManager.SendChannelMessage(channel, $"{nick}: GeoNames cannot find that location!");
@@ -113,12 +119,18 @@ namespace SharpIrcBot.Plugins.Weather
                 }
                 latitude = loc.Latitude;
                 longitude = loc.Longitude;
+                locName = loc.NameAndCountryName;
             }
 
             foreach (IWeatherProvider provider in WeatherProviders)
             {
                 string description = provider.GetWeatherDescriptionForCoordinates(latitude, longitude);
-                ConnectionManager.SendChannelMessage(channel, $"{nick}: {description}");
+                ConnectionManager.SendChannelMessage(
+                    channel,
+                    (showLocName && locName != null)
+                        ? $"{nick}: {locName}: {description}"
+                        : $"{nick}: {description}"
+                );
             }
         }
 
@@ -130,7 +142,7 @@ namespace SharpIrcBot.Plugins.Weather
                 location = Config.DefaultLocation;
             }
 
-            GetWeatherForLocation(location, msg.Channel, msg.SenderNickname);
+            GetWeatherForLocation(location, msg.Channel, msg.SenderNickname, showLocName: cmd.CommandName == "weather");
         }
 
         protected virtual string FormatTimeSpan(TimeSpan span)
