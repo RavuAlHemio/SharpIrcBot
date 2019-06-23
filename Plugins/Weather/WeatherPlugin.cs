@@ -69,7 +69,7 @@ namespace SharpIrcBot.Plugins.Weather
         {
             WeatherProviders.Clear();
 
-            foreach (PluginConfig config in Config.WeatherProviders)
+            foreach (PluginConfig config in Config.WeatherProviders.Where(wp => wp.Enabled))
             {
                 Assembly ass = Assembly.Load(new AssemblyName(config.Assembly));
                 Type type = ass.GetType(config.Class);
