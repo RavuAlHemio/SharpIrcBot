@@ -1,10 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Net.Http;
+using System.Text;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using SharpIrcBot.Plugins.Weather.OpenWeatherMap.Model;
+using SharpIrcBot.Util;
 
 namespace SharpIrcBot.Plugins.Weather.OpenWeatherMap
 {
@@ -54,11 +57,49 @@ namespace SharpIrcBot.Plugins.Weather.OpenWeatherMap
             }
         }
 
+        protected virtual SortedDictionary<DateTime, OWMForecastSummary> SummarizeForecast(OWMForecast forecast)
+        {
+            var ret = new SortedDictionary<DateTime, OWMForecastSummary>();
+
+            foreach (OWMWeatherState state in forecast.WeatherStates)
+            {
+                DateTimeOffset timestamp = DateTimeOffset.FromUnixTimeSeconds(state.UnixTimestamp);
+                DateTime date = timestamp.Date;
+
+                OWMForecastSummary curSummary;
+                if (ret.TryGetValue(date, out curSummary))
+                {
+                    curSummary.MaxTempKelvin = Math.Max(curSummary.MaxTempKelvin, state.Main.MaximumTemperatureKelvin);
+                    curSummary.MinTempKelvin = Math.Min(curSummary.MinTempKelvin, state.Main.MinimumTemperatureKelvin);
+                }
+                else
+                {
+                    curSummary = new OWMForecastSummary
+                    {
+                        MaxTempKelvin = state.Main.MaximumTemperatureKelvin,
+                        MinTempKelvin = state.Main.MinimumTemperatureKelvin,
+                        WeatherStates = new List<string>(),
+                    };
+                    ret[date] = curSummary;
+                }
+
+                foreach (OWMWeather weather in state.Weathers)
+                {
+                    if (!curSummary.WeatherStates.Contains(weather.Main))
+                    {
+                        curSummary.WeatherStates.Add(weather.Main);
+                    }
+                }
+            }
+
+            return ret;
+        }
+
         public string GetWeatherDescriptionForCoordinates(decimal latitudeDegNorth, decimal longitudeDegEast)
         {
             if (!CheckCooldownEnough(2))
             {
-                return "I'm on cooldown. :(";
+                return "OpenWeatherMap is on cooldown. :(";
             }
 
             string weatherUri = string.Format(
@@ -80,14 +121,68 @@ namespace SharpIrcBot.Plugins.Weather.OpenWeatherMap
                 latitudeDegNorth, longitudeDegEast, Config.ApiKey
             );
             string forecastJsonText = Client
-                .GetStringAsync(weatherUri)
+                .GetStringAsync(forecastUri)
                 .Result;
             RegisterForCooldown();
 
             var forecast = new OWMForecast();
             JsonConvert.PopulateObject(forecastJsonText, forecast);
 
-            return $"Current temperature: {KelvinToCelsius(currentWeather.Main.TemperatureKelvin)} °C";
+            var builder = new StringBuilder();
+
+            // weather status
+            if (currentWeather.Weathers.Count > 0)
+            {
+                builder.Append(currentWeather.Weathers[0].Main);
+            }
+
+            // current temperature
+            if (builder.Length > 0)
+            {
+                builder.Append(", ");
+            }
+            builder.AppendFormat(
+                CultureInfo.InvariantCulture,
+                "{0:0} \u00B0C",
+                KelvinToCelsius(currentWeather.Main.TemperatureKelvin)
+            );
+
+            // current humidity
+            if (builder.Length > 0)
+            {
+                builder.Append(", ");
+            }
+            builder.AppendFormat(
+                CultureInfo.InvariantCulture,
+                "{0}% humidity",
+                currentWeather.Main.HumidityPercent
+            );
+
+            if (forecast.WeatherStates.Count > 0)
+            {
+                if (builder.Length > 0)
+                {
+                    builder.Append("; ");
+                }
+                builder.Append("forecast: ");
+
+                SortedDictionary<DateTime, OWMForecastSummary> summarized = SummarizeForecast(forecast);
+                string forecastString = summarized
+                    .Select(kvp => string.Format(
+                        CultureInfo.InvariantCulture,
+                        "{0} {1}.{2:00}. {3} {4:0}\u2013{5:0} \u00B0C",
+                        kvp.Key.DayOfWeek.ToString().Substring(0, 2),
+                        kvp.Key.Day,
+                        kvp.Key.Month,
+                        kvp.Value.WeatherStates.StringJoin("/"),
+                        KelvinToCelsius(kvp.Value.MinTempKelvin),
+                        KelvinToCelsius(kvp.Value.MaxTempKelvin)
+                    ))
+                    .StringJoin(", ");
+                builder.Append(forecastString);
+            }
+
+            return "OpenWeatherMap: " + builder.ToString();
         }
 
         public static decimal KelvinToCelsius(decimal kelvin)

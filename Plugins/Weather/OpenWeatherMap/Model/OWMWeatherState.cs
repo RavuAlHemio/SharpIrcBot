@@ -17,5 +17,10 @@ namespace SharpIrcBot.Plugins.Weather.OpenWeatherMap.Model
 
         [JsonProperty("dt")]
         public long UnixTimestamp { get; set; }
+
+        public OWMWeatherState()
+        {
+            Weathers = new List<OWMWeather>();
+        }
     }
 }

@@ -8,5 +8,10 @@ namespace SharpIrcBot.Plugins.Weather.OpenWeatherMap.Model
     {
         [JsonProperty("list")]
         public List<OWMWeatherState> WeatherStates { get; set; }
+
+        public OWMForecast()
+        {
+            WeatherStates = new List<OWMWeatherState>();
+        }
     }
 }
