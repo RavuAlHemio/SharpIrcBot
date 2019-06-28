@@ -212,7 +212,7 @@ namespace SharpIrcBot.Plugins.Weather.OpenWeatherMap
 
             string weatherUri = string.Format(
                 CultureInfo.InvariantCulture,
-                "https://api.openweathermap.org/data/3.0/measurements?station_id={0}&type=h&limit=1&from={1}&to={2}&appid={3}",
+                "https://api.openweathermap.org/data/3.0/measurements?station_id={0}&type=m&limit=10&from={1}&to={2}&appid={3}",
                 weatherStationID, oneHourAgoTime, nowTime, Config.ApiKey
             );
             string weatherJsonText = Client
