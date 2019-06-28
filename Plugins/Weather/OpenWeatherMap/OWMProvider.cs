@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
+using System.Text.RegularExpressions;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using SharpIrcBot.Plugins.Weather.OpenWeatherMap.Model;
@@ -13,6 +14,8 @@ namespace SharpIrcBot.Plugins.Weather.OpenWeatherMap
 {
     public class OWMProvider : IWeatherProvider
     {
+        public static readonly Regex WeatherStationRegex = new Regex("^owm:ws:(?<id>[0-9a-f]+)$", RegexOptions.Compiled);
+
         protected OWMConfig Config { get; set; }
         protected SortedSet<DateTimeOffset> LastQueries { get; set; }
         protected HttpClient Client { get; set; }
@@ -188,6 +191,76 @@ namespace SharpIrcBot.Plugins.Weather.OpenWeatherMap
         public static decimal KelvinToCelsius(decimal kelvin)
         {
             return kelvin - 273.15m;
+        }
+
+        public string GetWeatherDescriptionForSpecial(string specialString)
+        {
+            Match wsMatch = WeatherStationRegex.Match(specialString);
+            if (wsMatch.Success)
+            {
+                string wsID = wsMatch.Groups["id"].Value;
+                return GetWeatherDescriptionForWeatherStation(wsID);
+            }
+
+            return null;
+        }
+        
+        protected virtual string GetWeatherDescriptionForWeatherStation(string weatherStationID)
+        {
+            long nowTime = DateTimeOffset.Now.ToUnixTimeSeconds();
+            long oneHourAgoTime = nowTime - (60*60);
+
+            string weatherUri = string.Format(
+                CultureInfo.InvariantCulture,
+                "https://api.openweathermap.org/data/3.0/measurements?station_id={0}&type=h&limit=1&from={1}&to={2}&appid={3}",
+                weatherStationID, oneHourAgoTime, nowTime, Config.ApiKey
+            );
+            string weatherJsonText = Client
+                .GetStringAsync(weatherUri)
+                .Result;
+            RegisterForCooldown();
+
+            var readings = new List<OWMStationReading>();
+            JsonConvert.PopulateObject(weatherJsonText, readings);
+
+            if (!readings.Any())
+            {
+                return "OpenWeatherMap returned no readings for this weather station!";
+            }
+
+            var builder = new StringBuilder();
+            OWMStationReading newestReading = readings
+                .OrderByDescending(r => r.Timestamp)
+                .First();
+
+            // current temperature
+            builder.AppendFormat(
+                CultureInfo.InvariantCulture,
+                "{0:0.0} \u00B0C",
+                newestReading.Temperature.AverageValueCelsius
+            );
+
+            // current humidity
+            if (builder.Length > 0)
+            {
+                builder.Append(", ");
+            }
+            builder.AppendFormat(
+                CultureInfo.InvariantCulture,
+                "{0:0}% humidity",
+                newestReading.Humidity.AverageValuePercent
+            );
+
+            // append time info
+            TimeSpan timeDiff = newestReading.Timestamp - DateTimeOffset.Now;
+            builder.AppendFormat(" ({0})", FormatTimeSpan(timeDiff));
+
+            return "OpenWeatherMap: " + builder.ToString();
+        }
+
+        protected virtual string FormatTimeSpan(TimeSpan span)
+        {
+            return WeatherPlugin.FormatTimeSpanImpl(span);
         }
     }
 }

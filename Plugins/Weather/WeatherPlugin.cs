@@ -83,6 +83,16 @@ namespace SharpIrcBot.Plugins.Weather
             }
         }
 
+        protected virtual void OutputWeather(string locName, string channel, string nick, string weather, bool showLocName = true)
+        {
+            ConnectionManager.SendChannelMessage(
+                channel,
+                (showLocName && locName != null)
+                    ? $"{nick}: {locName}: {weather}"
+                    : $"{nick}: {weather}"
+            );
+        }
+
         protected virtual void GetWeatherForLocation(string location, string channel, string nick, bool lookupAlias = true, bool showLocName = true)
         {
             if (lookupAlias)
@@ -94,6 +104,31 @@ namespace SharpIrcBot.Plugins.Weather
                 }
             }
 
+            // try specials first
+            var providersWeathers = new List<(IWeatherProvider Provider, string WeatherString)>();
+            foreach (IWeatherProvider provider in WeatherProviders)
+            {
+                // returns null if unsuccessful
+                string weatherDescr = provider.GetWeatherDescriptionForSpecial(location);
+                providersWeathers.Add((provider, weatherDescr));
+            }
+
+            if (providersWeathers.Any(pw => pw.WeatherString != null))
+            {
+                // some special; skip the geocoding
+                foreach (var (provider, weather) in providersWeathers)
+                {
+                    if (weather == null)
+                    {
+                        continue;
+                    }
+
+                    OutputWeather(null, channel, nick, weather, showLocName);
+                }
+                return;
+            }
+
+            // geocode
             var geoClient = new GeoNamesClient(Config.GeoNames);
 
             Match latLonMatch = LatLonRegex.Match(location);
@@ -122,15 +157,14 @@ namespace SharpIrcBot.Plugins.Weather
                 locName = loc.NameAndCountryName;
             }
 
-            foreach (IWeatherProvider provider in WeatherProviders)
+            foreach (var (provider, weather) in providersWeathers)
             {
-                string description = provider.GetWeatherDescriptionForCoordinates(latitude, longitude);
-                ConnectionManager.SendChannelMessage(
-                    channel,
-                    (showLocName && locName != null)
-                        ? $"{nick}: {locName}: {description}"
-                        : $"{nick}: {description}"
-                );
+                string finalWeather = weather;
+                if (finalWeather == null)
+                {
+                    finalWeather = provider.GetWeatherDescriptionForCoordinates(latitude, longitude);
+                }
+                OutputWeather(locName, channel, nick, finalWeather, showLocName);
             }
         }
 
@@ -150,7 +184,7 @@ namespace SharpIrcBot.Plugins.Weather
             return FormatTimeSpanImpl(span);
         }
 
-        internal static string FormatTimeSpanImpl(TimeSpan span)
+        public static string FormatTimeSpanImpl(TimeSpan span)
         {
             bool ago = false;
 
