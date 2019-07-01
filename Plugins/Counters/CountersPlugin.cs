@@ -250,7 +250,7 @@ namespace SharpIrcBot.Plugins.Counters
             using (var ctx = GetNewContext())
             {
                 IQueryable<CounterEntry> matchedEntries;
-                
+
                 matchedEntries = ctx.Entries
                     .Where(u => u.CounterUsername == oldBaseNick);
                 foreach (CounterEntry entry in matchedEntries)

@@ -204,7 +204,7 @@ namespace SharpIrcBot.Plugins.Weather.OpenWeatherMap
 
             return null;
         }
-        
+
         protected virtual string GetWeatherDescriptionForWeatherStation(string weatherStationID)
         {
             long nowTime = DateTimeOffset.Now.ToUnixTimeSeconds();

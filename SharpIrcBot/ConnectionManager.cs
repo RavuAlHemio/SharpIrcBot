@@ -103,7 +103,7 @@ namespace SharpIrcBot
             client.OnInvite += HandleInvite;
 
             return client;
-        } 
+        }
 
         public void Start()
         {

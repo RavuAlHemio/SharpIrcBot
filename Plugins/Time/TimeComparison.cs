@@ -3,7 +3,7 @@ using System;
 namespace SharpIrcBot.Plugins.Time
 {
     public static class TimeComparison
-    {        
+    {
         public static int CompareAdding(
             DateTime basePoint, DateTime target, int years = 0, int months = 0, int days = 0, int hours = 0, int minutes = 0,
             int seconds = 0, int milliseconds = 0

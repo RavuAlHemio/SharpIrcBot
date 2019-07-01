@@ -14,7 +14,7 @@ namespace SharpIrcBot.Plugins.Vitals
 
         protected IConnectionManager ConnectionManager { get; }
         protected VitalsConfig Config { get; set; }
-        
+
         protected Dictionary<string, IVitalsReader> NameToReader { get; set; }
 
         public VitalsPlugin(IConnectionManager connMgr, JObject config)

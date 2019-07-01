@@ -52,7 +52,7 @@ namespace SharpIrcBot.Plugins.Vitals.Nightscout
         [JsonProperty("noise")]
         public int Noise { get; set; }
 
-        
+
         [JsonProperty("sysTime")]
         public string SystemTimeString
         {

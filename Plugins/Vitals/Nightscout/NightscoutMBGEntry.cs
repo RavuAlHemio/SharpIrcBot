@@ -27,7 +27,7 @@ namespace SharpIrcBot.Plugins.Vitals.Nightscout
 
         [JsonProperty("mbg")]
         public decimal MBG { get; set; }
-        
+
         [JsonProperty("sysTime")]
         public string SystemTimeString
         {

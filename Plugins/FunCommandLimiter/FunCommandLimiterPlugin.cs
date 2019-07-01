@@ -15,7 +15,7 @@ namespace SharpIrcBot.Plugins.FunCommandLimiter
     public class FunCommandLimiterPlugin : IPlugin, IReloadableConfiguration
     {
         private static readonly LoggerWrapper Logger = LoggerWrapper.Create<FunCommandLimiterPlugin>();
-        
+
         public const string GlobalChannelKey = "\r\nGLOBAL";
         public const string PrivateMessageChannelKey = "\r\nQUERY";
         public const string GlobalUserKey = "\r\nGLOBAL";
