@@ -340,6 +340,11 @@ namespace SharpIrcBot.Util
                 // default (break and not continue): append
                 ret.Append(c);
             }
+            if (escapeState != 0)
+            {
+                // trailing backslash
+                return null;
+            }
             return ret.ToString();
         }
 
