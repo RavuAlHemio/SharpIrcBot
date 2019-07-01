@@ -31,6 +31,8 @@ namespace SharpIrcBot
         protected List<EventHandler<BaseNickChangedEventArgs>> BaseNickChangedSubscribers = new List<EventHandler<BaseNickChangedEventArgs>>();
         protected List<EventHandler<IUserInvitedToChannelEventArgs>> InvitedSubscribers = new List<EventHandler<IUserInvitedToChannelEventArgs>>();
         protected List<EventHandler<MessageChunkingEventArgs>> SplitToChunksSubscribers = new List<EventHandler<MessageChunkingEventArgs>>();
+        protected List<SharpIrcBotEventHandler<ICTCPEventArgs>> CTCPRequestSubscribers = new List<SharpIrcBotEventHandler<ICTCPEventArgs>>();
+        protected List<SharpIrcBotEventHandler<ICTCPEventArgs>> CTCPReplySubscribers = new List<SharpIrcBotEventHandler<ICTCPEventArgs>>();
         #endregion
 
         #region event definitions (per event)
@@ -171,6 +173,18 @@ namespace SharpIrcBot
             add { AddSubscriber(SplitToChunksSubscribers, value); }
             remove { RemoveSubscriber(SplitToChunksSubscribers, value); }
         }
+
+        public event SharpIrcBotEventHandler<ICTCPEventArgs> CTCPRequest
+        {
+            add { AddSubscriber(CTCPRequestSubscribers, value); }
+            remove { RemoveSubscriber(CTCPRequestSubscribers, value); }
+        }
+
+        public event SharpIrcBotEventHandler<ICTCPEventArgs> CTCPReply
+        {
+            add { AddSubscriber(CTCPReplySubscribers, value); }
+            remove { RemoveSubscriber(CTCPReplySubscribers, value); }
+        }
         #endregion
 
         #region OnEvent methods (per event)
@@ -287,6 +301,16 @@ namespace SharpIrcBot
         protected virtual void OnSplitToChunks(MessageChunkingEventArgs e)
         {
             HandleEvent(SplitToChunksSubscribers, e, "splitting message to chunks");
+        }
+
+        protected virtual void OnCTCPRequest(ICTCPEventArgs e)
+        {
+            HandleSharpIrcBotEvent(CTCPRequestSubscribers, e, "CTCP request");
+        }
+
+        protected virtual void OnCTCPReply(ICTCPEventArgs e)
+        {
+            HandleSharpIrcBotEvent(CTCPReplySubscribers, e, "CTCP reply");
         }
         #endregion
 

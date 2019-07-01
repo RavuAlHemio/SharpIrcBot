@@ -24,6 +24,7 @@ namespace SharpIrcBot
         public string ConfigPath { get; }
         public BotConfig Config { get; set; }
         public IrcClient Client { get; protected set; }
+        public bool DefaultCTCPHandlerEnabled { get; set; }
         protected TimerTrigger ActualTimers { get; }
 
         public string MyNickname => Client?.Nickname;
@@ -63,6 +64,8 @@ namespace SharpIrcBot
             Canceller = new CancellationTokenSource();
             CommandManager = new CommandManager(Config.Commands, this);
 
+            DefaultCTCPHandlerEnabled = true;
+
             ConfigFilePathKnown = false;
             ConfigPath = null;
         }
@@ -83,6 +86,7 @@ namespace SharpIrcBot
             };
 
             client.OnCtcpRequest += HandleCtcpRequest;
+            client.OnCtcpReply += HandleCtcpReply;
             client.OnChannelMessage += HandleChannelMessage;
             client.OnChannelAction += HandleChannelAction;
             client.OnChannelNotice += HandleChannelNotice;
@@ -216,6 +220,13 @@ namespace SharpIrcBot
 
         protected virtual void HandleCtcpRequest(object sender, CtcpEventArgs e)
         {
+            OnCTCPRequest(new CTCPEventArgs(e));
+
+            if (!DefaultCTCPHandlerEnabled)
+            {
+                return;
+            }
+
             try
             {
                 switch (e.CtcpCommand)
@@ -242,6 +253,11 @@ namespace SharpIrcBot
             {
                 Logger.LogWarning("exception while handling CTCP request: {Exception}", exc);
             }
+        }
+
+        protected virtual void HandleCtcpReply(object sender, CtcpEventArgs e)
+        {
+            OnCTCPReply(new CTCPEventArgs(e));
         }
 
         protected virtual void HandleChannelMessage(object sender, IrcEventArgs e)
