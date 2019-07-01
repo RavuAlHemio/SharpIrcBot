@@ -543,6 +543,22 @@ namespace SharpIrcBot
             }
         }
 
+        public void SendCtcpRequest(string target, string command, string parameters = null)
+        {
+            string message = (parameters == null)
+                ? $"PRIVMSG {target} :\u0001{command}\u0001"
+                : $"PRIVMSG {target} :\u0001{command} {parameters}\u0001";
+            Client.WriteLine(message);
+        }
+
+        public void SendCtcpResponse(string target, string command, string parameters = null)
+        {
+            string message = (parameters == null)
+                ? $"NOTICE {target} :\u0001{command}\u0001"
+                : $"NOTICE {target} :\u0001{command} {parameters}\u0001";
+            Client.WriteLine(message);
+        }
+
         public void SendRawCommand(string cmd)
         {
             Client.WriteLine(cmd);

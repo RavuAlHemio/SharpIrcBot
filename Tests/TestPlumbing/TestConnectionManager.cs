@@ -87,6 +87,22 @@ namespace SharpIrcBot.Tests.TestPlumbing
             LogMessage(MessageType.Notice, nick, message);
         }
 
+        public void SendCtcpRequest(string target, string message, string parameter = null)
+        {
+            string fullMessage = (parameter == null)
+                ? message
+                : (message + "\0" + parameter);
+            LogMessage(MessageType.CTCPRequest, target, fullMessage);
+        }
+
+        public void SendCtcpResponse(string target, string message, string parameter = null)
+        {
+            string fullMessage = (parameter == null)
+                ? message
+                : (message + "\0" + parameter);
+            LogMessage(MessageType.CTCPResponse, target, fullMessage);
+        }
+
         protected void LogMessage(MessageType messageType, string target, string body)
         {
             EventLog.Add(new TestMessage

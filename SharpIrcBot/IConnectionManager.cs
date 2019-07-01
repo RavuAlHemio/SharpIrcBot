@@ -50,6 +50,8 @@ namespace SharpIrcBot
         void SendQueryMessage([NotNull] string nick, [NotNull] string message);
         void SendQueryAction([NotNull] string nick, [NotNull] string message);
         void SendQueryNotice([NotNull] string nick, [NotNull] string message);
+        void SendCtcpRequest([NotNull] string target, [NotNull] string command, [CanBeNull] string parameters = null);
+        void SendCtcpResponse([NotNull] string target, [NotNull] string command, [CanBeNull] string parameters = null);
         void SendRawCommand([NotNull] string cmd);
 
         void KickChannelUser([NotNull] string channel, [NotNull] string nick, [CanBeNull] string message = null);
