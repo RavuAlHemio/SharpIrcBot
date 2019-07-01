@@ -10,7 +10,6 @@ using SharpIrcBot.Chunks;
 using SharpIrcBot.Commands;
 using SharpIrcBot.Config;
 using SharpIrcBot.Events;
-using SharpIrcBot.Events.Irc;
 using SharpIrcBot.Events.Irc.Specific;
 using SharpIrcBot.Util;
 

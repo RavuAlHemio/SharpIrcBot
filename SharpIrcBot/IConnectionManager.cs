@@ -33,6 +33,8 @@ namespace SharpIrcBot
         event EventHandler<BaseNickChangedEventArgs> BaseNickChanged;
         event EventHandler<IUserInvitedToChannelEventArgs> Invited;
         event EventHandler<MessageChunkingEventArgs> SplitToChunks;
+        event SharpIrcBotEventHandler<ICTCPEventArgs> CTCPRequest;
+        event SharpIrcBotEventHandler<ICTCPEventArgs> CTCPReply;
 
         [CanBeNull] string MyNickname { get; }
         [CanBeNull] string MyUsername { get; }

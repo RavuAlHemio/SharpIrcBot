@@ -36,6 +36,8 @@ namespace SharpIrcBot.Tests.TestPlumbing
         public event EventHandler<BaseNickChangedEventArgs> BaseNickChanged;
         public event EventHandler<IUserInvitedToChannelEventArgs> Invited;
         public event EventHandler<MessageChunkingEventArgs> SplitToChunks;
+        public event SharpIrcBotEventHandler<ICTCPEventArgs> CTCPRequest;
+        public event SharpIrcBotEventHandler<ICTCPEventArgs> CTCPReply;
         #pragma warning restore CS0067
 
         public string MyNickname => MyUsername;
