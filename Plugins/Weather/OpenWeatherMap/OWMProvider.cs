@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -98,6 +99,23 @@ namespace SharpIrcBot.Plugins.Weather.OpenWeatherMap
             return ret;
         }
 
+        protected virtual string GetAndPopulateJson(string uri, object target)
+        {
+            HttpResponseMessage response = Client
+                .GetAsync(uri)
+                .Result;
+            if (response.StatusCode == HttpStatusCode.ServiceUnavailable)
+            {
+                return "OpenWeatherMap is currently unavailable. :(";
+            }
+            string jsonText = response.Content
+                .ReadAsStringAsync()
+                .Result;
+
+            JsonConvert.PopulateObject(jsonText, target);
+            return null;
+        }
+
         public string GetWeatherDescriptionForCoordinates(decimal latitudeDegNorth, decimal longitudeDegEast)
         {
             if (!CheckCooldownEnough(2))
@@ -110,26 +128,26 @@ namespace SharpIrcBot.Plugins.Weather.OpenWeatherMap
                 "https://api.openweathermap.org/data/2.5/weather?lat={0}&lon={1}&appid={2}",
                 latitudeDegNorth, longitudeDegEast, Config.ApiKey
             );
-            string weatherJsonText = Client
-                .GetStringAsync(weatherUri)
-                .Result;
-            RegisterForCooldown();
-
             var currentWeather = new OWMWeatherState();
-            JsonConvert.PopulateObject(weatherJsonText, currentWeather);
+            string err = GetAndPopulateJson(weatherUri, currentWeather);
+            RegisterForCooldown();
+            if (err != null)
+            {
+                return err;
+            }
 
             string forecastUri = string.Format(
                 CultureInfo.InvariantCulture,
                 "https://api.openweathermap.org/data/2.5/forecast?lat={0}&lon={1}&appid={2}",
                 latitudeDegNorth, longitudeDegEast, Config.ApiKey
             );
-            string forecastJsonText = Client
-                .GetStringAsync(forecastUri)
-                .Result;
-            RegisterForCooldown();
-
             var forecast = new OWMForecast();
-            JsonConvert.PopulateObject(forecastJsonText, forecast);
+            err = GetAndPopulateJson(forecastUri, forecast);
+            RegisterForCooldown();
+            if (err != null)
+            {
+                return err;
+            }
 
             var builder = new StringBuilder();
 
@@ -215,13 +233,13 @@ namespace SharpIrcBot.Plugins.Weather.OpenWeatherMap
                 "https://api.openweathermap.org/data/3.0/measurements?station_id={0}&type=m&limit=10&from={1}&to={2}&appid={3}",
                 weatherStationID, oneHourAgoTime, nowTime, Config.ApiKey
             );
-            string weatherJsonText = Client
-                .GetStringAsync(weatherUri)
-                .Result;
-            RegisterForCooldown();
-
             var readings = new List<OWMStationReading>();
-            JsonConvert.PopulateObject(weatherJsonText, readings);
+            string err = GetAndPopulateJson(weatherUri, readings);
+            RegisterForCooldown();
+            if (err != null)
+            {
+                return err;
+            }
 
             if (!readings.Any())
             {
