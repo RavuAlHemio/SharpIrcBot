@@ -48,6 +48,11 @@ namespace SharpIrcBot.Plugins.ClientVersion.ORM
                     .IfNpgsql(Database, npa =>
                         npa.HasName("uq__client_version__nickname")
                     );
+
+                entBuilder.HasIndex(ve => ve.Timestamp)
+                    .IfNpgsql(Database, npa =>
+                        npa.HasName("ix__client_version__timestamp")
+                    );
             });
         }
     }
