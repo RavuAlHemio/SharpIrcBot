@@ -72,7 +72,15 @@ namespace SharpIrcBot.Plugins.GroupPressure
                 Backlog.Dequeue();
             }
 
-            var normalizedSender = Connection.RegisteredNameForNick(e.SenderNickname) ?? e.SenderNickname;
+            string normalizedSender;
+            if (e.SenderNickname == Connection.MyNickname)
+            {
+                normalizedSender = e.SenderNickname;
+            }
+            else
+            {
+                normalizedSender = Connection.RegisteredNameForNick(e.SenderNickname) ?? e.SenderNickname;
+            }
 
             // append the message
             Backlog.Enqueue(new BacklogMessage
