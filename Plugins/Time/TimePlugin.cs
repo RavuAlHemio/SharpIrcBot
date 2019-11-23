@@ -50,7 +50,9 @@ namespace SharpIrcBot.Plugins.Time
             ConnectionManager.CommandManager.RegisterChannelMessageCommandHandler(
                 new Command(
                     CommandUtil.MakeNames("interval"),
-                    CommandUtil.NoOptions,
+                    CommandUtil.MakeOptions(
+                        CommandUtil.MakeFlag("--utc"),
+                    ),
                     CommandUtil.MakeArguments(
                         RestTaker.Instance // date/time
                     ),
@@ -147,7 +149,11 @@ namespace SharpIrcBot.Plugins.Time
                 return;
             }
 
-            DateTime timestampUTC = timestamp.Value.ToUniversalTime();
+            DateTimeKind inputKind = cmd.Options.Any(opt => opt.Key == "--utc")
+                ? DateTimeKind.Utc
+                : DateTimeKind.Local;
+            DateTime timestampUTC = DateTime.SpecifyKind(timestamp.Value, inputKind)
+                .ToUniversalTime();
             DateTime nowUTC = DateTime.UtcNow;
             DateTime nowUTCFullSeconds = nowUTC.AddTicks(-(nowUTC.Ticks % TicksPerSecond));
 
