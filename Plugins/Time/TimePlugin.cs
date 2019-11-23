@@ -51,6 +51,7 @@ namespace SharpIrcBot.Plugins.Time
                 new Command(
                     CommandUtil.MakeNames("interval"),
                     CommandUtil.MakeOptions(
+                        CommandUtil.MakeFlag("--days"),
                         CommandUtil.MakeFlag("--utc"),
                     ),
                     CommandUtil.MakeArguments(
@@ -155,17 +156,29 @@ namespace SharpIrcBot.Plugins.Time
             DateTime timestampUTC = DateTime.SpecifyKind(timestamp.Value, inputKind)
                 .ToUniversalTime();
             DateTime nowUTC = DateTime.UtcNow;
-            DateTime nowUTCFullSeconds = nowUTC.AddTicks(-(nowUTC.Ticks % TicksPerSecond));
-
-            CalendarTimeSpan diff = TimeComparison.CalendarDifference(nowUTCFullSeconds, timestampUTC);
 
             var pieces = new List<string>();
-            MaybeAddUnit(pieces, diff.Years, "year", "years");
-            MaybeAddUnit(pieces, diff.Months, "month", "months");
-            MaybeAddUnit(pieces, diff.Days, "day", "days");
-            MaybeAddUnit(pieces, diff.Hours, "hour", "hours");
-            MaybeAddUnit(pieces, diff.Minutes, "minute", "minutes");
-            MaybeAddUnit(pieces, diff.Seconds, "second", "seconds");
+            if (cmd.Options.Any(opt => opt.Key == "--days"))
+            {
+                TimeSpan diff = nowUTC - timestampUTC;
+
+                MaybeAddUnit(pieces, diff.Days, "day", "days");
+                MaybeAddUnit(pieces, diff.Hours, "hour", "hours");
+                MaybeAddUnit(pieces, diff.Minutes, "minute", "minutes");
+                MaybeAddUnit(pieces, diff.Seconds, "second", "seconds");
+            }
+            else
+            {
+                DateTime nowUTCFullSeconds = nowUTC.AddTicks(-(nowUTC.Ticks % TicksPerSecond));
+                CalendarTimeSpan diff = TimeComparison.CalendarDifference(nowUTCFullSeconds, timestampUTC);
+
+                MaybeAddUnit(pieces, diff.Years, "year", "years");
+                MaybeAddUnit(pieces, diff.Months, "month", "months");
+                MaybeAddUnit(pieces, diff.Days, "day", "days");
+                MaybeAddUnit(pieces, diff.Hours, "hour", "hours");
+                MaybeAddUnit(pieces, diff.Minutes, "minute", "minutes");
+                MaybeAddUnit(pieces, diff.Seconds, "second", "seconds");
+            }
 
             string message;
             if (pieces.Count == 0)
