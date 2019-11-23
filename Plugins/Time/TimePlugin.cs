@@ -52,7 +52,7 @@ namespace SharpIrcBot.Plugins.Time
                     CommandUtil.MakeNames("interval"),
                     CommandUtil.MakeOptions(
                         CommandUtil.MakeFlag("--days"),
-                        CommandUtil.MakeFlag("--utc"),
+                        CommandUtil.MakeFlag("--utc")
                     ),
                     CommandUtil.MakeArguments(
                         RestTaker.Instance // date/time
@@ -156,11 +156,18 @@ namespace SharpIrcBot.Plugins.Time
             DateTime timestampUTC = DateTime.SpecifyKind(timestamp.Value, inputKind)
                 .ToUniversalTime();
             DateTime nowUTC = DateTime.UtcNow;
+            DateTime nowUTCFullSeconds = nowUTC.AddTicks(-(nowUTC.Ticks % TicksPerSecond));
 
+            bool negative = false;
             var pieces = new List<string>();
             if (cmd.Options.Any(opt => opt.Key == "--days"))
             {
-                TimeSpan diff = nowUTC - timestampUTC;
+                TimeSpan diff = timestampUTC - nowUTCFullSeconds;
+                if (diff.Ticks < 0)
+                {
+                    negative = true;
+                    diff = diff.Negate();
+                }
 
                 MaybeAddUnit(pieces, diff.Days, "day", "days");
                 MaybeAddUnit(pieces, diff.Hours, "hour", "hours");
@@ -169,8 +176,9 @@ namespace SharpIrcBot.Plugins.Time
             }
             else
             {
-                DateTime nowUTCFullSeconds = nowUTC.AddTicks(-(nowUTC.Ticks % TicksPerSecond));
                 CalendarTimeSpan diff = TimeComparison.CalendarDifference(nowUTCFullSeconds, timestampUTC);
+
+                negative = diff.Negative;
 
                 MaybeAddUnit(pieces, diff.Years, "year", "years");
                 MaybeAddUnit(pieces, diff.Months, "month", "months");
@@ -198,7 +206,7 @@ namespace SharpIrcBot.Plugins.Time
                     // 1 year, 2 months, 3 days and [4 hours]
                 }
                 messageBuilder.Append(pieces.Last());
-                messageBuilder.Append(diff.Negative ? " ago." : " remaining.");
+                messageBuilder.Append(negative ? " ago." : " remaining.");
 
                 message = messageBuilder.ToString();
             }
