@@ -332,7 +332,20 @@ namespace SharpIrcBot.Util
                 ret = new DateTime(year.Value, month, day, hour, minute, second);
                 if (now > ret)
                 {
-                    ret = new DateTime(year.Value + 1, month, day, hour, minute, second);
+                    // a bit more complex due to leap years
+                    for (int yearAdder = 1; yearAdder < 9; ++yearAdder)
+                    {
+                        try
+                        {
+                            ret = new DateTime(year.Value + yearAdder, month, day, hour, minute, second);
+                        }
+                        catch (ArgumentOutOfRangeException)
+                        {
+                            // probably not a valid date in that year; try the next one
+                            continue;
+                        }
+                        break;
+                    }
                 }
                 return ret;
             }

@@ -11,12 +11,15 @@ namespace SharpIrcBot.Tests.SharpIrcBotTests
         );
 
         void TestDateTimeFromString(
-            string str, int year, int month, int day, int hour = 0, int minute = 0, int second = 0
+            string str, int year, int month, int day, int hour = 0, int minute = 0, int second = 0,
+            DateTime? specialCustomNow = null
         )
         {
+            DateTime now = specialCustomNow.GetValueOrDefault(CustomNow);
+
             Assert.Equal(
                 new DateTime(year, month, day, hour, minute, second),
-                TimeUtil.DateTimeFromString(str, CustomNow)
+                TimeUtil.DateTimeFromString(str, now)
             );
         }
 
@@ -155,6 +158,25 @@ namespace SharpIrcBot.Tests.SharpIrcBotTests
         {
             Assert.Null(TimeUtil.DateTimeFromString("", CustomNow));
             Assert.Null(TimeUtil.DateTimeFromString("    ", CustomNow));
+        }
+
+        [Fact]
+        public void LeapYearTests()
+        {
+            var nowLeapDay = new DateTime(
+                2016, 2, 29, 1, 23, 45
+            );
+            var nowTrickyLeapDay = new DateTime(
+                2096, 2, 29, 1, 23, 45
+            );
+
+            // near future vs. far future
+            TestDateTimeFromString("02-29 1:23:46", 2016, 2, 29, 1, 23, 46, nowLeapDay);
+            TestDateTimeFromString("02-29 1:23:44", 2020, 2, 29, 1, 23, 44, nowLeapDay);
+
+            // 2100 is not a leap year
+            TestDateTimeFromString("02-29 1:23:46", 2096, 2, 29, 1, 23, 46, nowTrickyLeapDay);
+            TestDateTimeFromString("02-29 1:23:44", 2104, 2, 29, 1, 23, 44, nowTrickyLeapDay);
         }
     }
 }
