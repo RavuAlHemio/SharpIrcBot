@@ -329,25 +329,31 @@ namespace SharpIrcBot.Util
             {
                 // assume the future
                 year = now.Year;
-                ret = new DateTime(year.Value, month, day, hour, minute, second);
-                if (now > ret)
+
+                // a bit more complex due to leap years
+                for (int yearAdder = 0; yearAdder < 9; ++yearAdder)
                 {
-                    // a bit more complex due to leap years
-                    for (int yearAdder = 1; yearAdder < 9; ++yearAdder)
+                    try
                     {
-                        try
-                        {
-                            ret = new DateTime(year.Value + yearAdder, month, day, hour, minute, second);
-                        }
-                        catch (ArgumentOutOfRangeException)
-                        {
-                            // probably not a valid date in that year; try the next one
-                            continue;
-                        }
-                        break;
+                        ret = new DateTime(year.Value + yearAdder, month, day, hour, minute, second);
                     }
+                    catch (ArgumentOutOfRangeException)
+                    {
+                        // probably not a valid date in that year; try the next one
+                        continue;
+                    }
+
+                    if (now > ret)
+                    {
+                        // that's not the future
+                        continue;
+                    }
+
+                    return ret;
                 }
-                return ret;
+
+                // adding up to eight years didn't help
+                return null;
             }
 
             ret = new DateTime(year.Value, month, day, hour, minute, second);

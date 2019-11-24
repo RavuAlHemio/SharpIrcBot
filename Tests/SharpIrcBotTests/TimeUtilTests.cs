@@ -177,6 +177,9 @@ namespace SharpIrcBot.Tests.SharpIrcBotTests
             // 2100 is not a leap year
             TestDateTimeFromString("02-29 1:23:46", 2096, 2, 29, 1, 23, 46, nowTrickyLeapDay);
             TestDateTimeFromString("02-29 1:23:44", 2104, 2, 29, 1, 23, 44, nowTrickyLeapDay);
+
+            // specifying a leap day in a non-leap year
+            TestDateTimeFromString("02-29", 2020, 2, 29, 0, 0, 0);
         }
     }
 }
