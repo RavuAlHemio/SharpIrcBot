@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Text.RegularExpressions;
 using JetBrains.Annotations;
 
@@ -21,75 +23,127 @@ namespace SharpIrcBot.Util
         );
 
         [NotNull]
-        public static readonly Regex DateTimeRegex = new Regex(
-            "^" +
-            "\\s*" +
-            "(?:" +
-                // "2018-04-08", "04-08", "2018-4-8", ...
-                "(?:" +
-                    "(?<ymdYear>[0-9]+)" +
-                "-)?" +
-                "(?<ymdMonth>0?[1-9]|1[12])" +
-                "-" +
-                "(?<ymdDay>0?[1-9]|[12][0-9]|3[01])" +
-            "|" +
-                // "08.04.2018", "08.04.", "08.04", "8.4", ...
-                "(?<dmyDay>0?[1-9]|[12][0-9]|3[01])" +
-                "\\." +
+        public static readonly string[] DateRegexGroupPrefixes;
+
+        [NotNull]
+        public static readonly string[] TimeRegexGroupSpecPrefixes = {"t", "dt"};
+
+        [NotNull]
+        public static readonly Regex DateTimeRegex;
+
+        static TimeUtil()
+        {
+            DateTimeRegex = new Regex(
+                "^" +
                 "\\s*" +
-                "(?<dmyMonth>0?[1-9]|1[12])" +
                 "(?:" +
+                    // date only
+                    RegexDatePattern("d") +
+                "|" +
+                    // time only
+                    RegexTimePattern("t") +
+                "|" +
+                    // date and time
+                    RegexDatePattern("dt") +
+                    "\\s+" +
+                    RegexTimePattern("dt") +
+                ")" +
+                "\\s*" +
+                "$",
+                RegexOptions.Compiled
+            );
+
+            string[] dateSpecPrefixes = {"d", "dt"};
+            string[] dateFormatPrefixes = {"Ymd", "Dmy", "Mdy"};
+            DateRegexGroupPrefixes = dateSpecPrefixes
+                .SelectMany(
+                    dsp => dateFormatPrefixes,
+                    (dsp, dfp) => dsp + dfp
+                )
+                .ToArray()
+            ;
+        }
+
+        private static string RegexDatePattern(string groupPrefix)
+        {
+            if (!groupPrefix.All(c => c >= 'a' && c <= 'z'))
+            {
+                throw new ArgumentException("group prefix may only consist of letters a-z");
+            }
+
+            return
+                "(?:" +
+                    // "2018-04-08", "04-08", "2018-4-8", ...
+                    "(?:" +
+                        $"(?<{groupPrefix}YmdYear>[0-9]+)" +
+                    "-)?" +
+                    $"(?<{groupPrefix}YmdMonth>0?[1-9]|1[12])" +
+                    "-" +
+                    $"(?<{groupPrefix}YmdDay>0?[1-9]|[12][0-9]|3[01])" +
+                "|" +
+                    // "08.04.2018", "08.04.", "08.04", "8.4", ...
+                    $"(?<{groupPrefix}DmyDay>0?[1-9]|[12][0-9]|3[01])" +
                     "\\." +
                     "\\s*" +
-                    "(?<dmyYear>[0-9]+)?" +
-                ")?" +
-            "|" +
-                // "04/08/2018", "04/08", "4/8", ...
-                "(?<mdyMonth>0?[1-9]|1[12])" +
-                "/" +
-                "(?<mdyDay>0?[1-9]|[12][0-9]|3[01])" +
-                "(?:" +
+                    $"(?<{groupPrefix}DmyMonth>0?[1-9]|1[12])" +
+                    "(?:" +
+                        "\\." +
+                        "\\s*" +
+                        $"(?<{groupPrefix}DmyYear>[0-9]+)?" +
+                    ")?" +
+                "|" +
+                    // "04/08/2018", "04/08", "4/8", ...
+                    $"(?<{groupPrefix}MdyMonth>0?[1-9]|1[12])" +
                     "/" +
-                    "(?<mdyYear>[0-9]+)" +
-                ")?" +
-            ")" +
-            "(?:" +
-                "\\s+" +
+                    $"(?<{groupPrefix}MdyDay>0?[1-9]|[12][0-9]|3[01])" +
+                    "(?:" +
+                        "/" +
+                        $"(?<{groupPrefix}MdyYear>[0-9]+)" +
+                    ")?" +
+                ")"
+            ;
+        }
+
+        private static string RegexTimePattern(string groupPrefix)
+        {
+            if (!groupPrefix.All(c => c >= 'a' && c <= 'z'))
+            {
+                throw new ArgumentException("group prefix may only consist of letters a-z");
+            }
+
+            return
                 "(?:" +
                     // 24-hour clock
-                    "(?<hour24>0?[0-9]|1[0-9]|2[0-3])" +
+                    $"(?<{groupPrefix}Hour24>0?[0-9]|1[0-9]|2[0-3])" +
                     ":" +
-                    "(?<minute24>[0-5][0-9])" +
+                    $"(?<{groupPrefix}Minute24>[0-5][0-9])" +
                     "(?:" +
                         ":" +
-                        "(?<second24>[0-5][0-9])" +
+                        $"(?<{groupPrefix}Second24>[0-5][0-9])" +
                     ")?" +
                 "|" +
                     // 12-hour clock
-                    "(?<hour12>0?[1-9]|1[0-2])" +
+                    $"(?<{groupPrefix}Hour12>0?[1-9]|1[0-2])" +
                     ":" +
-                    "(?<minute12>[0-5][0-9])" +
+                    $"(?<{groupPrefix}Minute12>[0-5][0-9])" +
                     "(?:" +
                         ":" +
-                        "(?<second12>[0-5][0-9])" +
+                        $"(?<{groupPrefix}Second12>[0-5][0-9])" +
                     ")?" +
                     "\\s*" +
-                    "(?<amPm>[aApP])(?:[mM]|\\.[mM]\\.)?" +
+                    $"(?<{groupPrefix}AmPm>[aApP])(?:[mM]|\\.[mM]\\.)?" +
                 "|" +
                     // disambiguating conventions with the 12-hour clock
                     // "12 noon", "noon", "midnight", ...
                     // (otherwise: assumption that 12:00 am is midnight
                     "(?:" +
-                        "(?<noon>(?:12\\s+)?noon)" +
+                        $"(?<{groupPrefix}Noon>(?:12\\s+)?noon)" +
                         "|" +
-                        "(?<midnight>(?:12\\s+)?midnight)" +
+                        $"(?<{groupPrefix}Midnight>(?:12\\s+)?midnight)" +
                     ")" +
-                ")" +
-            ")?" +
-            "\\s*" +
-            "$",
-            RegexOptions.Compiled
-        );
+                ")"
+            ;
+        }
 
         public static DateTime ToUniversalTimeForDatabase(this DateTime dt)
         {
@@ -175,88 +229,107 @@ namespace SharpIrcBot.Util
                 return null;
             }
 
-            int? year;
-            int month;
-            int day;
+            DateTime now = customNow ?? DateTime.Now;
 
-            if (m.Groups["ymdDay"].Success)
-            {
-                (year, month, day) = ParseDate(m, "ymdYear", "ymdMonth", "ymdDay");
-            }
-            else if (m.Groups["dmyDay"].Success)
-            {
-                (year, month, day) = ParseDate(m, "dmyYear", "dmyMonth", "dmyDay");
-            }
-            else if (m.Groups["mdyDay"].Success)
-            {
-                (year, month, day) = ParseDate(m, "mdyYear", "mdyMonth", "mdyDay");
-            }
-            else
-            {
-                Debug.Fail("unexpected date format: " + dateTimeString);
-                return null;
-            }
+            int? year = null;
+            int month = 0;
+            int day = 0;
 
-            int hour, minute, second;
-            if (m.Groups["hour24"].Success)
+            bool haveDate = false;
+            foreach (string prefix in DateRegexGroupPrefixes)
             {
-                hour = StringUtil.MaybeParseInt(m.Groups["hour24"].Value).Value;
-                minute = StringUtil.MaybeParseInt(m.Groups["minute24"].Value).Value;
-                second = (m.Groups["second24"].Success)
-                    ? StringUtil.MaybeParseInt(m.Groups["second24"].Value).Value
-                    : 0
-                ;
-            }
-            else if (m.Groups["hour12"].Success)
-            {
-                hour = StringUtil.MaybeParseInt(m.Groups["hour12"].Value).Value;
-                minute = StringUtil.MaybeParseInt(m.Groups["minute12"].Value).Value;
-                second = (m.Groups["second12"].Success)
-                    ? StringUtil.MaybeParseInt(m.Groups["second12"].Value).Value
-                    : 0
-                ;
-
-                string amPm = m.Groups["amPm"].Value.ToLowerInvariant();
-                if (amPm == "a")
+                if (m.Groups[$"{prefix}Day"].Success)
                 {
-                    if (hour == 12)
+                    (year, month, day) = ParseDate(m, $"{prefix}Year", $"{prefix}Month", $"{prefix}Day");
+                    haveDate = true;
+                    break;
+                }
+            }
+            if (!haveDate)
+            {
+                // assume today
+                // (check later if time is past; if so, assume tomorrow)
+                year = now.Year;
+                month = now.Month;
+                day = now.Day;
+            }
+
+            int hour = 0, minute = 0, second = 0;
+            bool haveTime = false;
+            foreach (string prefix in TimeRegexGroupSpecPrefixes)
+            {
+                if (m.Groups[$"{prefix}Hour24"].Success)
+                {
+                    hour = StringUtil.MaybeParseInt(m.Groups[$"{prefix}Hour24"].Value).Value;
+                    minute = StringUtil.MaybeParseInt(m.Groups[$"{prefix}Minute24"].Value).Value;
+                    second = (m.Groups[$"{prefix}Second24"].Success)
+                        ? StringUtil.MaybeParseInt(m.Groups[$"{prefix}Second24"].Value).Value
+                        : 0
+                    ;
+                    haveTime = true;
+                    break;
+                }
+                else if (m.Groups[$"{prefix}Hour12"].Success)
+                {
+                    hour = StringUtil.MaybeParseInt(m.Groups[$"{prefix}Hour12"].Value).Value;
+                    minute = StringUtil.MaybeParseInt(m.Groups[$"{prefix}Minute12"].Value).Value;
+                    second = (m.Groups[$"{prefix}Second12"].Success)
+                        ? StringUtil.MaybeParseInt(m.Groups[$"{prefix}Second12"].Value).Value
+                        : 0
+                    ;
+
+                    string amPm = m.Groups[$"{prefix}AmPm"].Value.ToLowerInvariant();
+                    if (amPm == "a")
                     {
-                        hour = 0;
+                        if (hour == 12)
+                        {
+                            hour = 0;
+                        }
                     }
-                }
-                else if (amPm == "p")
-                {
-                    if (hour < 12)
+                    else if (amPm == "p")
                     {
-                        hour += 12;
+                        if (hour < 12)
+                        {
+                            hour += 12;
+                        }
                     }
+                    else
+                    {
+                        Debug.Fail("unexpected AM/PM value in " + dateTimeString);
+                        return null;
+                    }
+
+                    haveTime = true;
+                    break;
                 }
-                else
+                else if (m.Groups[$"{prefix}Noon"].Success)
                 {
-                    Debug.Fail("unexpected AM/PM value in " + dateTimeString);
-                    return null;
+                    (hour, minute, second) = (12, 0, 0);
+
+                    haveTime = true;
+                    break;
+                }
+                else if (m.Groups[$"{prefix}Midnight"].Success)
+                {
+                    (hour, minute, second) = (0, 0, 0);
+
+                    haveTime = true;
+                    break;
                 }
             }
-            else if (m.Groups["noon"].Success)
-            {
-                (hour, minute, second) = (12, 0, 0);
-            }
-            else if (m.Groups["midnight"].Success)
-            {
-                (hour, minute, second) = (0, 0, 0);
-            }
-            else
+            if (!haveTime)
             {
                 // assume midnight
                 (hour, minute, second) = (0, 0, 0);
             }
 
+            DateTime ret;
+
             if (!year.HasValue)
             {
                 // assume the future
-                DateTime now = customNow ?? DateTime.Now;
                 year = now.Year;
-                DateTime ret = new DateTime(year.Value, month, day, hour, minute, second);
+                ret = new DateTime(year.Value, month, day, hour, minute, second);
                 if (now > ret)
                 {
                     ret = new DateTime(year.Value + 1, month, day, hour, minute, second);
@@ -264,7 +337,14 @@ namespace SharpIrcBot.Util
                 return ret;
             }
 
-            return new DateTime(year.Value, month, day, hour, minute, second);
+            ret = new DateTime(year.Value, month, day, hour, minute, second);
+            if (!haveDate && now > ret)
+            {
+                // assume the future
+                ret = ret.AddDays(1);
+            }
+
+            return ret;
         }
 
         static (int? Year, int Month, int Day) ParseDate(Match dateTimeMatch, string yearGroup, string monthGroup, string dayGroup)

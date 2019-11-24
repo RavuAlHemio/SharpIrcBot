@@ -44,6 +44,12 @@ namespace SharpIrcBot.Tests.SharpIrcBotTests
 
             // gauntlet
             TestDateTimeFromString("   7-22  1:02 pm  ", 2018, 7, 22, 13, 2, 0);
+
+            // no time
+            TestDateTimeFromString("2018-07-22", 2018, 7, 22, 0, 0, 0);
+            TestDateTimeFromString("   2018-07-22  ", 2018, 7, 22, 0, 0, 0);
+            TestDateTimeFromString("   07-22  ", 2019, 7, 22, 0, 0, 0);
+            TestDateTimeFromString("   7-22  ", 2019, 7, 22, 0, 0, 0);
         }
 
         [Fact]
@@ -70,6 +76,12 @@ namespace SharpIrcBot.Tests.SharpIrcBotTests
 
             // gauntlet
             TestDateTimeFromString("   7/22  1:02 pm  ", 2018, 7, 22, 13, 2, 0);
+
+            // no time
+            TestDateTimeFromString("07/22/2018", 2018, 7, 22, 0, 0, 0);
+            TestDateTimeFromString("   07/22/2018  ", 2018, 7, 22, 0, 0, 0);
+            TestDateTimeFromString("   07/22  ", 2019, 7, 22, 0, 0, 0);
+            TestDateTimeFromString("   7/22  ", 2019, 7, 22, 0, 0, 0);
         }
 
         [Fact]
@@ -101,6 +113,48 @@ namespace SharpIrcBot.Tests.SharpIrcBotTests
 
             // gauntlet
             TestDateTimeFromString("   22.7.  1:02 pm  ", 2018, 7, 22, 13, 2, 0);
+
+            // no time
+            TestDateTimeFromString("22.07.2018", 2018, 7, 22, 0, 0, 0);
+            TestDateTimeFromString("   22.07.2018  ", 2018, 7, 22, 0, 0, 0);
+            TestDateTimeFromString("   22.07.  ", 2019, 7, 22, 0, 0, 0);
+            TestDateTimeFromString("   22.7.  ", 2019, 7, 22, 0, 0, 0);
+        }
+
+        [Fact]
+        public void DatelessFormatTests()
+        {
+            TestDateTimeFromString("03:54:26", 2018, 7, 22, 3, 54, 26);
+            TestDateTimeFromString("    03:54:26  ", 2018, 7, 22, 3, 54, 26);
+
+            // assume future
+            TestDateTimeFromString(" 2:06:09  ", 2018, 7, 23, 2, 6, 9);
+            TestDateTimeFromString(" 2:06:09  ", 2018, 7, 23, 2, 6, 9);
+            TestDateTimeFromString(" 2:06:11  ", 2018, 7, 22, 2, 6, 11);
+            TestDateTimeFromString(" 2:06:11  ", 2018, 7, 22, 2, 6, 11);
+
+            // no seconds (+ assume future)
+            TestDateTimeFromString(" 10:40  ", 2018, 7, 22, 10, 40, 0);
+            TestDateTimeFromString(" 2:05  ", 2018, 7, 23, 2, 5, 0);
+
+            // AM/PM (+ assume future)
+            TestDateTimeFromString(" 10:40 AM ", 2018, 7, 22, 10, 40, 0);
+            TestDateTimeFromString(" 10:40 PM ", 2018, 7, 22, 22, 40, 0);
+            TestDateTimeFromString(" 10:40 P.M. ", 2018, 7, 22, 22, 40, 0);
+            TestDateTimeFromString("  noon ", 2018, 7, 22, 12, 0, 0);
+            TestDateTimeFromString("   12  noon ", 2018, 7, 22, 12, 0, 0);
+            TestDateTimeFromString("  midnight ", 2018, 7, 23, 0, 0, 0);
+            TestDateTimeFromString(" 12  midnight ", 2018, 7, 23, 0, 0, 0);
+
+            // gauntlet
+            TestDateTimeFromString("   1:02 pm  ", 2018, 7, 22, 13, 2, 0);
+        }
+
+        [Fact]
+        public void EmptyStringTests()
+        {
+            Assert.Null(TimeUtil.DateTimeFromString("", CustomNow));
+            Assert.Null(TimeUtil.DateTimeFromString("    ", CustomNow));
         }
     }
 }
