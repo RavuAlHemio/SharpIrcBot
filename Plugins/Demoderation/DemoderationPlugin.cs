@@ -479,7 +479,7 @@ namespace SharpIrcBot.Plugins.Demoderation
             {
                 Immunity immu = ctx.Immunities
                     .FirstOrDefault(i =>
-                        i.NicknameOrUsername.ToLowerInvariant() == nickname.ToLowerInvariant()
+                        i.NicknameOrUsername.ToLower() == nickname.ToLowerInvariant()
                         && i.Channel == channel
                     );
                 if (immu != null)
@@ -527,7 +527,7 @@ namespace SharpIrcBot.Plugins.Demoderation
             {
                 Immunity immu = ctx.Immunities
                     .FirstOrDefault(i =>
-                        i.NicknameOrUsername.ToLowerInvariant() == nickname.ToLowerInvariant()
+                        i.NicknameOrUsername.ToLower() == nickname.ToLowerInvariant()
                         && i.Channel == channel
                     );
                 if (immu == null)
@@ -570,7 +570,7 @@ namespace SharpIrcBot.Plugins.Demoderation
             {
                 Permaban pban = ctx.Permabans
                     .FirstOrDefault(pb =>
-                        pb.NicknameOrUsername.ToLowerInvariant() == nickname.ToLowerInvariant()
+                        pb.NicknameOrUsername.ToLower() == nickname.ToLowerInvariant()
                         && pb.Channel == channel
                     );
                 if (pban != null)
@@ -618,7 +618,7 @@ namespace SharpIrcBot.Plugins.Demoderation
             {
                 Permaban pban = ctx.Permabans
                     .FirstOrDefault(pb =>
-                        pb.NicknameOrUsername.ToLowerInvariant() == nickname.ToLowerInvariant()
+                        pb.NicknameOrUsername.ToLower() == nickname.ToLowerInvariant()
                         && pb.Channel == channel
                     );
                 if (pban == null)
@@ -874,15 +874,15 @@ namespace SharpIrcBot.Plugins.Demoderation
 
             return ctx.Immunities.Any(i =>
                 (
-                    i.NicknameOrUsername.ToLowerInvariant() == nickname.ToLowerInvariant()
+                    i.NicknameOrUsername.ToLower() == nickname.ToLowerInvariant()
                     || (
                         usernameLower != null
-                        && i.NicknameOrUsername.ToLowerInvariant() == usernameLower
+                        && i.NicknameOrUsername.ToLower() == usernameLower
                     )
                 )
                 && (
                     i.Channel == null
-                    || i.Channel.ToLowerInvariant() == channel.ToLowerInvariant()
+                    || i.Channel.ToLower() == channel.ToLowerInvariant()
                 )
             );
         }
@@ -894,15 +894,15 @@ namespace SharpIrcBot.Plugins.Demoderation
 
             return ctx.Permabans.Any(pb =>
                 (
-                    pb.NicknameOrUsername.ToLowerInvariant() == nickname.ToLowerInvariant()
+                    pb.NicknameOrUsername.ToLower() == nickname.ToLowerInvariant()
                     || (
                         usernameLower != null
-                        && pb.NicknameOrUsername.ToLowerInvariant() == usernameLower
+                        && pb.NicknameOrUsername.ToLower() == usernameLower
                     )
                 )
                 && (
                     pb.Channel == null
-                    || pb.Channel.ToLowerInvariant() == channel.ToLowerInvariant()
+                    || pb.Channel.ToLower() == channel.ToLowerInvariant()
                 )
             );
         }
