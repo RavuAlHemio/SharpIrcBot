@@ -736,6 +736,8 @@ namespace SharpIrcBot.Plugins.Demoderation
             Ban ban;
             using (DemoderationContext ctx = GetNewContext())
             {
+                var now = DateTimeOffset.Now;
+
                 // is the sender permabanned?
                 if (IsPermabanned(ctx, channel, senderNickname))
                 {
@@ -761,7 +763,7 @@ namespace SharpIrcBot.Plugins.Demoderation
                 bool hasAbuseLock;
                 IQueryable<Abuse> activeAbuseLocks = ctx.Abuses
                     .Include(a => a.Ban)
-                    .Where(a => a.LockUntil >= DateTimeOffset.Now);
+                    .Where(a => a.LockUntil >= now);
 
                 hasAbuseLock = (senderUsername == null)
                     ? activeAbuseLocks.Any(a => a.Ban.BannerNickname == senderNickname)
@@ -816,7 +818,7 @@ namespace SharpIrcBot.Plugins.Demoderation
 
                 // is that user already being sanctioned for this?
                 IQueryable<Ban> runningBans = ctx.Bans
-                    .Where(b => b.BanUntil >= DateTimeOffset.Now);
+                    .Where(b => b.BanUntil >= now);
                 bool alreadyBanned = (matchedMessage.Username == null)
                     ? runningBans.Any(b => b.OffenderNickname == matchedMessage.Nickname)
                     : runningBans.Any(b =>
@@ -926,9 +928,11 @@ namespace SharpIrcBot.Plugins.Demoderation
         {
             using (DemoderationContext ctx = GetNewContext())
             {
+                var now = DateTimeOffset.Now;
+
                 IQueryable<Ban> bansToLift = ctx.Bans
                     .Include(b => b.Criterion)
-                    .Where(b => b.BanUntil < DateTimeOffset.Now && !b.Lifted);
+                    .Where(b => b.BanUntil < now && !b.Lifted);
                 foreach (Ban ban in bansToLift)
                 {
                     ConnectionManager.ChangeChannelMode(ban.Criterion.Channel, $"-b {ban.OffenderNickname}!*@*");
@@ -939,7 +943,7 @@ namespace SharpIrcBot.Plugins.Demoderation
                 IQueryable<Abuse> abuseBansToLift = ctx.Abuses
                     .Include(a => a.Ban)
                     .Include(a => a.Ban.Criterion)
-                    .Where(a => a.BanUntil < DateTimeOffset.Now && !a.Lifted);
+                    .Where(a => a.BanUntil < now && !a.Lifted);
                 foreach (Abuse abuse in abuseBansToLift)
                 {
                     ConnectionManager.ChangeChannelMode(abuse.Ban.Criterion.Channel, $"-b {abuse.Ban.BannerNickname}!*@*");
