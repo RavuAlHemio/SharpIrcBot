@@ -49,6 +49,7 @@
     <ProjectReference Include="..\Plugins\Catchword\Catchword.csproj" />
     <ProjectReference Include="..\Plugins\Vitals\Vitals.csproj" />
     <ProjectReference Include="..\Plugins\Proverb\Proverb.csproj" />
+    <ProjectReference Include="..\Plugins\Stats\Stats.csproj" />
   </ItemGroup>
 
   <ItemGroup>
