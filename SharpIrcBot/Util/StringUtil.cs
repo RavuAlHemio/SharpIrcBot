@@ -388,5 +388,46 @@ namespace SharpIrcBot.Util
                 ? int.Parse(grp.Value)
                 : (int?)null;
         }
+
+        /// <summary>
+        /// Calculates the Levenshtein distance between the two given strings.
+        /// </summary>
+        public static long LevenshteinDistance(string one, string other)
+        {
+            // https://en.wikipedia.org/wiki/Levenshtein_distance#Iterative_with_two_matrix_rows
+
+            if (one.Length > other.Length)
+            {
+                return LevenshteinDistance(other, one);
+            }
+
+            var prevRow = new long[other.Length + 1];
+            var curRow = new long[prevRow.Length];
+
+            for (int i = 0; i < prevRow.Length; ++i)
+            {
+                prevRow[i] = i;
+            }
+
+            for (int i = 0; i < one.Length; ++i)
+            {
+                curRow[0] = i + 1;
+
+                for (int j = 0; j < other.Length; ++j)
+                {
+                    long delCost = prevRow[j + 1] + 1;
+                    long insCost = curRow[j] + 1;
+                    long subCost = (one[i] == other[j])
+                        ? prevRow[j]
+                        : prevRow[j] + 1
+                    ;
+                    curRow[j + 1] = Math.Min(delCost, Math.Min(insCost, subCost));
+                }
+
+                (prevRow, curRow) = (curRow, prevRow);
+            }
+
+            return prevRow[prevRow.Length - 1];
+        }
     }
 }
