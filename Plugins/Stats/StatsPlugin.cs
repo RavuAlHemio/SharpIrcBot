@@ -142,15 +142,31 @@ namespace SharpIrcBot.Plugins.Stats
             long finalCases;
             long finalPop;
 
-            // special-case Vienna (sum up districts)
-            if (nameLower == "wien")
+            // special case some totals (sum up)
+            if (nameLower == "österreich" || nameLower == "wien")
             {
-                finalName = "Wien (total)";
+                if (nameLower == "österreich")
+                {
+                    finalName = "Österreich (total)";
+                }
+                else
+                {
+                    finalName = "Wien (total)";
+                }
                 finalCases = 0;
                 finalPop = 0;
 
                 foreach (var kvp in PopulationPerDistrict)
                 {
+                    if (nameLower == "wien")
+                    {
+                        // only Vienna
+                        if (!kvp.Key.StartsWith("Wien ") || !kvp.Key.Contains(".,"))
+                        {
+                            continue;
+                        }
+                    }
+
                     long hereCases;
                     if (!CoronaCasesPerDistrict.TryGetValue(kvp.Key, out hereCases))
                     {
