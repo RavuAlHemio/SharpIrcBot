@@ -143,30 +143,14 @@ namespace SharpIrcBot.Plugins.Stats
             long finalPop;
 
             // special case some totals (sum up)
-            if (nameLower == "österreich" || nameLower == "wien")
+            if (nameLower == "österreich")
             {
-                if (nameLower == "österreich")
-                {
-                    finalName = "Österreich (total)";
-                }
-                else
-                {
-                    finalName = "Wien (total)";
-                }
+                finalName = "Österreich (total)";
                 finalCases = 0;
                 finalPop = 0;
 
                 foreach (var kvp in PopulationPerDistrict)
                 {
-                    if (nameLower == "wien")
-                    {
-                        // only Vienna
-                        if (!kvp.Key.StartsWith("Wien ") || !kvp.Key.Contains(".,"))
-                        {
-                            continue;
-                        }
-                    }
-
                     long hereCases;
                     if (!CoronaCasesPerDistrict.TryGetValue(kvp.Key, out hereCases))
                     {
@@ -195,13 +179,6 @@ namespace SharpIrcBot.Plugins.Stats
                         districtKey = districtKey
                             .Substring(0, districtKey.Length - "(stadt)".Length)
                             .TrimEnd(' ');
-                    }
-
-                    // Vienna: clean up weird district format "wien  0.,hauptdorf"
-                    if (districtKey.StartsWith("wien ") && districtKey.Contains(".,"))
-                    {
-                        int dotCommaIndex = districtKey.IndexOf(".,");
-                        districtKey = "wien-" + districtKey.Substring(dotCommaIndex + ".,".Length);
                     }
 
                     if (bestName == null)
