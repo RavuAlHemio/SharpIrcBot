@@ -8,7 +8,7 @@ namespace SharpIrcBot.Plugins.Stats
     {
         public string DefaultTarget { get; set; }
         public string DistrictCoronaStatsUri { get; set; }
-        public string DistrictPopFile { get; set; }
+        public string StateDistrictPopFile { get; set; }
         public double? TimeoutSeconds { get; set; }
 
         public StatsConfig(JObject obj)

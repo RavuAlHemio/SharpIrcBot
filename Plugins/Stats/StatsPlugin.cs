@@ -21,18 +21,19 @@ namespace SharpIrcBot.Plugins.Stats
         protected IConnectionManager ConnectionManager { get; }
         protected StatsConfig Config { get; set; }
 
-        protected Dictionary<string, long> CoronaCasesPerDistrict { get; set; }
+        protected DrillDownValue<string, long> CoronaStatsRoot { get; set; }
         protected DateTimeOffset CoronaTimestamp { get; set; }
-        protected Dictionary<string, long> PopulationPerDistrict { get; set; }
-        protected int LongestDistrictNameLength { get; set; }
+        protected int LongestKeyLength { get; set; }
+
+        const string PopulationMetric = "population";
+        const string Covid19CasesMetric = "covid-19-cases";
 
         public StatsPlugin(IConnectionManager connMgr, JObject config)
         {
             ConnectionManager = connMgr;
             Config = new StatsConfig(config);
 
-            CoronaCasesPerDistrict = new Dictionary<string, long>();
-            PopulationPerDistrict = new Dictionary<string, long>();
+            CoronaStatsRoot = null;
 
             ConnectionManager.CommandManager.RegisterChannelMessageCommandHandler(
                 new Command(
@@ -87,29 +88,68 @@ namespace SharpIrcBot.Plugins.Stats
             }
 
             // load as JSON
-            var casesDict = new Dictionary<string, long>();
+            var districtToCaseCount = new Dictionary<string, long>();
             var entries = JArray.Parse(responseText);
             foreach (var entry in entries.OfType<JObject>())
             {
                 var districtName = (string)entry["label"];
                 var cases = (long)entry["y"];
-                casesDict[districtName] = cases;
+                districtToCaseCount[districtName] = cases;
             }
-            CoronaCasesPerDistrict = casesDict;
 
             // load population stats
-            var popDict = new Dictionary<string, long>();
-            string popFileName = Path.Combine(SharpIrcBotUtil.AppDirectory, Config.DistrictPopFile);
+            var stateToDistrictToPopulation = new Dictionary<string, Dictionary<string, long>>();
+            string popFileName = Path.Combine(SharpIrcBotUtil.AppDirectory, Config.StateDistrictPopFile);
             using (var stream = File.Open(popFileName, FileMode.Open, FileAccess.Read, FileShare.Read))
             using (var reader = new StreamReader(stream, StringUtil.Utf8NoBom))
             {
-                JsonSerializer.Create().Populate(reader, popDict);
+                JsonSerializer.Create().Populate(reader, stateToDistrictToPopulation);
             }
-            PopulationPerDistrict = popDict;
 
-            LongestDistrictNameLength = PopulationPerDistrict
-                .Keys
-                .Max(districtName => (int?)districtName.Length)
+            // generate the tree out of the population dict
+            var austria = new DrillDownValue<string, long>();
+            austria.Keys.Add("\u00D6sterreich");
+            foreach (var kvp1 in stateToDistrictToPopulation)
+            {
+                string stateName = kvp1.Key;
+                var state = new DrillDownValue<string, long>();
+                state.Keys.Add(stateName);
+                austria.Children.Add(state);
+
+                foreach (var kvp2 in kvp1.Value)
+                {
+                    string districtName = kvp2.Key;
+                    long population = kvp2.Value;
+
+                    var district = new DrillDownValue<string, long>();
+                    district.Keys.Add(districtName);
+                    state.Children.Add(district);
+
+                    // alternative key: no trailing "(stadt)"
+                    if (districtName.ToLowerInvariant().EndsWith("(stadt)"))
+                    {
+                        string shortKey = districtName
+                            .Substring(0, districtName.Length - "(stadt)".Length)
+                            .TrimEnd(' ');
+                        district.Keys.Add(shortKey);
+                    }
+
+                    district.Values[PopulationMetric] = population;
+
+                    long covid19Cases;
+                    if (!districtToCaseCount.TryGetValue(districtName, out covid19Cases))
+                    {
+                        covid19Cases = 0;
+                    }
+                    district.Values[Covid19CasesMetric] = covid19Cases;
+                }
+            }
+            CoronaStatsRoot = austria;
+
+            LongestKeyLength = CoronaStatsRoot
+                .FlattenedDescendants()
+                .SelectMany(ddv => ddv.Keys)
+                .Max(key => (int?)key.Length)
                 ?? 0;
 
             CoronaTimestamp = DateTimeOffset.Now;
@@ -125,9 +165,9 @@ namespace SharpIrcBot.Plugins.Stats
             string nameLower = name.ToLowerInvariant();
 
             // ensure our users don't go overboard
-            if (nameLower.Length > 2*LongestDistrictNameLength)
+            if (nameLower.Length > 2*LongestKeyLength)
             {
-                ConnectionManager.SendChannelMessage(msg.Channel, $"{msg.SenderNickname}: Try a shorter district name...");
+                ConnectionManager.SendChannelMessage(msg.Channel, $"{msg.SenderNickname}: Try a shorter key...");
                 return;
             }
 
@@ -138,89 +178,54 @@ namespace SharpIrcBot.Plugins.Stats
                 UpdateStats();
             }
 
-            string finalName;
-            long finalCases;
-            long finalPop;
+            DrillDownValue<string, long> bestValue = null;
+            long bestDistance = long.MaxValue;
 
-            // special case some totals (sum up)
-            if (nameLower == "österreich")
+            foreach (DrillDownValue<string, long> ddv in CoronaStatsRoot.FlattenedDescendants())
             {
-                finalName = "Österreich (total)";
-                finalCases = 0;
-                finalPop = 0;
-
-                foreach (var kvp in PopulationPerDistrict)
+                foreach (string key in ddv.Keys)
                 {
-                    long hereCases;
-                    if (!CoronaCasesPerDistrict.TryGetValue(kvp.Key, out hereCases))
-                    {
-                        hereCases = 0;
-                    }
+                    // normalize the key
+                    string normalizedKey = key.ToLowerInvariant();
 
-                    finalCases += hereCases;
-                    finalPop += kvp.Value;
-                }
-            }
-            else
-            {
-                // find the closest district by Levenshtein distance
-                long bestDistance = long.MaxValue;
-                string bestName = null;
-                string bestKey = null;
-                long bestPop = long.MinValue;
-                foreach (var kvp in PopulationPerDistrict)
-                {
-                    string districtName = kvp.Key;
-                    string districtKey = districtName.ToLowerInvariant();
-
-                    // remove trailing "(stadt)"
-                    if (districtKey.EndsWith("(stadt)"))
-                    {
-                        districtKey = districtKey
-                            .Substring(0, districtKey.Length - "(stadt)".Length)
-                            .TrimEnd(' ');
-                    }
-
-                    if (bestName == null)
-                    {
-                        bestName = districtName;
-                        bestKey = districtKey;
-                        bestPop = kvp.Value;
-                        continue;
-                    }
-
-                    long thisDistance = StringUtil.LevenshteinDistance(nameLower, districtKey);
+                    // compare
+                    long thisDistance = StringUtil.LevenshteinDistance(nameLower, normalizedKey);
                     if (bestDistance > thisDistance)
                     {
+                        bestValue = ddv;
                         bestDistance = thisDistance;
-                        bestName = districtName;
-                        bestKey = districtKey;
-                        bestPop = kvp.Value;
                     }
                 }
-
-                if (bestName == null)
-                {
-                    ConnectionManager.SendChannelMessage(msg.Channel, $"{msg.SenderNickname}: Failed to find this district.");
-                    return;
-                }
-
-                // get cases
-                long cases;
-                if (!CoronaCasesPerDistrict.TryGetValue(bestName, out cases))
-                {
-                    cases = 0;
-                }
-
-                finalName = bestName;
-                finalCases = cases;
-                finalPop = bestPop;
             }
 
-            // calculate cases vs. population
-            double perTenThousand = (finalCases * 10_000.0) / finalPop;
+            if (bestValue == null)
+            {
+                ConnectionManager.SendChannelMessage(msg.Channel, $"{msg.SenderNickname}: Failed to find this area.");
+                return;
+            }
 
-            ConnectionManager.SendChannelMessage(msg.Channel, $"{msg.SenderNickname}: {finalName}: {finalCases} cases ({perTenThousand:0.00} per 10k inhabitants)");
+            string foundName = bestValue.Keys.First();
+
+            // get population
+            long pop = bestValue.TotalValueForMetric(
+                PopulationMetric,
+                initialValue: 0,
+                missingValue: 0,
+                meldValueFunc: (a, b) => a + b
+            );
+
+            // get cases
+            long cases = bestValue.TotalValueForMetric(
+                Covid19CasesMetric,
+                initialValue: 0,
+                missingValue: 0,
+                meldValueFunc: (a, b) => a + b
+            );
+
+            // calculate cases vs. population
+            double perTenThousand = (cases * 10_000.0) / pop;
+
+            ConnectionManager.SendChannelMessage(msg.Channel, $"{msg.SenderNickname}: {foundName}: {cases} cases ({perTenThousand:0.00} per 10k inhabitants)");
         }
     }
 }
