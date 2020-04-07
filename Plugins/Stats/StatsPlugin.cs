@@ -16,7 +16,7 @@ namespace SharpIrcBot.Plugins.Stats
     {
         private static readonly LoggerWrapper Logger = LoggerWrapper.Create<StatsPlugin>();
 
-        public static readonly Regex EcmaScriptVarDef = new Regex("^\\s*var\\s+[a-zA-Z_$][a-zA-Z0-9_$]*\\s*=\\s*", RegexOptions.Compiled);
+        public static readonly Regex EcmaScriptVarDef = new Regex("^\\s*var\\s+(?<name>[a-zA-Z_$][a-zA-Z0-9_$]*)\\s*=\\s*", RegexOptions.Compiled);
 
         protected IConnectionManager ConnectionManager { get; }
         protected StatsConfig Config { get; set; }
@@ -78,18 +78,25 @@ namespace SharpIrcBot.Plugins.Stats
                 responseText = response.Content.ReadAsStringAsync().Result;
             }
 
-            // strip variable definition, leaving data
-            Match m = EcmaScriptVarDef.Match(responseText);
-            if (m.Success)
+            string responseJsonText = null;
+
+            // cut on semicolon
+            foreach (string chunk in responseText.Split(';'))
             {
-                // turn variable definition into data
-                responseText = responseText.Substring(m.Length)
-                    .TrimEnd(';', '\r', '\n');
+                // strip variable definition, leaving data
+                Match m = EcmaScriptVarDef.Match(responseText);
+                if (m.Success && m.Groups["name"].Value == "dpBezirke")
+                {
+                    // turn variable definition into data
+                    responseJsonText = chunk.Substring(m.Length)
+                        .TrimEnd(';', '\r', '\n');
+                    break;
+                }
             }
 
             // load as JSON
             var districtToCaseCount = new Dictionary<string, long>();
-            var entries = JArray.Parse(responseText);
+            var entries = JArray.Parse(responseJsonText);
             foreach (var entry in entries.OfType<JObject>())
             {
                 var districtName = (string)entry["label"];
