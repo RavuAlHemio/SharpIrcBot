@@ -349,7 +349,7 @@ namespace SharpIrcBot.Plugins.Calc.AST
 
             BigInteger actualExponent = BigInteger.Abs(exponentBig);
             BigInteger product = BigInteger.One;
-            for (long i = 1; i < actualExponent; ++i)
+            for (long i = 0; i < actualExponent; ++i)
             {
                 timer.ThrowIfTimedOut();
 
