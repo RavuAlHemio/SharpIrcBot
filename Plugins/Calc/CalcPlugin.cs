@@ -95,6 +95,12 @@ namespace SharpIrcBot.Plugins.Calc
 
         protected virtual string Calculate(string expression)
         {
+            var timer = new CalcTimer(TimeSpan.FromSeconds(Config.TimeoutSeconds));
+            return InternalCalculate(expression, timer);
+        }
+
+        public static Expression ParseExpression(string expression)
+        {
             var charStream = new AntlrInputStream(expression);
 
             var lexer = new CalcLangLexer(charStream);
@@ -109,11 +115,14 @@ namespace SharpIrcBot.Plugins.Calc
 
             CalcLangParser.ExpressionContext exprContext = parser.fullExpression().expression();
             var visitor = new ASTGrowingVisitor(tokenStream);
-            Expression topExpression = visitor.Visit(exprContext);
+            return visitor.Visit(exprContext);
+        }
 
+        public static string InternalCalculate(string expression, CalcTimer timer)
+        {
+            Expression topExpression = ParseExpression(expression);
             Grimoire grimoire = Grimoire.CanonicalGrimoire;
 
-            var timer = new CalcTimer(TimeSpan.FromSeconds(Config.TimeoutSeconds));
             timer.Start();
             PrimitiveExpression simplifiedTop = topExpression.Simplified(grimoire, timer);
 
