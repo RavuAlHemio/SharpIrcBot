@@ -87,7 +87,8 @@ namespace SharpIrcBot.Plugins.GroupPressure
             {
                 Sender = normalizedSender,
                 Body = body,
-                Action = action
+                Action = action,
+                ISentIt = false,
             });
 
             // perform accounting
@@ -95,7 +96,7 @@ namespace SharpIrcBot.Plugins.GroupPressure
             foreach (var backMessage in Backlog)
             {
                 var actualBody = (backMessage.Action ? 'A' : 'M') + backMessage.Body;
-                if (backMessage.Sender == Connection.MyNickname)
+                if (backMessage.ISentIt)
                 {
                     // this is my message -- start counting from zero, so to speak
                     messageToSenders[actualBody] = new HashSet<string>();
@@ -141,9 +142,10 @@ namespace SharpIrcBot.Plugins.GroupPressure
                 // fake this message into the backlog to prevent duplicates
                 Backlog.Enqueue(new BacklogMessage
                 {
-                    Sender = Connection.MyUsername,
+                    Sender = normalizedSender,
                     Body = body,
-                    Action = lastAction
+                    Action = lastAction,
+                    ISentIt = true,
                 });
             }
         }
