@@ -60,6 +60,16 @@ namespace SharpIrcBot.Plugins.Belch
                 ),
                 HandleTelCommand
             );
+            ConnectionManager.CommandManager.RegisterChannelMessageCommandHandler(
+                new Command(
+                    CommandUtil.MakeNames("wru"),
+                    CommandUtil.NoOptions,
+                    CommandUtil.MakeArguments(RestTaker.Instance),
+                    CommandUtil.MakeTags("fun"),
+                    forbiddenFlags: MessageFlags.UserBanned
+                ),
+                HandleWRUCommand
+            );
         }
 
         protected virtual void HandleBelchCommand(CommandMatch cmd, IChannelMessageEventArgs args)
@@ -138,6 +148,15 @@ namespace SharpIrcBot.Plugins.Belch
             }
 
             ConnectionManager.SendChannelMessage(args.Channel, ret.ToString());
+        }
+
+        protected virtual void HandleWRUCommand(CommandMatch cmd, IChannelMessageEventArgs args)
+        {
+            // WRU = who are you
+            ConnectionManager.SendChannelMessage(
+                args.Channel,
+                $"{args.SenderNickname}: I am {ConnectionManager.MyNickname}!"
+            );
         }
     }
 }
