@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
@@ -69,12 +70,24 @@ namespace SharpIrcBot.Plugins.Fortune
                 string fortuneText = File.ReadAllText(fileName, StringUtil.Utf8NoBom)
                     .Replace("\r\n", "\n")
                     .Replace("\r", "\n");
-                string[] fortunes = fortuneText.Split(
+                List<string> fortunes = fortuneText.Split(
                     new[] {"\n%\n"},
                     StringSplitOptions.RemoveEmptyEntries
-                );
+                ).ToList();
 
-                byCategoryBuilder[categoryName] = ImmutableArray.CreateRange(fortunes);
+                if (Config.MaxChars.HasValue)
+                {
+                    fortunes.RemoveAll(f => f.Length > Config.MaxChars.Value);
+                }
+                if (Config.MaxLines.HasValue)
+                {
+                    fortunes.RemoveAll(f => f.Count(c => c == '\n') >= Config.MaxLines.Value);
+                }
+
+                if (fortunes.Count > 0)
+                {
+                    byCategoryBuilder[categoryName] = ImmutableArray.CreateRange(fortunes);
+                }
                 allBuilder.AddRange(fortunes);
             }
 

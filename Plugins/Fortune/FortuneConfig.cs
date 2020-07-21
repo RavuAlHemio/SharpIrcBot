@@ -9,9 +9,14 @@ namespace SharpIrcBot.Plugins.Fortune
     {
         public string FortuneDirectory { get; set; }
         public HashSet<string> AllowedCategories { get; set; }
+        public int? MaxChars { get; set; }
+        public int? MaxLines { get; set; }
 
         public FortuneConfig(JObject obj)
         {
+            MaxChars = null;
+            MaxLines = null;
+
             var ser = new JsonSerializer();
             ser.Populate(obj.CreateReader(), this);
         }
