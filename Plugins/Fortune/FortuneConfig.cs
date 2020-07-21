@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using System.Collections.Generic;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace SharpIrcBot.Plugins.Fortune
@@ -7,6 +8,7 @@ namespace SharpIrcBot.Plugins.Fortune
     public class FortuneConfig
     {
         public string FortuneDirectory { get; set; }
+        public HashSet<string> AllowedCategories { get; set; }
 
         public FortuneConfig(JObject obj)
         {

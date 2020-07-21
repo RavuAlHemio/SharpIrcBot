@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Immutable;
 using System.IO;
+using System.Linq;
 using Newtonsoft.Json.Linq;
 using SharpIrcBot.Commands;
 using SharpIrcBot.Events.Irc;
@@ -89,9 +90,25 @@ namespace SharpIrcBot.Plugins.Fortune
             {
                 if (!CategoryToFortunes.TryGetValue(fortuneCategory, out fortunes))
                 {
+                    string availableCategories = string.Join(
+                        ", ",
+                        CategoryToFortunes.Keys
+                            .OrderBy(c => c)
+                            .Where(c => Config.AllowedCategories == null || Config.AllowedCategories.Contains(c))
+                    );
+
                     ConnectionManager.SendChannelMessage(
                         args.Channel,
-                        $"{args.SenderNickname}: fortune category \"{fortuneCategory}\" not found"
+                        $"{args.SenderNickname}: fortune category \"{fortuneCategory}\" not found; available categories are: {availableCategories}"
+                    );
+                    return;
+                }
+
+                if (Config.AllowedCategories != null && !Config.AllowedCategories.Contains(fortuneCategory))
+                {
+                    ConnectionManager.SendChannelMessage(
+                        args.Channel,
+                        $"{args.SenderNickname}: fortune category \"{fortuneCategory}\" has been disabled"
                     );
                     return;
                 }
