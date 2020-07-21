@@ -87,7 +87,7 @@ namespace SharpIrcBot.Plugins.Fortune
             string fortuneCategory = ((string)cmd.Arguments[0])?.Trim();
 
             ImmutableArray<string> fortunes;
-            if (fortuneCategory != null)
+            if (!string.IsNullOrEmpty(fortuneCategory))
             {
                 if (!CategoryToFortunes.TryGetValue(fortuneCategory, out fortunes))
                 {
