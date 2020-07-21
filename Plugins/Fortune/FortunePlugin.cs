@@ -20,6 +20,7 @@ namespace SharpIrcBot.Plugins.Fortune
         public FortunePlugin(IConnectionManager connMgr, JObject config)
         {
             ConnectionManager = connMgr;
+            Config = new FortuneConfig(config);
 
             ConnectionManager.CommandManager.RegisterChannelMessageCommandHandler(
                 new Command(
