@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using Newtonsoft.Json.Linq;
@@ -180,23 +181,33 @@ namespace SharpIrcBot.Plugins.Fortune
             fortuneList.Shuffle(RNG);
             fortuneList.RemoveRange(fortuneCount, fortuneList.Count - fortuneCount);
 
-            var lineEtorList = fortuneList
-                .Select(fortune => ((IEnumerable<string>)fortune.Split('\n')).GetEnumerator())
+            // split each fortune into lines
+            List<string[]> fortuneLinesList = fortuneList
+                .Select(fortune => fortune.Split('\n'))
                 .ToList();
 
-            var lines = new List<string>();
-            while (lineEtorList.Any())
+            // add the index of each fortune n times into the index list
+            // where n is the number of its lines
+            var fortuneIndexList = new List<int>();
+            for (int i = 0; i < fortuneLinesList.Count; ++i)
             {
-                // pick one of the fortunes to take a line from
-                int etorIndex = RNG.Next(lineEtorList.Count);
-                IEnumerator<string> etor = lineEtorList[etorIndex];
-                if (!etor.MoveNext())
+                foreach (string line in fortuneLinesList[i])
                 {
-                    // the enumerator has run its course; get rid of it and try again
-                    etor.Dispose();
-                    lineEtorList.RemoveAt(etorIndex);
-                    continue;
+                    fortuneIndexList.Add(i);
                 }
+            }
+            fortuneIndexList.Shuffle(RNG);
+
+            // get the enumerators for the line arrays
+            List<IEnumerator<string>> lineEtorList = fortuneLinesList
+                .Select(fortuneLines => ((IEnumerable<string>)fortuneLines).GetEnumerator())
+                .ToList();
+            var lines = new List<string>();
+            foreach (int index in fortuneIndexList)
+            {
+                IEnumerator<string> etor = lineEtorList[index];
+                bool moveSucceeded = etor.MoveNext();
+                Trace.Assert(moveSucceeded, "fortune line enumerator ended earlier than expected");
                 lines.Add(etor.Current);
             }
 
