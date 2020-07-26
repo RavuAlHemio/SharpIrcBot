@@ -80,6 +80,12 @@ namespace SharpIrcBot.Plugins.Fortune
                 }
 
                 string categoryName = Path.GetFileName(fileName);
+                if (Config.AllowedCategories != null && !Config.AllowedCategories.Contains(categoryName))
+                {
+                    // skip this category
+                    continue;
+                }
+
                 string fortuneText = File.ReadAllText(fileName, StringUtil.Utf8NoBom)
                     .Replace("\r\n", "\n")
                     .Replace("\r", "\n");
@@ -119,23 +125,12 @@ namespace SharpIrcBot.Plugins.Fortune
                 {
                     string availableCategories = string.Join(
                         ", ",
-                        CategoryToFortunes.Keys
-                            .OrderBy(c => c)
-                            .Where(c => Config.AllowedCategories == null || Config.AllowedCategories.Contains(c))
+                        CategoryToFortunes.Keys.OrderBy(c => c)
                     );
 
                     ConnectionManager.SendChannelMessage(
                         args.Channel,
                         $"{args.SenderNickname}: fortune category \"{fortuneCategory}\" not found; available categories are: {availableCategories}"
-                    );
-                    return null;
-                }
-
-                if (Config.AllowedCategories != null && !Config.AllowedCategories.Contains(fortuneCategory))
-                {
-                    ConnectionManager.SendChannelMessage(
-                        args.Channel,
-                        $"{args.SenderNickname}: fortune category \"{fortuneCategory}\" has been disabled"
                     );
                     return null;
                 }
