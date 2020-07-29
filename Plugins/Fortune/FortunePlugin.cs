@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using Newtonsoft.Json.Linq;
@@ -39,7 +40,10 @@ namespace SharpIrcBot.Plugins.Fortune
             ConnectionManager.CommandManager.RegisterChannelMessageCommandHandler(
                 new Command(
                     CommandUtil.MakeNames("forfortunetune"),
-                    CommandUtil.NoOptions,
+                    CommandUtil.MakeOptions(
+                        CommandUtil.MakeOption("-c", CommandUtil.NonzeroStringMatcherRequiredWordTaker),
+                        CommandUtil.MakeOption("--count", CommandUtil.NonzeroStringMatcherRequiredWordTaker)
+                    ),
                     CommandUtil.MakeArguments(
                         RestTaker.Instance // fortune type (optional)
                     ),
@@ -158,11 +162,50 @@ namespace SharpIrcBot.Plugins.Fortune
 
         protected virtual void HandleForForTuneTuneCommand(CommandMatch cmd, IChannelMessageEventArgs args)
         {
-            const int fortuneCount = 2;
-
             var fortunes = GetFortunesForCommand(cmd, args);
             if (!fortunes.HasValue || fortunes.Value.IsEmpty)
             {
+                return;
+            }
+
+            string countString = cmd.Options
+                .Where(kvp => kvp.Key == "-c" || kvp.Key == "--count")
+                .Select(kvp => (string)kvp.Value)
+                .LastOrDefault();
+
+            int fortuneCount;
+            if (countString == null)
+            {
+                fortuneCount = 2;
+            }
+            else
+            {
+                bool invalidNumber = false;
+                if (!int.TryParse(countString, NumberStyles.None, CultureInfo.InvariantCulture, out fortuneCount))
+                {
+                    invalidNumber = true;
+                }
+                else if (fortuneCount <= 0)
+                {
+                    invalidNumber = true;
+                }
+
+                if (invalidNumber)
+                {
+                    ConnectionManager.SendChannelMessage(
+                        args.Channel,
+                        $"{args.SenderNickname}: -c|--count requires a numeric argument >= 0"
+                    );
+                    return;
+                }
+            }
+
+            if (Config.MaxIntersperseCount.HasValue && fortuneCount > Config.MaxIntersperseCount.Value)
+            {
+                ConnectionManager.SendChannelMessage(
+                    args.Channel,
+                    $"{args.SenderNickname}: The administrator only allows a maximum -c|--count of {Config.MaxIntersperseCount.Value}."
+                );
                 return;
             }
 
