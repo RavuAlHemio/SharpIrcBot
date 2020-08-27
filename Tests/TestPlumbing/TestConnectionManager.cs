@@ -49,6 +49,7 @@ namespace SharpIrcBot.Tests.TestPlumbing
 
         public List<string> ActuallyJoinedChannels { get; } = new List<string>();
         public List<ITestIrcEvent> EventLog { get; } = new List<ITestIrcEvent>();
+        public Dictionary<string, string> NicknameRegistrations { get; } = new Dictionary<string, string>();
 
         public CommandManager CommandManager { get; }
 
@@ -150,7 +151,12 @@ namespace SharpIrcBot.Tests.TestPlumbing
 
         public string RegisteredNameForNick(string nick)
         {
-            throw new NotImplementedException();
+            string regName;
+            if (NicknameRegistrations.TryGetValue(nick, out regName))
+            {
+                return regName;
+            }
+            return null;
         }
 
         public void ReportBaseNickChange(string oldBaseNick, string newBaseNick)
