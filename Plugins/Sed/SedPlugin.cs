@@ -45,6 +45,17 @@ namespace SharpIrcBot.Plugins.Sed
                 return;
             }
 
+            if (Config.BannedUsers.Contains(e.SenderNickname))
+            {
+                return;
+            }
+
+            string senderUser = ConnectionManager.RegisteredNameForNick(e.SenderNickname);
+            if (senderUser != null && Config.BannedUsers.Contains(senderUser))
+            {
+                return;
+            }
+
             if (HandleReplacementCommand(e))
             {
                 return;
