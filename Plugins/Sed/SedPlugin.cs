@@ -1,4 +1,7 @@
 ﻿using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Linq;
+using System.Text.RegularExpressions;
 using Newtonsoft.Json.Linq;
 using SharpIrcBot.Events.Irc;
 using SharpIrcBot.Plugins.Sed.Parsing;
@@ -15,6 +18,8 @@ namespace SharpIrcBot.Plugins.Sed
 
         protected Dictionary<string, List<LastMessage>> ChannelToLastMessages { get; set; }
         protected SedParser Parser { get; set; }
+
+        protected ImmutableArray<Regex> BannedUserRegexes { get; set; }
 
         public SedPlugin(IConnectionManager connMgr, JObject config)
         {
@@ -36,6 +41,9 @@ namespace SharpIrcBot.Plugins.Sed
 
         protected virtual void PostConfigReload()
         {
+            BannedUserRegexes = Config.BannedUserRegexes
+                .Select(re => new Regex(re, RegexOptions.Compiled))
+                .ToImmutableArray();
         }
 
         protected virtual void HandleChannelMessage(object sender, IChannelMessageEventArgs e, MessageFlags flags)
@@ -45,13 +53,13 @@ namespace SharpIrcBot.Plugins.Sed
                 return;
             }
 
-            if (Config.BannedUsers.Contains(e.SenderNickname))
+            if (BannedUserRegexes.Any(re => re.IsMatch(e.SenderNickname)))
             {
                 return;
             }
 
             string senderUser = ConnectionManager.RegisteredNameForNick(e.SenderNickname);
-            if (senderUser != null && Config.BannedUsers.Contains(senderUser))
+            if (senderUser != null && BannedUserRegexes.Any(re => re.IsMatch(senderUser)))
             {
                 return;
             }
