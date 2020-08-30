@@ -31,6 +31,8 @@ namespace SharpIrcBot.Plugins.Sed
 
             ConnectionManager.ChannelMessage += HandleChannelMessage;
             ConnectionManager.ChannelAction += HandleChannelAction;
+
+            UpdateRegexCache();
         }
 
         public virtual void ReloadConfiguration(JObject newConfig)
@@ -40,6 +42,11 @@ namespace SharpIrcBot.Plugins.Sed
         }
 
         protected virtual void PostConfigReload()
+        {
+            UpdateRegexCache();
+        }
+
+        protected virtual void UpdateRegexCache()
         {
             BannedUserRegexes = Config.BannedUserRegexes
                 .Select(re => new Regex(re, RegexOptions.Compiled))
