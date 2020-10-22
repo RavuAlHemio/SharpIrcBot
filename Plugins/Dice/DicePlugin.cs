@@ -83,6 +83,20 @@ namespace SharpIrcBot.Plugins.Dice
                 ),
                 HandleShuffleCommand
             );
+            ConnectionManager.CommandManager.RegisterChannelMessageCommandHandler(
+                new Command(
+                    CommandUtil.MakeNames("someyear"),
+                    CommandUtil.MakeOptions(
+                        CommandUtil.MakeFlag("--crypto"),
+                        CommandUtil.MakeOption("-w", CommandUtil.NonzeroStringMatcherRequiredWordTaker),
+                        CommandUtil.MakeOption("--wikipedia", CommandUtil.NonzeroStringMatcherRequiredWordTaker)
+                    ),
+                    CommandUtil.NoArguments,
+                    CommandUtil.MakeTags("fun"),
+                    forbiddenFlags: MessageFlags.UserBanned
+                ),
+                HandleSomeYearCommand
+            );
             ConnectionManager.ChannelMessage += HandleChannelMessage;
         }
 
@@ -265,6 +279,35 @@ namespace SharpIrcBot.Plugins.Dice
             options.Shuffle(rng);
             string newString = string.Join(splitter, options);
             ConnectionManager.SendChannelMessageFormat(args.Channel, "{0}: {1}", args.SenderNickname, newString);
+        }
+
+        protected virtual void HandleSomeYearCommand(CommandMatch cmd, IChannelMessageEventArgs args)
+        {
+            string wikiOptionValue = cmd.Options
+                .Where(kvp => kvp.Key == "-w" || kvp.Key == "--wikipedia")
+                .Select(kvp => (string)kvp.Value)
+                .FirstOrDefault() ?? Config.DefaultWikipediaLanguage;
+
+            if (!wikiOptionValue.All(c =>
+                (c >= '0' && c <= '9')
+                || (c >= 'a' && c <= 'z')
+                || (c == '-')
+                || (c >= 'A' && c <= 'Z')
+            ))
+            {
+                ConnectionManager.SendChannelMessage(
+                    args.Channel,
+                    $"{args.SenderNickname}: That does not look like a valid Wikipedia to me."
+                );
+                return;
+            }
+
+            Random rng = ChosenRNG(cmd);
+            int year = rng.Next(1, DateTimeOffset.Now.Year + 1);
+            ConnectionManager.SendChannelMessage(
+                args.Channel,
+                $"{args.SenderNickname}: https://{wikiOptionValue}.wikipedia.org/wiki/{year}"
+            );
         }
 
         protected virtual void HandleChannelMessage(object sender, IChannelMessageEventArgs args, MessageFlags flags)

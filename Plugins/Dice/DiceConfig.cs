@@ -31,6 +31,8 @@ namespace SharpIrcBot.Plugins.Dice
 
         public long CooldownUpperBoundary { get; set; }
 
+        public string DefaultWikipediaLanguage { get; set; }
+
         public DiceConfig(JObject obj)
         {
             Channels = new HashSet<string>();
@@ -47,6 +49,8 @@ namespace SharpIrcBot.Plugins.Dice
 
             CooldownPerCommandUsage = 4;
             CooldownUpperBoundary = 32;
+
+            DefaultWikipediaLanguage = "en";
 
             var ser = new JsonSerializer();
             ser.Populate(obj.CreateReader(), this);
