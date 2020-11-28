@@ -51,6 +51,7 @@
     <ProjectReference Include="..\Plugins\Proverb\Proverb.csproj" />
     <ProjectReference Include="..\Plugins\Stats\Stats.csproj" />
     <ProjectReference Include="..\Plugins\Fortune\Fortune.csproj" />
+    <ProjectReference Include="..\Plugins\WordGen\WordGen.csproj" />
   </ItemGroup>
 
   <ItemGroup>
