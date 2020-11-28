@@ -45,6 +45,7 @@ namespace SharpIrcBot.Plugins.WordGen
             if (substr.Length > LongestWordLength)
             {
                 ConnectionManager.SendChannelMessage(msg.Channel, $"{msg.SenderNickname}: that's longer than the longest word");
+                return;
             }
 
             string foundWord;
