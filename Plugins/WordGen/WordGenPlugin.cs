@@ -34,6 +34,8 @@ namespace SharpIrcBot.Plugins.WordGen
                 ),
                 HandleWordGenCommand
             );
+
+            UpdateLongestWordLength();
         }
 
         private void HandleWordGenCommand(CommandMatch cmd, IChannelMessageEventArgs msg)
@@ -75,6 +77,11 @@ namespace SharpIrcBot.Plugins.WordGen
         }
 
         protected virtual void PostConfigReload()
+        {
+            UpdateLongestWordLength();
+        }
+
+        protected void UpdateLongestWordLength()
         {
             // find the longest word
             int longestLength = 0;
