@@ -52,6 +52,7 @@
     <ProjectReference Include="..\Plugins\Stats\Stats.csproj" />
     <ProjectReference Include="..\Plugins\Fortune\Fortune.csproj" />
     <ProjectReference Include="..\Plugins\WordGen\WordGen.csproj" />
+    <ProjectReference Include="..\Plugins\Dereverse\Dereverse.csproj" />
   </ItemGroup>
 
   <ItemGroup>
