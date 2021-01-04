@@ -187,6 +187,7 @@ namespace SharpIrcBot.Plugins.Fact.Uncyclopedia
 
                     // escape additional problematic characters
                     uriTextBuilder.Replace(":", "%3A");
+                    uriTextBuilder.Replace("?", "%3F");
 
                     uriText = uriTextBuilder.ToString();
                 }
