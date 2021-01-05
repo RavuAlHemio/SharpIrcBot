@@ -167,9 +167,6 @@ namespace SharpIrcBot.Plugins.Fact.Uncyclopedia
                 {
                     var uriTextBuilder = new StringBuilder(uriText);
 
-                    // escape percent signs
-                    uriTextBuilder.Replace("%", "%25");
-
                     // remove leading colons (:File:Test.jpeg => File:Test.jpeg)
                     while (uriTextBuilder.Length > 0 && uriTextBuilder[0] == ':')
                     {
@@ -185,11 +182,8 @@ namespace SharpIrcBot.Plugins.Fact.Uncyclopedia
                         uriTextBuilder[0] = char.ToUpperInvariant(uriTextBuilder[0]);
                     }
 
-                    // escape additional problematic characters
-                    uriTextBuilder.Replace(":", "%3A");
-                    uriTextBuilder.Replace("?", "%3F");
-
-                    uriText = uriTextBuilder.ToString();
+                    // URL-encode
+                    uriText = UriUtil.UrlEncode(uriTextBuilder.ToString(), Encoding.UTF8);
                 }
 
                 // collect the URI

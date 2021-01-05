@@ -49,7 +49,7 @@ namespace SharpIrcBot.Tests.FactTests
             CheckLinks(
                 "Did you know that [[Jackson County, Florida]] elected a [[Wankard]] to represent it?",
                 "Did you know that Jackson County, Florida elected a Wankard to represent it?",
-                "https://en.wikipedia.org/wiki/Jackson_County,_Florida",
+                "https://en.wikipedia.org/wiki/Jackson_County%2C_Florida",
                 "https://en.wikipedia.org/wiki/Wankard"
             );
 
@@ -68,13 +68,13 @@ namespace SharpIrcBot.Tests.FactTests
                 "Did you know that [[Siemens AG|Siemens]] is in [[Püssi, Estonia|Püssi]]?",
                 "Did you know that Siemens is in Püssi?",
                 "https://en.wikipedia.org/wiki/Siemens_AG",
-                "https://en.wikipedia.org/wiki/Püssi,_Estonia"
+                "https://en.wikipedia.org/wiki/Püssi%2C_Estonia"
             );
 
             CheckLinks(
                 "Did you know that [[Jackson County, Florida]] elected a [[Wankard Pooser|Wankard]] to represent it?",
                 "Did you know that Jackson County, Florida elected a Wankard to represent it?",
-                "https://en.wikipedia.org/wiki/Jackson_County,_Florida",
+                "https://en.wikipedia.org/wiki/Jackson_County%2C_Florida",
                 "https://en.wikipedia.org/wiki/Wankard_Pooser"
             );
 
@@ -83,6 +83,18 @@ namespace SharpIrcBot.Tests.FactTests
                 "Did you know that Beautiful picture.jpeg does not abide by Wikipedia's Guideline for Beautiful Pictures?",
                 "https://en.wikipedia.org/wiki/File%3ABeautiful_picture.jpeg",
                 "https://en.wikipedia.org/wiki/Wikipedia%3AGuideline_for_Beautiful_Pictures"
+            );
+
+            CheckLinks(
+                "Did you know you can [[Why?:Pour Boiling Hot Water Down Your Trousers?|pour boiling hot water down your trousers]]?",
+                "Did you know you can pour boiling hot water down your trousers?",
+                "https://en.wikipedia.org/wiki/Why%3F%3APour_Boiling_Hot_Water_Down_Your_Trousers%3F"
+            );
+
+            CheckLinks(
+                "Did you know there is a [[Water Polo... With Sharks!|water polo variant with sharks]]?",
+                "Did you know there is a water polo variant with sharks?",
+                "https://en.wikipedia.org/wiki/Water_Polo..._With_Sharks%21"
             );
         }
     }
