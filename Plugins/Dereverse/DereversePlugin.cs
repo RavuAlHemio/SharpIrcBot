@@ -1,10 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Text.RegularExpressions;
 using Newtonsoft.Json.Linq;
-using SharpIrcBot.Collections;
 using SharpIrcBot.Events.Irc;
 
 namespace SharpIrcBot.Plugins.Dereverse
@@ -44,14 +41,15 @@ namespace SharpIrcBot.Plugins.Dereverse
             decimal score = 0.0m;
             foreach (Scorer scorer in Config.Scorers)
             {
-                if (scorer.Pattern.IsMatch(e.Message))
+                MatchCollection matches = scorer.Pattern.Matches(e.Message);
+                if (matches.Count > 0)
                 {
                     if (scorer.KnockOut)
                     {
                         return;
                     }
 
-                    score += scorer.ScoreAdjustment;
+                    score += matches.Count * scorer.ScoreAdjustment;
                 }
             }
 
