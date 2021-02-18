@@ -50,6 +50,12 @@ namespace SharpIrcBot.Tests.DereverseTests
                         ["Pattern"] = new JValue(" [.,?!][^.,?!]"),
                         ["ScoreAdjustment"] = new JValue(5.0m),
                     },
+                    new JObject
+                    {
+                        // original has an incorrect order of sign and space
+                        ["Pattern"] = new JValue("[^.,?!][.,?!] "),
+                        ["ScoreAdjustment"] = new JValue(-5.0m),
+                    },
                 },
                 ["ScoreThreshold"] = new JValue(10.0m),
             };
@@ -79,6 +85,7 @@ namespace SharpIrcBot.Tests.DereverseTests
         [InlineData(".asshole RavusBot")]
         [InlineData("jetzt muss ich wieder in den lockdown")]
         [InlineData("V-s oder so")]
+        [InlineData("ah, User hat !msg statt !smsg verwendet, deswegen kein Gruppenzwang")]
         public void TestNotReversed(string unreversedMessage)
         {
             TestConnectionManager mgr = ObtainConnectionManager();
