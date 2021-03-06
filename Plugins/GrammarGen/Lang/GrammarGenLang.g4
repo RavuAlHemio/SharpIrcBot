@@ -5,7 +5,7 @@ Comments: '/*' .*? '*/' -> channel(HIDDEN);
 LineComments: '//' ~[\r\n]* -> channel(HIDDEN);
 
 EscapedString : '"' ('\\"'|'\\\\'|~["\\])* '"' ;
-Identifier : [A-Za-z] [A-Za-z0-9_]* ;
+Identifier : [A-Za-z_] [A-Za-z0-9_]* ;
 
 fragment Whitespace
     : ' ' // Space
