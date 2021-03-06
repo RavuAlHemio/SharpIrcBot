@@ -52,8 +52,9 @@ namespace SharpIrcBot.Plugins.GrammarGen
                 );
             }
 
-            // clear grammars
+            // clear grammars and commands
             Grammars.Clear();
+            Commands.Clear();
 
             // load the grammars from the directory
             foreach (string path in Directory.GetFiles(Config.GrammarDir, "*.grammar", SearchOption.TopDirectoryOnly))
@@ -72,7 +73,25 @@ namespace SharpIrcBot.Plugins.GrammarGen
                 builder["__IRC_nick"] = new Rule("__IRC_nick", new DynPersonProduction());
                 var builtInRules = new Rulebook(builder.ToImmutable());
 
+                // create and store the grammer
                 var grammar = new Grammar(definition, name, builtInRules);
+                Grammars[name] = grammar;
+
+                // create, register and store the corresponding command
+                var command = new Command(
+                    CommandUtil.MakeNames(name),
+                    CommandUtil.NoOptions,
+                    CommandUtil.MakeArguments(
+                        RestTaker.Instance // message
+                    ),
+                    CommandUtil.MakeTags("fun"),
+                    forbiddenFlags: MessageFlags.UserBanned
+                );
+
+                ConnectionManager.CommandManager.RegisterChannelMessageCommandHandler(
+                    command, HandleGenerationCommand
+                );
+                Commands.Add(command);
             }
         }
 
