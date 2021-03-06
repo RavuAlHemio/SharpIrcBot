@@ -1,6 +1,6 @@
 // START SYMBOL
 
-start
+wtf3
     : "Ich " verb1construct ", " opt_interjection conjunction " " person " " verb3construct "."
     ;
 
