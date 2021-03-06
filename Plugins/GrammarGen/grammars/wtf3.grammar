@@ -50,12 +50,17 @@ verb1_object_simple
         | "esse"
         | "verunstalte"
         | "programmiere"
-        | "rede ueber"
         )
         " "
         noun{art_m4, art_f4, art_n4}
         [ " " adverb ]
         [ " " adverbial ]
+    |   ( "rede"
+        )
+        [ " " adverb ]
+        [ " " adverbial ]
+        " ueber "
+        noun{art_m4, art_f4, art_n4}
     ;
 
 verb1_object_movement
