@@ -31,7 +31,6 @@ namespace SharpIrcBot.Plugins.GrammarGen
                 .Skip(1)
                 .Select(ident => ident.GetText())
                 .ToImmutableArray();
-            System.Console.WriteLine($"PARAMRULE {name}(" + string.Join(", ", paramNames) + ")");
             var prod = (Production)Visit(context.ggproduction());
             return new Rule(name, prod, paramNames);
         }
