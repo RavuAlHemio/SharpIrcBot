@@ -133,6 +133,7 @@ verb3_object_simple
 verb3_object_movement
     :   [ adverb " " ]
         noun{art_m4, art_f4, art_n4}
+        " "
         [ movement_adverbial " " ]
         ( "schlaegt"
         )
