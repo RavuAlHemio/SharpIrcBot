@@ -32,7 +32,7 @@ verb1_simple
     ;
 
 verb1_simple_movement
-        ( "wichse"
+    :   ( "wichse"
         )
         [ " " adverb ]
         [ " " movement_adverbial ]
