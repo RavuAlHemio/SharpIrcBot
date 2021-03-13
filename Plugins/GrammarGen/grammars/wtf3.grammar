@@ -216,6 +216,7 @@ noun{art_m, art_f, art_n}
     | art_f " Teetasse"
     | art_m " Kugelschreiber"
     | art_m " Interpreter"
+    | person
     ;
 
 // ADVERBS AND ADVERBIALS
