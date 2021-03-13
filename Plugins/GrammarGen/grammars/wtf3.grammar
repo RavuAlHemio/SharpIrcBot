@@ -95,10 +95,20 @@ verb1_object_complex
     ;
 
 verb3construct
-    : verb3_self
+    : verb3_simple
+    | verb3_self
     | verb3_object_simple
     | verb3_object_movement
     | verb3_object_complex
+    ;
+
+verb3_simple
+    :   [ adverb " " ]
+        [ adverbial " " ]
+        ( "redet"
+        | "stinkt"
+        | "wichst"
+        )
     ;
 
 verb3_self
