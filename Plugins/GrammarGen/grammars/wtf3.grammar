@@ -1,12 +1,13 @@
 // START SYMBOL
 
 wtf3
-    : "Ich " verb1construct ", " opt_interjection conjunction " " person " " verb3construct "."
+    : "Ich " verb1construct ", " opt_interjection conjunction " " chosen_person " " verb3construct "."
     ;
 
 // PERSONS
 
 person : __IRC_nick ;
+chosen_person : __IRC_chosen_nick;
 
 // VERBS
 

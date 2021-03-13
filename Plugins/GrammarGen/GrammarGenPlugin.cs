@@ -71,6 +71,7 @@ namespace SharpIrcBot.Plugins.GrammarGen
                 var builder = ImmutableDictionary.CreateBuilder<string, Rule>();
                 builder["__IRC_channel"] = new Rule("__IRC_channel", new DynPropertyProduction("channel"));
                 builder["__IRC_nick"] = new Rule("__IRC_nick", new DynPersonProduction());
+                builder["__IRC_chosen_nick"] = new Rule("__IRC_chosen_nick", new DynPersonProduction(chosenPerson: true));
                 var builtInRules = new Rulebook(builder.ToImmutable());
 
                 // create and store the grammer
