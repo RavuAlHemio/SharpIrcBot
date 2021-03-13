@@ -23,6 +23,8 @@ verb1_simple
     :   ( "rede"
         | "stinke"
         | "wichse"
+        | "spamme"
+        | "liege"
         )
         [ " " adverb ]
         [ " " adverbial ]
@@ -37,6 +39,11 @@ verb1_self
         | "aeussere"
         | "erschrecke"
         | "entspanne"
+        | "animiere"
+        | "erschiesse"
+        | "beschimpfe"
+        | "fotografiere"
+        | "verkaufe"
         )
         " mich"
         [ " " adverb ]
@@ -52,6 +59,12 @@ verb1_object_simple
         | "verunstalte"
         | "programmiere"
         | "reibe"
+        | "animiere"
+        | "erschiesse"
+        | "highlighte"
+        | "beschimpfe"
+        | "fotografiere"
+        | "verkaufe"
         )
         " "
         noun{art_m4, art_f4, art_n4}
@@ -108,6 +121,8 @@ verb3_simple
         ( "redet"
         | "stinkt"
         | "wichst"
+        | "spammt"
+        | "liegt"
         )
     ;
 
@@ -123,6 +138,11 @@ verb3_self
         | "aeussert"
         | "erschreckt"
         | "entspannt"
+        | "animiert"
+        | "erschiesst"
+        | "beschimpft"
+        | "fotografiert"
+        | "verkauft"
         )
     ;
 
@@ -132,14 +152,20 @@ verb3_object_simple
         noun{art_m4, art_f4, art_n4}
         " "
         ( "beschreibt"
-        | "schlaegt"
         | "putzt"
         | "erschreckt"
         | "liest"
         | "isst"
         | "verunstaltet"
-        | "anschaut"
+        | "programmiert"
         | "reibt"
+        | "animiert"
+        | "erschiesst"
+        | "anschaut"
+        | "highlightet"
+        | "beschimpft"
+        | "fotografiert"
+        | "verkauft"
         )
     ;
 
