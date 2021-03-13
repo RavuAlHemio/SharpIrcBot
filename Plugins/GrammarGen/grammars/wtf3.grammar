@@ -22,6 +22,7 @@ verb1construct
 verb1_simple
     :   ( "rede"
         | "stinke"
+        | "wichse"
         )
         [ " " adverb ]
         [ " " adverbial ]
@@ -50,6 +51,7 @@ verb1_object_simple
         | "esse"
         | "verunstalte"
         | "programmiere"
+        | "reibe"
         )
         " "
         noun{art_m4, art_f4, art_n4}
@@ -127,6 +129,7 @@ verb3_object_simple
         | "isst"
         | "verunstaltet"
         | "anschaut"
+        | "reibt"
         )
     ;
 
