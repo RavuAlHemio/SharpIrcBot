@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Immutable;
 using System.IO;
 using SharpIrcBot.Plugins.GrammarGen;
+using SharpIrcBot.Plugins.GrammarGen.AST;
 using SharpIrcBot.Util;
 
 namespace GrammarGenTest
@@ -24,7 +26,14 @@ namespace GrammarGenTest
 
             string startRule = args[1];
 
-            var grammar = new Grammar(grammarDef, startRule);
+            // generate the built-in rules
+            var builder = ImmutableDictionary.CreateBuilder<string, Rule>();
+            builder["__IRC_channel"] = new Rule("__IRC_channel", new StrProduction("#test"));
+            builder["__IRC_nick"] = new Rule("__IRC_nick", new StrProduction("SampleNick"));
+            builder["__IRC_chosen_nick"] = new Rule("__IRC_chosen_nick", new StrProduction("SampleNick"));
+            var builtInRules = new Rulebook(builder.ToImmutable());
+
+            var grammar = new Grammar(grammarDef, startRule, builtInRules);
             foreach (var r in grammar.Rules.Rules)
             {
                 Console.WriteLine(r);

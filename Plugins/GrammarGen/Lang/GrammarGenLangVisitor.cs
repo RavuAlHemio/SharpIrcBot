@@ -71,6 +71,12 @@ public interface IGrammarGenLangVisitor<Result> : IParseTreeVisitor<Result> {
 	/// <return>The visitor result.</return>
 	Result VisitSeq([NotNull] GrammarGenLangParser.SeqContext context);
 	/// <summary>
+	/// Visit a parse tree produced by <see cref="GrammarGenLangParser.weight"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitWeight([NotNull] GrammarGenLangParser.WeightContext context);
+	/// <summary>
 	/// Visit a parse tree produced by the <c>Str</c>
 	/// labeled alternative in <see cref="GrammarGenLangParser.sequenceElem"/>.
 	/// </summary>

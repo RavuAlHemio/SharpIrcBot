@@ -98,6 +98,16 @@ public partial class GrammarGenLangBaseVisitor<Result> : AbstractParseTreeVisito
 	/// <return>The visitor result.</return>
 	public virtual Result VisitSeq([NotNull] GrammarGenLangParser.SeqContext context) { return VisitChildren(context); }
 	/// <summary>
+	/// Visit a parse tree produced by <see cref="GrammarGenLangParser.weight"/>.
+	/// <para>
+	/// The default implementation returns the result of calling <see cref="AbstractParseTreeVisitor{Result}.VisitChildren(IRuleNode)"/>
+	/// on <paramref name="context"/>.
+	/// </para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	public virtual Result VisitWeight([NotNull] GrammarGenLangParser.WeightContext context) { return VisitChildren(context); }
+	/// <summary>
 	/// Visit a parse tree produced by the <c>Str</c>
 	/// labeled alternative in <see cref="GrammarGenLangParser.sequenceElem"/>.
 	/// <para>

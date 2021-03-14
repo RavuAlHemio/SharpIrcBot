@@ -113,6 +113,18 @@ public partial class GrammarGenLangBaseListener : IGrammarGenLangListener {
 	/// <param name="context">The parse tree.</param>
 	public virtual void ExitSeq([NotNull] GrammarGenLangParser.SeqContext context) { }
 	/// <summary>
+	/// Enter a parse tree produced by <see cref="GrammarGenLangParser.weight"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void EnterWeight([NotNull] GrammarGenLangParser.WeightContext context) { }
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="GrammarGenLangParser.weight"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void ExitWeight([NotNull] GrammarGenLangParser.WeightContext context) { }
+	/// <summary>
 	/// Enter a parse tree produced by the <c>Str</c>
 	/// labeled alternative in <see cref="GrammarGenLangParser.sequenceElem"/>.
 	/// <para>The default implementation does nothing.</para>

@@ -6,6 +6,7 @@ LineComments: '//' ~[\r\n]* -> channel(HIDDEN);
 
 EscapedString : '"' ('\\"'|'\\\\'|~["\\])* '"' ;
 Identifier : [A-Za-z_] [A-Za-z0-9_]* ;
+Number : [0-9]+ ;
 
 fragment Whitespace
     : ' ' // Space
@@ -29,11 +30,13 @@ paramrule : Identifier '{' Identifier (',' Identifier)+ '}' ':' ggproduction ';'
 // ggproduction and alternative are split up to ensure Seq binds more closely than Altern
 ggproduction : alternative ('|' alternative)* # Altern ;
 
-alternative : sequenceElem+ # Seq ;
+alternative : weight? sequenceElem+ # Seq ;
+
+weight : '<' Number '>' ;
 
 sequenceElem
     : '(' ggproduction ')' # Group
-    | '[' ggproduction ']' # Opt
+    | '[' weight? ggproduction ']' # Opt
     | sequenceElem '*' # Star
     | sequenceElem '+' # Plus
     | Identifier '{' ggproduction (',' ggproduction)* '}' # Call

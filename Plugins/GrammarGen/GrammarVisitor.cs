@@ -1,5 +1,6 @@
 using System.Collections.Immutable;
 using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using SharpIrcBot.Plugins.GrammarGen.AST;
@@ -9,6 +10,8 @@ namespace SharpIrcBot.Plugins.GrammarGen
 {
     public class GrammarVisitor : GrammarGenLangBaseVisitor<ASTNode>
     {
+        public const int DefaultWeight = 50;
+
         public override ASTNode VisitGgrulebook(GrammarGenLangParser.GgrulebookContext context)
         {
             ImmutableDictionary<string, Rule> rules = context.ruledef()
@@ -48,7 +51,18 @@ namespace SharpIrcBot.Plugins.GrammarGen
         public override ASTNode VisitOpt(GrammarGenLangParser.OptContext context)
         {
             var prod = (Production)Visit(context.ggproduction());
-            return new OptProduction(prod);
+
+            int weight = DefaultWeight;
+            if (context.weight() != null)
+            {
+                int testWeight;
+                if (int.TryParse(context.weight().Number().GetText(), NumberStyles.None, CultureInfo.InvariantCulture, out testWeight))
+                {
+                    weight = testWeight;
+                }
+            }
+
+            return new OptProduction(prod, weight);
         }
 
         public override ASTNode VisitStar(GrammarGenLangParser.StarContext context)
@@ -89,6 +103,17 @@ namespace SharpIrcBot.Plugins.GrammarGen
         {
             var seqElems = context.sequenceElem();
             var bldr = ImmutableArray.CreateBuilder<Production>();
+
+            int weight = DefaultWeight;
+            if (context.weight() != null)
+            {
+                int testWeight;
+                if (int.TryParse(context.weight().Number().GetText(), NumberStyles.None, CultureInfo.InvariantCulture, out testWeight))
+                {
+                    weight = testWeight;
+                }
+            }
+
             foreach (var seqElem in seqElems)
             {
                 var prod = (Production)Visit(seqElem);
@@ -104,7 +129,7 @@ namespace SharpIrcBot.Plugins.GrammarGen
                 }
             }
 
-            return new SeqProduction(bldr.ToImmutable());
+            return new SeqProduction(bldr.ToImmutable(), weight);
         }
 
         public override ASTNode VisitIdent(GrammarGenLangParser.IdentContext context)
