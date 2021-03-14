@@ -11,9 +11,9 @@ namespace GrammarGenTest
     {
         static void Main(string[] args)
         {
-            if (args.Length != 2)
+            if (args.Length < 2 || args.Length > 3)
             {
-                Console.Error.WriteLine("Usage: GrammarGenTest GRAMMARFILE STARTRULE");
+                Console.Error.WriteLine("Usage: GrammarGenTest GRAMMARFILE STARTRULE [GENCOUNT]");
                 Environment.ExitCode = 1;
                 return;
             }
@@ -25,6 +25,11 @@ namespace GrammarGenTest
             }
 
             string startRule = args[1];
+            int genCount = 1;
+            if (args.Length > 2)
+            {
+                genCount = int.Parse(args[2]);
+            }
 
             // generate the built-in rules
             var builder = ImmutableDictionary.CreateBuilder<string, Rule>();
@@ -40,7 +45,10 @@ namespace GrammarGenTest
             }
             Console.WriteLine();
 
-            Console.WriteLine(grammar.Generate());
+            for (int i = 0; i < genCount; i++)
+            {
+                Console.WriteLine(grammar.Generate());
+            }
         }
     }
 }
