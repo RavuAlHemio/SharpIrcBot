@@ -278,8 +278,8 @@ adverb
     ;
 
 adverbial
-    : ("ueber" | "auf" | "mit") " " noun3
-    | "zwischen " noun3 " und " noun3
+    : <50> ("ueber" | "auf" | "mit") " " noun3
+    | <20> "zwischen " noun3 " und " noun3
     ;
 
 movement_adverbial
