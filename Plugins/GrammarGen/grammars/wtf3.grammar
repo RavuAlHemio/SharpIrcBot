@@ -306,11 +306,10 @@ movement_adverbial
     ;
 
 opt_interjection
-    :   ""
-    |   ""
-    |   ""
-    |   ( "foobar" | "oida" | "heast" | "uppsala" | "lalala" | "ramba zamba" )
-        ", "
+    : <75>  ""
+    | <25>  ( "foobar" | "oida" | "heast" | "uppsala" | "lalala" | "ramba zamba"
+            )
+            ", "
     ;
 
 conjunction
