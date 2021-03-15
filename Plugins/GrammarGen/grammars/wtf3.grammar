@@ -280,6 +280,7 @@ noun{art_m, art_f, art_n}
     | art_m " Interpreter"
     // custom nouns:
     | art_m " Penis"
+    | " Ravus Bart"
     | person
     ;
 
