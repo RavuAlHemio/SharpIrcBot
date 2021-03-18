@@ -4,6 +4,6 @@
 cd "$(dirname "$0")/../.."
 dotnet restore
 cd SharpIrcBotCLI
-dotnet publish -f "netcoreapp2.0" -r "debian.8-x64" -o "../out"
+dotnet publish -f "net5.0" -r "debian.8-x64" -o "../out"
 cd ..
 docker build -t sharpircbot .
