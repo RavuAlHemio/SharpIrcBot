@@ -287,7 +287,10 @@ noun{art_m, art_f, art_n}
 // ADVERBS AND ADVERBIALS
 
 adverb
-    :   ( "" | "" | "" | [ "vielleicht " | "etwas " ] )
+    :   (   <6> ""
+        |   <1> "vielleicht "
+        |   <1> "etwas "
+        )
         ( "kaeltlich" | "spielend" | "gespannt" | "gluecklich" | "verspannt"
         | "bloed" | "suspekt" | "begeistert" | "schauend" | "schnell" | "redend"
         | "zufrieden" | "gelangweilt" | "entspannt" | "begafft" | "ruhig"
