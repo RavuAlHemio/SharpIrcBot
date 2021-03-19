@@ -12,14 +12,14 @@ chosen_person : __IRC_chosen_nick;
 // VERBS
 
 verb1construct
-    : verb1_simple
-    | verb1_simple_movement
-    | verb1_self
-    | verb1_self_movement
-    | verb1_object_simple
-    | verb1_object_movement
-    | verb1_object_split
-    | verb1_object_complex
+    : <4> verb1_simple
+    | <1> verb1_simple_movement
+    | <13> verb1_self
+    | <1> verb1_self_movement
+    | <14> verb1_object_simple
+    | <1> verb1_object_movement
+    | <1> verb1_object_split
+    | <1> verb1_object_complex
     ;
 
 verb1_simple
@@ -125,13 +125,13 @@ verb1_object_complex
     ;
 
 verb3construct
-    : verb3_simple
-    | verb3_simple_movement
-    | verb3_self
-    | verb3_self_movement
-    | verb3_object_simple
-    | verb3_object_movement
-    | verb3_object_complex
+    : <4> verb3_simple
+    | <1> verb3_simple_movement
+    | <12> verb3_self
+    | <1> verb3_self_movement
+    | <15> verb3_object_simple
+    | <1> verb3_object_movement
+    | <1> verb3_object_complex
     ;
 
 verb3_simple
