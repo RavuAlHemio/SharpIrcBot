@@ -14,12 +14,12 @@ chosen_person : __IRC_chosen_nick;
 verb1construct
     : <4> verb1_simple
     | <1> verb1_simple_movement
-    | <13> verb1_self
+    | <12> verb1_self
     | <1> verb1_self_movement
     | <14> verb1_object_simple
     | <1> verb1_object_movement
     | <1> verb1_object_split
-    | <1> verb1_object_complex
+    | <2> verb1_object_complex
     ;
 
 verb1_simple
@@ -45,7 +45,6 @@ verb1_self
         | "putze"
         | "schlage"
         | "langweile"
-        | "aeussere"
         | "erschrecke"
         | "entspanne"
         | "animiere"
@@ -122,16 +121,24 @@ verb1_object_complex
         noun4
         " mit "
         noun3
+    |   "aeussere mich"
+        [ " " adverb ]
+        [ " " adverbial ]
+        (   " zu "
+            noun3
+        |   " ueber "
+            noun4
+        )
     ;
 
 verb3construct
     : <4> verb3_simple
     | <1> verb3_simple_movement
-    | <12> verb3_self
+    | <11> verb3_self
     | <1> verb3_self_movement
     | <15> verb3_object_simple
     | <1> verb3_object_movement
-    | <1> verb3_object_complex
+    | <2> verb3_object_complex
     ;
 
 verb3_simple
@@ -160,7 +167,6 @@ verb3_self
         | "putzt"
         | "schlaegt"
         | "langweilt"
-        | "aeussert"
         | "erschreckt"
         | "animiert"
         | "erschiesst"
@@ -218,6 +224,14 @@ verb3_object_complex
         noun3
         ( " verwechselt"
         )
+    |   [ adverb " " ]
+        [ adverbial " " ]
+        (   " zu "
+            noun3
+        |   " ueber "
+            noun4
+        )
+        " aeussert"
     ;
 
 // ARTICLES AND NOUNS
