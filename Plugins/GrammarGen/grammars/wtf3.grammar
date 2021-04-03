@@ -224,7 +224,8 @@ verb3_object_complex
         noun3
         ( " verwechselt"
         )
-    |   [ adverb " " ]
+    |   "sich "
+        [ adverb " " ]
         [ adverbial " " ]
         (   "zu "
             noun3
