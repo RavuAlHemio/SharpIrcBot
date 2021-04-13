@@ -277,7 +277,7 @@ noun{art_m, art_f, art_n}
     | art_m " Drucker"
     | art_m " Vogerlsalat"
     | art_f " Pizza-Porn-Seite"
-    | art_m " " ("Handwerker" | "Installateuer" | "Programmierer")
+    | art_m " " ("Handwerker" | "Installateuer" | "Monteur" | "Programmierer")
     | art_n " " ("Buch" | "Bilderbuch" | "Linux-Buch")
     | art_f " Steckdose"
     | "Substi"
