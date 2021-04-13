@@ -12,23 +12,33 @@ chosen_person : __IRC_chosen_nick;
 // VERBS
 
 verb1construct
-    : <4> verb1_simple
+    : <6> verb1_simple
+    | <1> verb1_simple_reqadverb
     | <1> verb1_simple_movement
     | <12> verb1_self
     | <1> verb1_self_movement
-    | <14> verb1_object_simple
+    | <17> verb1_object_simple
     | <1> verb1_object_movement
     | <1> verb1_object_split
-    | <2> verb1_object_complex
+    | <3> verb1_object_complex
     ;
 
 verb1_simple
     :   ( "rede"
         | "stinke"
         | "spamme"
+        | "sitze"
         | "liege"
+        | "singe"
         )
         [ " " adverb ]
+        [ " " adverbial ]
+    ;
+
+verb1_simple_reqadverb
+    :   ( "klinge"
+        )
+        " " adverb
         [ " " adverbial ]
     ;
 
@@ -81,6 +91,9 @@ verb1_object_simple
         | "beschimpfe"
         | "fotografiere"
         | "verkaufe"
+        | "bastle"
+        | "kategorisiere"
+        | "schreibe"
         )
         " "
         noun4
@@ -129,16 +142,22 @@ verb1_object_complex
         |   " ueber "
             noun4
         )
+    |   "spiele"
+        [ " " adverb ]
+        [ " " adverbial ]
+        " mit "
+        noun3
     ;
 
 verb3construct
-    : <4> verb3_simple
+    : <6> verb3_simple
+    | <1> verb3_simple_reqadverb
     | <1> verb3_simple_movement
     | <11> verb3_self
     | <1> verb3_self_movement
-    | <15> verb3_object_simple
+    | <18> verb3_object_simple
     | <1> verb3_object_movement
-    | <2> verb3_object_complex
+    | <3> verb3_object_complex
     ;
 
 verb3_simple
@@ -147,7 +166,16 @@ verb3_simple
         ( "redet"
         | "stinkt"
         | "spammt"
+        | "sitzt"
         | "liegt"
+        | "singt"
+        )
+    ;
+
+verb3_simple_reqadverb
+    :   adverb " "
+        [ adverbial " " ]
+        ( "klingt"
         )
     ;
 
@@ -204,6 +232,9 @@ verb3_object_simple
         | "beschimpft"
         | "fotografiert"
         | "verkauft"
+        | "bastelt"
+        | "kategorisiert"
+        | "schreibt"
         )
     ;
 
@@ -233,6 +264,11 @@ verb3_object_complex
             noun4
         )
         " aeussert"
+    |   [ adverb " " ]
+        [ adverbial " " ]
+        "mit "
+        noun3
+        " spielt"
     ;
 
 // ARTICLES AND NOUNS
@@ -257,7 +293,7 @@ noun{art_m, art_f, art_n}
     : art_m " ROFL-Copter"
     | art_n " Katzenzuechtungsbuch"
     | art_f " Schultasche"
-    | ("Slashdot" | "YouPorn")
+    | ("Slashdot" | "YouPorn" | "Wikipedia")
     | art_f " Zahnbuerste"
     | art_f " Klopapierrolle"
     | art_n " Pferd"
@@ -277,8 +313,8 @@ noun{art_m, art_f, art_n}
     | art_m " Drucker"
     | art_m " Vogerlsalat"
     | art_f " Pizza-Porn-Seite"
-    | art_m " " ("Handwerker" | "Installateuer" | "Monteur" | "Programmierer")
-    | art_n " " ("Buch" | "Bilderbuch" | "Linux-Buch")
+    | art_m " " ("Installateuer" | "Monteur" | "Programmierer")
+    | art_n " " ("Buch" | "Bilderbuch" | "Linux-Buch" | "GIMP-Buch" | "HMTL-Buch" | "CSS-Buch" | "Lotus-Notes-Buch") // HMTL [sic]
     | art_f " Steckdose"
     | "Substi"
     | art_m " Substi-Ersatz"
@@ -288,13 +324,20 @@ noun{art_m, art_f, art_n}
     | art_f " Praesentation"
     | art_f " Katze"
     | "Schmierfett"
-    | art_m " Fleck"
+    | art_m " " ("Fleck" | "Ketchup-Fleck" | "Fett-Fleck")
     | art_f " Lesbe"
     | art_f " Teetasse"
     | art_m " Kugelschreiber"
     | art_m " Interpreter"
+    | art_m " Channel"
+    | art_m " Tisch"
+    | art_m " Baum"
+    | art_f " Gerichtsverhandlung"
+    | art_m " Roboter"
+    | art_f " Waschmaschine"
     // custom nouns:
     | art_m " Penis"
+    | art_m " Handwerker"
     | "Ravus Bart"
     | person
     ;
@@ -302,22 +345,30 @@ noun{art_m, art_f, art_n}
 // ADVERBS AND ADVERBIALS
 
 adverb
-    :   (   <6> ""
+    :   (   <14> ""
         |   <1> "vielleicht "
         |   <1> "etwas "
+        |   <1> "eher "
+        |   <1> "nicht "
+        |   <1> "teilweise "
+        |   <1> "sehr "
+        |   <1> "ein wenig "
         )
-        ( "kaeltlich" | "gespannt" | "gluecklich" | "verspannt"
+        ( "kaeltlich" | "gespannt" | "gluecklich" | "verspannt" | "langsam"
         | "bloed" | "suspekt" | "begeistert" | "schauend" | "schnell" | "redend"
-        | "zufrieden" | "gelangweilt" | "entspannt" | "ruhig"
-        | "verkaufend"
+        | "zufrieden" | "gelangweilt" | "entspannt" | "ruhig" | "erstaunt"
+        | "wichsend" | "reibend" | "stinkend" | "froh" | "spammend"
+        | noun4 " verkaufend"
         | "mit " noun3 " spielend"
         | "von " noun3 " begafft"
+        | ("auf " | "neben ") noun3 " liegend"
+        | noun4 " essend"
         )
     ;
 
 adverbial
-    : <50> ("ueber" | "auf" | "mit") " " noun3
-    | <20> "zwischen " noun3 " und " noun3
+    : <5> ("ueber" | "auf" | "bei" | "mit") " " noun3
+    | <2> "zwischen " noun3 " und " noun3
     ;
 
 movement_adverbial
@@ -327,8 +378,9 @@ movement_adverbial
     ;
 
 opt_interjection
-    : <75>  ""
-    | <25>  ( "foobar" | "oida" | "heast" | "uppsala" | "lalala" | "ramba zamba"
+    : <3>  ""
+    | <1>  ( "foobar" | "oida" | "heast" | "uppsala" | "lalala" | "ramba zamba"
+            | "bla bla"
             )
             ", "
     ;
