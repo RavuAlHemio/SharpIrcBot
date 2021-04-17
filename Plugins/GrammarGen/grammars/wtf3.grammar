@@ -77,34 +77,35 @@ verb1_self_movement
     ;
 
 verb1_object_simple
-    :   ( "beschreibe"
-        | "putze"
-        | "erschrecke"
-        | "lese"
-        | "esse"
-        | "verunstalte"
-        | "programmiere"
-        | "reibe"
-        | "animiere"
-        | "erschiesse"
-        | "highlighte"
-        | "beschimpfe"
-        | "fotografiere"
-        | "verkaufe"
-        | "bastle"
-        | "kategorisiere"
-        | "schreibe"
-        )
-        " "
-        noun4
-        [ " " adverb ]
-        [ " " adverbial ]
-    |   ( "rede"
-        )
-        [ " " adverb ]
-        [ " " adverbial ]
-        " ueber "
-        noun4
+    : <17>  ( "beschreibe"
+            | "putze"
+            | "erschrecke"
+            | "lese"
+            | "esse"
+            | "verunstalte"
+            | "programmiere"
+            | "reibe"
+            | "animiere"
+            | "erschiesse"
+            | "highlighte"
+            | "beschimpfe"
+            | "fotografiere"
+            | "verkaufe"
+            | "bastle"
+            | "kategorisiere"
+            )
+            " "
+            noun4
+            [ " " adverb ]
+            [ " " adverbial ]
+    | <2>   ( "rede"
+            | "schreibe"
+            )
+            [ " " adverb ]
+            [ " " adverbial ]
+            ( " ueber " noun4
+            | " von " noun3
+            )
     ;
 
 verb1_object_movement
@@ -213,29 +214,37 @@ verb3_self_movement
     ;
 
 verb3_object_simple
-    :   [ adverb " " ]
-        [ adverbial " " ]
-        noun4
-        " "
-        ( "beschreibt"
-        | "putzt"
-        | "erschreckt"
-        | "liest"
-        | "isst"
-        | "verunstaltet"
-        | "programmiert"
-        | "reibt"
-        | "animiert"
-        | "erschiesst"
-        | "anschaut"
-        | "highlightet"
-        | "beschimpft"
-        | "fotografiert"
-        | "verkauft"
-        | "bastelt"
-        | "kategorisiert"
-        | "schreibt"
-        )
+    : <17>  [ adverb " " ]
+            [ adverbial " " ]
+            noun4
+            " "
+            ( "beschreibt"
+            | "putzt"
+            | "erschreckt"
+            | "liest"
+            | "isst"
+            | "verunstaltet"
+            | "programmiert"
+            | "reibt"
+            | "animiert"
+            | "erschiesst"
+            | "anschaut"
+            | "highlightet"
+            | "beschimpft"
+            | "fotografiert"
+            | "verkauft"
+            | "bastelt"
+            | "kategorisiert"
+            )
+    | <2>   [ adverb " " ]
+            [ adverbial " " ]
+            ( "von " noun3
+            | "ueber " noun4
+            )
+            " "
+            ( "schreibt"
+            | "redet"
+            )
     ;
 
 verb3_object_movement
