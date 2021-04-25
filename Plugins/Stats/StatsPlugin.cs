@@ -151,7 +151,7 @@ namespace SharpIrcBot.Plugins.Stats
             decimal partPercent = (decimal)(freshestEntry.PartiallyImmune * 10000 / pop) / 100.0m;
             decimal fullPercent = (decimal)(freshestEntry.FullyImmune * 10000 / pop) / 100.0m;
 
-            ConnectionManager.SendChannelMessage(msg.Channel, $"{msg.SenderNickname}: {StateIDToName[stateID]}: {freshestEntry.Vaccinations:#,###} ({vacPercent:0.00}%) vaccinations => {freshestEntry.PartiallyImmune:#,###} ({partPercent:0.00}%) partially, {freshestEntry.FullyImmune:#,###} ({fullPercent:0.00}%) fully immune");
+            ConnectionManager.SendChannelMessage(msg.Channel, $"{msg.SenderNickname}: {StateIDToName[stateID]}: {freshestEntry.Vaccinations:#,###} ({vacPercent:0.00}%) vaccinations => {freshestEntry.PartiallyImmune:#,###} ({partPercent:0.00}%) at least partially, {freshestEntry.FullyImmune:#,###} ({fullPercent:0.00}%) fully immune");
         }
 
         static BigInteger ParseBigInt(string s)
