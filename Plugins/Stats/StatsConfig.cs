@@ -7,8 +7,7 @@ namespace SharpIrcBot.Plugins.Stats
     public class StatsConfig
     {
         public string DefaultTarget { get; set; }
-        public string DistrictCoronaStatsUri { get; set; }
-        public string StateDistrictPopFile { get; set; }
+        public string VaccineCsvUri { get; set; }
         public double? TimeoutSeconds { get; set; }
 
         public StatsConfig(JObject obj)

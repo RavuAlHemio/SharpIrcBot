@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
+using System.Globalization;
 using System.Linq;
 using System.Net.Http;
-using System.Text.RegularExpressions;
-using Newtonsoft.Json;
+using System.Numerics;
 using Newtonsoft.Json.Linq;
 using SharpIrcBot.Commands;
 using SharpIrcBot.Events.Irc;
@@ -16,28 +15,24 @@ namespace SharpIrcBot.Plugins.Stats
     {
         private static readonly LoggerWrapper Logger = LoggerWrapper.Create<StatsPlugin>();
 
-        public static readonly Regex EcmaScriptVarDef = new Regex("^\\s*var\\s+(?<name>[a-zA-Z_$][a-zA-Z0-9_$]*)\\s*=\\s*", RegexOptions.Compiled);
-
         protected IConnectionManager ConnectionManager { get; }
         protected StatsConfig Config { get; set; }
 
-        protected DrillDownValue<string, long> CoronaStatsRoot { get; set; }
+        protected Dictionary<int, string> StateIDToName { get; set; }
+        protected Dictionary<string, int> LowerNameToStateID { get; set; }
+        protected Dictionary<int, BigInteger> StateIDToPop { get; set; }
+        protected Dictionary<(int, DateTime), VaccinationStatsFields> StateIDAndDateToFields { get; set; }
         protected DateTimeOffset CoronaTimestamp { get; set; }
         protected int LongestKeyLength { get; set; }
-
-        const string PopulationMetric = "population";
-        const string Covid19CasesMetric = "covid-19-cases";
 
         public StatsPlugin(IConnectionManager connMgr, JObject config)
         {
             ConnectionManager = connMgr;
             Config = new StatsConfig(config);
 
-            CoronaStatsRoot = null;
-
             ConnectionManager.CommandManager.RegisterChannelMessageCommandHandler(
                 new Command(
-                    CommandUtil.MakeNames("autcorona"),
+                    CommandUtil.MakeNames("vaccine"),
                     CommandUtil.NoOptions,
                     CommandUtil.MakeArguments(
                         RestTaker.Instance // location
@@ -45,7 +40,7 @@ namespace SharpIrcBot.Plugins.Stats
                     CommandUtil.MakeTags("fun"), // not really, but not a functional command either
                     forbiddenFlags: MessageFlags.UserBanned
                 ),
-                HandleAutCoronaCommand
+                HandleVaccineCommand
             );
 
             UpdateStats();
@@ -72,97 +67,56 @@ namespace SharpIrcBot.Plugins.Stats
             }
 
             string responseText;
-            using (var request = new HttpRequestMessage(HttpMethod.Get, Config.DistrictCoronaStatsUri))
+            using (var request = new HttpRequestMessage(HttpMethod.Get, Config.VaccineCsvUri))
             using (var response = client.SendAsync(request, HttpCompletionOption.ResponseContentRead).Result)
             {
                 responseText = response.Content.ReadAsStringAsync().Result;
             }
 
-            string responseJsonText = null;
-
-            // cut on semicolon
-            foreach (string chunk in responseText.Split(';'))
+            // parse as CSV
+            StateIDToName = new Dictionary<int, string>();
+            LowerNameToStateID = new Dictionary<string, int>();
+            StateIDToPop = new Dictionary<int, BigInteger>();
+            StateIDAndDateToFields = new Dictionary<(int, DateTime), VaccinationStatsFields>();
+            bool headerRow = true;
+            foreach (string line in responseText.Split('\n'))
             {
-                // strip variable definition, leaving data
-                Match m = EcmaScriptVarDef.Match(responseText);
-                if (m.Success && m.Groups["name"].Value == "dpBezirke")
+                if (headerRow)
                 {
-                    // turn variable definition into data
-                    responseJsonText = chunk.Substring(m.Length)
-                        .TrimEnd(';', '\r', '\n');
-                    break;
+                    headerRow = false;
+                    continue;
                 }
-            }
 
-            // load as JSON
-            var districtToCaseCount = new Dictionary<string, long>();
-            var entries = JArray.Parse(responseJsonText);
-            foreach (var entry in entries.OfType<JObject>())
-            {
-                var districtName = (string)entry["label"];
-                var cases = (long)entry["y"];
-                districtToCaseCount[districtName] = cases;
-            }
+                string[] pieces = line.TrimEnd('\r', '\n').Split(';');
 
-            // load population stats
-            var stateToDistrictToPopulation = new Dictionary<string, Dictionary<string, long>>();
-            string popFileName = Path.Combine(SharpIrcBotUtil.AppDirectory, Config.StateDistrictPopFile);
-            using (var stream = File.Open(popFileName, FileMode.Open, FileAccess.Read, FileShare.Read))
-            using (var reader = new StreamReader(stream, StringUtil.Utf8NoBom))
-            {
-                JsonSerializer.Create().Populate(reader, stateToDistrictToPopulation);
-            }
+                string dateString = pieces[0].Split('T')[0];
+                DateTime date = DateTime.ParseExact(dateString, "yyyy-MM-dd", CultureInfo.InvariantCulture);
 
-            // generate the tree out of the population dict
-            var austria = new DrillDownValue<string, long>();
-            austria.Keys.Add("\u00D6sterreich");
-            foreach (var kvp1 in stateToDistrictToPopulation)
-            {
-                string stateName = kvp1.Key;
-                var state = new DrillDownValue<string, long>();
-                state.Keys.Add(stateName);
-                austria.Children.Add(state);
+                int stateID = StringUtil.MaybeParseInt(pieces[1]).Value;
 
-                foreach (var kvp2 in kvp1.Value)
+                string popString = pieces[2];
+                if (!string.IsNullOrEmpty(popString))
                 {
-                    string districtName = kvp2.Key;
-                    long population = kvp2.Value;
-
-                    var district = new DrillDownValue<string, long>();
-                    district.Keys.Add(districtName);
-                    state.Children.Add(district);
-
-                    // alternative key: no trailing "(stadt)"
-                    if (districtName.ToLowerInvariant().EndsWith("(stadt)"))
-                    {
-                        string shortKey = districtName
-                            .Substring(0, districtName.Length - "(stadt)".Length)
-                            .TrimEnd(' ');
-                        district.Keys.Add(shortKey);
-                    }
-
-                    district.Values[PopulationMetric] = population;
-
-                    long covid19Cases;
-                    if (!districtToCaseCount.TryGetValue(districtName, out covid19Cases))
-                    {
-                        covid19Cases = 0;
-                    }
-                    district.Values[Covid19CasesMetric] = covid19Cases;
+                    StateIDToPop[stateID] = ParseBigInt(popString);
                 }
+
+                string stateName = pieces[3];
+                StateIDToName[stateID] = stateName;
+                LowerNameToStateID[stateName.ToLowerInvariant()] = stateID;
+
+                var fields = new VaccinationStatsFields
+                {
+                    Vaccinations = ParseBigInt(pieces[4]),
+                    PartiallyImmune = ParseBigInt(pieces[6]),
+                    FullyImmune = ParseBigInt(pieces[8]),
+                };
+
+                StateIDAndDateToFields[(stateID, date)] = fields;
             }
-            CoronaStatsRoot = austria;
-
-            LongestKeyLength = CoronaStatsRoot
-                .FlattenedDescendants()
-                .SelectMany(ddv => ddv.Keys)
-                .Max(key => (int?)key.Length)
-                ?? 0;
-
             CoronaTimestamp = DateTimeOffset.Now;
         }
 
-        protected virtual void HandleAutCoronaCommand(CommandMatch cmd, IChannelMessageEventArgs msg)
+        protected virtual void HandleVaccineCommand(CommandMatch cmd, IChannelMessageEventArgs msg)
         {
             string name = ((string)cmd.Arguments[0]).Trim();
             if (name.Length == 0)
@@ -171,13 +125,6 @@ namespace SharpIrcBot.Plugins.Stats
             }
             string nameLower = name.ToLowerInvariant();
 
-            // ensure our users don't go overboard
-            if (nameLower.Length > 2*LongestKeyLength)
-            {
-                ConnectionManager.SendChannelMessage(msg.Channel, $"{msg.SenderNickname}: Try a shorter key...");
-                return;
-            }
-
             TimeSpan updateDelta = DateTimeOffset.Now - CoronaTimestamp;
             if (updateDelta > TimeSpan.FromDays(1.0))
             {
@@ -185,54 +132,29 @@ namespace SharpIrcBot.Plugins.Stats
                 UpdateStats();
             }
 
-            DrillDownValue<string, long> bestValue = null;
-            long bestDistance = long.MaxValue;
-
-            foreach (DrillDownValue<string, long> ddv in CoronaStatsRoot.FlattenedDescendants())
+            // try to find the state
+            int stateID;
+            if (!LowerNameToStateID.TryGetValue(nameLower, out stateID))
             {
-                foreach (string key in ddv.Keys)
-                {
-                    // normalize the key
-                    string normalizedKey = key.ToLowerInvariant();
-
-                    // compare
-                    long thisDistance = StringUtil.LevenshteinDistance(nameLower, normalizedKey);
-                    if (bestDistance > thisDistance)
-                    {
-                        bestValue = ddv;
-                        bestDistance = thisDistance;
-                    }
-                }
-            }
-
-            if (bestValue == null)
-            {
-                ConnectionManager.SendChannelMessage(msg.Channel, $"{msg.SenderNickname}: Failed to find this area.");
+                ConnectionManager.SendChannelMessage(msg.Channel, $"{msg.SenderNickname}: Was ist das f\u00FCr 1 Bundesland?");
                 return;
             }
 
-            string foundName = bestValue.Keys.First();
+            var freshestEntry = StateIDAndDateToFields
+                .Where(sidf => sidf.Key.Item1 == stateID)
+                .OrderByDescending(sidf => sidf.Key.Item2)
+                .Select(sidf => sidf.Value)
+                .First();
+            BigInteger pop = StateIDToPop[stateID];
 
-            // get population
-            long pop = bestValue.TotalValueForMetric(
-                PopulationMetric,
-                initialValue: 0,
-                missingValue: 0,
-                meldValueFunc: (a, b) => a + b
-            );
+            decimal vacPercent = (decimal)(freshestEntry.Vaccinations * 10000 / pop) / 100.0m;
+            decimal partPercent = (decimal)(freshestEntry.PartiallyImmune * 10000 / pop) / 100.0m;
+            decimal fullPercent = (decimal)(freshestEntry.FullyImmune * 10000 / pop) / 100.0m;
 
-            // get cases
-            long cases = bestValue.TotalValueForMetric(
-                Covid19CasesMetric,
-                initialValue: 0,
-                missingValue: 0,
-                meldValueFunc: (a, b) => a + b
-            );
-
-            // calculate cases vs. population
-            double perTenThousand = (cases * 10_000.0) / pop;
-
-            ConnectionManager.SendChannelMessage(msg.Channel, $"{msg.SenderNickname}: {foundName}: {cases} cases ({perTenThousand:0.00} per 10k inhabitants)");
+            ConnectionManager.SendChannelMessage(msg.Channel, $"{msg.SenderNickname}: {StateIDToName[stateID]}: {freshestEntry.Vaccinations:#,###} ({vacPercent:0.00}%) vaccinations => {freshestEntry.PartiallyImmune:#,###} ({partPercent:0.00}%) partially, {freshestEntry.FullyImmune:#,###} ({fullPercent:0.00}%) fully immune");
         }
+
+        static BigInteger ParseBigInt(string s)
+            => BigInteger.Parse(s, NumberStyles.None, CultureInfo.InvariantCulture);
     }
 }
