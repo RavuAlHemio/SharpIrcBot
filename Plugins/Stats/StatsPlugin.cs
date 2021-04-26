@@ -167,7 +167,7 @@ namespace SharpIrcBot.Plugins.Stats
             BigInteger fullDelta = freshestEntries[0].FullyImmune - freshestEntries[1].FullyImmune;
 
             var response = new StringBuilder();
-            response.Append($"{msg.SenderNickname}: {StateIDToName[stateID]}:");
+            response.Append($"{msg.SenderNickname}: {StateIDToName[stateID]}: ");
             response.Append($"{freshestEntries[0].Vaccinations:#,###} ({DeltaChar(vacDelta)}{vacDelta:#,###}) vaccinations");
             response.Append(" => ");
             response.Append($"{freshestEntries[0].PartiallyImmune:#,###} ({partPercent:0.00}%, {DeltaChar(partDelta)}{partDelta:#,###}) at least partially");
