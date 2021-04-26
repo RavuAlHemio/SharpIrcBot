@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Linq;
 using System.Net.Http;
 using System.Numerics;
+using System.Text;
 using Newtonsoft.Json.Linq;
 using SharpIrcBot.Commands;
 using SharpIrcBot.Events.Irc;
@@ -140,21 +141,46 @@ namespace SharpIrcBot.Plugins.Stats
                 return;
             }
 
-            var freshestEntry = StateIDAndDateToFields
+            var freshestEntries = StateIDAndDateToFields
                 .Where(sidf => sidf.Key.Item1 == stateID)
                 .OrderByDescending(sidf => sidf.Key.Item2)
                 .Select(sidf => sidf.Value)
-                .First();
+                .Take(2)
+                .ToList();
             BigInteger pop = StateIDToPop[stateID];
 
-            decimal vacPercent = (decimal)(freshestEntry.Vaccinations * 10000 / pop) / 100.0m;
-            decimal partPercent = (decimal)(freshestEntry.PartiallyImmune * 10000 / pop) / 100.0m;
-            decimal fullPercent = (decimal)(freshestEntry.FullyImmune * 10000 / pop) / 100.0m;
+            while (freshestEntries.Count < 2)
+            {
+                freshestEntries.Add(new VaccinationStatsFields
+                {
+                    Vaccinations = 0,
+                    PartiallyImmune = 0,
+                    FullyImmune = 0,
+                });
+            }
 
-            ConnectionManager.SendChannelMessage(msg.Channel, $"{msg.SenderNickname}: {StateIDToName[stateID]}: {freshestEntry.Vaccinations:#,###} ({vacPercent:0.00}%) vaccinations => {freshestEntry.PartiallyImmune:#,###} ({partPercent:0.00}%) at least partially, {freshestEntry.FullyImmune:#,###} ({fullPercent:0.00}%) fully immune");
+            decimal partPercent = (decimal)(freshestEntries[0].PartiallyImmune * 10000 / pop) / 100.0m;
+            decimal fullPercent = (decimal)(freshestEntries[0].FullyImmune * 10000 / pop) / 100.0m;
+
+            BigInteger vacDelta = freshestEntries[0].Vaccinations - freshestEntries[1].Vaccinations;
+            BigInteger partDelta = freshestEntries[0].PartiallyImmune - freshestEntries[1].PartiallyImmune;
+            BigInteger fullDelta = freshestEntries[0].FullyImmune - freshestEntries[1].FullyImmune;
+
+            var response = new StringBuilder();
+            response.Append($"{msg.SenderNickname}: {StateIDToName[stateID]}:");
+            response.Append($"{freshestEntries[0].Vaccinations:#,###} ({DeltaChar(vacDelta)}{vacDelta:#,###}) vaccinations");
+            response.Append(" => ");
+            response.Append($"{freshestEntries[0].PartiallyImmune:#,###} ({partPercent:0.00}%, {DeltaChar(partDelta)}{partDelta:#,###}) at least partially");
+            response.Append(", ");
+            response.Append($"{freshestEntries[0].FullyImmune:#,###} ({fullPercent:0.00}%, {DeltaChar(fullDelta)}{fullDelta:#,###}) fully immune");
+
+            ConnectionManager.SendChannelMessage(msg.Channel, response.ToString());
         }
 
         static BigInteger ParseBigInt(string s)
             => BigInteger.Parse(s, NumberStyles.None, CultureInfo.InvariantCulture);
+
+        static string DeltaChar(BigInteger i)
+            => (i <= 0) ? "" : "+";
     }
 }
