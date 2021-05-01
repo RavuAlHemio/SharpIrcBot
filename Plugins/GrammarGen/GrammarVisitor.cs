@@ -218,7 +218,7 @@ namespace SharpIrcBot.Plugins.GrammarGen
                     }
                     else
                     {
-                        throw new ArgumentException($"invalid hex digit within Unicode escape sequence: {c}", nameof(escapedString));
+                        throw new ArgumentException($"invalid hex digit {c} within Unicode escape sequence in {escapedString}", nameof(escapedString));
                     }
 
                     unicodeValue *= 16;
@@ -249,6 +249,8 @@ namespace SharpIrcBot.Plugins.GrammarGen
                     {
                         sb.Append(c);
                     }
+
+                    escaping = false;
                 }
                 else if (c == '\\')
                 {
