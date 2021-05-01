@@ -33,7 +33,8 @@ ggproduction : alternative ('|' alternative)* # Altern ;
 
 alternative : condition* weight? sequenceElem+ # Seq ;
 
-condition : '!' Identifier ;
+condition : '!' negated? Identifier ;
+negated : '!' ;
 weight : '<' Number '>' ;
 
 sequenceElem

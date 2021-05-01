@@ -17,8 +17,11 @@ namespace SharpIrcBot.Plugins.GrammarGen.AST
             ImmutableArray<Production> condInners = Inners
                 .Where(i =>
                     !(i is IConditionalProduction)
-                    || ((IConditionalProduction)i).Conditions.All(
-                        cond => IsValueTruthy(parameters, cond)
+                    || ((IConditionalProduction)i).Conditions.All(cond =>
+                        // negated conditions are stored as the identifier prefixed with a !
+                        cond.StartsWith("!")
+                            ? !IsValueTruthy(parameters, cond.Substring(1))
+                            : IsValueTruthy(parameters, cond)
                     )
                 )
                 .ToImmutableArray();

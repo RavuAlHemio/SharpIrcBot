@@ -108,7 +108,15 @@ namespace SharpIrcBot.Plugins.GrammarGen
             var conditionBldr = ImmutableArray.CreateBuilder<string>();
             foreach (var condElem in context.condition())
             {
-                conditionBldr.Add(condElem.Identifier().GetText());
+                if (condElem.negated() != null)
+                {
+                    // negated conditions are stored as the identifier prefixed with a !
+                    conditionBldr.Add("!" + condElem.Identifier().GetText());
+                }
+                else
+                {
+                    conditionBldr.Add(condElem.Identifier().GetText());
+                }
             }
 
             int weight = DefaultWeight;

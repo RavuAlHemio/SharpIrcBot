@@ -77,6 +77,12 @@ public interface IGrammarGenLangVisitor<Result> : IParseTreeVisitor<Result> {
 	/// <return>The visitor result.</return>
 	Result VisitCondition([NotNull] GrammarGenLangParser.ConditionContext context);
 	/// <summary>
+	/// Visit a parse tree produced by <see cref="GrammarGenLangParser.negated"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitNegated([NotNull] GrammarGenLangParser.NegatedContext context);
+	/// <summary>
 	/// Visit a parse tree produced by <see cref="GrammarGenLangParser.weight"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>

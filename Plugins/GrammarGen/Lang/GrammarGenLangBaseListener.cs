@@ -125,6 +125,18 @@ public partial class GrammarGenLangBaseListener : IGrammarGenLangListener {
 	/// <param name="context">The parse tree.</param>
 	public virtual void ExitCondition([NotNull] GrammarGenLangParser.ConditionContext context) { }
 	/// <summary>
+	/// Enter a parse tree produced by <see cref="GrammarGenLangParser.negated"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void EnterNegated([NotNull] GrammarGenLangParser.NegatedContext context) { }
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="GrammarGenLangParser.negated"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void ExitNegated([NotNull] GrammarGenLangParser.NegatedContext context) { }
+	/// <summary>
 	/// Enter a parse tree produced by <see cref="GrammarGenLangParser.weight"/>.
 	/// <para>The default implementation does nothing.</para>
 	/// </summary>

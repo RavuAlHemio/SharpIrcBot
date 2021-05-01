@@ -106,6 +106,16 @@ public interface IGrammarGenLangListener : IParseTreeListener {
 	/// <param name="context">The parse tree.</param>
 	void ExitCondition([NotNull] GrammarGenLangParser.ConditionContext context);
 	/// <summary>
+	/// Enter a parse tree produced by <see cref="GrammarGenLangParser.negated"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void EnterNegated([NotNull] GrammarGenLangParser.NegatedContext context);
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="GrammarGenLangParser.negated"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void ExitNegated([NotNull] GrammarGenLangParser.NegatedContext context);
+	/// <summary>
 	/// Enter a parse tree produced by <see cref="GrammarGenLangParser.weight"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
