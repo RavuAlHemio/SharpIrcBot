@@ -107,8 +107,40 @@ namespace SharpIrcBot.Plugins.GrammarGen
             string message = ((string)cmd.Arguments[0]).Trim();
 
             var paramBuilder = ImmutableDictionary.CreateBuilder<string, object>();
+
+            var messagePieces = message.Split(' ');
+            var nonFlagPieces = new List<string>();
+            bool flagsEnded = false;
+            foreach (string piece in messagePieces)
+            {
+                if (flagsEnded)
+                {
+                    nonFlagPieces.Add(piece);
+                }
+                else if (piece == "--")
+                {
+                    flagsEnded = true;
+                }
+                else if (piece.StartsWith("--") && piece.Length > 2)
+                {
+                    paramBuilder[$"opt_{piece.Substring(2)}"] = true;
+                }
+                else if (piece.StartsWith("-") && piece.Length > 1)
+                {
+                    foreach (char opt in piece.Substring(1))
+                    {
+                        paramBuilder[$"opt_{opt}"] = true;
+                    }
+                }
+                else
+                {
+                    nonFlagPieces.Add(piece);
+                }
+            }
+
             paramBuilder["channel"] = msg.Channel;
-            paramBuilder["message"] = message;
+            paramBuilder["message"] = string.Join(" ", nonFlagPieces);
+            paramBuilder["fullMessage"] = message;
             paramBuilder["nicknames"] = ConnectionManager.NicknamesInChannel(msg.Channel);
 
             string response = grammar.Generate(Random, paramBuilder.ToImmutable());
