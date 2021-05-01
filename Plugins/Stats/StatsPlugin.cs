@@ -67,11 +67,22 @@ namespace SharpIrcBot.Plugins.Stats
                 client.Timeout = TimeSpan.FromSeconds(Config.TimeoutSeconds.Value);
             }
 
-            string responseText;
+            byte[] responseBytes;
             using (var request = new HttpRequestMessage(HttpMethod.Get, Config.VaccineCsvUri))
             using (var response = client.SendAsync(request, HttpCompletionOption.ResponseContentRead).Result)
             {
-                responseText = response.Content.ReadAsStringAsync().Result;
+                responseBytes = response.Content.ReadAsByteArrayAsync().Result;
+            }
+
+            // UTF-8 with fallback to Windows-1252
+            string responseText;
+            try
+            {
+                responseText = StringUtil.Utf8NoBom.GetString(responseBytes);
+            }
+            catch (DecoderFallbackException)
+            {
+                responseText = Encoding.GetEncoding("windows-1252").GetString(responseBytes);
             }
 
             // parse as CSV
