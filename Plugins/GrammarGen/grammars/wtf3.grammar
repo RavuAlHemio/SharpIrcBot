@@ -12,6 +12,11 @@ chosen_person : __IRC_chosen_nick;
 // VERBS
 
 verb1construct
+    : !!opt_B   <3> verb1construct_builtin
+    | !opt_g    <1> verb1construct_wg
+    ;
+
+verb1construct_builtin
     : <6> verb1_simple
     | <1> verb1_simple_reqadverb
     | <1> verb1_simple_movement
@@ -21,6 +26,12 @@ verb1construct
     | <1> verb1_object_movement
     | <1> verb1_object_split
     | <3> verb1_object_complex
+    ;
+
+verb1construct_wg
+    :   wg_verb1
+        [ " " adverb ]
+        [ " " adverbial ]
     ;
 
 verb1_simple
@@ -151,6 +162,11 @@ verb1_object_complex
     ;
 
 verb3construct
+    : !!opt_B   <3> verb3construct_builtin
+    | !opt_g    <1> verb3construct_wg
+    ;
+
+verb3construct_builtin
     : <6> verb3_simple
     | <1> verb3_simple_reqadverb
     | <1> verb3_simple_movement
@@ -159,6 +175,12 @@ verb3construct
     | <18> verb3_object_simple
     | <1> verb3_object_movement
     | <3> verb3_object_complex
+    ;
+
+verb3construct_wg
+    :   [ adverb " " ]
+        [ adverbial " " ]
+        wg_verb3
     ;
 
 verb3_simple
@@ -363,6 +385,13 @@ adverb
         |   <1> "sehr "
         |   <1> "ein wenig "
         )
+        (   !!opt_B <3> adverb_builtin
+        |   !opt_g  <1> wg_adverb
+        )
+        ;
+
+adverb_builtin
+    :
         ( "kaeltlich" | "gespannt" | "gluecklich" | "verspannt" | "langsam"
         | "bloed" | "suspekt" | "begeistert" | "schauend" | "schnell" | "redend"
         | "zufrieden" | "gelangweilt" | "entspannt" | "ruhig" | "erstaunt"
@@ -372,6 +401,7 @@ adverb
         | "von " noun3 " begafft"
         | ("auf " | "neben ") noun3 " liegend"
         | noun4 " essend"
+        | !opt_g wg_adverb
         )
     ;
 
@@ -396,4 +426,58 @@ opt_interjection
 
 conjunction
     : "waehrend" | "zudem" | "bis" | "wodurch" | "da" | "solange" | "womit"
+    ;
+
+
+// and now: word generation, stolen from a different viperBOT function
+
+wg_verb1 : wg_prefix wg_root wg_verb1_suffix ;
+wg_verb3 : wg_prefix wg_root wg_verb3_suffix ;
+wg_adverb : wg_prefix wg_root wg_adverb_suffix ;
+
+wg_prefix
+    : "an" | "be" | "um" | "auf" | "zu" | "ab" | "ge" | "miss" | "der" | "ver"
+    ;
+
+wg_root
+    : <2> wg_preconsonants wg_vowel wg_postconsonants
+    | <1> wg_vowel wg_postconsonants
+    ;
+
+wg_preconsonants
+    : <3> wg_consonant_simple
+    | <1> wg_consonant_cluster
+    ;
+
+wg_consonant_simple
+    : "b" | "c" | "d" | "f" | "g" | "h" | "k" | "l" | "m" | "n" "p" | "r" | "s"
+    | "t" | "w" | "y" | "z"
+    ;
+
+wg_consonant_cluster
+    : "str" | "fl" | "bl" | "kr" | "sch" | "tsch" | "br" | "gl" | "kl"
+    ;
+
+wg_vowel
+    : <2> wg_vowel_simple
+    | <1> wg_vowel_umlaut
+    | <1> wg_vowel_diphthong
+    ;
+
+wg_vowel_simple : "a" | "e" | "i" | "o" | "u" ;
+//wg_vowel_umlaut : "\u00E4" | "\u00F6" | "\u00FC" ;
+wg_vowel_umlaut : "ae" | "oe" | "ue" ;
+wg_vowel_diphthong : "ei" | "ai" | "ah" ;
+
+wg_postconsonants
+    : "chst" | "scht" | "cht"
+    // | "nk" | "nt" | "st" | "\u00DF" | "ff"
+    | "nk" | "nt" | "st" | "ss" | "ff"
+    ;
+
+wg_verb1_suffix : "e" ;
+wg_verb3_suffix : "t" ;
+wg_verbinf_suffix : "en" ;
+wg_adverb_suffix
+    : "bar" | "er" | "ig" | "isch" | "haft"
     ;
