@@ -431,16 +431,26 @@ conjunction
 // and now: word generation, stolen from a different viperBOT function
 
 wg_verb1 : wg_prefix wg_root wg_verb1_suffix ;
-wg_verb3 : wg_prefix wg_root wg_verb3_suffix ;
+wg_verb3
+    : wg_prefix wg_root_t wg_verb3_suffix_t
+    | wg_prefix wg_root_non_t wg_verb3_suffix_non_t
+    ;
 wg_adverb : wg_prefix wg_root wg_adverb_suffix ;
 
 wg_prefix
     : "an" | "be" | "um" | "auf" | "zu" | "ab" | "ge" | "miss" | "der" | "ver"
     ;
 
-wg_root
-    : <2> wg_preconsonants wg_vowel wg_postconsonants
-    | <1> wg_vowel wg_postconsonants
+wg_root : wg_root_t | wg_root_non_t ;
+
+wg_root_t
+    : <2> wg_preconsonants wg_vowel wg_postconsonants_t
+    | <1> wg_vowel wg_postconsonants_t
+    ;
+
+wg_root_non_t
+    : <2> wg_preconsonants wg_vowel wg_postconsonants_non_t
+    | <1> wg_vowel wg_postconsonants_non_t
     ;
 
 wg_preconsonants
@@ -467,13 +477,18 @@ wg_vowel_simple : "a" | "e" | "i" | "o" | "u" ;
 wg_vowel_umlaut : "\u00E4" | "\u00F6" | "\u00FC" ;
 wg_vowel_diphthong : "ei" | "ai" | "ah" ;
 
-wg_postconsonants
-    : "chst" | "scht" | "cht"
-    | "nk" | "nt" | "st" | "\u00DF" | "ff"
+wg_postconsonants_t
+    : "chst" | "scht" | "cht" | "st"
+    | "nt" | "st"
+    ;
+
+wg_postconsonants_non_t
+    : "nk" | "\u00DF" | "ss" | "ff"
     ;
 
 wg_verb1_suffix : "e" ;
-wg_verb3_suffix : "t" ;
+wg_verb3_suffix_t : "et" ;
+wg_verb3_suffix_non_t : "t" ;
 wg_verbinf_suffix : "en" ;
 wg_adverb_suffix
     : "bar" | "er" | "ig" | "isch" | "haft"
