@@ -31,8 +31,9 @@ paramrule : Identifier '{' Identifier (',' Identifier)+ '}' ':' ggproduction ';'
 // ggproduction and alternative are split up to ensure Seq binds more closely than Altern
 ggproduction : alternative ('|' alternative)* # Altern ;
 
-alternative : weight? sequenceElem+ # Seq ;
+alternative : condition* weight? sequenceElem+ # Seq ;
 
+condition : '!' Identifier ;
 weight : '<' Number '>' ;
 
 sequenceElem

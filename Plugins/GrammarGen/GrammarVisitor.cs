@@ -105,6 +105,12 @@ namespace SharpIrcBot.Plugins.GrammarGen
             var seqElems = context.sequenceElem();
             var bldr = ImmutableArray.CreateBuilder<Production>();
 
+            var conditionBldr = ImmutableArray.CreateBuilder<string>();
+            foreach (var condElem in context.condition())
+            {
+                conditionBldr.Add(condElem.Identifier().GetText());
+            }
+
             int weight = DefaultWeight;
             if (context.weight() != null)
             {
@@ -130,7 +136,7 @@ namespace SharpIrcBot.Plugins.GrammarGen
                 }
             }
 
-            return new SeqProduction(bldr.ToImmutable(), weight);
+            return new SeqProduction(bldr.ToImmutable(), weight, conditionBldr.ToImmutable());
         }
 
         public override ASTNode VisitIdent(GrammarGenLangParser.IdentContext context)

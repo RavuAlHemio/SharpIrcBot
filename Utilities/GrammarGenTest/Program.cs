@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
+using System.Linq;
 using SharpIrcBot.Plugins.GrammarGen;
 using SharpIrcBot.Plugins.GrammarGen.AST;
 using SharpIrcBot.Util;
@@ -11,9 +13,9 @@ namespace GrammarGenTest
     {
         static void Main(string[] args)
         {
-            if (args.Length < 2 || args.Length > 3)
+            if (args.Length < 1)
             {
-                Console.Error.WriteLine("Usage: GrammarGenTest GRAMMARFILE STARTRULE [GENCOUNT]");
+                Console.Error.WriteLine("Usage: GrammarGenTest GRAMMARFILE [GENCOUNT [CONDITION...]]");
                 Environment.ExitCode = 1;
                 return;
             }
@@ -24,12 +26,17 @@ namespace GrammarGenTest
                 grammarDef = grammarFile.ReadToEnd();
             }
 
-            string startRule = args[1];
+            string startRule = Path.GetFileNameWithoutExtension(args[0]);
             int genCount = 1;
-            if (args.Length > 2)
+            if (args.Length > 1)
             {
-                genCount = int.Parse(args[2]);
+                genCount = int.Parse(args[1]);
             }
+
+            ImmutableDictionary<string, object> parameters = args
+                .Skip(2)
+                .Select(p => KeyValuePair.Create(p, (object)true))
+                .ToImmutableDictionary();
 
             // generate the built-in rules
             var builder = ImmutableDictionary.CreateBuilder<string, Rule>();
@@ -47,7 +54,10 @@ namespace GrammarGenTest
 
             for (int i = 0; i < genCount; i++)
             {
-                Console.WriteLine(grammar.Generate());
+                Console.WriteLine(grammar.Generate(
+                    rng: null,
+                    parameters: parameters
+                ));
             }
         }
     }
