@@ -4,9 +4,10 @@ Whitespaces: Whitespace+ -> channel(HIDDEN);
 Comments: '/*' .*? '*/' -> channel(HIDDEN);
 LineComments: '//' ~[\r\n]* -> channel(HIDDEN);
 
-EscapedString : '"' ('\\"'|'\\\\'|~["\\])* '"' ;
+EscapedString : '"' ('\\"'|'\\\\'|'\\u'HexD HexD HexD HexD|'\\U'HexD HexD HexD HexD HexD HexD HexD HexD|~["\\])* '"' ;
 Identifier : [A-Za-z_] [A-Za-z0-9_]* ;
 Number : [0-9]+ ;
+fragment HexD : [0-9a-fA-F] ;
 
 fragment Whitespace
     : ' ' // Space
