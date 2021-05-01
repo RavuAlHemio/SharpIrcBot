@@ -69,7 +69,7 @@ verb1_self
         | "erschrecke"
         | "entspanne"
         | "animiere"
-        | "erschiesse"
+        | "erschie\u00DFe"
         | "beschimpfe"
         | "fotografiere"
         | "verkaufe"
@@ -97,7 +97,7 @@ verb1_object_simple
             | "programmiere"
             | "reibe"
             | "animiere"
-            | "erschiesse"
+            | "erschie\u00DFe"
             | "highlighte"
             | "beschimpfe"
             | "fotografiere"
@@ -114,7 +114,7 @@ verb1_object_simple
             )
             [ " " adverb ]
             [ " " adverbial ]
-            ( " ueber " noun4
+            ( " \u00FCber " noun4
             | " von " noun3
             )
     ;
@@ -146,12 +146,12 @@ verb1_object_complex
         noun4
         " mit "
         noun3
-    |   "aeussere mich"
+    |   "\u00E4u\u00DFere mich"
         [ " " adverb ]
         [ " " adverbial ]
         (   " zu "
             noun3
-        |   " ueber "
+        |   " \u00FCber "
             noun4
         )
     |   "spiele"
@@ -216,11 +216,11 @@ verb3_self
         ( "sieht"
         | "beschreibt"
         | "putzt"
-        | "schlaegt"
+        | "schl\u00E4gt"
         | "langweilt"
         | "erschreckt"
         | "animiert"
-        | "erschiesst"
+        | "erschie\u00DFt"
         | "beschimpft"
         | "fotografiert"
         | "verkauft"
@@ -249,7 +249,7 @@ verb3_object_simple
             | "programmiert"
             | "reibt"
             | "animiert"
-            | "erschiesst"
+            | "erschie\u00DFt"
             | "anschaut"
             | "highlightet"
             | "beschimpft"
@@ -261,7 +261,7 @@ verb3_object_simple
     | <2>   [ adverb " " ]
             [ adverbial " " ]
             ( "von " noun3
-            | "ueber " noun4
+            | "\u00FCber " noun4
             )
             " "
             ( "schreibt"
@@ -274,7 +274,7 @@ verb3_object_movement
         noun4
         " "
         [ movement_adverbial " " ]
-        ( "schlaegt"
+        ( "schl\u00E4gt"
         )
     ;
 
@@ -291,10 +291,10 @@ verb3_object_complex
         [ adverbial " " ]
         (   "zu "
             noun3
-        |   "ueber "
+        |   "\u00FCber "
             noun4
         )
-        " aeussert"
+        " \u00E4u\u00DFert"
     |   [ adverb " " ]
         [ adverbial " " ]
         "mit "
@@ -322,10 +322,10 @@ noun4 : noun{art_m4, art_f4, art_n4} ;
 
 noun{art_m, art_f, art_n}
     : art_m " ROFL-Copter"
-    | art_n " Katzenzuechtungsbuch"
+    | art_n " Katzenz\u00FCchtungsbuch"
     | art_f " Schultasche"
     | ("Slashdot" | "YouPorn" | "Wikipedia")
-    | art_f " Zahnbuerste"
+    | art_f " Zahnb\u00FCrste"
     | art_f " Klopapierrolle"
     | art_n " Pferd"
     | art_f " " ("Lehr" | "Auto" | "Flaschenpost") "-Industrie"
@@ -352,7 +352,7 @@ noun{art_m, art_f, art_n}
     | art_n " Deo"
     | (art_f | art_n) " Cola"
     | art_n " Papier"
-    | art_f " Praesentation"
+    | art_f " Pr\u00E4sentation"
     | art_f " Katze"
     | "Schmierfett"
     | art_m " " ("Fleck" | "Ketchup-Fleck" | "Fett-Fleck")
@@ -392,8 +392,8 @@ adverb
 
 adverb_builtin
     :
-        ( "kaeltlich" | "gespannt" | "gluecklich" | "verspannt" | "langsam"
-        | "bloed" | "suspekt" | "begeistert" | "schauend" | "schnell" | "redend"
+        ( "k\u00E4ltlich" | "gespannt" | "gl\u00FCcklich" | "verspannt" | "langsam"
+        | "bl\u00F6d" | "suspekt" | "begeistert" | "schauend" | "schnell" | "redend"
         | "zufrieden" | "gelangweilt" | "entspannt" | "ruhig" | "erstaunt"
         | "wichsend" | "reibend" | "stinkend" | "froh" | "spammend"
         | noun4 " verkaufend"
@@ -401,12 +401,11 @@ adverb_builtin
         | "von " noun3 " begafft"
         | ("auf " | "neben ") noun3 " liegend"
         | noun4 " essend"
-        | !opt_g wg_adverb
         )
     ;
 
 adverbial
-    : <5> ("ueber" | "auf" | "bei" | "mit") " " noun3
+    : <5> ("\u00FCber" | "auf" | "bei" | "mit") " " noun3
     | <2> "zwischen " noun3 " und " noun3
     ;
 
@@ -425,7 +424,7 @@ opt_interjection
     ;
 
 conjunction
-    : "waehrend" | "zudem" | "bis" | "wodurch" | "da" | "solange" | "womit"
+    : "w\u00E4hrend" | "zudem" | "bis" | "wodurch" | "da" | "solange" | "womit"
     ;
 
 
@@ -465,14 +464,12 @@ wg_vowel
     ;
 
 wg_vowel_simple : "a" | "e" | "i" | "o" | "u" ;
-//wg_vowel_umlaut : "\u00E4" | "\u00F6" | "\u00FC" ;
-wg_vowel_umlaut : "ae" | "oe" | "ue" ;
+wg_vowel_umlaut : "\u00E4" | "\u00F6" | "\u00FC" ;
 wg_vowel_diphthong : "ei" | "ai" | "ah" ;
 
 wg_postconsonants
     : "chst" | "scht" | "cht"
-    // | "nk" | "nt" | "st" | "\u00DF" | "ff"
-    | "nk" | "nt" | "st" | "ss" | "ff"
+    | "nk" | "nt" | "st" | "\u00DF" | "ff"
     ;
 
 wg_verb1_suffix : "e" ;
