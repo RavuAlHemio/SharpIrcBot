@@ -143,7 +143,17 @@ namespace SharpIrcBot.Plugins.GrammarGen
             paramBuilder["fullMessage"] = message;
             paramBuilder["nicknames"] = ConnectionManager.NicknamesInChannel(msg.Channel);
 
-            string response = grammar.Generate(Random, paramBuilder.ToImmutable());
+            string response;
+            try
+            {
+                response = grammar.Generate(Random, paramBuilder.ToImmutable());
+            }
+            catch (NoProductionsRemainException npre)
+            {
+                Logger.LogInformation($"{cmd.CommandName}: no productions remained at {npre.Production}");
+                return;
+            }
+
             ConnectionManager.SendChannelMessage(msg.Channel, response);
         }
     }

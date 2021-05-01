@@ -28,9 +28,7 @@ namespace SharpIrcBot.Plugins.GrammarGen.AST
 
             if (condInners.Length == 0)
             {
-                throw new GrammarException(
-                    $"no productions available after processing conditions at {this.ToString()}"
-                );
+                throw new NoProductionsRemainException(this);
             }
 
             if (condInners.Length == 1)
