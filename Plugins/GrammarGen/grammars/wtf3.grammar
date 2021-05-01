@@ -375,6 +375,7 @@ noun{art_m, art_f, art_n}
     // custom nouns:
     | art_m " Penis"
     | art_m " Handwerker"
+    | art_m " Schreßer"
     | "Ravus Bart"
     | person
     ;
