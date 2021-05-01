@@ -316,9 +316,15 @@ art_n1 : "das" | "ein" ;
 art_n3 : "dem" | "einem" ;
 art_n4 : "das" | "ein" ;
 
-noun1 : noun{art_m1, art_f1, art_n1} ;
-noun3 : noun{art_m3, art_f3, art_n3} ;
-noun4 : noun{art_m4, art_f4, art_n4} ;
+noun1   : !!opt_B   noun{art_m1, art_f1, art_n1}
+        | !opt_g    wg_noun{art_m1, art_f1, art_n1}
+        ;
+noun3   : !!opt_B   noun{art_m3, art_f3, art_n3}
+        | !opt_g    wg_noun{art_m3, art_f3, art_n3}
+        ;
+noun4   : !!opt_B   noun{art_m4, art_f4, art_n4}
+        | !opt_g    wg_noun{art_m4, art_f4, art_n4}
+        ;
 
 noun{art_m, art_f, art_n}
     : art_m " ROFL-Copter"
@@ -436,9 +442,18 @@ wg_verb3
     | wg_prefix wg_root_non_t wg_verb3_suffix_non_t
     ;
 wg_adverb : wg_prefix wg_root wg_adverb_suffix ;
+wg_noun{art_m, art_f, art_n}
+    : art_m " " wg_cap_prefix wg_root
+    | art_f " " wg_cap_prefix wg_root "e"
+    | art_n " " wg_cap_prefix wg_root
+    ;
 
 wg_prefix
     : "an" | "be" | "um" | "auf" | "zu" | "ab" | "ge" | "miss" | "der" | "ver"
+    ;
+
+wg_cap_prefix
+    : "An" | "Be" | "Um" | "Auf" | "Zu" | "Ab" | "Ge" | "Miss" | "Der" | "Ver"
     ;
 
 wg_root : wg_root_t | wg_root_non_t ;
