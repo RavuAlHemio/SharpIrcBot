@@ -111,5 +111,17 @@ namespace SharpIrcBot.Plugins.GrammarGen
             Production startProd = startRule.Production;
             return startProd.ProduceAll(Rules, parameters);
         }
+
+        public CountBounds CountVariantBounds(ImmutableDictionary<string, object> parameters = null)
+        {
+            if (parameters == null)
+            {
+                parameters = ImmutableDictionary<string, object>.Empty;
+            }
+
+            Rule startRule = Rules.GetRule(StartRule);
+            Production startProd = startRule.Production;
+            return startProd.CountVariantBounds(Rules, parameters);
+        }
     }
 }

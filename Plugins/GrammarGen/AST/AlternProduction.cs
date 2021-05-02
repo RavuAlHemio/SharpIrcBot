@@ -89,6 +89,24 @@ namespace SharpIrcBot.Plugins.GrammarGen.AST
             }
         }
 
+        public override CountBounds CountVariantBounds(Rulebook rulebook, ImmutableDictionary<string, object> parameters)
+        {
+            // sum of all alternatives (except where the conditions are not met)
+
+            ImmutableArray<Production> condInners = GetInnersMatchingCondition(parameters);
+
+            var bounds = new CountBounds(0, 0);
+            foreach (Production condInner in condInners)
+            {
+                var innerBounds = condInner.CountVariantBounds(rulebook, parameters);
+                bounds = new CountBounds(
+                    bounds.Lower + innerBounds.Lower,
+                    bounds.Upper + innerBounds.Upper
+                );
+            }
+            return bounds;
+        }
+
         public override string ToString()
         {
             string bits = string.Join(" | ", Inners.Select(i => i.ToString()));

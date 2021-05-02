@@ -20,6 +20,11 @@ namespace SharpIrcBot.Plugins.GrammarGen.AST
             throw new GrammarException("attempted to make a placeholder production produce a value");
         }
 
+        public override CountBounds CountVariantBounds(Rulebook rulebook, ImmutableDictionary<string, object> parameters)
+        {
+            throw new GrammarException("attempted to count variant bounds on a placeholder production");
+        }
+
         public override void CollectSoundnessErrors(Rulebook rulebook, List<string> errors)
         {
             // don't worry about me, I'll be okay

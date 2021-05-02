@@ -16,6 +16,8 @@ namespace GrammarGenTest
             if (args.Length < 1)
             {
                 Console.Error.WriteLine("Usage: GrammarGenTest GRAMMARFILE [GENCOUNT [CONDITION...]]");
+                Console.Error.WriteLine("  pass -1 as GENCOUNT to get the bounds on the number of variants");
+                Console.Error.WriteLine("  pass any another negative as GENCOUNT to enumerate all variants");
                 Environment.ExitCode = 1;
                 return;
             }
@@ -52,18 +54,23 @@ namespace GrammarGenTest
             }
             Console.WriteLine();
 
-            if (genCount < 0)
+            if (genCount == -1)
+            {
+                // output number of combinations
+                var variantBounds = grammar.CountVariantBounds(parameters);
+                string upperBound = variantBounds.Upper.HasValue
+                    ? $"{variantBounds.Upper.Value}"
+                    : "infinity"
+                ;
+                Console.WriteLine($"from {variantBounds.Lower} to {upperBound}");
+            }
+            else if (genCount < 0)
             {
                 long totalCount = 0;
-                int outputCount = 0;
                 foreach (string generation in grammar.GenerateAll(parameters))
                 {
                     totalCount++;
-                    outputCount = (outputCount + 1) % 65536;
-                    if (outputCount == 0)
-                    {
-                        Console.WriteLine($"{totalCount}: {generation}");
-                    }
+                    Console.WriteLine($"{totalCount}: {generation}");
                 }
                 Console.WriteLine();
                 Console.WriteLine($"total entries: {totalCount}");

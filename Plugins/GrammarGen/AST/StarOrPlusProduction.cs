@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Numerics;
 using System.Text;
 
 namespace SharpIrcBot.Plugins.GrammarGen.AST
@@ -36,6 +37,9 @@ namespace SharpIrcBot.Plugins.GrammarGen.AST
             // * and + produce theoretically infinite expansions
             throw new NotEnumerableException(this);
         }
+
+        public override CountBounds CountVariantBounds(Rulebook rulebook, ImmutableDictionary<string, object> parameters)
+            => new CountBounds(Inner.CountVariantBounds(rulebook, parameters).Lower, null); // upper bound: infinity
 
         public override string ToString()
         {

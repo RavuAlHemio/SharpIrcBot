@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using System.Numerics;
 using System.Text;
 
 namespace SharpIrcBot.Plugins.GrammarGen.AST
@@ -110,6 +111,22 @@ namespace SharpIrcBot.Plugins.GrammarGen.AST
             {
                 inner.CollectSoundnessErrors(rulebook, errors);
             }
+        }
+
+        public override CountBounds CountVariantBounds(Rulebook rulebook, ImmutableDictionary<string, object> parameters)
+        {
+            // product of the bounds of all items in the sequence
+
+            var bounds = new CountBounds(1, 1);
+            foreach (Production inner in Inners)
+            {
+                var innerBounds = inner.CountVariantBounds(rulebook, parameters);
+                bounds = new CountBounds(
+                    bounds.Lower * innerBounds.Lower,
+                    bounds.Upper * innerBounds.Upper
+                );
+            }
+            return bounds;
         }
 
         public override string ToString()

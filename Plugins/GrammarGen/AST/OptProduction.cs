@@ -31,6 +31,12 @@ namespace SharpIrcBot.Plugins.GrammarGen.AST
             yield return "";
         }
 
+        public override CountBounds CountVariantBounds(Rulebook rulebook, ImmutableDictionary<string, object> parameters)
+        {
+            CountBounds innerBounds = Inner.CountVariantBounds(rulebook, parameters);
+            return new CountBounds(innerBounds.Lower + 1, innerBounds.Upper + 1);
+        }
+
         public override string ToString()
         {
             return $"[<{Weight}> {Inner.ToString()}]";

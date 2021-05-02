@@ -21,6 +21,9 @@ namespace SharpIrcBot.Plugins.GrammarGen.AST
             return Inner.ProduceAll(rulebook, parameters);
         }
 
+        public override CountBounds CountVariantBounds(Rulebook rulebook, ImmutableDictionary<string, object> parameters)
+            => Inner.CountVariantBounds(rulebook, parameters);
+
         public override string ToString()
         {
             return $"({Inner})";

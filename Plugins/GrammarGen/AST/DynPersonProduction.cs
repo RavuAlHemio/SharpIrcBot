@@ -56,6 +56,12 @@ namespace SharpIrcBot.Plugins.GrammarGen.AST
             }
         }
 
+        public override CountBounds CountVariantBounds(Rulebook rulebook, ImmutableDictionary<string, object> parameters)
+        {
+            int nickCount = GetNicknames(parameters).Length;
+            return new CountBounds(nickCount, nickCount);
+        }
+
         public override void CollectSoundnessErrors(Rulebook rulebook, List<string> errors)
         {
         }

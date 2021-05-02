@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Numerics;
 using System.Text;
 
 namespace SharpIrcBot.Plugins.GrammarGen.AST
@@ -28,6 +29,9 @@ namespace SharpIrcBot.Plugins.GrammarGen.AST
         {
             // constant text doesn't depend on much
         }
+
+        public override CountBounds CountVariantBounds(Rulebook rulebook, ImmutableDictionary<string, object> parameters)
+            => new CountBounds(1, 1);
 
         public override string ToString()
         {

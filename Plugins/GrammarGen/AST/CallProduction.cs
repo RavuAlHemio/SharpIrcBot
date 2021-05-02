@@ -43,6 +43,13 @@ namespace SharpIrcBot.Plugins.GrammarGen.AST
             return rule.Production.ProduceAll(subtreeRulebook, parameters);
         }
 
+        public override CountBounds CountVariantBounds(Rulebook rulebook, ImmutableDictionary<string, object> parameters)
+        {
+            Rule rule = rulebook.GetRule(Identifier);
+            Rulebook subtreeRulebook = ConstructSubtreeRulebook(rulebook, rule);
+            return rule.Production.CountVariantBounds(subtreeRulebook, parameters);
+        }
+
         public override void CollectSoundnessErrors(Rulebook rulebook, List<string> errors)
         {
             // check if the referred rule exists

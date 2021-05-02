@@ -23,6 +23,9 @@ namespace SharpIrcBot.Plugins.GrammarGen.AST
             yield return (string)parameters[PropertyName];
         }
 
+        public override CountBounds CountVariantBounds(Rulebook rulebook, ImmutableDictionary<string, object> parameters)
+            => new CountBounds(1, 1);
+
         public override void CollectSoundnessErrors(Rulebook rulebook, List<string> errors)
         {
         }

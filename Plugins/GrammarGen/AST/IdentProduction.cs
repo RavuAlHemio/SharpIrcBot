@@ -25,6 +25,12 @@ namespace SharpIrcBot.Plugins.GrammarGen.AST
             return rule.Production.ProduceAll(rulebook, parameters);
         }
 
+        public override CountBounds CountVariantBounds(Rulebook rulebook, ImmutableDictionary<string, object> parameters)
+        {
+            Rule rule = rulebook.GetRule(Identifier);
+            return rule.Production.CountVariantBounds(rulebook, parameters);
+        }
+
         public override void CollectSoundnessErrors(Rulebook rulebook, List<string> errors)
         {
             // check if the referred rule exists
