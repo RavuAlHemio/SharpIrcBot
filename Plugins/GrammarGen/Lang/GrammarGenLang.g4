@@ -25,7 +25,7 @@ ruledef : ggrule | paramrule ;
 // cannot call this "rule" because this creates naming conflicts within the generated code
 ggrule : Identifier ':' ggproduction ';' ;
 
-paramrule : Identifier '{' Identifier (',' Identifier)+ '}' ':' ggproduction ';' ;
+paramrule : Identifier '{' Identifier (',' Identifier)* '}' ':' ggproduction ';' ;
 
 // cannot call this "production" because this creates naming conflicts within the generated code
 // ggproduction and alternative are split up to ensure Seq binds more closely than Altern
