@@ -15,6 +15,11 @@ namespace SharpIrcBot.Plugins.GrammarGen.AST
             throw new GrammarException("attempted to make a placeholder production produce a value");
         }
 
+        public override IEnumerable<string> ProduceAll(Rulebook rulebook, ImmutableDictionary<string, object> parameters)
+        {
+            throw new GrammarException("attempted to make a placeholder production produce a value");
+        }
+
         public override void CollectSoundnessErrors(Rulebook rulebook, List<string> errors)
         {
             // don't worry about me, I'll be okay

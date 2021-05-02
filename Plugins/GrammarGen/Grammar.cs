@@ -99,5 +99,17 @@ namespace SharpIrcBot.Plugins.GrammarGen
             string result = startProd.Produce(rng, Rules, parameters);
             return result;
         }
+
+        public IEnumerable<string> GenerateAll(ImmutableDictionary<string, object> parameters = null)
+        {
+            if (parameters == null)
+            {
+                parameters = ImmutableDictionary<string, object>.Empty;
+            }
+
+            Rule startRule = Rules.GetRule(StartRule);
+            Production startProd = startRule.Production;
+            return startProd.ProduceAll(Rules, parameters);
+        }
     }
 }

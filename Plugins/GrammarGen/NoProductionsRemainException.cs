@@ -3,7 +3,7 @@ using SharpIrcBot.Plugins.GrammarGen.AST;
 
 namespace SharpIrcBot.Plugins.GrammarGen
 {
-    public class NoProductionsRemainException : Exception
+    public class NoProductionsRemainException : GrammarGenException
     {
         public Production Production { get; }
 

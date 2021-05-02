@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 
 namespace SharpIrcBot.Plugins.GrammarGen.AST
@@ -13,6 +14,11 @@ namespace SharpIrcBot.Plugins.GrammarGen.AST
         public override string Produce(Random rng, Rulebook rulebook, ImmutableDictionary<string, object> parameters)
         {
             return Inner.Produce(rng, rulebook, parameters);
+        }
+
+        public override IEnumerable<string> ProduceAll(Rulebook rulebook, ImmutableDictionary<string, object> parameters)
+        {
+            return Inner.ProduceAll(rulebook, parameters);
         }
 
         public override string ToString()

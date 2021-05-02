@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Text;
 
@@ -28,6 +29,12 @@ namespace SharpIrcBot.Plugins.GrammarGen.AST
             }
 
             return ret.ToString();
+        }
+
+        public override IEnumerable<string> ProduceAll(Rulebook rulebook, ImmutableDictionary<string, object> parameters)
+        {
+            // * and + produce theoretically infinite expansions
+            throw new NotEnumerableException(this);
         }
 
         public override string ToString()

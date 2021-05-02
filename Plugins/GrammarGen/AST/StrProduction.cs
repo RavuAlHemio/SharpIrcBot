@@ -19,6 +19,11 @@ namespace SharpIrcBot.Plugins.GrammarGen.AST
             return Str;
         }
 
+        public override IEnumerable<string> ProduceAll(Rulebook rulebook, ImmutableDictionary<string, object> parameters)
+        {
+            yield return Str;
+        }
+
         public override void CollectSoundnessErrors(Rulebook rulebook, List<string> errors)
         {
             // constant text doesn't depend on much

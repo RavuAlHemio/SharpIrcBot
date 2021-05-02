@@ -18,6 +18,11 @@ namespace SharpIrcBot.Plugins.GrammarGen.AST
             return (string)parameters[PropertyName];
         }
 
+        public override IEnumerable<string> ProduceAll(Rulebook rulebook, ImmutableDictionary<string, object> parameters)
+        {
+            yield return (string)parameters[PropertyName];
+        }
+
         public override void CollectSoundnessErrors(Rulebook rulebook, List<string> errors)
         {
         }

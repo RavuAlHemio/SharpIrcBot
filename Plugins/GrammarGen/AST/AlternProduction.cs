@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 
@@ -12,9 +13,9 @@ namespace SharpIrcBot.Plugins.GrammarGen.AST
         {
         }
 
-        public override string Produce(Random rng, Rulebook rulebook, ImmutableDictionary<string, object> parameters)
+        protected virtual ImmutableArray<Production> GetInnersMatchingCondition(ImmutableDictionary<string, object> parameters)
         {
-            ImmutableArray<Production> condInners = Inners
+            return Inners
                 .Where(i =>
                     !(i is IConditionalProduction)
                     || ((IConditionalProduction)i).Conditions.All(cond =>
@@ -25,6 +26,11 @@ namespace SharpIrcBot.Plugins.GrammarGen.AST
                     )
                 )
                 .ToImmutableArray();
+        }
+
+        public override string Produce(Random rng, Rulebook rulebook, ImmutableDictionary<string, object> parameters)
+        {
+            ImmutableArray<Production> condInners = GetInnersMatchingCondition(parameters);
 
             if (condInners.Length == 0)
             {
@@ -63,6 +69,24 @@ namespace SharpIrcBot.Plugins.GrammarGen.AST
 
             // this shouldn't happen
             throw new NotImplementedException("unreachable code reached");
+        }
+
+        public override IEnumerable<string> ProduceAll(Rulebook rulebook, ImmutableDictionary<string, object> parameters)
+        {
+            ImmutableArray<Production> condInners = GetInnersMatchingCondition(parameters);
+
+            if (condInners.Length == 0)
+            {
+                throw new NoProductionsRemainException(this);
+            }
+
+            foreach (Production condInner in condInners)
+            {
+                foreach (string produced in condInner.ProduceAll(rulebook, parameters))
+                {
+                    yield return produced;
+                }
+            }
         }
 
         public override string ToString()

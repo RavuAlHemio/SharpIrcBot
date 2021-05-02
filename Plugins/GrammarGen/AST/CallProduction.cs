@@ -16,10 +16,8 @@ namespace SharpIrcBot.Plugins.GrammarGen.AST
             Parameters = parameters;
         }
 
-        public override string Produce(Random rng, Rulebook rulebook, ImmutableDictionary<string, object> parameters)
+        protected virtual Rulebook ConstructSubtreeRulebook(Rulebook rulebook, Rule rule)
         {
-            Rule rule = rulebook.GetRule(Identifier);
-
             // add the parameters to the rulebook
             var builder = ImmutableDictionary.CreateBuilder<string, Rule>();
             builder.AddRange(rulebook.Rules);
@@ -28,9 +26,21 @@ namespace SharpIrcBot.Plugins.GrammarGen.AST
             {
                 builder[rule.ParameterNames[i]] = new Rule(rule.ParameterNames[i], Parameters[i]);
             }
-            Rulebook subtreeRulebook = new Rulebook(builder.ToImmutable());
+            return new Rulebook(builder.ToImmutable());
+        }
 
+        public override string Produce(Random rng, Rulebook rulebook, ImmutableDictionary<string, object> parameters)
+        {
+            Rule rule = rulebook.GetRule(Identifier);
+            Rulebook subtreeRulebook = ConstructSubtreeRulebook(rulebook, rule);
             return rule.Production.Produce(rng, subtreeRulebook, parameters);
+        }
+
+        public override IEnumerable<string> ProduceAll(Rulebook rulebook, ImmutableDictionary<string, object> parameters)
+        {
+            Rule rule = rulebook.GetRule(Identifier);
+            Rulebook subtreeRulebook = ConstructSubtreeRulebook(rulebook, rule);
+            return rule.Production.ProduceAll(subtreeRulebook, parameters);
         }
 
         public override void CollectSoundnessErrors(Rulebook rulebook, List<string> errors)

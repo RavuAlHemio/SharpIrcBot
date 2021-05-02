@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 
 namespace SharpIrcBot.Plugins.GrammarGen.AST
@@ -19,6 +20,15 @@ namespace SharpIrcBot.Plugins.GrammarGen.AST
             return (proceed < Weight)
                 ? Inner.Produce(rng, rulebook, parameters)
                 : "";
+        }
+
+        public override IEnumerable<string> ProduceAll(Rulebook rulebook, ImmutableDictionary<string, object> parameters)
+        {
+            foreach (string innerProduced in Inner.ProduceAll(rulebook, parameters))
+            {
+                yield return innerProduced;
+            }
+            yield return "";
         }
 
         public override string ToString()

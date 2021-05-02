@@ -52,12 +52,31 @@ namespace GrammarGenTest
             }
             Console.WriteLine();
 
-            for (int i = 0; i < genCount; i++)
+            if (genCount < 0)
             {
-                Console.WriteLine(grammar.Generate(
-                    rng: null,
-                    parameters: parameters
-                ));
+                long totalCount = 0;
+                int outputCount = 0;
+                foreach (string generation in grammar.GenerateAll(parameters))
+                {
+                    totalCount++;
+                    outputCount = (outputCount + 1) % 65536;
+                    if (outputCount == 0)
+                    {
+                        Console.WriteLine($"{totalCount}: {generation}");
+                    }
+                }
+                Console.WriteLine();
+                Console.WriteLine($"total entries: {totalCount}");
+            }
+            else
+            {
+                for (int i = 0; i < genCount; i++)
+                {
+                    Console.WriteLine(grammar.Generate(
+                        rng: null,
+                        parameters: parameters
+                    ));
+                }
             }
         }
     }
