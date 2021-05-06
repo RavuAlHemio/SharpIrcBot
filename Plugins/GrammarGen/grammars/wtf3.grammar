@@ -30,6 +30,7 @@ verb1construct_builtin
 
 verb1construct_wg
     :   wg_verb1
+        [ " " noun4 ]
         [ " " adverb ]
         [ " " adverbial ]
     ;
@@ -180,6 +181,7 @@ verb3construct_builtin
 verb3construct_wg
     :   [ adverb " " ]
         [ adverbial " " ]
+        [ noun4 " " ]
         wg_verb3
     ;
 
