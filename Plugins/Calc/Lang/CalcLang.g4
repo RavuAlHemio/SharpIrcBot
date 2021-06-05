@@ -33,13 +33,9 @@ expression
     | Identifier '(' arglist? ')' # Func
     | expression '!' # Fac
     | '-' expression # Neg
-    | expression '**' expression # Pow
-    | expression '*' expression # Mul
-    | expression '//' expression # IntDiv
-    | expression '/' expression # Div
-    | expression '%' expression # Rem
-    | expression '+' expression # Add
-    | expression '-' expression # Sub
+    |<assoc=right> expression '**' expression # Pow
+    | expression op=('*'|'/'|'//'|'%') expression # MulDivRem
+    | expression op=('+'|'-') expression # AddSub
     | expression '&' expression # BAnd
     | expression '^' expression # BXor
     | expression '|' expression # BOr

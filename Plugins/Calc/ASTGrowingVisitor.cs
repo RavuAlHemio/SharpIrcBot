@@ -18,62 +18,46 @@ namespace SharpIrcBot.Plugins.Calc
             TokenStream = tokenStream;
         }
 
-        public override Expression VisitAdd([NotNull] CalcLangParser.AddContext context)
+        public override Expression VisitAddSub([NotNull] CalcLangParser.AddSubContext context)
         {
             (int index, int length) = ExpressionIndexAndLength(context.SourceInterval);
+
+            Operation op;
+            switch (context.op.Text)
+            {
+                case "+": op = Operation.Add; break;
+                case "-": op = Operation.Subtract; break;
+                default:
+                    throw new System.ArgumentException($"invalid AddSub operator: {context.op.Text}");
+            }
 
             return new BinaryOperationExpression(
                 index, length,
                 Visit(context.expression(0)),
-                Operation.Add,
+                op,
                 Visit(context.expression(1))
             );
         }
 
-        public override Expression VisitDiv([NotNull] CalcLangParser.DivContext context)
+        public override Expression VisitMulDivRem([NotNull] CalcLangParser.MulDivRemContext context)
         {
             (int index, int length) = ExpressionIndexAndLength(context.SourceInterval);
+
+            Operation op;
+            switch (context.op.Text)
+            {
+                case "*": op = Operation.Multiply; break;
+                case "/": op = Operation.Divide; break;
+                case "//": op = Operation.IntegralDivide; break;
+                case "%": op = Operation.Remainder; break;
+                default:
+                    throw new System.ArgumentException($"invalid MulDivRem operator: {context.op.Text}");
+            }
 
             return new BinaryOperationExpression(
                 index, length,
                 Visit(context.expression(0)),
-                Operation.Divide,
-                Visit(context.expression(1))
-            );
-        }
-
-        public override Expression VisitIntDiv([NotNull] CalcLangParser.IntDivContext context)
-        {
-            (int index, int length) = ExpressionIndexAndLength(context.SourceInterval);
-
-            return new BinaryOperationExpression(
-                index, length,
-                Visit(context.expression(0)),
-                Operation.IntegralDivide,
-                Visit(context.expression(1))
-            );
-        }
-
-        public override Expression VisitMul([NotNull] CalcLangParser.MulContext context)
-        {
-            (int index, int length) = ExpressionIndexAndLength(context.SourceInterval);
-
-            return new BinaryOperationExpression(
-                index, length,
-                Visit(context.expression(0)),
-                Operation.Multiply,
-                Visit(context.expression(1))
-            );
-        }
-
-        public override Expression VisitRem([NotNull] CalcLangParser.RemContext context)
-        {
-            (int index, int length) = ExpressionIndexAndLength(context.SourceInterval);
-
-            return new BinaryOperationExpression(
-                index, length,
-                Visit(context.expression(0)),
-                Operation.Remainder,
+                op,
                 Visit(context.expression(1))
             );
         }
@@ -86,18 +70,6 @@ namespace SharpIrcBot.Plugins.Calc
                 index, length,
                 Visit(context.expression(0)),
                 Operation.Power,
-                Visit(context.expression(1))
-            );
-        }
-
-        public override Expression VisitSub([NotNull] CalcLangParser.SubContext context)
-        {
-            (int index, int length) = ExpressionIndexAndLength(context.SourceInterval);
-
-            return new BinaryOperationExpression(
-                index, length,
-                Visit(context.expression(0)),
-                Operation.Subtract,
                 Visit(context.expression(1))
             );
         }

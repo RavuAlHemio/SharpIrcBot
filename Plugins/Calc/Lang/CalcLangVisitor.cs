@@ -39,20 +39,6 @@ public interface ICalcLangVisitor<Result> : IParseTreeVisitor<Result> {
 	/// <return>The visitor result.</return>
 	Result VisitFullExpression([NotNull] CalcLangParser.FullExpressionContext context);
 	/// <summary>
-	/// Visit a parse tree produced by the <c>Add</c>
-	/// labeled alternative in <see cref="CalcLangParser.expression"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	/// <return>The visitor result.</return>
-	Result VisitAdd([NotNull] CalcLangParser.AddContext context);
-	/// <summary>
-	/// Visit a parse tree produced by the <c>Sub</c>
-	/// labeled alternative in <see cref="CalcLangParser.expression"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	/// <return>The visitor result.</return>
-	Result VisitSub([NotNull] CalcLangParser.SubContext context);
-	/// <summary>
 	/// Visit a parse tree produced by the <c>Dec</c>
 	/// labeled alternative in <see cref="CalcLangParser.expression"/>.
 	/// </summary>
@@ -81,12 +67,12 @@ public interface ICalcLangVisitor<Result> : IParseTreeVisitor<Result> {
 	/// <return>The visitor result.</return>
 	Result VisitCst([NotNull] CalcLangParser.CstContext context);
 	/// <summary>
-	/// Visit a parse tree produced by the <c>Mul</c>
+	/// Visit a parse tree produced by the <c>AddSub</c>
 	/// labeled alternative in <see cref="CalcLangParser.expression"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
-	Result VisitMul([NotNull] CalcLangParser.MulContext context);
+	Result VisitAddSub([NotNull] CalcLangParser.AddSubContext context);
 	/// <summary>
 	/// Visit a parse tree produced by the <c>Parens</c>
 	/// labeled alternative in <see cref="CalcLangParser.expression"/>.
@@ -109,6 +95,13 @@ public interface ICalcLangVisitor<Result> : IParseTreeVisitor<Result> {
 	/// <return>The visitor result.</return>
 	Result VisitFac([NotNull] CalcLangParser.FacContext context);
 	/// <summary>
+	/// Visit a parse tree produced by the <c>MulDivRem</c>
+	/// labeled alternative in <see cref="CalcLangParser.expression"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitMulDivRem([NotNull] CalcLangParser.MulDivRemContext context);
+	/// <summary>
 	/// Visit a parse tree produced by the <c>BAnd</c>
 	/// labeled alternative in <see cref="CalcLangParser.expression"/>.
 	/// </summary>
@@ -123,13 +116,6 @@ public interface ICalcLangVisitor<Result> : IParseTreeVisitor<Result> {
 	/// <return>The visitor result.</return>
 	Result VisitInt([NotNull] CalcLangParser.IntContext context);
 	/// <summary>
-	/// Visit a parse tree produced by the <c>Div</c>
-	/// labeled alternative in <see cref="CalcLangParser.expression"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	/// <return>The visitor result.</return>
-	Result VisitDiv([NotNull] CalcLangParser.DivContext context);
-	/// <summary>
 	/// Visit a parse tree produced by the <c>Neg</c>
 	/// labeled alternative in <see cref="CalcLangParser.expression"/>.
 	/// </summary>
@@ -137,26 +123,12 @@ public interface ICalcLangVisitor<Result> : IParseTreeVisitor<Result> {
 	/// <return>The visitor result.</return>
 	Result VisitNeg([NotNull] CalcLangParser.NegContext context);
 	/// <summary>
-	/// Visit a parse tree produced by the <c>IntDiv</c>
-	/// labeled alternative in <see cref="CalcLangParser.expression"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	/// <return>The visitor result.</return>
-	Result VisitIntDiv([NotNull] CalcLangParser.IntDivContext context);
-	/// <summary>
 	/// Visit a parse tree produced by the <c>Pow</c>
 	/// labeled alternative in <see cref="CalcLangParser.expression"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
 	Result VisitPow([NotNull] CalcLangParser.PowContext context);
-	/// <summary>
-	/// Visit a parse tree produced by the <c>Rem</c>
-	/// labeled alternative in <see cref="CalcLangParser.expression"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	/// <return>The visitor result.</return>
-	Result VisitRem([NotNull] CalcLangParser.RemContext context);
 	/// <summary>
 	/// Visit a parse tree produced by <see cref="CalcLangParser.arglist"/>.
 	/// </summary>

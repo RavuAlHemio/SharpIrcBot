@@ -46,28 +46,6 @@ public partial class CalcLangBaseVisitor<Result> : AbstractParseTreeVisitor<Resu
 	/// <return>The visitor result.</return>
 	public virtual Result VisitFullExpression([NotNull] CalcLangParser.FullExpressionContext context) { return VisitChildren(context); }
 	/// <summary>
-	/// Visit a parse tree produced by the <c>Add</c>
-	/// labeled alternative in <see cref="CalcLangParser.expression"/>.
-	/// <para>
-	/// The default implementation returns the result of calling <see cref="AbstractParseTreeVisitor{Result}.VisitChildren(IRuleNode)"/>
-	/// on <paramref name="context"/>.
-	/// </para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	/// <return>The visitor result.</return>
-	public virtual Result VisitAdd([NotNull] CalcLangParser.AddContext context) { return VisitChildren(context); }
-	/// <summary>
-	/// Visit a parse tree produced by the <c>Sub</c>
-	/// labeled alternative in <see cref="CalcLangParser.expression"/>.
-	/// <para>
-	/// The default implementation returns the result of calling <see cref="AbstractParseTreeVisitor{Result}.VisitChildren(IRuleNode)"/>
-	/// on <paramref name="context"/>.
-	/// </para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	/// <return>The visitor result.</return>
-	public virtual Result VisitSub([NotNull] CalcLangParser.SubContext context) { return VisitChildren(context); }
-	/// <summary>
 	/// Visit a parse tree produced by the <c>Dec</c>
 	/// labeled alternative in <see cref="CalcLangParser.expression"/>.
 	/// <para>
@@ -112,7 +90,7 @@ public partial class CalcLangBaseVisitor<Result> : AbstractParseTreeVisitor<Resu
 	/// <return>The visitor result.</return>
 	public virtual Result VisitCst([NotNull] CalcLangParser.CstContext context) { return VisitChildren(context); }
 	/// <summary>
-	/// Visit a parse tree produced by the <c>Mul</c>
+	/// Visit a parse tree produced by the <c>AddSub</c>
 	/// labeled alternative in <see cref="CalcLangParser.expression"/>.
 	/// <para>
 	/// The default implementation returns the result of calling <see cref="AbstractParseTreeVisitor{Result}.VisitChildren(IRuleNode)"/>
@@ -121,7 +99,7 @@ public partial class CalcLangBaseVisitor<Result> : AbstractParseTreeVisitor<Resu
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
-	public virtual Result VisitMul([NotNull] CalcLangParser.MulContext context) { return VisitChildren(context); }
+	public virtual Result VisitAddSub([NotNull] CalcLangParser.AddSubContext context) { return VisitChildren(context); }
 	/// <summary>
 	/// Visit a parse tree produced by the <c>Parens</c>
 	/// labeled alternative in <see cref="CalcLangParser.expression"/>.
@@ -156,6 +134,17 @@ public partial class CalcLangBaseVisitor<Result> : AbstractParseTreeVisitor<Resu
 	/// <return>The visitor result.</return>
 	public virtual Result VisitFac([NotNull] CalcLangParser.FacContext context) { return VisitChildren(context); }
 	/// <summary>
+	/// Visit a parse tree produced by the <c>MulDivRem</c>
+	/// labeled alternative in <see cref="CalcLangParser.expression"/>.
+	/// <para>
+	/// The default implementation returns the result of calling <see cref="AbstractParseTreeVisitor{Result}.VisitChildren(IRuleNode)"/>
+	/// on <paramref name="context"/>.
+	/// </para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	public virtual Result VisitMulDivRem([NotNull] CalcLangParser.MulDivRemContext context) { return VisitChildren(context); }
+	/// <summary>
 	/// Visit a parse tree produced by the <c>BAnd</c>
 	/// labeled alternative in <see cref="CalcLangParser.expression"/>.
 	/// <para>
@@ -178,17 +167,6 @@ public partial class CalcLangBaseVisitor<Result> : AbstractParseTreeVisitor<Resu
 	/// <return>The visitor result.</return>
 	public virtual Result VisitInt([NotNull] CalcLangParser.IntContext context) { return VisitChildren(context); }
 	/// <summary>
-	/// Visit a parse tree produced by the <c>Div</c>
-	/// labeled alternative in <see cref="CalcLangParser.expression"/>.
-	/// <para>
-	/// The default implementation returns the result of calling <see cref="AbstractParseTreeVisitor{Result}.VisitChildren(IRuleNode)"/>
-	/// on <paramref name="context"/>.
-	/// </para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	/// <return>The visitor result.</return>
-	public virtual Result VisitDiv([NotNull] CalcLangParser.DivContext context) { return VisitChildren(context); }
-	/// <summary>
 	/// Visit a parse tree produced by the <c>Neg</c>
 	/// labeled alternative in <see cref="CalcLangParser.expression"/>.
 	/// <para>
@@ -200,17 +178,6 @@ public partial class CalcLangBaseVisitor<Result> : AbstractParseTreeVisitor<Resu
 	/// <return>The visitor result.</return>
 	public virtual Result VisitNeg([NotNull] CalcLangParser.NegContext context) { return VisitChildren(context); }
 	/// <summary>
-	/// Visit a parse tree produced by the <c>IntDiv</c>
-	/// labeled alternative in <see cref="CalcLangParser.expression"/>.
-	/// <para>
-	/// The default implementation returns the result of calling <see cref="AbstractParseTreeVisitor{Result}.VisitChildren(IRuleNode)"/>
-	/// on <paramref name="context"/>.
-	/// </para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	/// <return>The visitor result.</return>
-	public virtual Result VisitIntDiv([NotNull] CalcLangParser.IntDivContext context) { return VisitChildren(context); }
-	/// <summary>
 	/// Visit a parse tree produced by the <c>Pow</c>
 	/// labeled alternative in <see cref="CalcLangParser.expression"/>.
 	/// <para>
@@ -221,17 +188,6 @@ public partial class CalcLangBaseVisitor<Result> : AbstractParseTreeVisitor<Resu
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
 	public virtual Result VisitPow([NotNull] CalcLangParser.PowContext context) { return VisitChildren(context); }
-	/// <summary>
-	/// Visit a parse tree produced by the <c>Rem</c>
-	/// labeled alternative in <see cref="CalcLangParser.expression"/>.
-	/// <para>
-	/// The default implementation returns the result of calling <see cref="AbstractParseTreeVisitor{Result}.VisitChildren(IRuleNode)"/>
-	/// on <paramref name="context"/>.
-	/// </para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	/// <return>The visitor result.</return>
-	public virtual Result VisitRem([NotNull] CalcLangParser.RemContext context) { return VisitChildren(context); }
 	/// <summary>
 	/// Visit a parse tree produced by <see cref="CalcLangParser.arglist"/>.
 	/// <para>
