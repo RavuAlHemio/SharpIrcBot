@@ -408,6 +408,7 @@ noun{art_m, art_f, art_n}
     | art_f " Nähmaschine"
     | art_f " Ampel"
     | art_f " Limonadendose"
+    | art_f " Pflanze"
     | art_m " Polster"
     | art_f " Decke"
     | art_n " Leintuch"
@@ -421,7 +422,7 @@ noun{art_m, art_f, art_n}
     | art_f " Wiederholung"
     | art_n " " ("Ladegerät" | "Netzteil")
     | art_m " " ("Computer" | "Laptop")
-    | art_m " Schrank"
+    | art_m " " ("Schrank" | "Kasten")
     | art_m " " ("Stand" | "Hand") "mixer"
     | art_f " " ( "Wohnzimmer" | "Esszimmer" | "Küchen" | "Vorzimmer" | "Badezimmer" | "Abstellraum"
                 | "Aufzugs" | "Gang" | "Toiletten" | "Dusch" | "Steh" | "Balkon"
@@ -429,10 +430,17 @@ noun{art_m, art_f, art_n}
                 "lampe"
     | art_f " Tür"
     | art_m " Brandmelder"
+    | art_m " Aufzug"
     | art_m " Betonmischer"
     | art_m " Kran"
     | art_m " Bagger"
+    | art_m " Container"
     | art_n " Notlicht"
+    | art_f " Mine"
+    | art_m " Steinbruch"
+    | art_m " " ("Hörsaal" | "Seminarraum")
+    | art_f " " ("Bibliothek" | "Mensa")
+    | art_n " Labor"
     | person
     ;
 
