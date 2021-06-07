@@ -60,7 +60,7 @@ verb1_simple_movement
         | "laufe"
         | "fliege"
         | "scheiße"
-        | "nieße"
+        | "niese"
         )
         [ " " adverb ]
         [ " " movement_adverbial ]
@@ -219,7 +219,7 @@ verb3_simple_movement
         | "fliegt"
         | "scheißt"
         | "pinkelt"
-        | "nießt"
+        | "niest"
         )
     ;
 
