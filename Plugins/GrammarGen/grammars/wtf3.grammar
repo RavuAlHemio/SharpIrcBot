@@ -19,10 +19,10 @@ verb1construct
 verb1construct_builtin
     : <6> verb1_simple
     | <1> verb1_simple_reqadverb
-    | <1> verb1_simple_movement
-    | <12> verb1_self
+    | <6> verb1_simple_movement
+    | <13> verb1_self
     | <1> verb1_self_movement
-    | <17> verb1_object_simple
+    | <19> verb1_object_simple
     | <1> verb1_object_movement
     | <1> verb1_object_split
     | <3> verb1_object_complex
@@ -56,6 +56,11 @@ verb1_simple_reqadverb
 
 verb1_simple_movement
     :   ( "wichse"
+        | "gehe"
+        | "laufe"
+        | "fliege"
+        | "scheiße"
+        | "nieße"
         )
         [ " " adverb ]
         [ " " movement_adverbial ]
@@ -74,6 +79,7 @@ verb1_self
         | "beschimpfe"
         | "fotografiere"
         | "verkaufe"
+        | "wiederhole"
         )
         " mich"
         [ " " adverb ]
@@ -170,10 +176,10 @@ verb3construct
 verb3construct_builtin
     : <6> verb3_simple
     | <1> verb3_simple_reqadverb
-    | <1> verb3_simple_movement
-    | <11> verb3_self
+    | <7> verb3_simple_movement
+    | <12> verb3_self
     | <1> verb3_self_movement
-    | <18> verb3_object_simple
+    | <19> verb3_object_simple
     | <1> verb3_object_movement
     | <3> verb3_object_complex
     ;
@@ -208,6 +214,12 @@ verb3_simple_movement
     :   [ adverb " " ]
         [ movement_adverbial " " ]
         ( "wichst"
+        | "geht"
+        | "läuft"
+        | "fliegt"
+        | "scheißt"
+        | "pinkelt"
+        | "nießt"
         )
     ;
 
@@ -226,6 +238,7 @@ verb3_self
         | "beschimpft"
         | "fotografiert"
         | "verkauft"
+        | "wiederholt"
         )
     ;
 
@@ -379,6 +392,47 @@ noun{art_m, art_f, art_n}
     | art_m " Handwerker"
     | art_m " Schreßer"
     | "Ravus Bart"
+    | art_m " Hund"
+    | art_f " Kaffeetasse"
+    | art_n " " ("Kaffee" | "Tee") "häferl"
+    | art_m " Bierkrug"
+    | art_m " " ("Eimer" | "Kübel")
+    | art_m " Heizkörper"
+    | art_f " Fußbodenheizung"
+    | art_f " Wäsche"
+    | art_m " Wäscheständer"
+    | art_m " " ("Stuhl" | "Sessel")
+    | art_f " Couch"
+    | art_n " Sofa"
+    | art_f " Leiter"
+    | art_f " Nähmaschine"
+    | art_f " Ampel"
+    | art_f " Limonadendose"
+    | art_m " Polster"
+    | art_f " Decke"
+    | art_n " Leintuch"
+    | art_f " Hose"
+    | art_f " Unterhose"
+    | art_n " Leiberl"
+    | art_n " Hemd"
+    | art_m " Pullover"
+    | art_f " Jacke"
+    | art_m " Schuh"
+    | art_f " Wiederholung"
+    | art_n " " ("Ladegerät" | "Netzteil")
+    | art_m " " ("Computer" | "Laptop")
+    | art_m " Schrank"
+    | art_m " " ("Stand" | "Hand") "mixer"
+    | art_f " " ( "Wohnzimmer" | "Esszimmer" | "Küchen" | "Vorzimmer" | "Badezimmer" | "Abstellraum"
+                | "Aufzugs" | "Gang" | "Toiletten" | "Dusch" | "Steh" | "Balkon"
+                )
+                "lampe"
+    | art_f " Tür"
+    | art_m " Brandmelder"
+    | art_m " Betonmischer"
+    | art_m " Kran"
+    | art_m " Bagger"
+    | art_n " Notlicht"
     | person
     ;
 
@@ -404,7 +458,8 @@ adverb_builtin
         ( "k\u00E4ltlich" | "gespannt" | "gl\u00FCcklich" | "verspannt" | "langsam"
         | "bl\u00F6d" | "suspekt" | "begeistert" | "schauend" | "schnell" | "redend"
         | "zufrieden" | "gelangweilt" | "entspannt" | "ruhig" | "erstaunt"
-        | "wichsend" | "reibend" | "stinkend" | "froh" | "spammend"
+        | "wichsend" | "reibend" | "stinkend" | "froh" | "spammend" | "repetitiv"
+        | "lustvoll" | "lustlos" | "beeindruckt" | "unbeeindruckt"
         | noun4 " verkaufend"
         | "mit " noun3 " spielend"
         | "von " noun3 " begafft"
