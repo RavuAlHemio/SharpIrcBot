@@ -20,12 +20,12 @@ verb1construct_builtin
     : <6> verb1_simple
     | <1> verb1_simple_reqadverb
     | <6> verb1_simple_movement
-    | <13> verb1_self
-    | <1> verb1_self_movement
-    | <19> verb1_object_simple
+    | <17> verb1_self
+    | <7> verb1_self_movement
+    | <42> verb1_object_simple
     | <1> verb1_object_movement
-    | <1> verb1_object_split
-    | <3> verb1_object_complex
+    | <6> verb1_object_split
+    | <5> verb1_object_complex
     ;
 
 verb1construct_wg
@@ -61,6 +61,7 @@ verb1_simple_movement
         | "fliege"
         | "scheiße"
         | "niese"
+        | "purzle"
         )
         [ " " adverb ]
         [ " " movement_adverbial ]
@@ -78,8 +79,12 @@ verb1_self
         | "erschieße"
         | "beschimpfe"
         | "fotografiere"
+        | "interviewe"
         | "verkaufe"
         | "wiederhole"
+        | "hinterfrage"
+        | "befeuchte"
+        | "trockne"
         )
         " mich"
         [ " " adverb ]
@@ -95,7 +100,7 @@ verb1_self_movement
     ;
 
 verb1_object_simple
-    : <17>  ( "beschreibe"
+    : <40>  ( "beschreibe"
             | "putze"
             | "erschrecke"
             | "lese"
@@ -108,9 +113,33 @@ verb1_object_simple
             | "highlighte"
             | "beschimpfe"
             | "fotografiere"
+            | "kaufe"
             | "verkaufe"
             | "bastle"
             | "kategorisiere"
+            | "hinterfrage"
+            | "interviewe"
+            | "befeuchte"
+            | "trockne"
+            | "organisiere"
+            | "verherrliche"
+            | "torpediere"
+            | "verwarne"
+            | "verfärbe"
+            | "digitalisiere"
+            | "verschwende"
+            | "kritisiere"
+            | "beamtshandle"
+            | "de"? "komprimiere"
+            | "verheize"
+            | "verdecke"
+            | "entlause"
+            | "entkräfte"
+            | "zerbreche"
+            | "entlohne"
+            | "belege"
+            | "zerknülle"
+            | "knete"
             )
             " "
             noun4
@@ -136,17 +165,36 @@ verb1_object_movement
     ;
 
 verb1_object_split
-    :   ( "schaue"
-        )
-        " "
-        noun4
-        [ " " adverb ]
-        [ " " adverbial ]
-        " an"
+    : <3>   ( "schaue"
+            | "zünde"
+            | "locke"
+            )
+            " "
+            noun4
+            [ " " adverb ]
+            [ " " adverbial ]
+            " an"
+    | <2>   ( "schule"
+            | "packe"
+            )
+            " "
+            noun4
+            [ " " adverb ]
+            [ " " adverbial ]
+            " ein"
+    | <1>   ( "spiele"
+            )
+            " "
+            noun4
+            [ " " adverb ]
+            [ " " adverbial ]
+            " herunter"
     ;
 
 verb1_object_complex
-    :   "verwechsle"
+    :   ( "verwechsle"
+        | "betrüge"
+        )
         [ " " adverb ]
         [ " " adverbial ]
         " "
@@ -161,7 +209,9 @@ verb1_object_complex
         |   " über "
             noun4
         )
-    |   "spiele"
+    |   ( "spiele"
+        | "schlafe"
+        )
         [ " " adverb ]
         [ " " adverbial ]
         " mit "
@@ -176,12 +226,12 @@ verb3construct
 verb3construct_builtin
     : <6> verb3_simple
     | <1> verb3_simple_reqadverb
-    | <7> verb3_simple_movement
-    | <12> verb3_self
+    | <8> verb3_simple_movement
+    | <16> verb3_self
     | <1> verb3_self_movement
-    | <19> verb3_object_simple
+    | <48> verb3_object_simple
     | <1> verb3_object_movement
-    | <3> verb3_object_complex
+    | <5> verb3_object_complex
     ;
 
 verb3construct_wg
@@ -220,6 +270,7 @@ verb3_simple_movement
         | "scheißt"
         | "pinkelt"
         | "niest"
+        | "purzelt"
         )
     ;
 
@@ -239,6 +290,10 @@ verb3_self
         | "fotografiert"
         | "verkauft"
         | "wiederholt"
+        | "hinterfragt"
+        | "interviewt"
+        | "befeuchtet"
+        | "trocknet"
         )
     ;
 
@@ -251,7 +306,7 @@ verb3_self_movement
     ;
 
 verb3_object_simple
-    : <17>  [ adverb " " ]
+    : <46>  [ adverb " " ]
             [ adverbial " " ]
             noun4
             " "
@@ -269,9 +324,38 @@ verb3_object_simple
             | "highlightet"
             | "beschimpft"
             | "fotografiert"
+            | "kauft"
             | "verkauft"
             | "bastelt"
             | "kategorisiert"
+            | "hinterfragt"
+            | "einschult"
+            | "interviewt"
+            | "einpackt"
+            | "befeuchtet"
+            | "trocknet"
+            | "organisiert"
+            | "verherrlicht"
+            | "torpediert"
+            | "verwarnt"
+            | "verfärbt"
+            | "digitalisiert"
+            | "anzündet"
+            | "verschwendet"
+            | "kritisiert"
+            | "beamtshandelt"
+            | "de"? "komprimiert"
+            | "verheizt"
+            | "verdeckt"
+            | "entlaust"
+            | "entkräftet"
+            | "zerbricht"
+            | "entlohnt"
+            | "belegt"
+            | "zerknüllt"
+            | "knetet"
+            | "herunterspielt"
+            | "anlockt"
             )
     | <2>   [ adverb " " ]
             [ adverbial " " ]
@@ -300,6 +384,7 @@ verb3_object_complex
         " mit "
         noun3
         ( " verwechselt"
+        | " betrügt"
         )
     |   "sich "
         [ adverb " " ]
@@ -314,7 +399,9 @@ verb3_object_complex
         [ adverbial " " ]
         "mit "
         noun3
-        " spielt"
+        ( " spielt"
+        | " schläft"
+        )
     ;
 
 // ARTICLES AND NOUNS
